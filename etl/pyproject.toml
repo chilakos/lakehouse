@@ -30,6 +30,7 @@ markers = [
     "unit: Unit tests (no external services required)",
     "integration: Integration tests (requires Docker services)",
     "slow: Slow-running tests",
+    "snowflake: Snowflake integration tests (requires Snowflake credentials)",
 ]
 addopts = "-ra --strict-markers"
 
