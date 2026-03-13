@@ -82,11 +82,12 @@ Plans:
   2. Tableau and Power BI analysts query the lakehouse through the semantic layer instead of direct Teradata connections, with query performance meeting or exceeding current Teradata baselines on representative dashboards
   3. A business user can ask a natural-language question about a curated data domain and receive an accurate SQL-generated answer, with accuracy meeting the defined threshold on pilot domains
   4. NL-to-SQL leverages the BI semantic layer metric definitions for accuracy, so business terms resolve to the same calculations as BI dashboards
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md -- Cube semantic layer deployment, YAML metric definitions (trading + risk exposure), risk exposure Gold pipeline, benchmark harness
+- [ ] 04-02-PLAN.md -- NL-to-SQL engine (prompt builder + Bedrock client), golden evaluation datasets, accuracy evaluation framework
+- [ ] 04-03-PLAN.md -- Cross-tool validation, integration tests, CI/CD metric validation, human verification of Phase 4 deliverables
 
 ## Progress
 
@@ -98,4 +99,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Foundation and Feasibility Validation | 4/4 | Complete | 2026-03-13 |
 | 2. ETL Migration and Data Pipeline | 5/5 | Complete | 2026-03-13 |
 | 3. Governance, Security Hardening, and Platform | 4/4 | Complete   | 2026-03-13 |
-| 4. Semantic Layers and Consumer Migration | 0/2 | Not started | - |
+| 4. Semantic Layers and Consumer Migration | 0/3 | Not started | - |
