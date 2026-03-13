@@ -9,12 +9,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Foundation & Storage
 
-- [ ] **FNDTN-01**: Iceberg tables created and queryable on AWS S3 (cloud storage)
-- [ ] **FNDTN-02**: Iceberg tables created and queryable on MinIO/replacement (on-prem S3-compatible storage)
-- [ ] **FNDTN-03**: Centralized Iceberg catalog deployed supporting both S3 and MinIO storage backends
-- [ ] **FNDTN-04**: Iceberg schema evolution works without data rewrites across all engines
-- [ ] **FNDTN-05**: Iceberg partition evolution supported for query performance optimization
-- [ ] **FNDTN-06**: Automated Iceberg table maintenance (compaction, snapshot expiration, orphan file cleanup)
+- [x] **FNDTN-01**: Iceberg tables created and queryable on AWS S3 (cloud storage)
+- [x] **FNDTN-02**: Iceberg tables created and queryable on MinIO/replacement (on-prem S3-compatible storage)
+- [x] **FNDTN-03**: Centralized Iceberg catalog deployed supporting both S3 and MinIO storage backends
+- [x] **FNDTN-04**: Iceberg schema evolution works without data rewrites across all engines
+- [x] **FNDTN-05**: Iceberg partition evolution supported for query performance optimization
+- [x] **FNDTN-06**: Automated Iceberg table maintenance (compaction, snapshot expiration, orphan file cleanup)
 - [ ] **FNDTN-07**: Medallion architecture (Bronze/Silver/Gold) implemented with clear layer boundaries
 
 ### Multi-Engine Query Access
@@ -129,12 +129,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FNDTN-01 | Phase 1 | Pending |
-| FNDTN-02 | Phase 1 | Pending |
-| FNDTN-03 | Phase 1 | Pending |
-| FNDTN-04 | Phase 1 | Pending |
-| FNDTN-05 | Phase 1 | Pending |
-| FNDTN-06 | Phase 1 | Pending |
+| FNDTN-01 | Phase 1 | Complete |
+| FNDTN-02 | Phase 1 | Complete |
+| FNDTN-03 | Phase 1 | Complete |
+| FNDTN-04 | Phase 1 | Complete |
+| FNDTN-05 | Phase 1 | Complete |
+| FNDTN-06 | Phase 1 | Complete |
 | FNDTN-07 | Phase 2 | Pending |
 | QUERY-01 | Phase 1 | Pending |
 | QUERY-02 | Phase 1 | Pending |
