@@ -1,0 +1,23 @@
+# SodaCL quality check definitions for Gold trading metrics table.
+# Gold layer contains pre-aggregated metrics per symbol and side.
+# Critical checks ensure grouping key integrity.
+#
+# Referenced by: etl/src/quality/scanner.py via scan.add_sodacl_yaml_file()
+# Table: __soda_check_target (temp view created from DataFrame)
+
+checks for __soda_check_target:
+  # --- Critical checks (hard block) ---
+
+  # Grouping key: symbol must never be null
+  - missing_count(symbol) = 0:
+      name: symbol_not_null
+
+  # --- Advisory checks (soft alert) ---
+
+  # Trade count: every group should have at least one trade
+  - min(trade_count) > 0:
+      name: trade_count_positive
+
+  # Total notional: must be non-negative
+  - min(total_notional) >= 0:
+      name: total_notional_non_negative

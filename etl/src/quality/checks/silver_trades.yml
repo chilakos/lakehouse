@@ -1,0 +1,26 @@
+# SodaCL quality check definitions for Silver trades table.
+# Silver layer receives cleaned, deduplicated data from Bronze.
+# Critical checks ensure deduplication and key integrity.
+#
+# Referenced by: etl/src/quality/scanner.py via scan.add_sodacl_yaml_file()
+# Table: __soda_check_target (temp view created from DataFrame)
+
+checks for __soda_check_target:
+  # --- Critical checks (hard block) ---
+
+  # Primary key: trade_id must be unique after dedup
+  - duplicate_count(trade_id) = 0:
+      name: primary_key_unique
+
+  # Primary key: trade_id must never be null
+  - missing_count(trade_id) = 0:
+      name: primary_key_not_null
+
+  # --- Advisory checks (soft alert) ---
+
+  # Side values must be valid (BUY or SELL)
+  - invalid_count(side) = 0:
+      name: side_valid_values
+      valid values:
+        - "BUY"
+        - "SELL"

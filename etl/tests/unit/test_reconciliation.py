@@ -138,6 +138,44 @@ class TestReconciliationResult:
 
 
 @pytest.mark.unit
+class TestWithinTolerance:
+    """Tests for the _within_tolerance helper."""
+
+    def test_equal_values(self):
+        """Equal values are within any tolerance."""
+        from src.quality.reconciliation import _within_tolerance
+
+        assert _within_tolerance(Decimal("100"), Decimal("100"), Decimal("0.01")) is True
+
+    def test_within_tolerance(self):
+        """Values within 1% tolerance pass."""
+        from src.quality.reconciliation import _within_tolerance
+
+        # 100 vs 100.5 -> diff = 0.5/100 = 0.005 < 0.01
+        assert _within_tolerance(Decimal("100"), Decimal("100.5"), Decimal("0.01")) is True
+
+    def test_exceeds_tolerance(self):
+        """Values exceeding tolerance fail."""
+        from src.quality.reconciliation import _within_tolerance
+
+        # 100 vs 110 -> diff = 10/100 = 0.10 > 0.01
+        assert _within_tolerance(Decimal("100"), Decimal("110"), Decimal("0.01")) is False
+
+    def test_both_none(self):
+        """Both None values are considered matching."""
+        from src.quality.reconciliation import _within_tolerance
+
+        assert _within_tolerance(None, None, Decimal("0.01")) is True
+
+    def test_one_none(self):
+        """One None value does not match."""
+        from src.quality.reconciliation import _within_tolerance
+
+        assert _within_tolerance(Decimal("100"), None, Decimal("0.01")) is False
+        assert _within_tolerance(None, Decimal("100"), Decimal("0.01")) is False
+
+
+@pytest.mark.unit
 class TestReconcileTable:
     """Tests for reconcile_table function with mocked Spark."""
 
@@ -186,9 +224,16 @@ class TestReconcileTable:
         assert result.row_count_match is False
         assert result.passed is False
 
-    def test_reconcile_checksum_within_tolerance(self):
+    @patch("src.quality.reconciliation.F")
+    def test_reconcile_checksum_within_tolerance(self, mock_F):
         """reconcile_table passes when checksum difference is within tolerance."""
         from src.quality.reconciliation import reconcile_table
+
+        # Mock PySpark functions to avoid SparkContext requirement
+        mock_sum_result = MagicMock()
+        mock_sum_result.alias.return_value = mock_sum_result
+        mock_F.sum.return_value = mock_sum_result
+        mock_F.col.return_value = MagicMock()
 
         mock_spark = MagicMock()
         mock_source_df = MagicMock()
@@ -230,9 +275,15 @@ class TestReconcileTable:
         assert result.row_count_match is True
         assert result.passed is True
 
-    def test_reconcile_checksum_exceeds_tolerance(self):
+    @patch("src.quality.reconciliation.F")
+    def test_reconcile_checksum_exceeds_tolerance(self, mock_F):
         """reconcile_table fails when checksum difference exceeds tolerance."""
         from src.quality.reconciliation import reconcile_table
+
+        mock_sum_result = MagicMock()
+        mock_sum_result.alias.return_value = mock_sum_result
+        mock_F.sum.return_value = mock_sum_result
+        mock_F.col.return_value = MagicMock()
 
         mock_spark = MagicMock()
         mock_source_df = MagicMock()
@@ -272,9 +323,20 @@ class TestReconcileTable:
         assert result.checksum_match is False
         assert result.passed is False
 
-    def test_reconcile_aggregate_comparison(self):
+    @patch("src.quality.reconciliation.F")
+    def test_reconcile_aggregate_comparison(self, mock_F):
         """reconcile_table computes and compares aggregate columns."""
         from src.quality.reconciliation import reconcile_table
+
+        # Mock PySpark functions
+        mock_agg_result = MagicMock()
+        mock_agg_result.alias.return_value = mock_agg_result
+        mock_F.sum.return_value = mock_agg_result
+        mock_F.avg.return_value = mock_agg_result
+        mock_F.min.return_value = mock_agg_result
+        mock_F.max.return_value = mock_agg_result
+        mock_F.count.return_value = mock_agg_result
+        mock_F.col.return_value = MagicMock()
 
         mock_spark = MagicMock()
         mock_source_df = MagicMock()
@@ -295,7 +357,7 @@ class TestReconcileTable:
 
         def sql_side_effect(query):
             result = MagicMock()
-            if "COUNT" in query:
+            if "COUNT(*)" in query:
                 result.collect.return_value = [mock_target_count_row]
             else:
                 result.collect.return_value = [mock_target_agg_row]

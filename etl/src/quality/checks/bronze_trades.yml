@@ -1,0 +1,38 @@
+# SodaCL quality check definitions for Bronze trades table.
+# Critical checks block pipeline progression to Silver layer.
+# Advisory checks generate warnings but do not block.
+#
+# Referenced by: etl/src/quality/scanner.py via scan.add_sodacl_yaml_file()
+# Table: __soda_check_target (temp view created from DataFrame)
+
+checks for __soda_check_target:
+  # --- Critical checks (hard block) ---
+
+  # Schema: required columns must be present
+  - schema:
+      name: schema_required_columns
+      fail:
+        when required column missing:
+          [trade_id, trade_date, symbol, side, quantity, price]
+
+  # Primary key: trade_id must never be null
+  - missing_count(trade_id) = 0:
+      name: primary_key_not_null
+
+  # Primary key: trade_id must be unique
+  - duplicate_count(trade_id) = 0:
+      name: primary_key_unique
+
+  # --- Advisory checks (soft alert) ---
+
+  # Account completeness: less than 5% null account_id
+  - missing_percent(account_id) < 5:
+      name: account_id_completeness
+
+  # Price validity: must be non-negative
+  - min(price) >= 0:
+      name: price_non_negative
+
+  # Quantity validity: must be positive
+  - min(quantity) > 0:
+      name: quantity_positive
