@@ -63,9 +63,9 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Data Quality
 
 - [x] **QUAL-01**: Schema validation enforced on all ingestion pipelines before Iceberg writes
-- [ ] **QUAL-02**: Data quality checks (null rates, range validation, uniqueness) integrated into ETL
-- [ ] **QUAL-03**: Source-to-lakehouse reconciliation (row counts, checksums, aggregates) for migrated tables
-- [ ] **QUAL-04**: Data quality monitoring with alerting for degradation detection
+- [x] **QUAL-02**: Data quality checks (null rates, range validation, uniqueness) integrated into ETL
+- [x] **QUAL-03**: Source-to-lakehouse reconciliation (row counts, checksums, aggregates) for migrated tables
+- [x] **QUAL-04**: Data quality monitoring with alerting for degradation detection
 
 ### BI Semantic Layer
 
@@ -165,9 +165,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEC-05 | Phase 1 | Complete (01-03) |
 | SEC-06 | Phase 1 | Complete (01-03) |
 | QUAL-01 | Phase 2 | Complete |
-| QUAL-02 | Phase 2 | Pending |
-| QUAL-03 | Phase 2 | Pending |
-| QUAL-04 | Phase 2 | Pending |
+| QUAL-02 | Phase 2 | Complete |
+| QUAL-03 | Phase 2 | Complete |
+| QUAL-04 | Phase 2 | Complete |
 | BISEM-01 | Phase 4 | Pending |
 | BISEM-02 | Phase 4 | Pending |
 | BISEM-03 | Phase 4 | Pending |

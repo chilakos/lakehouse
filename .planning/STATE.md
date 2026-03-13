@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-03-PLAN.md
-last_updated: "2026-03-13T15:44:30.000Z"
-last_activity: 2026-03-13 -- Plan 02-03 executed (Pilot pipelines + incremental loading)
+stopped_at: Completed 02-04-PLAN.md
+last_updated: "2026-03-13T15:49:35.000Z"
+last_activity: 2026-03-13 -- Plan 02-04 executed (Soda Core quality framework + reconciliation)
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 9
-  completed_plans: 7
-  percent: 54
+  completed_plans: 8
+  percent: 62
 ---
 
 # Project State
@@ -21,38 +21,39 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
-**Current focus:** Phase 2: ETL Migration and Data Pipeline -- executing Plan 4 of 5
+**Current focus:** Phase 2: ETL Migration and Data Pipeline -- executing Plan 5 of 5
 
 ## Current Position
 
 Phase: 2 of 4 (ETL Migration and Data Pipeline) -- EXECUTING
-Plan: 4 of 5 in current phase (3 complete)
+Plan: 5 of 5 in current phase (4 complete)
 Status: Executing Phase 2
-Last activity: 2026-03-13 -- Plan 02-03 executed (Pilot pipelines + incremental loading)
+Last activity: 2026-03-13 -- Plan 02-04 executed (Soda Core quality framework + reconciliation)
 
-Progress: [######░░░░] 54%
+Progress: [######░░░░] 62%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
+- Total plans completed: 8
 - Average duration: 10 min
-- Total execution time: 1.2 hours
+- Total execution time: 1.3 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 4 | 51 min | 13 min |
-| 2 | 3 | 19 min | 6 min |
+| 2 | 4 | 28 min | 7 min |
 
 **Recent Trend:**
-- Last 5 plans: 12min, 18min, 10min, 5min, 4min
-- Trend: improving
+- Last 5 plans: 18min, 10min, 5min, 4min, 9min
+- Trend: stable
 
 *Updated after each plan completion*
 | Phase 02 P01 | 7 | 2 tasks | 13 files |
 | Phase 02 P03 | 4 | 2 tasks | 11 files |
+| Phase 02 P04 | 9 | 2 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,10 @@ Recent decisions affecting current work:
 - [Phase 02]: 02-03: MainframeBronzePipeline overrides validate_schema() (Cobrix derives schema from copybook at runtime)
 - [Phase 02]: 02-03: merge_incremental uses temporary view + MERGE INTO SQL for Iceberg upserts
 - [Phase 02]: 02-03: Mainframe table name derived from copybook filename for multi-source support
+- [Phase 02]: 02-04: Top-level F import in reconciliation.py for mock.patch testability
+- [Phase 02]: 02-04: Soda scan temp view __soda_check_target for DataFrame-to-SQL bridge
+- [Phase 02]: 02-04: Reconciliation uses relative tolerance for numeric comparison
+- [Phase 02]: 02-04: BasePipeline falls back to placeholder when soda-core not installed
 
 ### Pending Todos
 
@@ -115,6 +120,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T15:44:30Z
-Stopped at: Completed 02-03-PLAN.md
+Last session: 2026-03-13T15:49:35Z
+Stopped at: Completed 02-04-PLAN.md
 Resume file: None
