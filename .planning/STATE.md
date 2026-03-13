@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-03-13T15:49:35.000Z"
-last_activity: 2026-03-13 -- Plan 02-04 executed (Soda Core quality framework + reconciliation)
+status: planning
+stopped_at: Phase 2 complete, ready for Phase 3
+last_updated: "2026-03-13T18:00:00.000Z"
+last_activity: 2026-03-13 -- Phase 2 complete (all 5 plans executed, 142 tests passing)
 progress:
   total_phases: 4
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 9
-  completed_plans: 8
-  percent: 62
+  completed_plans: 9
+  percent: 69
 ---
 
 # Project State
@@ -21,39 +21,49 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
-**Current focus:** Phase 2: ETL Migration and Data Pipeline -- executing Plan 5 of 5
+**Current focus:** Phase 3: Governance, Security Hardening, and Platform -- ready to plan
 
 ## Current Position
 
-Phase: 2 of 4 (ETL Migration and Data Pipeline) -- EXECUTING
-Plan: 5 of 5 in current phase (4 complete)
-Status: Executing Phase 2
-Last activity: 2026-03-13 -- Plan 02-04 executed (Soda Core quality framework + reconciliation)
+Phase: 3 of 4 (Governance, Security Hardening, and Platform) -- READY TO PLAN
+Plan: 0 of ? in current phase (phase not yet planned)
+Status: Phase 2 complete, transitioning to Phase 3
+Last activity: 2026-03-13 -- Phase 2 complete (all 5 plans executed, 142 tests passing)
 
-Progress: [######░░░░] 62%
+Progress: [#######░░░] 69%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
+- Total plans completed: 9
 - Average duration: 10 min
-- Total execution time: 1.3 hours
+- Total execution time: ~1.5 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 4 | 51 min | 13 min |
-| 2 | 4 | 28 min | 7 min |
+| 2 | 5 | 43 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: 18min, 10min, 5min, 4min, 9min
+- Last 5 plans: 10min, 5min, 4min, 9min, 15min
 - Trend: stable
 
-*Updated after each plan completion*
-| Phase 02 P01 | 7 | 2 tasks | 13 files |
-| Phase 02 P03 | 4 | 2 tasks | 11 files |
-| Phase 02 P04 | 9 | 2 tasks | 10 files |
+## Phases Completed
+
+### Phase 1: Foundation and Feasibility Validation (4 plans)
+- Mono-repo, Docker Compose, Nessie/Trino/Iceberg local dev
+- Synthetic data generators, catalog/maintenance utilities
+- Terraform IaC, GitHub Actions CI/CD, encryption
+- Multi-engine validation, RBAC, LDAP auth stubs, benchmarks
+
+### Phase 2: ETL Migration and Data Pipeline (5 plans)
+- ETL framework: BasePipeline ABC, Bronze/Silver/Gold medallion layers
+- Airflow 3.1.x + Marquez deployment, OpenLineage
+- Pilot pipelines: trades, positions, mainframe COBOL, incremental loading
+- Soda Core quality gates, SodaCL checks, reconciliation framework
+- Production DAGs, job inventory, Grafana observability, ETL patterns docs
 
 ## Accumulated Context
 
@@ -62,48 +72,14 @@ Progress: [######░░░░] 62%
 Decisions are logged in PROJECT.md Key Decisions table.
 Recent decisions affecting current work:
 
-- Roadmap: 4 phases derived from 49 v1 requirements at coarse granularity
 - Roadmap: Governance (OpenLineage) starts Phase 2 with ETL; fine-grained security (Ranger) in Phase 3
 - Roadmap: BCBS 239 lineage visualization deferred to Phase 3 (lineage capture starts Phase 2)
-- 01-01: Used partial backend config for Terraform S3 backend (vars not allowed in backend blocks)
-- 01-01: Nessie REST catalog URI pattern: {nessie_url}/iceberg with prefix=main for Trino
-- 01-01: Settings dataclass with os.environ.get defaults matching Docker Compose values
-- 01-01: TCP socket probing for test fixture service availability detection
-- 01-02: TYPE_CHECKING pattern for lazy PySpark imports in catalog/maintenance utilities
-- 01-02: Isolated random.Random(seed) per generator call for true determinism
-- 01-02: REST catalog type consistently used (not Nessie-specific) per anti-pattern guidance
-- 01-02: Decimal type for all financial precision fields in synthetic data generators
-- 01-03: Standalone aws_security_group_rule for cross-SG references to avoid Terraform cycles
-- 01-03: Workflow files copied to .github/workflows/ (git does not follow directory symlinks)
-- 01-03: OIDC for all AWS auth in GitHub Actions (no long-lived credentials)
-- 01-03: Trino REST catalog type pointing to Nessie internal endpoint (consistent with 01-01)
-- 01-04: Snowflake tests skip gracefully when SNOWFLAKE_ACCOUNT absent (network isolation expected)
-- 01-04: Trino LDAP auth commented out in config.properties for local dev; uncomment for staging/prod
-- 01-04: Teradata OTF ADR recommends direct Nessie REST first, Trino JDBC federation as fallback
 - 01-04: File-based RBAC (rules.json) for Phase 1 baseline; Ranger deferred to Phase 3
-- 01-04: Benchmark harness discards first iteration as warmup for accurate latency
-- 02-02: Airflow webserver on port 8081 (avoids Trino port 8080 conflict)
-- 02-02: Airflow DB on port 5433, Marquez DB on port 5434 (avoid Nessie Postgres 5432)
-- 02-02: YAML anchor (&airflow-env) for shared environment across Airflow containers
-- 02-02: enable_lineage=False default on get_spark_session() to preserve backward compatibility
-- 02-02: OpenLineage Spark package appended to jars.packages alongside Iceberg runtime
-- 02-02: Marquez Web UI on separate container (port 3000) from API (port 5000)
-- 02-01: Top-level PySpark function imports (lit, current_timestamp) for mock.patch testability
-- 02-01: Schema validation allows nullable differences and extra columns, rejects missing/wrong-typed
-- 02-01: Silver dedup via window function (row_number partitioned by trade_id, ordered by ingestion_ts desc)
-- 02-01: Gold metrics use DecimalType(38,4) for financial precision through aggregation
-- 02-01: Integration tests use uuid-based namespace/table suffixes for test isolation
-- [Phase 02]: 02-01: Top-level PySpark function imports for mock.patch testability
-- [Phase 02]: 02-01: Schema validation allows nullable differences, rejects missing/wrong-typed columns
-- [Phase 02]: 02-01: Gold metrics use DecimalType(38,4) for financial precision through aggregation
-- [Phase 02]: 02-03: Positions Silver dedup partitions by position_id+as_of_date (entity-centric)
-- [Phase 02]: 02-03: MainframeBronzePipeline overrides validate_schema() (Cobrix derives schema from copybook at runtime)
-- [Phase 02]: 02-03: merge_incremental uses temporary view + MERGE INTO SQL for Iceberg upserts
-- [Phase 02]: 02-03: Mainframe table name derived from copybook filename for multi-source support
-- [Phase 02]: 02-04: Top-level F import in reconciliation.py for mock.patch testability
-- [Phase 02]: 02-04: Soda scan temp view __soda_check_target for DataFrame-to-SQL bridge
-- [Phase 02]: 02-04: Reconciliation uses relative tolerance for numeric comparison
-- [Phase 02]: 02-04: BasePipeline falls back to placeholder when soda-core not installed
+- 01-04: Teradata OTF ADR recommends direct Nessie REST first, Trino JDBC federation as fallback
+- 02-05: Grafana on port 3001 (avoids Marquez Web UI on port 3000)
+- 02-05: Hybrid DAG pattern: source-specific Bronze/Silver, cross-source Gold
+- 02-05: Job complexity classification: SIMPLE/MEDIUM/COMPLEX
+- 02-05: ETL patterns doc is team onboarding document -- opinionated to enforce consistency
 
 ### Pending Todos
 
@@ -120,6 +96,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T15:49:35Z
-Stopped at: Completed 02-04-PLAN.md
+Last session: 2026-03-13T18:00:00Z
+Stopped at: Phase 2 complete, ready for Phase 3
 Resume file: None
