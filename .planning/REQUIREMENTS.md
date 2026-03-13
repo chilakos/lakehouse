@@ -48,7 +48,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **GOVN-01**: End-to-end data lineage captured via OpenLineage from source to consumption layer
 - [ ] **GOVN-02**: Lineage visualization available for regulatory reporting (BCBS 239, SOX compliance)
 - [x] **GOVN-03**: Data classification and sensitivity labeling applied to PII and regulated financial data
-- [ ] **GOVN-04**: Business glossary with data definitions accessible to business users
+- [x] **GOVN-04**: Business glossary with data definitions accessible to business users
 - [ ] **GOVN-05**: Audit trail capturing all data access across Trino, Teradata, and Snowflake
 
 ### Security & Access Control
@@ -82,9 +82,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Self-Service & Observability
 
-- [ ] **PLAT-01**: Data catalog deployed for self-service data discovery (search, profiling, glossary)
+- [x] **PLAT-01**: Data catalog deployed for self-service data discovery (search, profiling, glossary)
 - [ ] **PLAT-02**: Pipeline observability dashboard with SLA monitoring and failure alerting
-- [ ] **PLAT-03**: Data freshness tracking visible to business users
+- [x] **PLAT-03**: Data freshness tracking visible to business users
 
 ## v2 Requirements
 
@@ -156,7 +156,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GOVN-01 | Phase 2 | Complete |
 | GOVN-02 | Phase 3 | Pending |
 | GOVN-03 | Phase 3 | Complete |
-| GOVN-04 | Phase 3 | Pending |
+| GOVN-04 | Phase 3 | Complete |
 | GOVN-05 | Phase 3 | Pending |
 | SEC-01 | Phase 1 | Pending |
 | SEC-02 | Phase 1 | Pending |
@@ -175,9 +175,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AISEM-01 | Phase 4 | Pending |
 | AISEM-02 | Phase 4 | Pending |
 | AISEM-03 | Phase 4 | Pending |
-| PLAT-01 | Phase 3 | Pending |
+| PLAT-01 | Phase 3 | Complete |
 | PLAT-02 | Phase 2 | Pending |
-| PLAT-03 | Phase 3 | Pending |
+| PLAT-03 | Phase 3 | Complete |
 
 **Coverage:**
 - v1 requirements: 49 total

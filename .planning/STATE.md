@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Completed 03-01-PLAN.md (Ranger Docker + governance module)
-last_updated: "2026-03-13T17:43:13.960Z"
-last_activity: 2026-03-13 -- Phase 3 Plan 01 complete (Ranger Docker + governance module, 86 tests passing)
+stopped_at: Completed 03-02-PLAN.md (OpenMetadata catalog + freshness tracker + lineage stubs)
+last_updated: "2026-03-13T17:54:09.870Z"
+last_activity: 2026-03-13 -- 03-01 complete (86 unit tests passing, Ranger stack + classification module)
 progress:
   total_phases: 4
   completed_phases: 2
   total_plans: 13
-  completed_plans: 10
+  completed_plans: 11
   percent: 77
 ---
 
@@ -50,6 +50,7 @@ Progress: [████████░░] 77%
 - Last 5 plans: 10min, 5min, 4min, 9min, 15min
 - Trend: stable
 | Phase 03-governance-security-hardening-and-platform P01 | 8 | 2 tasks | 16 files |
+| Phase 03-governance-security-hardening-and-platform P02 | 8 | 2 tasks | 11 files |
 
 ## Phases Completed
 
@@ -83,6 +84,9 @@ Recent decisions affecting current work:
 - 02-05: ETL patterns doc is team onboarding document -- opinionated to enforce consistency
 - [Phase 03-01]: Ranger 2.8.0 plugin targets Trino 433; Trino 479 version mismatch documented -- plugin JAR compatibility must be verified at integration time or plugin built from source
 - [Phase 03-01]: Tag-driven classification (SensitivityLevel regex rules) applied once per column; tag drives masking policy automatically -- scales to 300+ sources without per-column policies
+- [Phase 03-02]: OpenMetadata ingestion port 8086 to avoid conflicts with Trino (8080) and Airflow (8081)
+- [Phase 03-02]: Freshness SLA grace: hours_since <= warning_threshold -> GREEN (allows grace past expected_interval); within critical -> YELLOW; past critical -> RED
+- [Phase 03-02]: OpenMetadata 1.6.0 chosen as known stable release; research-specified 1.12.x tag unverified on docker.getcollate.io
 
 ### Pending Todos
 
@@ -99,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T17:43:13.958Z
-Stopped at: Completed 03-01-PLAN.md (Ranger Docker + governance module)
+Last session: 2026-03-13T17:54:09.868Z
+Stopped at: Completed 03-02-PLAN.md (OpenMetadata catalog + freshness tracker + lineage stubs)
 Resume file: None
