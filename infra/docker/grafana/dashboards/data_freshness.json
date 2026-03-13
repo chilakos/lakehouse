@@ -1,0 +1,284 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Data Freshness SLA Monitoring - Per-table traffic-light status (GREEN/YELLOW/RED) for all medallion layers",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "title": "BCBS 239 Compliance",
+      "type": "dashboard",
+      "dashboardUri": "/d/bcbs239-compliance",
+      "icon": "dashboard",
+      "tooltip": "View BCBS 239 compliance dashboard"
+    },
+    {
+      "title": "OpenMetadata Catalog",
+      "type": "link",
+      "url": "http://localhost:8585",
+      "icon": "external link",
+      "tooltip": "Open data catalog",
+      "targetBlank": true
+    }
+  ],
+  "panels": [
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "Overall freshness health: count of tables in GREEN (on time), YELLOW (warning), and RED (stale) status",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "On time": { "color": "green", "text": "GREEN" },
+                "Warning": { "color": "yellow", "text": "YELLOW" },
+                "Stale": { "color": "red", "text": "RED" }
+              }
+            }
+          ]
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "GREEN" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "YELLOW" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "yellow", "mode": "fixed" } }]
+          },
+          {
+            "matcher": { "id": "byName", "options": "RED" },
+            "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }]
+          }
+        ]
+      },
+      "gridPos": { "h": 6, "w": 8, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Freshness Overview",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT SUM(CASE WHEN badge_status = 'green' THEN 1 ELSE 0 END) AS \"GREEN\", SUM(CASE WHEN badge_status = 'yellow' THEN 1 ELSE 0 END) AS \"YELLOW\", SUM(CASE WHEN badge_status = 'red' THEN 1 ELSE 0 END) AS \"RED\" FROM freshness_metrics",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "Per-table freshness status with traffic-light color coding. GREEN = on time, YELLOW = warning (approaching critical), RED = stale (SLA breached). Table names link to OpenMetadata catalog.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.5 },
+              { "color": "red", "value": 0.75 }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "table_name" },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "View in OpenMetadata",
+                    "url": "http://localhost:8585/table/lakehouse-trino.iceberg.${__value.text}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "badge_status" },
+            "properties": [
+              {
+                "id": "custom.displayMode",
+                "value": "color-background"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "green": { "color": "green", "text": "GREEN" } } },
+                  { "type": "value", "options": { "yellow": { "color": "yellow", "text": "YELLOW" } } },
+                  { "type": "value", "options": { "red": { "color": "red", "text": "RED" } } }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "hours_since_update" },
+            "properties": [
+              { "id": "unit", "value": "h" },
+              { "id": "decimals", "value": 1 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "sla_hours" },
+            "properties": [
+              { "id": "unit", "value": "h" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 6 },
+      "id": 2,
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "badge_status", "desc": true }]
+      },
+      "title": "Table Freshness Status",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT table_name, status, badge_status, badge_label, hours_since_update, sla_hours, checked_at FROM freshness_metrics ORDER BY CASE badge_status WHEN 'red' THEN 1 WHEN 'yellow' THEN 2 ELSE 3 END, hours_since_update DESC",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "Historical freshness trend showing hours since last update for key tables. Useful for identifying persistent SLA breaches vs. transient delays.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "showPoints": "auto"
+          },
+          "unit": "h",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 26 },
+              { "color": "red", "value": 48 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 16 },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": ["lastNotNull", "max"],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Freshness Timeline (7 days)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT checked_at AS time, table_name AS metric, hours_since_update AS value FROM freshness_metrics WHERE checked_at >= NOW() - INTERVAL '7 days' ORDER BY checked_at",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "Tables currently in YELLOW or RED status with how long the SLA has been breached. Requires immediate attention.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 24 }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "table_name" },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "View in OpenMetadata",
+                    "url": "http://localhost:8585/table/lakehouse-trino.iceberg.${__value.text}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "badge_status" },
+            "properties": [
+              { "id": "custom.displayMode", "value": "color-background" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 16 },
+      "id": 4,
+      "options": { "showHeader": true },
+      "title": "SLA Breaches",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT table_name, badge_status, badge_label, hours_since_update, sla_hours, (hours_since_update - sla_hours) AS hours_overdue, checked_at FROM freshness_metrics WHERE badge_status IN ('yellow', 'red') ORDER BY hours_since_update DESC",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["freshness", "sla", "monitoring", "governance"],
+  "templating": { "list": [] },
+  "time": { "from": "now-7d", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Data Freshness SLA Monitoring",
+  "uid": "data-freshness-sla",
+  "version": 1
+}

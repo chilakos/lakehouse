@@ -310,12 +310,31 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin
       GF_USERS_ALLOW_SIGN_UP: "false"
+      # Infinity plugin for querying Marquez lineage API in BCBS 239 compliance dashboard
+      GF_INSTALL_PLUGINS: yesoreyeram-infinity-datasource
     volumes:
       - ./infra/docker/grafana/provisioning:/etc/grafana/provisioning:ro
       - ./infra/docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
+
+  # Grafana Reporter: PDF/HTML compliance report export for audit evidence archives
+  # API: GET http://localhost:8686/render?dashboard=<uid>&from=<epoch>&to=<epoch>
+  # Used by dag_anomaly_report.py export_compliance_pdf task (daily at 09:00 UTC)
+  grafana-reporter:
+    image: izakmarais/grafana-reporter:latest
+    ports:
+      - "8686:8686"
+    environment:
+      GRAFANA_HOST: grafana
+      GRAFANA_PORT: "3000"
+      GRAFANA_USERNAME: admin
+      GRAFANA_PASSWORD: admin
+    env_file:
+      - ./infra/docker/grafana-reporter/grafana-reporter.env
+    depends_on:
+      - grafana
 
   # --- Apache Ranger services ---
   # NOTE: The Ranger Trino plugin JAR (ranger-2.8.0-trino-plugin.tar.gz) targets Trino 433.

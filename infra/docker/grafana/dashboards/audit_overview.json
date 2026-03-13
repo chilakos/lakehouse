@@ -1,0 +1,282 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "Audit Trail Overview - Query volume by engine, top users, restricted data access, masked columns, and daily anomaly summary",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "title": "BCBS 239 Compliance",
+      "type": "dashboard",
+      "dashboardUri": "/d/bcbs239-compliance",
+      "icon": "dashboard",
+      "tooltip": "View BCBS 239 compliance dashboard"
+    }
+  ],
+  "panels": [
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "Number of audit queries processed per engine (Trino, Teradata, Snowflake) over time. Shows overall query activity distribution.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 15,
+            "showPoints": "auto"
+          },
+          "unit": "short",
+          "mappings": []
+        }
+      },
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 0 },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": ["sum", "lastNotNull"],
+          "displayMode": "table",
+          "placement": "right"
+        },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Query Volume by Engine",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT date_trunc('hour', timestamp) AS time, engine AS metric, COUNT(*) AS value FROM audit_records WHERE $__timeFilter(timestamp) GROUP BY time, engine ORDER BY time",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "Top 10 users by total query count in the selected time range. High-volume users may require review for data governance purposes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "fillOpacity": 80
+          },
+          "mappings": []
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
+      "id": 2,
+      "options": {
+        "barWidth": 0.7,
+        "groupWidth": 0.7,
+        "legend": { "displayMode": "hidden" },
+        "orientation": "horizontal",
+        "tooltip": { "mode": "single" },
+        "xTickLabelRotation": 0
+      },
+      "title": "Top Users by Query Count",
+      "type": "barchart",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT user_name, COUNT(*) AS query_count FROM audit_records WHERE $__timeFilter(timestamp) GROUP BY user_name ORDER BY query_count DESC LIMIT 10",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "All accesses to the sensitive_ns schema showing user, timestamp, query, and whether access was granted or denied. Review these accesses for compliance.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "access_granted" },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  { "type": "value", "options": { "true": { "color": "green", "text": "Granted" } } },
+                  { "type": "value", "options": { "false": { "color": "red", "text": "Denied" } } }
+                ]
+              },
+              { "id": "custom.displayMode", "value": "color-background" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 8 },
+      "id": 3,
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "timestamp", "desc": true }]
+      },
+      "title": "Restricted Data Access (sensitive_ns)",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT timestamp, user_name, engine, query_id, LEFT(query_text, 200) AS query_preview, access_granted FROM audit_records WHERE $__timeFilter(timestamp) AND tables_accessed::text LIKE '%sensitive_ns%' ORDER BY timestamp DESC LIMIT 100",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "Queries where column-level masking was applied by Ranger policies. These represent accesses to CONFIDENTIAL or RESTRICTED data with masking enforced.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+      "id": 4,
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "timestamp", "desc": true }]
+      },
+      "title": "Masked Column Access Log",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT timestamp, user_name, engine, LEFT(query_text, 150) AS query_preview, masked_columns::text AS masked_columns FROM audit_records WHERE $__timeFilter(timestamp) AND masked_columns != '[]' ORDER BY timestamp DESC LIMIT 50",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "Count of access denied events where access_granted = false. Spikes may indicate misconfigured policies or unauthorized access attempts.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          },
+          "mappings": [],
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 18 },
+      "id": 5,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["sum"] }
+      },
+      "title": "Daily Anomaly Count",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT COUNT(*) AS value FROM audit_records WHERE $__timeFilter(timestamp) AND access_granted = false",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "Daily total queries vs denied queries trend to identify spikes in access denials",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 18 },
+      "id": 8,
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Access Denied Trend",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT date_trunc('day', timestamp) AS time, 'Denied' AS metric, COUNT(*) AS value FROM audit_records WHERE $__timeFilter(timestamp) AND access_granted = false GROUP BY time ORDER BY time",
+          "format": "time_series",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "All access-denied events with user, engine, timestamp, and query text for security review.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "red" },
+          "mappings": []
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 22 },
+      "id": 6,
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "timestamp", "desc": true }]
+      },
+      "title": "Access Denied Events",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT timestamp, user_name, engine, LEFT(query_text, 200) AS query_preview, query_id FROM audit_records WHERE $__timeFilter(timestamp) AND access_granted = false ORDER BY timestamp DESC LIMIT 50",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["audit", "compliance", "security", "governance"],
+  "templating": { "list": [] },
+  "time": { "from": "now-24h", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "Audit Trail Overview",
+  "uid": "audit-overview",
+  "version": 1
+}

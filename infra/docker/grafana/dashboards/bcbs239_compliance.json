@@ -1,0 +1,409 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "BCBS 239 Regulatory Compliance - Lineage with quality overlay for Accuracy, Completeness, and Timeliness",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [
+    {
+      "title": "OpenMetadata Catalog",
+      "type": "link",
+      "url": "http://localhost:8585",
+      "icon": "external link",
+      "tooltip": "Open data catalog for dataset lineage and classification",
+      "targetBlank": true
+    },
+    {
+      "title": "Audit Trail",
+      "type": "dashboard",
+      "dashboardUri": "/d/audit-overview",
+      "icon": "dashboard",
+      "tooltip": "View audit trail overview"
+    }
+  ],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "BCBS 239 - Accuracy",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Data quality scores by dataset showing pass/fail/warn for accuracy checks (null rate, uniqueness, range). Each row is a dataset; columns show quality check results.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.8 },
+              { "color": "green", "value": 0.95 }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "dataset" },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "View in OpenMetadata",
+                    "url": "http://localhost:8585/table/lakehouse-trino.iceberg.${__value.text}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 16, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "showHeader": true,
+        "sortBy": [{ "displayName": "quality_score", "desc": true }]
+      },
+      "title": "Data Quality Scores by Dataset",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "soda_check_results",
+          "legendFormat": "{{dataset}} - {{check_name}}",
+          "refId": "A"
+        }
+      ],
+      "transformations": [
+        { "id": "labelsToFields", "options": { "mode": "columns" } },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "dataset": "Dataset",
+              "check_name": "Check",
+              "Value": "Score"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Quality score trend over the last 30 days showing accuracy evolution per dataset",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "lineWidth": 2,
+            "fillOpacity": 10
+          },
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.8 },
+              { "color": "green", "value": 0.95 }
+            ]
+          }
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 1 },
+      "id": 2,
+      "options": {
+        "legend": { "calcs": ["lastNotNull"], "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
+      },
+      "title": "Quality Score Trend (30 days)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "avg by (dataset) (soda_check_results)",
+          "legendFormat": "{{dataset}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 101,
+      "title": "BCBS 239 - Completeness",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Marquez-API" },
+      "description": "Percentage of gold-layer datasets with complete upstream lineage chains. Queries Marquez lineage API via Infinity plugin.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 60 },
+              { "color": "green", "value": 80 }
+            ]
+          },
+          "unit": "percent",
+          "mappings": []
+        }
+      },
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 10 },
+      "id": 3,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "title": "Lineage Coverage (%)",
+      "type": "stat",
+      "targets": [
+        {
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Marquez-API" },
+          "refId": "A",
+          "type": "json",
+          "url": "http://marquez:5000/api/v1/namespaces/lakehouse/datasets",
+          "root_selector": "datasets",
+          "columns": [
+            { "selector": "name", "text": "dataset", "type": "string" }
+          ]
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Marquez-API" },
+      "description": "Gold-layer datasets missing upstream lineage. Deep-links to OpenMetadata catalog for each dataset.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "fixed", "fixedColor": "orange" },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "dataset" },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "View in OpenMetadata",
+                    "url": "http://localhost:8585/table/lakehouse-trino.iceberg.${__value.text}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 6, "w": 18, "x": 6, "y": 10 },
+      "id": 4,
+      "options": {
+        "showHeader": true
+      },
+      "title": "Missing Lineage Sources",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Marquez-API" },
+          "refId": "A",
+          "type": "json",
+          "url": "http://marquez:5000/api/v1/namespaces/lakehouse/datasets",
+          "root_selector": "datasets",
+          "columns": [
+            { "selector": "name", "text": "dataset", "type": "string" },
+            { "selector": "namespace", "text": "namespace", "type": "string" },
+            { "selector": "description", "text": "description", "type": "string" }
+          ]
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 16 },
+      "id": 102,
+      "title": "BCBS 239 - Timeliness",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "description": "Overall SLA compliance rate for all pipelines over the last 7 days",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.85 },
+              { "color": "green", "value": 0.95 }
+            ]
+          },
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "mappings": []
+        }
+      },
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 17 },
+      "id": 5,
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true,
+        "text": {}
+      },
+      "title": "Pipeline SLA Compliance",
+      "type": "gauge",
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prometheus" },
+          "expr": "sum(rate(airflow_dag_run_duration_count{status=\"success\"}[7d])) / sum(rate(airflow_dag_run_duration_count[7d]))",
+          "legendFormat": "SLA Rate",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "datasource": { "type": "postgres", "uid": "Audit-DB" },
+      "description": "Pipelines that missed their SLA in the last 7 days based on freshness metrics",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 24 }
+            ]
+          },
+          "mappings": []
+        }
+      },
+      "gridPos": { "h": 8, "w": 16, "x": 8, "y": 17 },
+      "id": 6,
+      "options": { "showHeader": true },
+      "title": "Late Pipeline Runs (7 days)",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "postgres", "uid": "Audit-DB" },
+          "rawSql": "SELECT table_name AS \"Table\", status AS \"Status\", hours_since_update AS \"Hours Since Update\", sla_hours AS \"SLA Hours\", checked_at AS \"Checked At\" FROM freshness_metrics WHERE badge_status IN ('yellow', 'red') AND checked_at >= NOW() - INTERVAL '7 days' ORDER BY hours_since_update DESC LIMIT 50",
+          "format": "table",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 25 },
+      "id": 103,
+      "title": "Lineage Explorer",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Marquez-API" },
+      "description": "Dataset lineage graph from Marquez. Select a dataset from the variable dropdown to view its upstream and downstream lineage nodes.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "mappings": []
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "node_id" },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "View in OpenMetadata",
+                    "url": "http://localhost:8585/table/lakehouse-trino.iceberg.${__value.text}",
+                    "targetBlank": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 26 },
+      "id": 7,
+      "options": { "showHeader": true },
+      "title": "Dataset Lineage Graph - $selected_dataset",
+      "type": "table",
+      "targets": [
+        {
+          "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Marquez-API" },
+          "refId": "A",
+          "type": "json",
+          "url": "http://marquez:5000/api/v1-beta/lineage?nodeId=dataset:lakehouse:${selected_dataset}&depth=3",
+          "root_selector": "graph",
+          "columns": [
+            { "selector": "id", "text": "node_id", "type": "string" },
+            { "selector": "type", "text": "node_type", "type": "string" },
+            { "selector": "data.name", "text": "name", "type": "string" },
+            { "selector": "data.namespace", "text": "namespace", "type": "string" }
+          ]
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["bcbs239", "compliance", "lineage", "governance"],
+  "templating": {
+    "list": [
+      {
+        "current": { "text": "gold.trades_daily", "value": "gold.trades_daily" },
+        "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "Marquez-API" },
+        "definition": "http://marquez:5000/api/v1/namespaces/lakehouse/datasets",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Dataset",
+        "multi": false,
+        "name": "selected_dataset",
+        "options": [],
+        "query": {
+          "type": "json",
+          "url": "http://marquez:5000/api/v1/namespaces/lakehouse/datasets",
+          "root_selector": "datasets",
+          "columns": [{ "selector": "name", "text": "Dataset", "type": "string" }]
+        },
+        "refresh": 2,
+        "sort": 1,
+        "type": "query"
+      }
+    ]
+  },
+  "time": { "from": "now-30d", "to": "now" },
+  "timepicker": {},
+  "timezone": "utc",
+  "title": "BCBS 239 Compliance - Regulatory Lineage",
+  "uid": "bcbs239-compliance",
+  "version": 1
+}

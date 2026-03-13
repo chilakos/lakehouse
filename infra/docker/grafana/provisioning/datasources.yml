@@ -9,3 +9,26 @@ datasources:
     editable: false
     jsonData:
       timeInterval: "15s"
+
+  - name: Marquez-API
+    type: yesoreyeram-infinity-datasource
+    access: proxy
+    url: http://marquez:5000
+    editable: true
+    jsonData:
+      auth_method: "noAuth"
+    version: 1
+
+  - name: Audit-DB
+    type: postgres
+    access: proxy
+    url: marquez-db:5432
+    database: marquez
+    user: marquez
+    editable: true
+    secureJsonData:
+      password: marquez
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1500
+      timescaledb: false
