@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md -- Mono-repo structure, Docker Compose local dev environment, Python test infrastructure
 - [x] 01-02-PLAN.md -- Synthetic data generators, Iceberg catalog utilities, schema/partition evolution, table maintenance
-- [ ] 01-03-PLAN.md -- Terraform IaC modules (Nessie, Trino, S3, MinIO, networking), GitHub Actions CI/CD workflows, encryption
+- [x] 01-03-PLAN.md -- Terraform IaC modules (Nessie, Trino, S3, MinIO, networking), GitHub Actions CI/CD workflows, encryption
 - [ ] 01-04-PLAN.md -- Multi-engine query validation (Trino, Teradata OTF, Snowflake), RBAC, LDAP auth, benchmarks
 
 ### Phase 2: ETL Migration and Data Pipeline
@@ -91,7 +91,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation and Feasibility Validation | 2/4 | Executing | - |
+| 1. Foundation and Feasibility Validation | 3/4 | Executing | - |
 | 2. ETL Migration and Data Pipeline | 0/3 | Not started | - |
 | 3. Governance, Security Hardening, and Platform | 0/2 | Not started | - |
 | 4. Semantic Layers and Consumer Migration | 0/2 | Not started | - |
