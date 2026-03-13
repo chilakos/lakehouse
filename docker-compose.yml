@@ -148,6 +148,10 @@ services:
       AIRFLOW__OPENLINEAGE__CONFIG_PATH: ""
       AIRFLOW__PROVIDERS_APACHE_SPARK__INJECT_PARENT_JOB_INFO: "true"
       AIRFLOW__PROVIDERS_APACHE_SPARK__INJECT_TRANSPORT_INFO: "true"
+      AIRFLOW__METRICS__STATSD_ON: "true"
+      AIRFLOW__METRICS__STATSD_HOST: statsd-exporter
+      AIRFLOW__METRICS__STATSD_PORT: "9125"
+      AIRFLOW__METRICS__STATSD_PREFIX: airflow
       OPENLINEAGE_URL: http://marquez:5000
       OPENLINEAGE_NAMESPACE: lakehouse
       NESSIE_URI: http://nessie:19120
@@ -274,8 +278,46 @@ services:
       MARQUEZ_HOST: marquez
       MARQUEZ_PORT: 5000
 
+  # --- Observability stack (Grafana + Prometheus + StatsD) ---
+
+  statsd-exporter:
+    image: prom/statsd-exporter:latest
+    ports:
+      - "9125:9125/udp"
+      - "9102:9102"
+    command:
+      - "--statsd.listen-udp=:9125"
+      - "--web.listen-address=:9102"
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infra/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    depends_on:
+      - statsd-exporter
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - ./infra/docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
 volumes:
   pgdata:
   miniodata:
   airflow-db-data:
   marquez-db-data:
+  prometheus-data:
+  grafana-data:
