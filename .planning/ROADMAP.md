@@ -65,11 +65,13 @@ Plans:
   2. A compliance officer can view end-to-end lineage for any regulated report (BCBS 239) from source system through transformations to final output, with full audit trail of data access across Trino, Teradata, and Snowflake
   3. A business user can search the data catalog, find datasets by name or description, see data profiling statistics, and read business glossary definitions for key terms
   4. Data freshness for key business tables is tracked and visible to business users, with clear indicators of when data was last updated
-**Plans**: TBD
+**Plans**: 4 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
+- [ ] 03-01-PLAN.md -- Ranger deployment, Trino plugin, tag-based column masking, row-level filtering, data classification
+- [ ] 03-02-PLAN.md -- OpenMetadata catalog, Trino ingestion, business glossary, freshness tracking, legacy lineage stubs
+- [ ] 03-03-PLAN.md -- BCBS 239 compliance dashboards, cross-engine audit trail, anomaly detection, freshness monitoring
+- [ ] 03-04-PLAN.md -- End-to-end verification and human approval of Phase 3 deliverables
 
 ### Phase 4: Semantic Layers and Consumer Migration
 **Goal**: BI tools (Tableau, Power BI) query the lakehouse through a unified semantic layer with performance parity to direct Teradata queries, and NL-to-SQL is deployed on curated pilot domains
@@ -94,6 +96,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation and Feasibility Validation | 4/4 | Complete | 2026-03-13 |
-| 2. ETL Migration and Data Pipeline | 4/5 | In Progress|  |
-| 3. Governance, Security Hardening, and Platform | 0/2 | Not started | - |
+| 2. ETL Migration and Data Pipeline | 5/5 | Complete | 2026-03-13 |
+| 3. Governance, Security Hardening, and Platform | 0/4 | Not started | - |
 | 4. Semantic Layers and Consumer Migration | 0/2 | Not started | - |
