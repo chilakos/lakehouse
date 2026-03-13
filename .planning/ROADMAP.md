@@ -47,12 +47,14 @@ Plans:
   3. End-to-end data lineage from source to consumption layer is captured via OpenLineage for every migrated pipeline and viewable in the governance tool
   4. Source-to-lakehouse reconciliation (row counts, checksums, aggregates) confirms data accuracy for all migrated tables
   5. A pipeline observability dashboard shows SLA status, failure rates, and run history for all active Airflow DAGs
-**Plans**: TBD
+**Plans**: 5 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md -- ETL framework core: BasePipeline ABC, medallion layers (Bronze/Silver/Gold), schema validation
+- [ ] 02-02-PLAN.md -- Airflow 3.1.x + Marquez deployment, OpenLineage configuration, DAG infrastructure
+- [ ] 02-03-PLAN.md -- Pilot pipelines (positions, mainframe COBOL), incremental loading, reconciliation tests
+- [ ] 02-04-PLAN.md -- Soda Core quality framework, SodaCL checks, reconciliation, quality alerting
+- [ ] 02-05-PLAN.md -- Production DAGs, job inventory, Grafana dashboard, ETL patterns documentation
 
 ### Phase 3: Governance, Security Hardening, and Platform
 **Goal**: Production-grade security with column-level and row-level controls, regulatory compliance lineage dashboards, data catalog for self-service discovery, and business glossary accessible to business users
@@ -92,6 +94,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation and Feasibility Validation | 3/4 | Executing | - |
-| 2. ETL Migration and Data Pipeline | 0/3 | Not started | - |
+| 2. ETL Migration and Data Pipeline | 0/5 | Not started | - |
 | 3. Governance, Security Hardening, and Platform | 0/2 | Not started | - |
 | 4. Semantic Layers and Consumer Migration | 0/2 | Not started | - |
