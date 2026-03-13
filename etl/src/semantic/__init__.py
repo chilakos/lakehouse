@@ -10,9 +10,16 @@ Provides:
 - nl_to_sql: NLToSQLEngine for generating Trino SQL via Claude on Bedrock.
 - evaluation: Accuracy evaluation framework with golden dataset comparison
   and tiered accuracy thresholds (AISEM-03).
+- cross_tool_validation: Cross-tool metric consistency, glossary linking,
+  and YAML structure validation for CI/CD quality gates.
 """
 
 from src.semantic.benchmark import BenchmarkResult, benchmark_query, generate_benchmark_report
+from src.semantic.cross_tool_validation import (
+    validate_cube_yaml_structure,
+    validate_glossary_links,
+    validate_metric_consistency,
+)
 from src.semantic.evaluation import EvalResult, evaluate_accuracy, generate_evaluation_report, load_golden_dataset
 from src.semantic.metric_context import build_metric_context, load_cube_definitions
 from src.semantic.nl_to_sql import NLToSQLEngine, NLToSQLError
@@ -32,4 +39,7 @@ __all__ = [
     "generate_evaluation_report",
     "load_cube_definitions",
     "load_golden_dataset",
+    "validate_cube_yaml_structure",
+    "validate_glossary_links",
+    "validate_metric_consistency",
 ]

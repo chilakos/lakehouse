@@ -52,6 +52,41 @@ jobs:
       - name: Run unit tests
         run: pytest tests/unit/ -x --tb=short
 
+  cube-yaml-validate:
+    name: Cube YAML Validation
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: etl
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install ".[dev]"
+
+      - name: Validate Cube YAML structure
+        run: |
+          python -c "
+          from src.semantic.cross_tool_validation import validate_cube_yaml_structure
+          result = validate_cube_yaml_structure('../semantic/model')
+          assert result['pass'], f'Cube YAML validation failed: {result[\"errors\"]}'
+          print(f'Cube YAML validation PASSED ({len(result.get(\"errors\", []))} errors)')
+          "
+
+      - name: Validate glossary links
+        run: |
+          python -c "
+          from src.semantic.cross_tool_validation import validate_glossary_links
+          result = validate_glossary_links('../semantic/model', '../infra/docker/openmetadata/glossary-seed.json')
+          assert result['pass'], f'Glossary link validation failed: {result[\"missing_terms\"]}'
+          print(f'Glossary link validation PASSED ({len(result.get(\"valid_links\", []))} valid links)')
+          "
+
   terraform-validate:
     name: Terraform Validate
     runs-on: ubuntu-latest

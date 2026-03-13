@@ -91,6 +91,78 @@
       "reviewers": ["data_steward"],
       "status": "Draft",
       "tags": ["governance", "quality", "monitoring", "sla"]
+    },
+    {
+      "name": "notional_value",
+      "description": "The total dollar value of a trade or position, calculated as price multiplied by quantity. Notional value represents the gross market exposure for a given instrument. Used in trading dashboards for exposure reporting.",
+      "synonyms": ["gross value", "face value", "nominal value"],
+      "relatedTerms": ["Trade", "Position"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["finance", "trading", "metrics", "fsdm"]
+    },
+    {
+      "name": "trade_count",
+      "description": "The total number of individual trade executions in a given grouping (by symbol, side, time period). Trade count is a core activity metric used for volume analysis and operational reporting.",
+      "synonyms": ["execution count", "transaction count"],
+      "relatedTerms": ["Trade"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["finance", "trading", "metrics", "fsdm"]
+    },
+    {
+      "name": "average_price",
+      "description": "The mean execution price across all trades for a given instrument and side. Calculated as a weighted or simple average depending on context. Used for cost basis analysis and execution quality monitoring.",
+      "synonyms": ["avg price", "mean price", "VWAP"],
+      "relatedTerms": ["Trade", "notional_value"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["finance", "trading", "metrics", "fsdm"]
+    },
+    {
+      "name": "market_value",
+      "description": "The current market value of a position, calculated as quantity multiplied by the current market price per unit. Market value represents the mark-to-market exposure for portfolio valuation and risk reporting.",
+      "synonyms": ["mark-to-market", "fair value", "current value"],
+      "relatedTerms": ["Position", "notional_value"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["finance", "risk", "metrics", "fsdm"]
+    },
+    {
+      "name": "var_95",
+      "description": "Value at Risk at 95% confidence level. The maximum expected loss over a specified time horizon such that there is a 95% probability the actual loss will not exceed this amount. A core risk metric required by BCBS 239 for risk reporting.",
+      "synonyms": ["VaR 95", "value-at-risk 95"],
+      "relatedTerms": ["var_99", "expected_shortfall", "BCBS 239"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["finance", "risk", "metrics", "fsdm"]
+    },
+    {
+      "name": "var_99",
+      "description": "Value at Risk at 99% confidence level. The maximum expected loss over a specified time horizon such that there is a 99% probability the actual loss will not exceed this amount. More conservative than VaR 95, used for stress testing and regulatory capital calculations.",
+      "synonyms": ["VaR 99", "value-at-risk 99"],
+      "relatedTerms": ["var_95", "expected_shortfall", "BCBS 239"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["finance", "risk", "metrics", "fsdm"]
+    },
+    {
+      "name": "expected_shortfall",
+      "description": "Expected Shortfall (Conditional VaR) measures the average loss in the tail beyond the VaR threshold. Captures the severity of tail risk events. ES is considered a more coherent risk measure than VaR and is increasingly required by regulators.",
+      "synonyms": ["CVaR", "conditional VaR", "tail VaR"],
+      "relatedTerms": ["var_95", "var_99", "BCBS 239"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["finance", "risk", "metrics", "fsdm"]
+    },
+    {
+      "name": "position_count",
+      "description": "The total number of open positions in a given grouping (by account, sector, currency). Used for portfolio concentration analysis, diversification monitoring, and capacity planning.",
+      "synonyms": ["holding count", "open positions"],
+      "relatedTerms": ["Position", "market_value"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["finance", "risk", "metrics", "fsdm"]
     }
   ]
 }
