@@ -1,0 +1,82 @@
+[
+  {
+    "question": "What is the total market value for account ACCT-1234?",
+    "sql": "SELECT SUM(total_market_value) FROM gold.risk_exposure WHERE account_id = 'ACCT-1234'",
+    "complexity": "simple"
+  },
+  {
+    "question": "What is the VaR 95 for the Technology sector?",
+    "sql": "SELECT SUM(total_var_95) FROM gold.risk_exposure WHERE sector = 'Technology'",
+    "complexity": "simple"
+  },
+  {
+    "question": "How many positions does account ACCT-5678 have?",
+    "sql": "SELECT SUM(position_count) FROM gold.risk_exposure WHERE account_id = 'ACCT-5678'",
+    "complexity": "simple"
+  },
+  {
+    "question": "What is the total expected shortfall in USD?",
+    "sql": "SELECT SUM(total_expected_shortfall) FROM gold.risk_exposure WHERE currency = 'USD'",
+    "complexity": "simple"
+  },
+  {
+    "question": "What is the VaR 99 for the Finance sector?",
+    "sql": "SELECT SUM(total_var_99) FROM gold.risk_exposure WHERE sector = 'Finance'",
+    "complexity": "simple"
+  },
+  {
+    "question": "What is the total market value across all accounts?",
+    "sql": "SELECT SUM(total_market_value) FROM gold.risk_exposure",
+    "complexity": "simple"
+  },
+  {
+    "question": "How many total positions are there in EUR?",
+    "sql": "SELECT SUM(position_count) FROM gold.risk_exposure WHERE currency = 'EUR'",
+    "complexity": "simple"
+  },
+  {
+    "question": "What is the VaR 95 for account ACCT-1234 in the Technology sector?",
+    "sql": "SELECT SUM(total_var_95) FROM gold.risk_exposure WHERE account_id = 'ACCT-1234' AND sector = 'Technology'",
+    "complexity": "simple"
+  },
+  {
+    "question": "Which sector has the highest expected shortfall?",
+    "sql": "SELECT sector, SUM(total_expected_shortfall) AS es FROM gold.risk_exposure GROUP BY sector ORDER BY es DESC LIMIT 1",
+    "complexity": "complex"
+  },
+  {
+    "question": "Compare VaR 95 vs VaR 99 by currency.",
+    "sql": "SELECT currency, SUM(total_var_95) AS var_95, SUM(total_var_99) AS var_99 FROM gold.risk_exposure GROUP BY currency",
+    "complexity": "complex"
+  },
+  {
+    "question": "What accounts have more than 10 positions?",
+    "sql": "SELECT account_id, SUM(position_count) AS positions FROM gold.risk_exposure GROUP BY account_id HAVING SUM(position_count) > 10",
+    "complexity": "complex"
+  },
+  {
+    "question": "Rank sectors by total market value descending.",
+    "sql": "SELECT sector, SUM(total_market_value) AS total_mv FROM gold.risk_exposure GROUP BY sector ORDER BY total_mv DESC",
+    "complexity": "complex"
+  },
+  {
+    "question": "What is the total market value and position count by sector and currency?",
+    "sql": "SELECT sector, currency, SUM(total_market_value) AS total_mv, SUM(position_count) AS positions FROM gold.risk_exposure GROUP BY sector, currency",
+    "complexity": "complex"
+  },
+  {
+    "question": "Which accounts have a VaR 99 exceeding their VaR 95?",
+    "sql": "SELECT account_id, SUM(total_var_95) AS var_95, SUM(total_var_99) AS var_99 FROM gold.risk_exposure GROUP BY account_id HAVING SUM(total_var_99) > SUM(total_var_95)",
+    "complexity": "complex"
+  },
+  {
+    "question": "What is the average expected shortfall per position by sector?",
+    "sql": "SELECT sector, SUM(total_expected_shortfall) / NULLIF(SUM(position_count), 0) AS es_per_position FROM gold.risk_exposure GROUP BY sector",
+    "complexity": "complex"
+  },
+  {
+    "question": "What are the top 3 accounts by total market value?",
+    "sql": "SELECT account_id, SUM(total_market_value) AS total_mv FROM gold.risk_exposure GROUP BY account_id ORDER BY total_mv DESC LIMIT 3",
+    "complexity": "complex"
+  }
+]

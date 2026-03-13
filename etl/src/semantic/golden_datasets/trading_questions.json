@@ -1,0 +1,82 @@
+[
+  {
+    "question": "What is the total notional value for AAPL?",
+    "sql": "SELECT SUM(total_notional) FROM gold.trading_metrics WHERE symbol = 'AAPL'",
+    "complexity": "simple"
+  },
+  {
+    "question": "How many BUY trades are there?",
+    "sql": "SELECT SUM(trade_count) FROM gold.trading_metrics WHERE side = 'BUY'",
+    "complexity": "simple"
+  },
+  {
+    "question": "What is the average price for JPM?",
+    "sql": "SELECT AVG(avg_price) FROM gold.trading_metrics WHERE symbol = 'JPM'",
+    "complexity": "simple"
+  },
+  {
+    "question": "What is the total trade count for MSFT?",
+    "sql": "SELECT SUM(trade_count) FROM gold.trading_metrics WHERE symbol = 'MSFT'",
+    "complexity": "simple"
+  },
+  {
+    "question": "What is the total notional for SELL trades?",
+    "sql": "SELECT SUM(total_notional) FROM gold.trading_metrics WHERE side = 'SELL'",
+    "complexity": "simple"
+  },
+  {
+    "question": "What is the average price for GOOGL BUY trades?",
+    "sql": "SELECT AVG(avg_price) FROM gold.trading_metrics WHERE symbol = 'GOOGL' AND side = 'BUY'",
+    "complexity": "simple"
+  },
+  {
+    "question": "How many SELL trades are there for TSLA?",
+    "sql": "SELECT SUM(trade_count) FROM gold.trading_metrics WHERE symbol = 'TSLA' AND side = 'SELL'",
+    "complexity": "simple"
+  },
+  {
+    "question": "What is the total notional across all symbols?",
+    "sql": "SELECT SUM(total_notional) FROM gold.trading_metrics",
+    "complexity": "simple"
+  },
+  {
+    "question": "What symbol has the highest total notional?",
+    "sql": "SELECT symbol, SUM(total_notional) AS total FROM gold.trading_metrics GROUP BY symbol ORDER BY total DESC LIMIT 1",
+    "complexity": "complex"
+  },
+  {
+    "question": "Which symbols have more than 100 trades?",
+    "sql": "SELECT symbol, SUM(trade_count) AS trades FROM gold.trading_metrics GROUP BY symbol HAVING SUM(trade_count) > 100",
+    "complexity": "complex"
+  },
+  {
+    "question": "Compare BUY vs SELL total notional for all symbols.",
+    "sql": "SELECT symbol, side, SUM(total_notional) AS total FROM gold.trading_metrics GROUP BY symbol, side ORDER BY symbol, side",
+    "complexity": "complex"
+  },
+  {
+    "question": "Rank symbols by average price descending.",
+    "sql": "SELECT symbol, AVG(avg_price) AS avg_px FROM gold.trading_metrics GROUP BY symbol ORDER BY avg_px DESC",
+    "complexity": "complex"
+  },
+  {
+    "question": "What is the total notional and trade count for each symbol?",
+    "sql": "SELECT symbol, SUM(total_notional) AS total_notional, SUM(trade_count) AS trades FROM gold.trading_metrics GROUP BY symbol",
+    "complexity": "complex"
+  },
+  {
+    "question": "Which symbols have a higher BUY notional than SELL notional?",
+    "sql": "SELECT b.symbol FROM (SELECT symbol, SUM(total_notional) AS buy_notional FROM gold.trading_metrics WHERE side = 'BUY' GROUP BY symbol) b JOIN (SELECT symbol, SUM(total_notional) AS sell_notional FROM gold.trading_metrics WHERE side = 'SELL' GROUP BY symbol) s ON b.symbol = s.symbol WHERE b.buy_notional > s.sell_notional",
+    "complexity": "complex"
+  },
+  {
+    "question": "What percentage of total trades are BUY trades for each symbol?",
+    "sql": "SELECT symbol, CAST(SUM(CASE WHEN side = 'BUY' THEN trade_count ELSE 0 END) AS DECIMAL) * 100 / SUM(trade_count) AS buy_pct FROM gold.trading_metrics GROUP BY symbol",
+    "complexity": "complex"
+  },
+  {
+    "question": "What are the top 3 symbols by trade count?",
+    "sql": "SELECT symbol, SUM(trade_count) AS trades FROM gold.trading_metrics GROUP BY symbol ORDER BY trades DESC LIMIT 3",
+    "complexity": "complex"
+  }
+]
