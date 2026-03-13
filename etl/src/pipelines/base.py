@@ -182,18 +182,39 @@ class BasePipeline(ABC):
         df.writeTo(table_name).append()
 
     def run_quality_checks(self, df: DataFrame) -> dict[str, Any]:
-        """Run data quality checks on the DataFrame.
+        """Run data quality checks on the DataFrame using Soda Core.
 
-        Placeholder implementation returning passing results.
-        Real Soda Core integration comes in Plan 04.
+        Calls run_soda_checks() from the quality scanner module with the
+        pipeline's configured checks_yaml_path and critical_checks list.
+        Falls back to a passing placeholder if Soda Core is not installed
+        or no quality_checks_path is configured.
 
         Args:
             df: DataFrame to check.
 
         Returns:
-            Dict with passed (bool), critical_failures (list), warnings (list).
+            Dict with passed (bool), critical_failures (list), warnings (list),
+            and all_results (list of QualityCheckResult).
         """
-        return {"passed": True, "critical_failures": [], "warnings": []}
+        if not self.config.quality_checks_path:
+            self.logger.info("No quality_checks_path configured, skipping Soda checks")
+            return {"passed": True, "critical_failures": [], "warnings": [], "all_results": []}
+
+        try:
+            from src.quality.scanner import run_soda_checks
+
+            return run_soda_checks(
+                spark_session=self.spark,
+                df=df,
+                checks_yaml_path=self.config.quality_checks_path,
+                critical_check_names=self.config.critical_checks,
+            )
+        except ImportError:
+            self.logger.warning(
+                "soda-core not installed, returning placeholder quality results. "
+                "Install soda-core-spark-df to enable quality gates."
+            )
+            return {"passed": True, "critical_failures": [], "warnings": [], "all_results": []}
 
     def execute(self) -> dict[str, Any]:
         """Orchestrate the full pipeline: extract -> transform -> validate -> write.
