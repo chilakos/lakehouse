@@ -47,7 +47,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **GOVN-01**: End-to-end data lineage captured via OpenLineage from source to consumption layer
 - [ ] **GOVN-02**: Lineage visualization available for regulatory reporting (BCBS 239, SOX compliance)
-- [ ] **GOVN-03**: Data classification and sensitivity labeling applied to PII and regulated financial data
+- [x] **GOVN-03**: Data classification and sensitivity labeling applied to PII and regulated financial data
 - [ ] **GOVN-04**: Business glossary with data definitions accessible to business users
 - [ ] **GOVN-05**: Audit trail capturing all data access across Trino, Teradata, and Snowflake
 
@@ -55,8 +55,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **SEC-01**: SSO/LDAP/Active Directory authentication integrated with Trino
 - [ ] **SEC-02**: Role-based access control (RBAC) enforced on catalogs, schemas, and tables
-- [ ] **SEC-03**: Column-level security (masking PII and sensitive financial fields) via Apache Ranger
-- [ ] **SEC-04**: Row-level security for multi-business-unit data access via Apache Ranger
+- [x] **SEC-03**: Column-level security (masking PII and sensitive financial fields) via Apache Ranger
+- [x] **SEC-04**: Row-level security for multi-business-unit data access via Apache Ranger
 - [x] **SEC-05**: Encryption at rest (S3 SSE-KMS, MinIO equivalent) for all Iceberg data
 - [x] **SEC-06**: Encryption in transit (TLS) for all data movement and query traffic
 
@@ -155,13 +155,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CICD-04 | Phase 1 | Complete (01-01) |
 | GOVN-01 | Phase 2 | Complete |
 | GOVN-02 | Phase 3 | Pending |
-| GOVN-03 | Phase 3 | Pending |
+| GOVN-03 | Phase 3 | Complete |
 | GOVN-04 | Phase 3 | Pending |
 | GOVN-05 | Phase 3 | Pending |
 | SEC-01 | Phase 1 | Pending |
 | SEC-02 | Phase 1 | Pending |
-| SEC-03 | Phase 3 | Pending |
-| SEC-04 | Phase 3 | Pending |
+| SEC-03 | Phase 3 | Complete |
+| SEC-04 | Phase 3 | Complete |
 | SEC-05 | Phase 1 | Complete (01-03) |
 | SEC-06 | Phase 1 | Complete (01-03) |
 | QUAL-01 | Phase 2 | Complete |
