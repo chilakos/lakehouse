@@ -99,4 +99,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4
 | 1. Foundation and Feasibility Validation | 4/4 | Complete | 2026-03-13 |
 | 2. ETL Migration and Data Pipeline | 5/5 | Complete | 2026-03-13 |
 | 3. Governance, Security Hardening, and Platform | 4/4 | Complete   | 2026-03-13 |
-| 4. Semantic Layers and Consumer Migration | 0/3 | Not started | - |
+| 4. Semantic Layers and Consumer Migration | 2/3 | In Progress|  |

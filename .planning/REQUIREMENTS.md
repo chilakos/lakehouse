@@ -76,9 +76,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### AI Semantic Layer
 
-- [ ] **AISEM-01**: NL-to-SQL capability deployed on curated high-confidence data domains
-- [ ] **AISEM-02**: NL-to-SQL leverages BI semantic layer definitions for accuracy
-- [ ] **AISEM-03**: NL-to-SQL accuracy benchmarked and meeting target threshold on pilot domains
+- [x] **AISEM-01**: NL-to-SQL capability deployed on curated high-confidence data domains
+- [x] **AISEM-02**: NL-to-SQL leverages BI semantic layer definitions for accuracy
+- [x] **AISEM-03**: NL-to-SQL accuracy benchmarked and meeting target threshold on pilot domains
 
 ### Self-Service & Observability
 
@@ -172,9 +172,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BISEM-02 | Phase 4 | Complete |
 | BISEM-03 | Phase 4 | Complete |
 | BISEM-04 | Phase 4 | Complete |
-| AISEM-01 | Phase 4 | Pending |
-| AISEM-02 | Phase 4 | Pending |
-| AISEM-03 | Phase 4 | Pending |
+| AISEM-01 | Phase 4 | Complete |
+| AISEM-02 | Phase 4 | Complete |
+| AISEM-03 | Phase 4 | Complete |
 | PLAT-01 | Phase 3 | Complete |
 | PLAT-02 | Phase 2 | Pending |
 | PLAT-03 | Phase 3 | Complete |
