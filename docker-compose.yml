@@ -417,6 +417,86 @@ services:
       timeout: 5s
       retries: 3
 
+  # --- OpenMetadata data catalog services ---
+
+  om-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: openmetadata
+      POSTGRES_USER: openmetadata
+      POSTGRES_PASSWORD: openmetadata_dev
+    ports:
+      - "5436:5432"
+    volumes:
+      - om-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U openmetadata -d openmetadata"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  openmetadata-server:
+    image: docker.getcollate.io/openmetadata/server:1.6.0
+    ports:
+      - "8585:8585"
+    mem_limit: 6g
+    environment:
+      DB_HOST: om-db
+      DB_PORT: "5432"
+      DB_USER: openmetadata
+      DB_PASSWORD: openmetadata_dev
+      DB_DRIVER_CLASS: org.postgresql.Driver
+      DB_SCHEME: postgresql
+      SERVER_HOST_API_URL: http://openmetadata-server:8585/api
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: "9200"
+      ELASTICSEARCH_SCHEME: http
+      PIPELINE_SERVICE_CLIENT_ENDPOINT: http://openmetadata-ingestion:8086
+      LOG_LEVEL: INFO
+    depends_on:
+      om-db:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8585/healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+
+  openmetadata-ingestion:
+    image: docker.getcollate.io/openmetadata/ingestion:1.6.0
+    ports:
+      - "8086:8080"
+    mem_limit: 8g
+    environment:
+      OPENMETADATA_SERVER_URL: http://openmetadata-server:8585/api
+      LOG_LEVEL: INFO
+    depends_on:
+      openmetadata-server:
+        condition: service_healthy
+    volumes:
+      - ./infra/docker/openmetadata/connectors:/home/airflow/connectors:ro
+
 volumes:
   pgdata:
   miniodata:
@@ -425,3 +505,5 @@ volumes:
   prometheus-data:
   grafana-data:
   ranger-db-data:
+  om-db-data:
+  es-data:

@@ -1,0 +1,96 @@
+{
+  "glossaryName": "FSDM Business Glossary",
+  "description": "Financial Services Data Model (FSDM) business glossary seeded from industry-standard definitions. Terms cover core financial domain concepts, data governance policies, and lakehouse architecture layers.",
+  "terms": [
+    {
+      "name": "Trade",
+      "description": "A financial transaction involving buying or selling a security, derivative, or other financial instrument. Trades have a trade date, settlement date, price, quantity, and counterparty. In the lakehouse, raw trade data arrives in the bronze layer and is standardized in silver.",
+      "synonyms": ["transaction", "deal", "execution"],
+      "relatedTerms": ["Position", "Counterparty", "Settlement"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["finance", "trading", "fsdm"]
+    },
+    {
+      "name": "Position",
+      "description": "The amount of a security or financial instrument held by an entity at a specific point in time. A position is the net result of all trades in a given security. Can be long (owned) or short (borrowed and sold). Positions are tracked daily in the gold layer.",
+      "synonyms": ["holding", "exposure"],
+      "relatedTerms": ["Trade", "Business Unit", "Risk Metrics"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["finance", "risk", "fsdm"]
+    },
+    {
+      "name": "Business Unit",
+      "description": "An organizational division or segment of the firm that operates with its own profit and loss responsibility. Common business units include Wealth Management, Investment Banking, Risk Management, and Retail Banking. Business units are used to partition data access and ownership in the lakehouse.",
+      "synonyms": ["division", "department", "desk"],
+      "relatedTerms": ["Trade", "Position"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["organization", "governance", "fsdm"]
+    },
+    {
+      "name": "PII",
+      "description": "Personally Identifiable Information -- any data that could be used to identify a specific individual. Subject to data protection regulations including GDPR, CCPA, and industry-specific rules. In the lakehouse, PII columns are automatically classified via regex rules and masked for non-privileged users.",
+      "synonyms": ["personal data", "sensitive personal information"],
+      "relatedTerms": ["BCBS 239", "Data Freshness"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["privacy", "compliance", "governance"]
+    },
+    {
+      "name": "BCBS 239",
+      "description": "Basel Committee on Banking Supervision Principles for Effective Risk Data Aggregation and Risk Reporting (BCBS 239). Requires financial institutions to have strong risk data aggregation capabilities and internal risk reporting practices. The lakehouse supports BCBS 239 compliance through end-to-end data lineage tracking via OpenLineage/Marquez.",
+      "synonyms": ["Basel 239", "RDARR principles"],
+      "relatedTerms": ["SLA", "Data Freshness", "Bronze Layer"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["compliance", "regulation", "risk", "fsdm"]
+    },
+    {
+      "name": "Bronze Layer",
+      "description": "The first layer of the medallion architecture. Contains raw ingested data with minimal transformation -- primarily format conversion (e.g., CSV/JSON to Iceberg Parquet). Data in the bronze layer preserves the original source schema and values. Schema may reflect source system quirks. Retention: typically 7 years for regulatory compliance.",
+      "synonyms": ["raw layer", "landing zone", "staging layer"],
+      "relatedTerms": ["Silver Layer", "Gold Layer", "Data Freshness"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["architecture", "medallion", "data-lake"]
+    },
+    {
+      "name": "Silver Layer",
+      "description": "The second layer of the medallion architecture. Contains cleansed, validated, and standardized data. Source-system quirks are resolved (e.g., date formats normalized, NULL handling applied), and FSDM schema conformance is enforced. Used for cross-source joins and analytical queries.",
+      "synonyms": ["cleansed layer", "conformed layer", "standardized layer"],
+      "relatedTerms": ["Bronze Layer", "Gold Layer", "SLA"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["architecture", "medallion", "data-lake"]
+    },
+    {
+      "name": "Gold Layer",
+      "description": "The third layer of the medallion architecture. Contains business-ready aggregated data, denormalized for analytical consumption. Gold tables are optimized for BI tools, AI/ML features, and API consumption. These datasets represent the single, governed copy of truth for business metrics.",
+      "synonyms": ["business layer", "serving layer", "analytical layer"],
+      "relatedTerms": ["Silver Layer", "SLA", "Data Freshness"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["architecture", "medallion", "data-lake", "analytics"]
+    },
+    {
+      "name": "Data Freshness",
+      "description": "The time elapsed since the last successful data update for a given dataset. Data freshness is tracked per table using traffic-light SLA status: GREEN (within expected interval), YELLOW (past warning threshold), RED (stale -- past critical threshold). Freshness dashboards are visible in Grafana and the OpenMetadata catalog.",
+      "synonyms": ["data recency", "data currency", "data latency"],
+      "relatedTerms": ["SLA", "Bronze Layer", "Silver Layer", "Gold Layer"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["quality", "monitoring", "governance", "sla"]
+    },
+    {
+      "name": "SLA",
+      "description": "Service Level Agreement for data delivery timeliness. Each dataset in the lakehouse has a defined SLA specifying the expected update interval and thresholds for warning (YELLOW) and critical (RED) status. SLA breaches trigger alerts via Grafana. Default SLAs: Gold 24h expected/48h critical, Silver 12h/24h, Bronze 6h/12h.",
+      "synonyms": ["service level", "timeliness requirement", "data contract"],
+      "relatedTerms": ["Data Freshness", "BCBS 239"],
+      "reviewers": ["data_steward"],
+      "status": "Draft",
+      "tags": ["governance", "quality", "monitoring", "sla"]
+    }
+  ]
+}

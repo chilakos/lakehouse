@@ -1,0 +1,28 @@
+# OpenMetadata Docker Compose override file
+#
+# Usage: docker compose -f docker-compose.yml -f infra/docker/openmetadata/docker-compose-override.yml up
+#
+# This file provides environment-specific tuning for OpenMetadata services.
+# Used for local dev overrides, production environment promotions, or
+# custom authentication configuration.
+#
+# Example: Override with production Elasticsearch credentials
+# services:
+#   openmetadata-server:
+#     environment:
+#       ELASTICSEARCH_HOST: prod-es.internal
+#       ELASTICSEARCH_PORT: "9200"
+
+services:
+  openmetadata-server:
+    environment:
+      # Override LOG_LEVEL for verbose debugging
+      LOG_LEVEL: DEBUG
+      # JWT signing key for local dev (change in production)
+      RSA_PUBLIC_KEY_FILE_PATH: ""
+      RSA_PRIVATE_KEY_FILE_PATH: ""
+
+  openmetadata-ingestion:
+    environment:
+      # Override log level for ingestion debugging
+      LOG_LEVEL: DEBUG

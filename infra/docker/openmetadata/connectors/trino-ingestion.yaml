@@ -1,0 +1,46 @@
+# OpenMetadata Trino connector ingestion configuration
+# Ingests table metadata from bronze, silver, and gold schemas.
+#
+# Usage:
+#   metadata ingest -c trino-ingestion.yaml
+#
+# Prerequisites:
+#   1. OpenMetadata server is running at http://openmetadata-server:8585
+#   2. Generate INGESTION_BOT_JWT from OpenMetadata UI:
+#      Settings > Bots > ingestion-bot > Generate New Token
+#   3. Replace <INGESTION_BOT_JWT> with the generated token
+
+source:
+  type: trino
+  serviceName: lakehouse-trino
+  serviceConnection:
+    config:
+      type: Trino
+      hostPort: trino:8080
+      username: admin
+      catalog: iceberg
+  sourceConfig:
+    config:
+      type: DatabaseMetadata
+      includeTables: true
+      includeViews: true
+      includeStoredProcedures: false
+      includeTags: true
+      schemaFilterPattern:
+        includes:
+          - "bronze.*"
+          - "silver.*"
+          - "gold.*"
+
+sink:
+  type: metadata-rest
+  config:
+    api_endpoint: http://openmetadata-server:8585/api
+
+workflowConfig:
+  openMetadataServerConfig:
+    hostPort: http://openmetadata-server:8585/api
+    authProvider: openmetadata
+    securityConfig:
+      jwtToken: "<INGESTION_BOT_JWT>"
+  loggerLevel: INFO
