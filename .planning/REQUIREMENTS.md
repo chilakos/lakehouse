@@ -29,10 +29,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### ETL & Ingestion
 
 - [x] **ETL-01**: Python ETL framework established using PySpark + PyIceberg for Iceberg writes
-- [ ] **ETL-02**: Pilot ETL migration of 5-10 representative DataStage jobs to Python
-- [ ] **ETL-03**: Mainframe source connectivity validated in Python (COBOL copybook parsing, DB2 z/OS, flat files)
+- [x] **ETL-02**: Pilot ETL migration of 5-10 representative DataStage jobs to Python
+- [x] **ETL-03**: Mainframe source connectivity validated in Python (COBOL copybook parsing, DB2 z/OS, flat files)
 - [x] **ETL-04**: Apache Airflow deployed for workflow orchestration with DAG dependency management
-- [ ] **ETL-05**: Incremental/delta loading patterns implemented (watermark-based, CDC where available)
+- [x] **ETL-05**: Incremental/delta loading patterns implemented (watermark-based, CDC where available)
 - [ ] **ETL-06**: Standardized ETL patterns documented and reusable across 40+ engineer team
 - [ ] **ETL-07**: Full DataStage job inventory cataloged with complexity classification (simple/medium/complex)
 
@@ -143,10 +143,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | QUERY-05 | Phase 1 | Pending |
 | QUERY-06 | Phase 1 | Pending |
 | ETL-01 | Phase 2 | Complete |
-| ETL-02 | Phase 2 | Pending |
-| ETL-03 | Phase 2 | Pending |
+| ETL-02 | Phase 2 | Complete |
+| ETL-03 | Phase 2 | Complete |
 | ETL-04 | Phase 2 | Complete |
-| ETL-05 | Phase 2 | Pending |
+| ETL-05 | Phase 2 | Complete |
 | ETL-06 | Phase 2 | Pending |
 | ETL-07 | Phase 2 | Pending |
 | CICD-01 | Phase 1 | Complete (01-01) |

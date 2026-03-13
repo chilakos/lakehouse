@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-13T13:50:41.307Z"
-last_activity: 2026-03-13 -- Plan 02-02 executed (Airflow + Marquez + OpenLineage)
+stopped_at: Completed 02-03-PLAN.md
+last_updated: "2026-03-13T15:44:30.000Z"
+last_activity: 2026-03-13 -- Plan 02-03 executed (Pilot pipelines + incremental loading)
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 9
-  completed_plans: 6
-  percent: 46
+  completed_plans: 7
+  percent: 54
 ---
 
 # Project State
@@ -21,37 +21,38 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
-**Current focus:** Phase 2: ETL Migration and Data Pipeline -- executing Plan 3 of 5
+**Current focus:** Phase 2: ETL Migration and Data Pipeline -- executing Plan 4 of 5
 
 ## Current Position
 
 Phase: 2 of 4 (ETL Migration and Data Pipeline) -- EXECUTING
-Plan: 3 of 5 in current phase (2 complete)
+Plan: 4 of 5 in current phase (3 complete)
 Status: Executing Phase 2
-Last activity: 2026-03-13 -- Plan 02-02 executed (Airflow + Marquez + OpenLineage)
+Last activity: 2026-03-13 -- Plan 02-03 executed (Pilot pipelines + incremental loading)
 
-Progress: [#####░░░░░] 46%
+Progress: [######░░░░] 54%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6
-- Average duration: 11 min
-- Total execution time: 1.1 hours
+- Total plans completed: 7
+- Average duration: 10 min
+- Total execution time: 1.2 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 4 | 51 min | 13 min |
-| 2 | 2 | 15 min | 8 min |
+| 2 | 3 | 19 min | 6 min |
 
 **Recent Trend:**
-- Last 5 plans: 11min, 12min, 18min, 10min, 5min
+- Last 5 plans: 12min, 18min, 10min, 5min, 4min
 - Trend: improving
 
 *Updated after each plan completion*
 | Phase 02 P01 | 7 | 2 tasks | 13 files |
+| Phase 02 P03 | 4 | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,10 @@ Recent decisions affecting current work:
 - [Phase 02]: 02-01: Top-level PySpark function imports for mock.patch testability
 - [Phase 02]: 02-01: Schema validation allows nullable differences, rejects missing/wrong-typed columns
 - [Phase 02]: 02-01: Gold metrics use DecimalType(38,4) for financial precision through aggregation
+- [Phase 02]: 02-03: Positions Silver dedup partitions by position_id+as_of_date (entity-centric)
+- [Phase 02]: 02-03: MainframeBronzePipeline overrides validate_schema() (Cobrix derives schema from copybook at runtime)
+- [Phase 02]: 02-03: merge_incremental uses temporary view + MERGE INTO SQL for Iceberg upserts
+- [Phase 02]: 02-03: Mainframe table name derived from copybook filename for multi-source support
 
 ### Pending Todos
 
@@ -110,6 +115,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T13:50:34.343Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-03-13T15:44:30Z
+Stopped at: Completed 02-03-PLAN.md
 Resume file: None
