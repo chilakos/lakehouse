@@ -24,6 +24,7 @@ def get_spark_session(
     warehouse: str | None = None,
     s3_endpoint: str | None = None,
     app_name: str = "lakehouse-etl",
+    enable_lineage: bool = False,
 ) -> SparkSession:
     """Create a SparkSession configured for Iceberg with Nessie REST catalog.
 
@@ -35,6 +36,9 @@ def get_spark_session(
         warehouse: Iceberg warehouse name. Defaults to NESSIE_WAREHOUSE env var or "lakehouse".
         s3_endpoint: S3-compatible endpoint URL (for MinIO). None for AWS S3.
         app_name: Spark application name.
+        enable_lineage: When True, adds OpenLineage Spark agent config for lineage
+                        capture. Requires Marquez or compatible backend running.
+                        Defaults to False to avoid breaking tests without Marquez.
 
     Returns:
         Configured SparkSession with Iceberg REST catalog named "lakehouse".
@@ -44,11 +48,20 @@ def get_spark_session(
     if warehouse is None:
         warehouse = os.environ.get("NESSIE_WAREHOUSE", "lakehouse")
 
+    # Base Iceberg Spark runtime package
+    packages = ["org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.7.1"]
+
+    # Add OpenLineage Spark agent package when lineage is enabled
+    if enable_lineage:
+        from src.lineage.config import OPENLINEAGE_SPARK_PACKAGE
+
+        packages.append(OPENLINEAGE_SPARK_PACKAGE)
+
     builder = (
         SparkSession.builder.appName(app_name)
         .config(
             "spark.jars.packages",
-            "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.7.1",
+            ",".join(packages),
         )
         .config(
             "spark.sql.extensions",
@@ -74,6 +87,13 @@ def get_spark_session(
             .config("spark.sql.catalog.lakehouse.s3.secret-access-key", secret_key)
             .config("spark.sql.catalog.lakehouse.s3.path-style-access", "true")
         )
+
+    # Apply OpenLineage Spark listener and transport config
+    if enable_lineage:
+        from src.lineage.config import get_openlineage_spark_config
+
+        for key, value in get_openlineage_spark_config().items():
+            builder = builder.config(key, value)
 
     return builder.master("local[*]").getOrCreate()
 

@@ -87,6 +87,103 @@ services:
       retries: 30
       start_period: 15s
 
+  # --- Airflow services (test) ---
+
+  airflow-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  airflow-init:
+    build:
+      context: ./infra/docker/airflow
+      dockerfile: Dockerfile
+    entrypoint: >
+      /bin/bash -c "
+      airflow db migrate &&
+      airflow users create
+        --username admin
+        --password admin
+        --firstname Admin
+        --lastname User
+        --role Admin
+        --email admin@example.com || true &&
+      echo 'Airflow init complete'
+      "
+    environment: &airflow-test-env
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow-db:5432/airflow
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://airflow:airflow@airflow-db:5432/airflow
+      AIRFLOW__OPENLINEAGE__TRANSPORT: '{"type": "http", "url": "http://marquez:5000", "endpoint": "api/v1/lineage"}'
+      AIRFLOW__OPENLINEAGE__NAMESPACE: lakehouse
+      AIRFLOW__OPENLINEAGE__CONFIG_PATH: ""
+      OPENLINEAGE_URL: http://marquez:5000
+      OPENLINEAGE_NAMESPACE: lakehouse
+      NESSIE_URI: http://nessie:19120
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: admin
+      MINIO_SECRET_KEY: admin123456
+    depends_on:
+      airflow-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # --- Marquez (test) ---
+
+  marquez-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: marquez
+      POSTGRES_USER: marquez
+      POSTGRES_PASSWORD: marquez
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marquez -d marquez"]
+      interval: 2s
+      timeout: 3s
+      retries: 10
+
+  marquez:
+    image: marquezproject/marquez:0.50.0
+    depends_on:
+      marquez-db:
+        condition: service_healthy
+    environment:
+      MARQUEZ_PORT: 5000
+      MARQUEZ_ADMIN_PORT: 5001
+      POSTGRES_HOST: marquez-db
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: marquez
+      POSTGRES_USER: marquez
+      POSTGRES_PASSWORD: marquez
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/namespaces"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+
   test-runner:
     image: python:3.11-slim
     depends_on:
@@ -106,6 +203,8 @@ services:
       MINIO_SECRET_KEY: admin123456
       TRINO_HOST: trino
       TRINO_PORT: "8080"
+      OPENLINEAGE_URL: http://marquez:5000
+      OPENLINEAGE_NAMESPACE: lakehouse
       ENVIRONMENT: test
     entrypoint: >
       /bin/sh -c "
