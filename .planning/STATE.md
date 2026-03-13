@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-02-PLAN.md
-last_updated: "2026-03-13T13:46:31Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-13T13:50:41.307Z"
 last_activity: 2026-03-13 -- Plan 02-02 executed (Airflow + Marquez + OpenLineage)
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 13
+  total_plans: 9
   completed_plans: 6
   percent: 46
 ---
@@ -51,6 +51,7 @@ Progress: [#####░░░░░] 46%
 - Trend: improving
 
 *Updated after each plan completion*
+| Phase 02 P01 | 7 | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -85,6 +86,14 @@ Recent decisions affecting current work:
 - 02-02: enable_lineage=False default on get_spark_session() to preserve backward compatibility
 - 02-02: OpenLineage Spark package appended to jars.packages alongside Iceberg runtime
 - 02-02: Marquez Web UI on separate container (port 3000) from API (port 5000)
+- 02-01: Top-level PySpark function imports (lit, current_timestamp) for mock.patch testability
+- 02-01: Schema validation allows nullable differences and extra columns, rejects missing/wrong-typed
+- 02-01: Silver dedup via window function (row_number partitioned by trade_id, ordered by ingestion_ts desc)
+- 02-01: Gold metrics use DecimalType(38,4) for financial precision through aggregation
+- 02-01: Integration tests use uuid-based namespace/table suffixes for test isolation
+- [Phase 02]: 02-01: Top-level PySpark function imports for mock.patch testability
+- [Phase 02]: 02-01: Schema validation allows nullable differences, rejects missing/wrong-typed columns
+- [Phase 02]: 02-01: Gold metrics use DecimalType(38,4) for financial precision through aggregation
 
 ### Pending Todos
 
@@ -101,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T13:46:31Z
-Stopped at: Completed 02-02-PLAN.md
-Resume file: .planning/phases/02-etl-migration-and-data-pipeline/02-03-PLAN.md
+Last session: 2026-03-13T13:50:34.343Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

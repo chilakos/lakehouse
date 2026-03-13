@@ -15,7 +15,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **FNDTN-04**: Iceberg schema evolution works without data rewrites across all engines
 - [x] **FNDTN-05**: Iceberg partition evolution supported for query performance optimization
 - [x] **FNDTN-06**: Automated Iceberg table maintenance (compaction, snapshot expiration, orphan file cleanup)
-- [ ] **FNDTN-07**: Medallion architecture (Bronze/Silver/Gold) implemented with clear layer boundaries
+- [x] **FNDTN-07**: Medallion architecture (Bronze/Silver/Gold) implemented with clear layer boundaries
 
 ### Multi-Engine Query Access
 
@@ -28,7 +28,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### ETL & Ingestion
 
-- [ ] **ETL-01**: Python ETL framework established using PySpark + PyIceberg for Iceberg writes
+- [x] **ETL-01**: Python ETL framework established using PySpark + PyIceberg for Iceberg writes
 - [ ] **ETL-02**: Pilot ETL migration of 5-10 representative DataStage jobs to Python
 - [ ] **ETL-03**: Mainframe source connectivity validated in Python (COBOL copybook parsing, DB2 z/OS, flat files)
 - [x] **ETL-04**: Apache Airflow deployed for workflow orchestration with DAG dependency management
@@ -62,7 +62,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Data Quality
 
-- [ ] **QUAL-01**: Schema validation enforced on all ingestion pipelines before Iceberg writes
+- [x] **QUAL-01**: Schema validation enforced on all ingestion pipelines before Iceberg writes
 - [ ] **QUAL-02**: Data quality checks (null rates, range validation, uniqueness) integrated into ETL
 - [ ] **QUAL-03**: Source-to-lakehouse reconciliation (row counts, checksums, aggregates) for migrated tables
 - [ ] **QUAL-04**: Data quality monitoring with alerting for degradation detection
@@ -135,14 +135,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FNDTN-04 | Phase 1 | Complete |
 | FNDTN-05 | Phase 1 | Complete |
 | FNDTN-06 | Phase 1 | Complete |
-| FNDTN-07 | Phase 2 | Pending |
+| FNDTN-07 | Phase 2 | Complete |
 | QUERY-01 | Phase 1 | Pending |
 | QUERY-02 | Phase 1 | Pending |
 | QUERY-03 | Phase 1 | Pending |
 | QUERY-04 | Phase 1 | Pending |
 | QUERY-05 | Phase 1 | Pending |
 | QUERY-06 | Phase 1 | Pending |
-| ETL-01 | Phase 2 | Pending |
+| ETL-01 | Phase 2 | Complete |
 | ETL-02 | Phase 2 | Pending |
 | ETL-03 | Phase 2 | Pending |
 | ETL-04 | Phase 2 | Complete |
@@ -164,7 +164,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEC-04 | Phase 3 | Pending |
 | SEC-05 | Phase 1 | Complete (01-03) |
 | SEC-06 | Phase 1 | Complete (01-03) |
-| QUAL-01 | Phase 2 | Pending |
+| QUAL-01 | Phase 2 | Complete |
 | QUAL-02 | Phase 2 | Pending |
 | QUAL-03 | Phase 2 | Pending |
 | QUAL-04 | Phase 2 | Pending |
