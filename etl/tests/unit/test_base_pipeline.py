@@ -139,7 +139,9 @@ class TestExecuteOrchestration:
 class TestMetadataColumns:
     """Test add_metadata_columns for Bronze layer."""
 
-    def test_add_metadata_columns_adds_required_fields(self):
+    @patch("src.pipelines.base.current_timestamp")
+    @patch("src.pipelines.base.lit")
+    def test_add_metadata_columns_adds_required_fields(self, mock_lit, mock_ts):
         """add_metadata_columns adds source_system, ingestion_ts, batch_id columns."""
         from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 

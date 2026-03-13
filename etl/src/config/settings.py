@@ -36,6 +36,19 @@ class Settings:
     # Environment
     environment: str = field(default_factory=lambda: os.environ.get("ENVIRONMENT", "dev"))
 
+    # OpenLineage
+    openlineage_url: str = field(
+        default_factory=lambda: os.environ.get("OPENLINEAGE_URL", "http://localhost:5000")
+    )
+    openlineage_namespace: str = field(
+        default_factory=lambda: os.environ.get("OPENLINEAGE_NAMESPACE", "lakehouse")
+    )
+
+    # Airflow
+    airflow_home: str = field(
+        default_factory=lambda: os.environ.get("AIRFLOW_HOME", "/opt/airflow")
+    )
+
     @property
     def nessie_api_url(self) -> str:
         """Full Nessie REST API v2 URL."""
