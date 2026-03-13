@@ -1,0 +1,46 @@
+cubes:
+  - name: trading_metrics
+    sql_table: gold.trading_metrics
+    description: >
+      Pre-aggregated trading metrics by symbol and side. Source of truth for
+      notional value, trade count, and average price calculations across all
+      BI consumers (Tableau, Power BI) and NL-to-SQL queries.
+
+    measures:
+      - name: total_notional
+        sql: total_notional
+        type: sum
+        description: >
+          Sum of notional values (price * quantity) for all trades.
+          Represents the total dollar exposure for a given symbol/side.
+        meta:
+          glossary_term: notional_value
+
+      - name: trade_count
+        sql: trade_count
+        type: sum
+        description: >
+          Total number of trades executed. Count of individual trade
+          events aggregated by symbol and side.
+        meta:
+          glossary_term: trade_count
+
+      - name: avg_price
+        sql: avg_price
+        type: avg
+        description: >
+          Average execution price across all trades for a given
+          symbol and side combination.
+        meta:
+          glossary_term: average_price
+
+    dimensions:
+      - name: symbol
+        sql: symbol
+        type: string
+        description: Ticker symbol identifying the traded instrument (e.g., AAPL, MSFT).
+
+      - name: side
+        sql: side
+        type: string
+        description: Trade direction -- BUY or SELL.

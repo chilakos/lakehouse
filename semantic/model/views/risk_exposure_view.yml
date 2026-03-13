@@ -1,0 +1,23 @@
+views:
+  - name: risk_dashboard
+    description: >
+      Risk exposure dashboard view for BI tools. Composes all risk exposure
+      measures and dimensions from the risk_exposure cube into a single
+      view for portfolio risk monitoring in Tableau and Power BI.
+
+    includes:
+      # Measures from risk_exposure cube
+      - name: measures
+        members:
+          - risk_exposure.total_market_value
+          - risk_exposure.total_var_95
+          - risk_exposure.total_var_99
+          - risk_exposure.total_expected_shortfall
+          - risk_exposure.position_count
+
+      # Dimensions from risk_exposure cube
+      - name: dimensions
+        members:
+          - risk_exposure.account_id
+          - risk_exposure.sector
+          - risk_exposure.currency

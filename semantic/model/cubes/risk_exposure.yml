@@ -1,0 +1,69 @@
+cubes:
+  - name: risk_exposure
+    sql_table: gold.risk_exposure
+    description: >
+      Aggregated risk exposure metrics per account, sector, and currency.
+      Combines position market values with VaR and Expected Shortfall risk
+      metrics for portfolio risk reporting across all BI consumers.
+
+    measures:
+      - name: total_market_value
+        sql: total_market_value
+        type: sum
+        description: >
+          Sum of position market values (quantity * price_per_unit) across
+          all positions in the account/sector/currency grouping.
+        meta:
+          glossary_term: market_value
+
+      - name: total_var_95
+        sql: total_var_95
+        type: sum
+        description: >
+          Sum of Value at Risk at 95% confidence level. Maximum expected
+          loss over a specified time horizon with 95% probability.
+        meta:
+          glossary_term: var_95
+
+      - name: total_var_99
+        sql: total_var_99
+        type: sum
+        description: >
+          Sum of Value at Risk at 99% confidence level. Maximum expected
+          loss over a specified time horizon with 99% probability.
+        meta:
+          glossary_term: var_99
+
+      - name: total_expected_shortfall
+        sql: total_expected_shortfall
+        type: sum
+        description: >
+          Sum of Expected Shortfall (Conditional VaR). Average loss
+          exceeding the VaR threshold -- captures tail risk severity.
+        meta:
+          glossary_term: expected_shortfall
+
+      - name: position_count
+        sql: position_count
+        type: sum
+        description: >
+          Total number of open positions in the account/sector/currency
+          grouping. Used for portfolio concentration analysis.
+        meta:
+          glossary_term: position_count
+
+    dimensions:
+      - name: account_id
+        sql: account_id
+        type: string
+        description: Unique account identifier for the trading book or portfolio.
+
+      - name: sector
+        sql: sector
+        type: string
+        description: Industry sector classification of the held instrument (e.g., Technology, Finance).
+
+      - name: currency
+        sql: currency
+        type: string
+        description: Base currency of the position (e.g., USD, EUR, GBP).

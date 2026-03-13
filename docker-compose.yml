@@ -436,6 +436,50 @@ services:
       timeout: 5s
       retries: 3
 
+  # --- Cube semantic layer services ---
+  # Cube provides unified metric definitions over Trino/Iceberg Gold tables.
+  # SQL API (Postgres wire protocol) on port 15432 for BI tool connections.
+  # REST API on port 4000 for programmatic access and status checks.
+
+  cube-api:
+    image: cubejs/cube:v0.36.0
+    ports:
+      - "4000:4000"
+      - "15432:15432"
+    environment:
+      CUBEJS_DB_TYPE: trino
+      CUBEJS_DB_HOST: trino
+      CUBEJS_DB_PORT: "8080"
+      CUBEJS_DB_PRESTO_CATALOG: iceberg
+      CUBEJS_DB_SCHEMA: gold
+      CUBEJS_PG_SQL_PORT: "15432"
+      CUBEJS_SQL_USER: cube
+      CUBEJS_SQL_PASSWORD: cube_local_dev
+      CUBEJS_CUBESTORE_HOST: cubestore
+      CUBEJS_DB_EXPORT_BUCKET: s3://lakehouse-data/cube-preaggs
+      CUBEJS_DB_EXPORT_BUCKET_TYPE: s3
+      CUBEJS_DB_EXPORT_BUCKET_AWS_KEY: admin
+      CUBEJS_DB_EXPORT_BUCKET_AWS_SECRET: admin123456
+      CUBEJS_DB_EXPORT_BUCKET_AWS_REGION: us-east-1
+      CUBEJS_API_SECRET: cube_local_dev_secret
+    volumes:
+      - ./semantic/model:/cube/conf/model:ro
+      - ./infra/docker/cube/cube.js:/cube/conf/cube.js:ro
+    depends_on:
+      trino:
+        condition: service_started
+      cubestore:
+        condition: service_started
+
+  cubestore:
+    image: cubejs/cubestore:v0.36.0
+    ports:
+      - "9999:9999"
+    environment:
+      CUBESTORE_REMOTE_DIR: /cube/data
+    volumes:
+      - cubestore-data:/cube/data
+
   # --- OpenMetadata data catalog services ---
 
   om-db:
@@ -526,3 +570,4 @@ volumes:
   ranger-db-data:
   om-db-data:
   es-data:
+  cubestore-data:

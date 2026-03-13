@@ -1,0 +1,20 @@
+views:
+  - name: trading_dashboard
+    description: >
+      Trading dashboard view for BI tools. Composes all trading metrics
+      measures and dimensions from the trading_metrics cube into a single
+      view optimized for Tableau and Power BI consumption.
+
+    includes:
+      # Measures from trading_metrics cube
+      - name: measures
+        members:
+          - trading_metrics.total_notional
+          - trading_metrics.trade_count
+          - trading_metrics.avg_price
+
+      # Dimensions from trading_metrics cube
+      - name: dimensions
+        members:
+          - trading_metrics.symbol
+          - trading_metrics.side
