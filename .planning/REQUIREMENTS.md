@@ -1,7 +1,7 @@
 # Requirements: Lakehouse Architecture Transformation
 
 **Defined:** 2026-03-13
-**Core Value:** A single, governed copy of data in Iceberg format that every consumer — Teradata, Trino, Snowflake, BI tools, and AI — can access without creating additional copies.
+**Core Value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
 
 ## v1 Requirements
 
@@ -38,10 +38,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### CI/CD & DevOps
 
-- [ ] **CICD-01**: GitHub repository structure established for ETL code, dbt models, and infrastructure
+- [x] **CICD-01**: GitHub repository structure established for ETL code, dbt models, and infrastructure
 - [ ] **CICD-02**: CI/CD pipeline deployed via GitHub Actions for automated testing and deployment
-- [ ] **CICD-03**: Environment promotion workflow (dev → staging → production) for ETL and infrastructure changes
-- [ ] **CICD-04**: Infrastructure as Code for lakehouse components (Trino, Airflow, catalog, storage)
+- [ ] **CICD-03**: Environment promotion workflow (dev -> staging -> production) for ETL and infrastructure changes
+- [x] **CICD-04**: Infrastructure as Code for lakehouse components (Trino, Airflow, catalog, storage)
 
 ### Governance & Lineage
 
@@ -129,13 +129,61 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (Populated during roadmap creation) | | |
+| FNDTN-01 | Phase 1 | Pending |
+| FNDTN-02 | Phase 1 | Pending |
+| FNDTN-03 | Phase 1 | Pending |
+| FNDTN-04 | Phase 1 | Pending |
+| FNDTN-05 | Phase 1 | Pending |
+| FNDTN-06 | Phase 1 | Pending |
+| FNDTN-07 | Phase 2 | Pending |
+| QUERY-01 | Phase 1 | Pending |
+| QUERY-02 | Phase 1 | Pending |
+| QUERY-03 | Phase 1 | Pending |
+| QUERY-04 | Phase 1 | Pending |
+| QUERY-05 | Phase 1 | Pending |
+| QUERY-06 | Phase 1 | Pending |
+| ETL-01 | Phase 2 | Pending |
+| ETL-02 | Phase 2 | Pending |
+| ETL-03 | Phase 2 | Pending |
+| ETL-04 | Phase 2 | Pending |
+| ETL-05 | Phase 2 | Pending |
+| ETL-06 | Phase 2 | Pending |
+| ETL-07 | Phase 2 | Pending |
+| CICD-01 | Phase 1 | Complete (01-01) |
+| CICD-02 | Phase 1 | Pending |
+| CICD-03 | Phase 1 | Pending |
+| CICD-04 | Phase 1 | Complete (01-01) |
+| GOVN-01 | Phase 2 | Pending |
+| GOVN-02 | Phase 3 | Pending |
+| GOVN-03 | Phase 3 | Pending |
+| GOVN-04 | Phase 3 | Pending |
+| GOVN-05 | Phase 3 | Pending |
+| SEC-01 | Phase 1 | Pending |
+| SEC-02 | Phase 1 | Pending |
+| SEC-03 | Phase 3 | Pending |
+| SEC-04 | Phase 3 | Pending |
+| SEC-05 | Phase 1 | Pending |
+| SEC-06 | Phase 1 | Pending |
+| QUAL-01 | Phase 2 | Pending |
+| QUAL-02 | Phase 2 | Pending |
+| QUAL-03 | Phase 2 | Pending |
+| QUAL-04 | Phase 2 | Pending |
+| BISEM-01 | Phase 4 | Pending |
+| BISEM-02 | Phase 4 | Pending |
+| BISEM-03 | Phase 4 | Pending |
+| BISEM-04 | Phase 4 | Pending |
+| AISEM-01 | Phase 4 | Pending |
+| AISEM-02 | Phase 4 | Pending |
+| AISEM-03 | Phase 4 | Pending |
+| PLAT-01 | Phase 3 | Pending |
+| PLAT-02 | Phase 2 | Pending |
+| PLAT-03 | Phase 3 | Pending |
 
 **Coverage:**
-- v1 requirements: 40 total
-- Mapped to phases: 0
-- Unmapped: 40 (pending roadmap)
+- v1 requirements: 49 total
+- Mapped to phases: 49
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-13*
-*Last updated: 2026-03-13 after initial definition*
+*Last updated: 2026-03-13 after roadmap creation*
