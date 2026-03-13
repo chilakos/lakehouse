@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: Phase 4 context gathered
-last_updated: "2026-03-13T19:05:41.150Z"
-last_activity: 2026-03-13 -- 03-01 complete (86 unit tests passing, Ranger stack + classification module)
+stopped_at: Completed 04-01-PLAN.md
+last_updated: "2026-03-13T22:14:29.685Z"
+last_activity: 2026-03-13 -- 04-01 complete (435 unit tests passing, Cube semantic layer + benchmark harness)
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 13
-  completed_plans: 13
-  percent: 77
+  total_plans: 16
+  completed_plans: 14
+  percent: 82
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
-**Current focus:** Phase 3: Governance, Security Hardening, and Platform -- 1 of 4 plans complete
+**Current focus:** Phase 4: Semantic Layers and Consumer Migration -- 1 of 3 plans complete
 
 ## Current Position
 
-Phase: 3 of 4 (Governance, Security Hardening, and Platform) -- IN PROGRESS
-Plan: 1 of 4 complete (03-01 done: Ranger Docker + governance module)
-Status: Phase 3 Plan 01 complete; ready for Plan 02 (BCBS 239 lineage dashboards)
-Last activity: 2026-03-13 -- 03-01 complete (86 unit tests passing, Ranger stack + classification module)
+Phase: 4 of 4 (Semantic Layers and Consumer Migration) -- IN PROGRESS
+Plan: 1 of 3 complete (04-01 done: Cube semantic layer + risk exposure Gold + benchmark)
+Status: Phase 4 Plan 01 complete; ready for Plan 02
+Last activity: 2026-03-13 -- 04-01 complete (435 unit tests passing, Cube semantic layer + benchmark harness)
 
-Progress: [████████░░] 77%
+Progress: [████████░░] 82%
 
 ## Performance Metrics
 
@@ -47,12 +47,14 @@ Progress: [████████░░] 77%
 | 2 | 5 | 43 min | 9 min |
 
 **Recent Trend:**
-- Last 5 plans: 10min, 5min, 4min, 9min, 15min
+- Last 5 plans: 10min, 5min, 4min, 9min, 15min, 5min
 - Trend: stable
 | Phase 03-governance-security-hardening-and-platform P01 | 8 | 2 tasks | 16 files |
 | Phase 03-governance-security-hardening-and-platform P02 | 8 | 2 tasks | 11 files |
 | Phase 03-governance-security-hardening-and-platform P03 | 13 | 2 tasks | 18 files |
 | Phase 03-governance-security-hardening-and-platform P04 | 5 | 2 tasks | 0 files |
+| Phase 04-semantic-layers-consumer-migration P01 | 5 | 2 tasks | 16 files |
+| Phase 04 P01 | 5 | 2 tasks | 16 files |
 
 ## Phases Completed
 
@@ -68,6 +70,16 @@ Progress: [████████░░] 77%
 - Pilot pipelines: trades, positions, mainframe COBOL, incremental loading
 - Soda Core quality gates, SodaCL checks, reconciliation framework
 - Production DAGs, job inventory, Grafana observability, ETL patterns docs
+
+### Phase 3: Governance, Security Hardening, and Platform (4 plans)
+- Ranger Docker stack, tag-driven classification, column masking policies
+- OpenMetadata catalog, freshness tracker, BCBS 239 lineage dashboards
+- Cross-engine audit trail, anomaly detection, Grafana compliance reporting
+- Human verification checkpoint (all governance modules confirmed)
+
+### Phase 4: Semantic Layers and Consumer Migration (in progress -- 1/3 plans)
+- Cube semantic layer: YAML metric definitions, Docker services, risk exposure Gold pipeline
+- metric_context.py AISEM-02 bridge, BI benchmark harness
 
 ## Accumulated Context
 
@@ -92,6 +104,11 @@ Recent decisions affecting current work:
 - [Phase 03-governance-security-hardening-and-platform]: Cross-engine audit normalized to AuditRecord (13 fields); Teradata/Snowflake extractors env-var gated for graceful skip; Snowflake ACCESS_HISTORY->QUERY_HISTORY fallback for non-Enterprise accounts
 - [Phase 03-governance-security-hardening-and-platform]: Audit DB reuses marquez-db PostgreSQL (new audit_records table); grafana-reporter sidecar for PDF export without Grafana Enterprise; anomaly thresholds as function parameters for testability
 - [Phase 03-governance-security-hardening-and-platform]: Phase 3 human verification approved: Ranger security, OpenMetadata catalog, BCBS 239 dashboards, and audit trail all confirmed correct and complete
+- [Phase 04-01]: Cube v0.36.0 selected as semantic layer platform -- YAML metric definitions with SQL API (Postgres wire protocol) on port 15432 for BI tool connections
+- [Phase 04-01]: Risk exposure Gold pipeline joins Silver positions + risk_metrics by account_id, aggregates per account/sector/currency
+- [Phase 04-01]: metric_context.py is the AISEM-02 bridge: same YAML files serve both Cube (BI) and NL-to-SQL (AI)
+- [Phase 04-01]: Benchmark harness uses wall-clock timing with configurable iterations and p50/p95/avg statistical reporting
+- [Phase 04-01]: Cube v0.36.0 selected as semantic layer platform -- YAML metric definitions with SQL API (Postgres wire protocol) on port 15432
 
 ### Pending Todos
 
@@ -108,6 +125,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T19:05:41.147Z
-Stopped at: Phase 4 context gathered
-Resume file: .planning/phases/04-semantic-layers-consumer-migration/04-CONTEXT.md
+Last session: 2026-03-13T22:14:21.823Z
+Stopped at: Completed 04-01-PLAN.md
+Resume file: None

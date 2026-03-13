@@ -69,10 +69,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### BI Semantic Layer
 
-- [ ] **BISEM-01**: Unified metric definitions (revenue, risk exposure, etc.) in a semantic layer
-- [ ] **BISEM-02**: Tableau connected to lakehouse via semantic layer (replacing direct Teradata queries)
-- [ ] **BISEM-03**: Power BI connected to lakehouse via semantic layer (replacing direct Teradata queries)
-- [ ] **BISEM-04**: BI query performance validated against current Teradata direct-query baselines
+- [x] **BISEM-01**: Unified metric definitions (revenue, risk exposure, etc.) in a semantic layer
+- [x] **BISEM-02**: Tableau connected to lakehouse via semantic layer (replacing direct Teradata queries)
+- [x] **BISEM-03**: Power BI connected to lakehouse via semantic layer (replacing direct Teradata queries)
+- [x] **BISEM-04**: BI query performance validated against current Teradata direct-query baselines
 
 ### AI Semantic Layer
 
@@ -168,10 +168,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | QUAL-02 | Phase 2 | Complete |
 | QUAL-03 | Phase 2 | Complete |
 | QUAL-04 | Phase 2 | Complete |
-| BISEM-01 | Phase 4 | Pending |
-| BISEM-02 | Phase 4 | Pending |
-| BISEM-03 | Phase 4 | Pending |
-| BISEM-04 | Phase 4 | Pending |
+| BISEM-01 | Phase 4 | Complete |
+| BISEM-02 | Phase 4 | Complete |
+| BISEM-03 | Phase 4 | Complete |
+| BISEM-04 | Phase 4 | Complete |
 | AISEM-01 | Phase 4 | Pending |
 | AISEM-02 | Phase 4 | Pending |
 | AISEM-03 | Phase 4 | Pending |
