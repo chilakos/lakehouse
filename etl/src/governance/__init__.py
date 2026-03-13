@@ -1,5 +1,5 @@
 """Governance module: data classification, Ranger policy management, audit trail,
-freshness tracking, and legacy lineage stubs.
+freshness tracking, legacy lineage stubs, and anomaly detection.
 
 Provides:
 - SensitivityLevel enum and classify_column() for data classification
@@ -7,6 +7,9 @@ Provides:
 - Bootstrap script for seeding Ranger policies
 - FreshnessSLA/FreshnessStatus and check_table_freshness() for SLA monitoring
 - register_legacy_lineage_stub() and source helpers for Marquez lineage stubs
+- AuditRecord/AUDIT_SCHEMA and cross-engine normalization functions
+- AnomalyType/AnomalyReport/detect_anomalies() for suspicious access detection
+- archive_old_records() for S3 Parquet archival of audit records
 """
 
 from .classification import (
@@ -35,6 +38,19 @@ from .ranger_policies import (
     create_row_filter_policy,
     create_tag_policy,
 )
+from .audit_schema import (
+    AUDIT_SCHEMA,
+    AuditRecord,
+    normalize_trino_audit,
+    normalize_teradata_audit,
+    normalize_snowflake_audit,
+)
+from .anomaly_detector import (
+    AnomalyType,
+    AnomalyReport,
+    detect_anomalies,
+    format_anomaly_report,
+)
 
 __all__ = [
     # Classification
@@ -59,4 +75,15 @@ __all__ = [
     "register_legacy_lineage_stub",
     "register_teradata_sources",
     "register_snowflake_sources",
+    # Audit schema
+    "AuditRecord",
+    "AUDIT_SCHEMA",
+    "normalize_trino_audit",
+    "normalize_teradata_audit",
+    "normalize_snowflake_audit",
+    # Anomaly detector
+    "AnomalyType",
+    "AnomalyReport",
+    "detect_anomalies",
+    "format_anomaly_report",
 ]
