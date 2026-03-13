@@ -92,6 +92,9 @@ services:
       - ./infra/docker/trino/etc/node.properties:/etc/trino/node.properties:ro
       - ./infra/docker/trino/etc/jvm.config:/etc/trino/jvm.config:ro
       - ./infra/docker/trino/etc/catalog/iceberg.properties:/etc/trino/catalog/iceberg.properties:ro
+      - ./infra/docker/ranger/ranger-trino-security.xml:/etc/trino/ranger/ranger-trino-security.xml:ro
+      - ./infra/docker/ranger/ranger-trino-audit.xml:/etc/trino/ranger/ranger-trino-audit.xml:ro
+      - ./infra/docker/trino/etc/event-listener.properties:/etc/trino/event-listener.properties:ro
 
   # --- Airflow services ---
 
@@ -314,6 +317,106 @@ services:
     depends_on:
       - prometheus
 
+  # --- Apache Ranger services ---
+  # NOTE: The Ranger Trino plugin JAR (ranger-2.8.0-trino-plugin.tar.gz) targets Trino 433.
+  # We use Trino 479 which may require building the plugin from source. The config files
+  # below are prepared for local dev; plugin JAR compatibility must be verified at integration
+  # test time. See: https://ranger.apache.org/quick_start_guide.html
+
+  ranger-zk:
+    image: apache/ranger-zk:2.8.0
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: ["CMD-SHELL", "echo ruok | nc localhost 2181 | grep imok"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  ranger-solr:
+    image: apache/ranger-solr:2.8.0
+    depends_on:
+      ranger-zk:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8983/solr/ranger_audits/admin/ping"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+
+  ranger-db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: ranger
+      POSTGRES_USER: ranger
+      POSTGRES_PASSWORD: ranger_local_dev
+    ports:
+      - "5435:5432"
+    volumes:
+      - ranger-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ranger -d ranger"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ranger-admin:
+    image: apache/ranger:2.8.0
+    ports:
+      - "6080:6080"
+      - "6182:6182"
+    depends_on:
+      ranger-db:
+        condition: service_healthy
+      ranger-solr:
+        condition: service_started
+      ranger-zk:
+        condition: service_healthy
+    environment:
+      RANGER_DB_TYPE: postgres
+      DB_HOST: ranger-db
+      DB_PORT: "5432"
+      DB_NAME: ranger
+      DB_USER: ranger
+      DB_PASSWORD: ranger_local_dev
+      AUDIT_SOLR_URLS: http://ranger-solr:8983/solr/ranger_audits
+      JAVA_OPTS: "-Xmx3g -Xms1g"
+    mem_limit: 4g
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6080/login.jsp"]
+      interval: 30s
+      timeout: 10s
+      retries: 15
+      start_period: 120s
+
+  # Audit receiver: lightweight HTTP service capturing Trino query events.
+  # Implementation: see Plan 03-03 (audit trail). Placeholder for event-listener config.
+  audit-receiver:
+    image: python:3.11-slim
+    command: >
+      python3 -c "
+      import http.server, json, sys
+      class Handler(http.server.BaseHTTPRequestHandler):
+        def do_POST(self):
+          length = int(self.headers.get('Content-Length', 0))
+          body = self.rfile.read(length)
+          self.send_response(200)
+          self.end_headers()
+          self.wfile.write(b'OK')
+        def log_message(self, fmt, *args): pass
+      print('audit-receiver listening on :8090', flush=True)
+      http.server.HTTPServer(('0.0.0.0', 8090), Handler).serve_forever()
+      "
+    ports:
+      - "8090:8090"
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8090/')\" 2>/dev/null || exit 0"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
 volumes:
   pgdata:
   miniodata:
@@ -321,3 +424,4 @@ volumes:
   marquez-db-data:
   prometheus-data:
   grafana-data:
+  ranger-db-data:

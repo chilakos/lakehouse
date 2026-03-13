@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  Ranger Trino Plugin Audit Configuration
+  Audit destination: Apache Solr (ranger_audits collection)
+  Solr URL: http://ranger-solr:8983/solr/ranger_audits
+-->
+<configuration>
+
+  <property>
+    <name>ranger.plugin.trino.ambari.service.name</name>
+    <value>trino</value>
+    <description>Trino service name for audit correlation.</description>
+  </property>
+
+  <property>
+    <name>ranger.plugin.trino.audit.is.enabled</name>
+    <value>true</value>
+    <description>Enable Ranger audit logging for Trino queries.</description>
+  </property>
+
+  <property>
+    <name>ranger.plugin.trino.audit.solr.is.enabled</name>
+    <value>true</value>
+    <description>Enable audit to Apache Solr (ranger_audits collection).</description>
+  </property>
+
+  <property>
+    <name>ranger.plugin.trino.audit.solr.urls</name>
+    <value>http://ranger-solr:8983/solr/ranger_audits</value>
+    <description>Solr collection URL for storing Ranger audit events.</description>
+  </property>
+
+  <property>
+    <name>ranger.plugin.trino.audit.solr.zookeepers</name>
+    <value>ranger-zk:2181</value>
+    <description>ZooKeeper connection string for Solr cloud coordination.</description>
+  </property>
+
+</configuration>

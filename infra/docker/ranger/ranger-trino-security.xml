@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  Ranger Trino Plugin Security Configuration
+  Service: trino
+  Admin URL: http://ranger-admin:6080
+  Poll interval: 5000ms (reduced for local dev; use 30000ms in production)
+-->
+<configuration>
+
+  <property>
+    <name>ranger.plugin.trino.service.name</name>
+    <value>trino</value>
+    <description>Ranger service name for Trino. Must match the service created in Ranger Admin UI.</description>
+  </property>
+
+  <property>
+    <name>ranger.plugin.trino.policy.rest.url</name>
+    <value>http://ranger-admin:6080</value>
+    <description>Ranger Admin URL for policy retrieval.</description>
+  </property>
+
+  <property>
+    <name>ranger.plugin.trino.policy.pollIntervalMs</name>
+    <value>5000</value>
+    <description>Interval (ms) for Ranger plugin to poll Admin for policy updates. Dev setting; use 30000 in production.</description>
+  </property>
+
+  <property>
+    <name>ranger.plugin.trino.use.rangerGroups</name>
+    <value>true</value>
+    <description>Use Ranger groups for RBAC. Groups are synced from LDAP/AD via Ranger usersync.</description>
+  </property>
+
+  <property>
+    <name>ranger.plugin.trino.access.cluster.name</name>
+    <value>lakehouse</value>
+    <description>Logical cluster name for audit trail identification.</description>
+  </property>
+
+  <property>
+    <name>ranger.plugin.trino.policy.cache.dir</name>
+    <value>/etc/ranger/trino/policy-cache</value>
+    <description>Directory for local policy cache (fallback when Ranger Admin is unreachable).</description>
+  </property>
+
+</configuration>
