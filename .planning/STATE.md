@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-13T12:26:08.385Z"
-last_activity: 2026-03-13 -- Plan 01-04 executed (Phase 1 complete)
+status: executing
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-13T13:46:31Z"
+last_activity: 2026-03-13 -- Plan 02-02 executed (Airflow + Marquez + OpenLineage)
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 36
+  total_plans: 13
+  completed_plans: 6
+  percent: 46
 ---
 
 # Project State
@@ -21,33 +21,34 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-13)
 
 **Core value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
-**Current focus:** Phase 1 complete. Ready for Phase 2: ETL Migration and Data Pipeline
+**Current focus:** Phase 2: ETL Migration and Data Pipeline -- executing Plan 3 of 5
 
 ## Current Position
 
-Phase: 1 of 4 (Foundation and Feasibility Validation) -- COMPLETE
-Plan: 4 of 4 in current phase (all complete)
-Status: Phase 1 Complete
-Last activity: 2026-03-13 -- Plan 01-04 executed (Phase 1 complete)
+Phase: 2 of 4 (ETL Migration and Data Pipeline) -- EXECUTING
+Plan: 3 of 5 in current phase (2 complete)
+Status: Executing Phase 2
+Last activity: 2026-03-13 -- Plan 02-02 executed (Airflow + Marquez + OpenLineage)
 
-Progress: [####░░░░░░] 36%
+Progress: [#####░░░░░] 46%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 13 min
-- Total execution time: 0.85 hours
+- Total plans completed: 6
+- Average duration: 11 min
+- Total execution time: 1.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1 | 4 | 51 min | 13 min |
+| 2 | 2 | 15 min | 8 min |
 
 **Recent Trend:**
-- Last 5 plans: 10min, 11min, 12min, 18min
-- Trend: stable
+- Last 5 plans: 11min, 12min, 18min, 10min, 5min
+- Trend: improving
 
 *Updated after each plan completion*
 
@@ -78,6 +79,12 @@ Recent decisions affecting current work:
 - 01-04: Teradata OTF ADR recommends direct Nessie REST first, Trino JDBC federation as fallback
 - 01-04: File-based RBAC (rules.json) for Phase 1 baseline; Ranger deferred to Phase 3
 - 01-04: Benchmark harness discards first iteration as warmup for accurate latency
+- 02-02: Airflow webserver on port 8081 (avoids Trino port 8080 conflict)
+- 02-02: Airflow DB on port 5433, Marquez DB on port 5434 (avoid Nessie Postgres 5432)
+- 02-02: YAML anchor (&airflow-env) for shared environment across Airflow containers
+- 02-02: enable_lineage=False default on get_spark_session() to preserve backward compatibility
+- 02-02: OpenLineage Spark package appended to jars.packages alongside Iceberg runtime
+- 02-02: Marquez Web UI on separate container (port 3000) from API (port 5000)
 
 ### Pending Todos
 
@@ -94,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T12:26:08.383Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-etl-migration-and-data-pipeline/02-CONTEXT.md
+Last session: 2026-03-13T13:46:31Z
+Stopped at: Completed 02-02-PLAN.md
+Resume file: .planning/phases/02-etl-migration-and-data-pipeline/02-03-PLAN.md

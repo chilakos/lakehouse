@@ -31,7 +31,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **ETL-01**: Python ETL framework established using PySpark + PyIceberg for Iceberg writes
 - [ ] **ETL-02**: Pilot ETL migration of 5-10 representative DataStage jobs to Python
 - [ ] **ETL-03**: Mainframe source connectivity validated in Python (COBOL copybook parsing, DB2 z/OS, flat files)
-- [ ] **ETL-04**: Apache Airflow deployed for workflow orchestration with DAG dependency management
+- [x] **ETL-04**: Apache Airflow deployed for workflow orchestration with DAG dependency management
 - [ ] **ETL-05**: Incremental/delta loading patterns implemented (watermark-based, CDC where available)
 - [ ] **ETL-06**: Standardized ETL patterns documented and reusable across 40+ engineer team
 - [ ] **ETL-07**: Full DataStage job inventory cataloged with complexity classification (simple/medium/complex)
@@ -45,7 +45,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Governance & Lineage
 
-- [ ] **GOVN-01**: End-to-end data lineage captured via OpenLineage from source to consumption layer
+- [x] **GOVN-01**: End-to-end data lineage captured via OpenLineage from source to consumption layer
 - [ ] **GOVN-02**: Lineage visualization available for regulatory reporting (BCBS 239, SOX compliance)
 - [ ] **GOVN-03**: Data classification and sensitivity labeling applied to PII and regulated financial data
 - [ ] **GOVN-04**: Business glossary with data definitions accessible to business users
@@ -145,7 +145,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ETL-01 | Phase 2 | Pending |
 | ETL-02 | Phase 2 | Pending |
 | ETL-03 | Phase 2 | Pending |
-| ETL-04 | Phase 2 | Pending |
+| ETL-04 | Phase 2 | Complete |
 | ETL-05 | Phase 2 | Pending |
 | ETL-06 | Phase 2 | Pending |
 | ETL-07 | Phase 2 | Pending |
@@ -153,7 +153,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CICD-02 | Phase 1 | Complete (01-03) |
 | CICD-03 | Phase 1 | Complete (01-03) |
 | CICD-04 | Phase 1 | Complete (01-01) |
-| GOVN-01 | Phase 2 | Pending |
+| GOVN-01 | Phase 2 | Complete |
 | GOVN-02 | Phase 3 | Pending |
 | GOVN-03 | Phase 3 | Pending |
 | GOVN-04 | Phase 3 | Pending |
