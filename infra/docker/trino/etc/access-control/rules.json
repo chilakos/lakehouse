@@ -1,0 +1,72 @@
+{
+  "catalogs": [
+    {
+      "group": "data_admin",
+      "catalog": "iceberg",
+      "allow": "all"
+    },
+    {
+      "group": "data_engineers",
+      "catalog": "iceberg",
+      "allow": "all"
+    },
+    {
+      "group": "data_readers",
+      "catalog": "iceberg",
+      "allow": "read-only"
+    },
+    {
+      "catalog": "system",
+      "allow": "read-only"
+    }
+  ],
+  "schemas": [
+    {
+      "group": "data_admin",
+      "catalog": "iceberg",
+      "schema": ".*",
+      "owner": true
+    },
+    {
+      "group": "data_engineers",
+      "catalog": "iceberg",
+      "schema": "(?!sensitive_ns).*",
+      "owner": false
+    },
+    {
+      "group": "data_readers",
+      "catalog": "iceberg",
+      "schema": "(?!sensitive_ns).*",
+      "owner": false
+    },
+    {
+      "group": "data_admin",
+      "catalog": "iceberg",
+      "schema": "sensitive_ns",
+      "owner": true
+    }
+  ],
+  "tables": [
+    {
+      "group": "data_admin",
+      "catalog": "iceberg",
+      "schema": ".*",
+      "table": ".*",
+      "privileges": ["SELECT", "INSERT", "DELETE", "UPDATE", "OWNERSHIP", "GRANT_SELECT"]
+    },
+    {
+      "group": "data_engineers",
+      "catalog": "iceberg",
+      "schema": "(?!sensitive_ns).*",
+      "table": ".*",
+      "privileges": ["SELECT", "INSERT", "DELETE", "UPDATE"]
+    },
+    {
+      "group": "data_readers",
+      "catalog": "iceberg",
+      "schema": "(?!sensitive_ns).*",
+      "table": ".*",
+      "privileges": ["SELECT"]
+    }
+  ]
+}
