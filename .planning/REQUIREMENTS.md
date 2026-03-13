@@ -46,10 +46,10 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Governance & Lineage
 
 - [x] **GOVN-01**: End-to-end data lineage captured via OpenLineage from source to consumption layer
-- [ ] **GOVN-02**: Lineage visualization available for regulatory reporting (BCBS 239, SOX compliance)
+- [x] **GOVN-02**: Lineage visualization available for regulatory reporting (BCBS 239, SOX compliance)
 - [x] **GOVN-03**: Data classification and sensitivity labeling applied to PII and regulated financial data
 - [x] **GOVN-04**: Business glossary with data definitions accessible to business users
-- [ ] **GOVN-05**: Audit trail capturing all data access across Trino, Teradata, and Snowflake
+- [x] **GOVN-05**: Audit trail capturing all data access across Trino, Teradata, and Snowflake
 
 ### Security & Access Control
 
@@ -154,10 +154,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CICD-03 | Phase 1 | Complete (01-03) |
 | CICD-04 | Phase 1 | Complete (01-01) |
 | GOVN-01 | Phase 2 | Complete |
-| GOVN-02 | Phase 3 | Pending |
+| GOVN-02 | Phase 3 | Complete |
 | GOVN-03 | Phase 3 | Complete |
 | GOVN-04 | Phase 3 | Complete |
-| GOVN-05 | Phase 3 | Pending |
+| GOVN-05 | Phase 3 | Complete |
 | SEC-01 | Phase 1 | Pending |
 | SEC-02 | Phase 1 | Pending |
 | SEC-03 | Phase 3 | Complete |
