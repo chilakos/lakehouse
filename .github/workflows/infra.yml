@@ -1,0 +1,86 @@
+# Source of truth: ci/.github/workflows/infra.yml
+name: Infrastructure Plan Review
+
+on:
+  pull_request:
+    paths:
+      - 'infra/**'
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  plan:
+    name: Terraform Plan (${{ matrix.environment }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: [dev, staging, prod]
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7"
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Select workspace
+        env:
+          TF_ENV: ${{ matrix.environment }}
+        run: terraform workspace select -or-create "$TF_ENV"
+
+      - name: Terraform plan
+        id: plan
+        env:
+          TF_ENV: ${{ matrix.environment }}
+        run: |
+          terraform plan -var-file="environments/${TF_ENV}/terraform.tfvars" \
+            -no-color -out=tfplan 2>&1 | tee plan-output.txt
+
+      - name: Post plan as PR comment
+        if: always()
+        uses: actions/github-script@v7
+        env:
+          TF_ENV: ${{ matrix.environment }}
+        with:
+          script: |
+            const fs = require('fs');
+            const environment = process.env.TF_ENV;
+            const planOutput = fs.readFileSync('infra/terraform/plan-output.txt', 'utf8');
+            const truncated = planOutput.length > 60000
+              ? planOutput.substring(0, 60000) + '\n\n... (truncated)'
+              : planOutput;
+
+            const body = `### Terraform Plan: \`${environment}\`
+
+            <details>
+            <summary>Show Plan Output</summary>
+
+            \`\`\`
+            ${truncated}
+            \`\`\`
+
+            </details>
+
+            *Triggered in PR #${context.issue.number}*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

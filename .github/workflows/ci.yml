@@ -1,3 +1,4 @@
+# Source of truth: ci/.github/workflows/ci.yml
 name: CI Pipeline
 
 on:

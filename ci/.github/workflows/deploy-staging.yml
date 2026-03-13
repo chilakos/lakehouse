@@ -1,0 +1,50 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [staging]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to Staging Environment
+    runs-on: ubuntu-latest
+    environment: staging
+    defaults:
+      run:
+        working-directory: infra/terraform
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7"
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Select staging workspace
+        run: terraform workspace select -or-create staging
+
+      - name: Terraform plan
+        run: terraform plan -var-file=environments/staging/terraform.tfvars -out=tfplan
+
+      - name: Terraform apply
+        run: terraform apply tfplan
+
+      - name: Run integration tests
+        if: success()
+        run: |
+          echo "Integration tests would run against staging environment here"
+          echo "Nessie health: curl -sf https://nessie.staging.lakehouse.internal:19120/q/health"
+          echo "Trino health: curl -sf https://trino.staging.lakehouse.internal:8443/v1/info"
