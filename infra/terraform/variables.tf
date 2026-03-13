@@ -53,3 +53,99 @@ variable "state_lock_table" {
   type        = string
   default     = "lakehouse-terraform-locks"
 }
+
+# Networking variables
+variable "vpc_id" {
+  description = "VPC ID for security group creation"
+  type        = string
+  default     = ""
+}
+
+variable "allowed_cidrs" {
+  description = "CIDR blocks allowed to access lakehouse services"
+  type        = list(string)
+  default     = []
+}
+
+# S3 module variables
+variable "bucket_name_prefix" {
+  description = "Prefix for S3 bucket names"
+  type        = string
+  default     = "lakehouse"
+}
+
+# MinIO module variables
+variable "minio_access_key" {
+  description = "MinIO access key for authentication"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "minio_secret_key" {
+  description = "MinIO secret key for authentication"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "minio_bucket_names" {
+  description = "List of MinIO buckets to create"
+  type        = list(string)
+  default     = ["lakehouse-data", "lakehouse-onprem"]
+}
+
+# Kubernetes variables
+variable "kubernetes_namespace" {
+  description = "Kubernetes namespace for lakehouse services"
+  type        = string
+  default     = "lakehouse"
+}
+
+# Nessie module variables
+variable "nessie_db_password" {
+  description = "Password for Nessie PostgreSQL database"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+# Trino module variables
+variable "ldap_url" {
+  description = "LDAP server URL for Trino authentication"
+  type        = string
+  default     = ""
+}
+
+variable "ldap_user_bind_pattern" {
+  description = "LDAP user bind pattern for Trino authentication"
+  type        = string
+  default     = ""
+}
+
+variable "ldap_user_base_dn" {
+  description = "LDAP user base DN for Trino authentication"
+  type        = string
+  default     = ""
+}
+
+variable "trino_tls_keystore_password" {
+  description = "Password for Trino TLS keystore"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "trino_access_control_rules" {
+  description = "JSON string with Trino file-based access control rules"
+  type        = string
+  default     = <<-EOT
+    {
+      "catalogs": [
+        {
+          "allow": "all"
+        }
+      ]
+    }
+  EOT
+}
