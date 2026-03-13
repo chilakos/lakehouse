@@ -1,0 +1,3 @@
+PLACEHOLDER: This file should contain binary EBCDIC-encoded records matching sample_copybook.cpy.
+Real mainframe sample data must be generated or exported from an actual mainframe system.
+See test_mainframe_ingest.py for details on the expected record format.
