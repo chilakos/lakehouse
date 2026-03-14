@@ -1,0 +1,10 @@
+{# docs/templates/macros/collapsible.html -- CSS-only collapsible sections #}
+
+{% macro collapsible(title, content, open=false) %}
+<details{% if open %} open{% endif %}>
+  <summary>{{ title }}</summary>
+  <div class="details-body">
+    {{ content }}
+  </div>
+</details>
+{% endmacro %}

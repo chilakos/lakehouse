@@ -1,0 +1,38 @@
+{# docs/templates/macros/swot_grid.html -- 2x2 SWOT quadrant grid macro #}
+
+{% macro swot_grid(strengths, weaknesses, opportunities, threats) %}
+<div class="swot-grid">
+  <div class="swot-quadrant swot-strengths">
+    <h3>Strengths</h3>
+    <ul>
+      {% for item in strengths %}
+      <li><strong>{{ item.id }}: {{ item.title }}</strong> &mdash; {{ item.description | trim }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-weaknesses">
+    <h3>Weaknesses</h3>
+    <ul>
+      {% for item in weaknesses %}
+      <li><strong>{{ item.id }}: {{ item.title }}</strong> &mdash; {{ item.description | trim }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-opportunities">
+    <h3>Opportunities</h3>
+    <ul>
+      {% for item in opportunities %}
+      <li><strong>{{ item.id }}: {{ item.title }}</strong> &mdash; {{ item.description | trim }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-threats">
+    <h3>Threats</h3>
+    <ul>
+      {% for item in threats %}
+      <li><strong>{{ item.id }}: {{ item.title }}</strong> &mdash; {{ item.description | trim }}</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endmacro %}

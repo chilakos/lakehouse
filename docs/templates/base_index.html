@@ -1,0 +1,129 @@
+{# docs/templates/base_index.html -- Jinja2 base template for index/dashboard pages #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} - Lakehouse Architecture</title>
+  <style>
+    {% block styles %}
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+    .doc-header .meta { color: #94a3b8; font-size: 0.9rem; }
+
+    /* === STATUS BADGES === */
+    .status-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: capitalize;
+    }
+    .status-decided { background: #22c55e; color: white; }
+    .status-undecided { background: #f59e0b; color: #1a2332; }
+
+    /* === CARD GRID === */
+    .card-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.25rem;
+      transition: box-shadow 0.2s;
+    }
+    .card:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); }
+    .card h3 { margin-bottom: 0.5rem; font-size: 1rem; color: #1a2332; }
+    .card h3 a { color: inherit; text-decoration: none; }
+    .card h3 a:hover { color: #c8a961; }
+    .card p { font-size: 0.9rem; color: #64748b; margin-bottom: 0.5rem; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .card-grid { grid-template-columns: 1fr; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+    {% endblock styles %}
+  </style>
+</head>
+<body>
+  {% block header %}
+  <header class="doc-header">
+    <h1>{{ title }}</h1>
+    {% if subtitle %}
+    <p class="subtitle">{{ subtitle }}</p>
+    {% endif %}
+    <p class="meta">{{ date }}</p>
+  </header>
+  {% endblock header %}
+
+  {% block content %}{% endblock content %}
+
+  {% block footer %}
+  <footer class="doc-footer">
+    <p>Generated: {{ generation_date }} | Next review: {{ next_review }}</p>
+    <div class="versions">
+      {% for name, info in versions.items() %}
+      <span class="version-item">{{ name }}: {{ info.version }}</span>
+      {% endfor %}
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
+  </footer>
+  {% endblock footer %}
+</body>
+</html>

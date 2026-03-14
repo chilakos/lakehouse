@@ -1,0 +1,312 @@
+{# docs/templates/base_swot.html -- Jinja2 base SWOT template with embedded CSS #}
+{% from "macros/swot_grid.html" import swot_grid %}
+{% from "macros/decision_matrix.html" import decision_matrix as render_decision_matrix %}
+{% from "macros/collapsible.html" import collapsible %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }} - Lakehouse Architecture</title>
+  <style>
+    {% block styles %}
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+    .doc-header .meta { color: #94a3b8; font-size: 0.9rem; }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: capitalize;
+    }
+    .status-decided { background: #22c55e; color: white; }
+    .status-undecided { background: #f59e0b; color: #1a2332; }
+
+    /* === SWOT GRID === */
+    .swot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .swot-quadrant {
+      padding: 1.25rem;
+      border-radius: 6px;
+      border: 2px solid;
+    }
+    .swot-quadrant h3 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.05rem; }
+    .swot-quadrant ul { margin-left: 1.25rem; }
+    .swot-quadrant li { font-size: 0.92rem; }
+    .swot-strengths { border-color: #22c55e; background: #f0fdf4; }
+    .swot-weaknesses { border-color: #eab308; background: #fefce8; }
+    .swot-opportunities { border-color: #3b82f6; background: #eff6ff; }
+    .swot-threats { border-color: #ef4444; background: #fef2f2; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === EVIDENCE CALLOUT === */
+    .evidence {
+      background: #f1f5f9;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    /* === MITIGATION CALLOUT === */
+    .mitigation {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      .swot-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+      .table-container { overflow-x: auto; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle, .doc-header .meta { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      .swot-grid { break-inside: avoid; }
+      .swot-quadrant { break-inside: avoid; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+    {% endblock styles %}
+  </style>
+</head>
+<body>
+  {% block header %}
+  <header class="doc-header">
+    <h1>{{ title }}</h1>
+    {% if subtitle %}
+    <p class="subtitle">{{ subtitle }}</p>
+    {% endif %}
+    <p class="meta">
+      <span class="status-badge status-{{ status }}">{{ status | capitalize }}</span>
+      {% if decision %} | Decision: <strong>{{ decision }}</strong>{% endif %}
+      | {{ date }}
+      {% if prepared_for %} | Prepared for: {{ prepared_for }}{% endif %}
+    </p>
+  </header>
+  {% endblock header %}
+
+  {% block content %}
+  {# --- Executive Summary --- #}
+  {% if executive_summary %}
+  <details open>
+    <summary>Executive Summary</summary>
+    <div class="details-body">
+      {{ executive_summary | trim | replace('\n\n', '</p><p>') | replace('\n', ' ') }}
+    </div>
+  </details>
+  {% endif %}
+
+  {# --- Recommendation --- #}
+  {% if recommendation %}
+  <details open>
+    <summary>Recommendation</summary>
+    <div class="details-body">
+      {{ recommendation | trim | replace('\n\n', '</p><p>') | replace('\n', ' ') }}
+    </div>
+  </details>
+  {% endif %}
+
+  {# --- SWOT 2x2 Grid --- #}
+  {% if strengths and weaknesses and opportunities and threats %}
+  <h2>SWOT Overview</h2>
+  {{ swot_grid(strengths, weaknesses, opportunities, threats) }}
+  {% endif %}
+
+  {# --- Detailed Strengths --- #}
+  {% if strengths %}
+  <details>
+    <summary>Strengths ({{ strengths | length }} items)</summary>
+    <div class="details-body">
+      {% for item in strengths %}
+      <h3>{{ item.id }}: {{ item.title }}</h3>
+      <p>{{ item.description | trim }}</p>
+      {% if item.evidence %}
+      <div class="evidence"><strong>Evidence:</strong> {{ item.evidence }}</div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
+  {# --- Detailed Weaknesses --- #}
+  {% if weaknesses %}
+  <details>
+    <summary>Weaknesses ({{ weaknesses | length }} items)</summary>
+    <div class="details-body">
+      {% for item in weaknesses %}
+      <h3>{{ item.id }}: {{ item.title }}</h3>
+      <p>{{ item.description | trim }}</p>
+      {% if item.evidence %}
+      <div class="evidence"><strong>Evidence:</strong> {{ item.evidence }}</div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
+  {# --- Detailed Opportunities --- #}
+  {% if opportunities %}
+  <details>
+    <summary>Opportunities ({{ opportunities | length }} items)</summary>
+    <div class="details-body">
+      {% for item in opportunities %}
+      <h3>{{ item.id }}: {{ item.title }}</h3>
+      <p>{{ item.description | trim }}</p>
+      {% if item.evidence %}
+      <div class="evidence"><strong>Evidence:</strong> {{ item.evidence }}</div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
+  {# --- Detailed Threats --- #}
+  {% if threats %}
+  <details>
+    <summary>Threats ({{ threats | length }} items)</summary>
+    <div class="details-body">
+      {% for item in threats %}
+      <h3>{{ item.id }}: {{ item.title }}</h3>
+      <p>{{ item.description | trim }}</p>
+      {% if item.evidence %}
+      <div class="evidence"><strong>Evidence:</strong> {{ item.evidence }}</div>
+      {% endif %}
+      {% if item.mitigation %}
+      <div class="mitigation"><strong>Mitigation:</strong> {{ item.mitigation }}</div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </details>
+  {% endif %}
+
+  {# --- Decision Matrix --- #}
+  {% if decision_matrix %}
+  <details>
+    <summary>Decision Matrix</summary>
+    <div class="details-body">
+      {{ render_decision_matrix(decision_matrix.criteria, decision_matrix.options) }}
+    </div>
+  </details>
+  {% endif %}
+  {% endblock content %}
+
+  {% block footer %}
+  <footer class="doc-footer">
+    <p>Generated: {{ generation_date }} | Next review: {{ next_review }}</p>
+    {% if phase %}
+    <p>Phase: {{ phase }}</p>
+    {% endif %}
+    <div class="versions">
+      {% for name, info in versions.items() %}
+      <span class="version-item">{{ name }}: {{ info.version }}</span>
+      {% endfor %}
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
+  </footer>
+  {% endblock footer %}
+</body>
+</html>

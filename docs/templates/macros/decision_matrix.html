@@ -1,0 +1,26 @@
+{# docs/templates/macros/decision_matrix.html -- Comparison table macro #}
+
+{% macro decision_matrix(criteria, options) %}
+<div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Criteria</th>
+        {% for option_name in options.keys() %}
+        <th>{{ option_name }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for i in range(criteria | length) %}
+      <tr>
+        <td><strong>{{ criteria[i] }}</strong></td>
+        {% for option_name, ratings in options.items() %}
+        <td>{{ ratings[i] if i < ratings | length else '&mdash;' }}</td>
+        {% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
