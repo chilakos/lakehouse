@@ -1,212 +1,244 @@
 # Project Research Summary
 
-**Project:** Lakehouse Architecture Transformation
-**Domain:** Enterprise Data Platform -- Financial Services (Teradata/DataStage to Iceberg/Trino)
-**Researched:** 2026-03-13
-**Confidence:** MEDIUM-HIGH
+**Project:** Lakehouse Documentation Deliverables (v1.1)
+**Domain:** Executive and developer documentation for an enterprise financial services data lakehouse
+**Researched:** 2026-03-14
+**Confidence:** HIGH
 
 ## Executive Summary
 
-This project transforms a legacy Teradata/DataStage data warehouse into an open lakehouse built on Apache Iceberg and Trino, serving a regulated financial services organization with 1.5 PB of data across 300+ sources. The expert consensus is clear: Iceberg is the winning open table format for multi-engine lakehouse architectures, Trino is the best open query engine for interactive analytics, and PySpark is the only viable ETL engine at petabyte scale. The stack is mature and battle-tested at organizations like Netflix, Apple, and LinkedIn. The architectural pattern -- medallion layers (Bronze/Silver/Gold) with a shared Iceberg catalog and write-engine separation -- is well-documented and proven. This is not a bleeding-edge bet; it is an industry-standard transformation.
+This milestone delivers documentation on top of a fully operational lakehouse platform (Nessie/Trino/Iceberg, PySpark ETL, Airflow, Ranger, OpenMetadata, Cube BI, NL-to-SQL AI, 480+ tests). The deliverables divide into two distinct tracks: standalone HTML artifacts for leadership (6 SWOT analyses, marketecture diagram, detailed architecture page) and developer-facing docs integrated into the repository (onboarding guide, API reference, contributor guidelines, data catalog). The two tracks have different consumers, different build toolchains, and different maintenance models -- treating them as one homogeneous task is the single most common structural mistake.
 
-The recommended approach is a feasibility-first, phased migration over 18-24 months. Phase 1 validates the core premise: can Teradata, Trino, and Snowflake all read and write the same Iceberg tables through a shared catalog? The answer depends entirely on catalog interoperability, which is the single highest-risk decision in the project. AWS Glue is the only catalog confirmed to work with all four engines (Teradata OTF, Trino, Snowflake, PySpark) and should be the Phase 1 choice, with a planned migration to Apache Polaris (REST catalog) once Teradata's REST catalog support is confirmed or Teradata's role diminishes. The on-premises storage strategy needs urgent reassessment: MinIO entered maintenance mode in late 2025, and RustFS or Ceph should replace it.
+The recommended approach is minimal new tooling layered on existing dependencies. Jinja2 (already installed) renders SWOT and architecture HTML from YAML/Markdown content. Mermaid.js (CDN or local bundle) generates architecture diagrams as code. Only two truly new Python packages are needed: `pdoc` for API reference and `markdown` for guide conversion. All standalone HTML must be rigorously self-contained -- no CDN links, no web fonts, file size under 500 KB -- because financial services environments routinely restrict network access and executives email these files as attachments. A parallel docs-as-code site (MkDocs Material + mkdocstrings) serves the engineering team.
 
-The key risks are: (1) Teradata OTF catalog mismatch locking the project into a dead-end catalog, (2) Iceberg file explosion at 1.5 PB scale without automated compaction from day one, (3) DataStage migration complexity being severely underestimated (the 40% of complex jobs will consume 80% of effort), and (4) governance/lineage gaps during transition creating regulatory exposure under BCBS 239. All four risks are manageable with early validation, dedicated platform team standards, and treating governance as a Phase 1 requirement rather than a Phase 3 afterthought. The 6-12 month timeline in the PROJECT.md is aggressive for full delivery but realistic for proving feasibility and migrating the first 50 ETL jobs.
+The critical risks are: (1) SWOT analyses that read as opinion rather than evidence -- every item must be backed by benchmark data, vendor specifications, or internal test results; (2) architecture diagrams that drift from the actual infrastructure within weeks unless diagram source is in git and rendered by CI; (3) the data catalog becoming a second source of truth that conflicts with OpenMetadata -- catalog docs must be generated from or tightly linked to the live OpenMetadata instance to satisfy BCBS 239 auditability requirements; and (4) developer docs going stale as the platform evolves, which is prevented by auto-generating API reference from docstrings and running onboarding commands in CI.
+
+---
 
 ## Key Findings
 
 ### Recommended Stack
 
-The stack centers on Apache Iceberg as the universal table format, with Trino as the primary open query engine and PySpark as the ETL workhorse. The transformation layer uses dbt-trino for SQL-based Silver-to-Gold modeling, orchestrated by Apache Airflow 3.0. Data quality runs through Soda Core (primary, YAML-based data contracts) supplemented by Great Expectations for complex statistical validation. Governance and lineage use OpenMetadata with OpenLineage as the event standard. The semantic layer for BI uses Cube (API-first, pre-aggregation caching, Trino-native), with NL-to-SQL deferred to Phase 3+ starting through Cube's AI API. See [STACK.md](STACK.md) for full rationale and alternatives analysis.
+The documentation stack deliberately reuses existing platform dependencies. Jinja2 3.1.6 is already installed via Airflow and handles standalone HTML rendering with template inheritance. PyYAML and Pydantic -- both already in the stack -- manage SWOT content files and data validation. Mermaid.js 11.x loads from CDN (or local bundle for air-gapped delivery) and renders diagrams client-side with no build dependency. The only net-new packages are `pdoc >= 15.0` for zero-config API reference and `Markdown >= 3.7` for converting existing `.md` guides to HTML. A MkDocs Material + mkdocstrings layer is added by ARCHITECTURE.md research for the developer-facing documentation site. See [STACK.md](STACK.md) for full version matrix and configuration examples.
 
 **Core technologies:**
-- **Apache Iceberg 1.10.x (V2):** Open table format -- only OTF with first-class support across Teradata, Trino, Snowflake, and Spark
-- **Apache Polaris 1.2.x:** Iceberg REST catalog -- Apache TLP, vendor-neutral, RBAC built-in (Phase 2+ target; AWS Glue for Phase 1)
-- **Trino 479+:** Primary query engine -- Iceberg connector with full DML, 100+ federation connectors, interactive performance
-- **PySpark 3.5.x:** ETL engine -- only viable option at 1.5 PB distributed scale, native Iceberg writes
-- **dbt-core 1.9.x + dbt-trino:** SQL transformation layer -- Silver-to-Gold modeling, semantic layer integration, massive community
-- **Apache Airflow 3.0:** Orchestration -- asset-aware scheduling, 80K+ org adoption, AWS MWAA managed option
-- **Soda Core 4.1.x:** Data quality -- Data Contracts model, reconciliation checks purpose-built for migration validation
-- **OpenMetadata 1.12.x + OpenLineage:** Governance -- unified catalog/lineage/quality, PII auto-classification, column-level lineage
-- **Cube 1.6.x:** BI semantic layer -- API-first, pre-aggregation caching, Trino integration, Tableau/Power BI connectors
-- **AWS S3 + RustFS/Ceph (on-prem):** Storage -- S3 API for cloud, S3-compatible replacement for abandoned MinIO on-prem
+- **Jinja2 3.1.6**: HTML templating for all standalone deliverables -- already installed, template inheritance ensures consistent branding across 15+ pages
+- **Mermaid.js 11.x (CDN/local)**: Diagram-as-code for marketecture and architecture diagrams -- text source is version-controllable, renders client-side with zero build deps
+- **pdoc >= 15.0**: Zero-config Python API reference -- reads existing docstrings, outputs standalone HTML, far simpler than Sphinx for 47 source files
+- **Markdown >= 3.7**: Converts existing `.md` content (etl-patterns.md, ADRs, guides) to styled HTML
+- **MkDocs Material >= 9.5 + mkdocstrings[python] >= 0.27**: Searchable developer documentation site with auto-generated API reference from Python docstrings
 
-**Critical version notes:** Iceberg V3 spec is ratified but engine support is incomplete -- stay on V2. MinIO open-source is archived; budget for commercial alternative or migrate to RustFS/Ceph.
+**Critical version note:** Pygments should be upgraded from 2.17.2 to >= 2.19.0 for Python 3.12 syntax support. Net new packages are 2 (`pdoc`, `Markdown`). MkDocs Material and mkdocstrings are added in the docs optional dependency group.
 
 ### Expected Features
 
-See [FEATURES.md](FEATURES.md) for full feature landscape, dependency graph, and prioritization matrix.
+The deliverables split into three priority tiers. Two SWOTs (Snowflake Strategy, Data Model Strategy) have undecided outcomes that are actively blocking strategic decisions -- these are the highest-priority items. See [FEATURES.md](FEATURES.md) for the full content-readiness matrix per SWOT and the audience-specific requirements table.
 
-**Must have (table stakes -- Phase 1-2):**
-- TS-1: Iceberg tables on S3 and MinIO with ACID transactions, schema evolution, time travel
-- TS-2: Multi-engine query access (Trino + Teradata OTF + Snowflake reading same Iceberg tables)
-- TS-3: Centralized Iceberg catalog supporting all engines and both storage backends
-- TS-4: Python ETL framework replacing DataStage (PySpark + Airflow)
-- TS-5: End-to-end data lineage (OpenLineage -- regulatory non-negotiable under BCBS 239)
-- TS-6: Security and access control (SSO, RBAC, column-level masking, encryption)
-- TS-7: Data quality framework (schema validation, reconciliation, monitoring)
+**Must have (table stakes):**
+- 6 SWOT analyses as standalone HTML -- standard 2x2 grid, executive summary with explicit recommendation, decision matrix, mitigations for every threat
+- Marketecture HTML -- executive-facing layer diagram, plain English labels, key platform numbers (1.5 PB, 300+ sources, 40 engineers, 480+ tests)
+- Shared CSS template -- print-friendly, system fonts, consistent color palette; must be built before any HTML deliverable
+- Detailed architecture HTML -- every service with port/protocol, data flow arrows, Ranger security integration points, environment differences
+- Developer onboarding guide -- testable step-by-step commands, repository structure walkthrough, first pipeline tutorial
+- API/module reference -- auto-generated from docstrings, all 8 packages covered
+- Contributor guidelines -- branch/PR process, ruff config, pytest markers, naming conventions
+- Data catalog/glossary -- business-language definitions linked to OpenMetadata, metric calculation logic from Cube YAML, BCBS 239 term mapping
 
-**Should have (differentiators -- Phase 2-3):**
-- D-1: BI semantic layer (Cube over Trino, serving Tableau/Power BI)
-- D-2: Query federation (Trino joining Iceberg + Teradata + other sources)
-- D-4: Pipeline observability and SLA monitoring
+**Should have (differentiators):**
+- Decision status badges (Decided/Pending) on SWOT pages -- immediately signals which analyses need leadership action
+- Cross-SWOT index page -- single view of all 6 decisions with status and links
+- Interactive collapsible sections using pure CSS `<details>`/`<summary>` -- no JavaScript required
+- Responsive design for tablet (executives review on iPad)
+- "Day 1 Checklist" -- printable single-page onboarding accelerator
+- Version-stamped footers on all HTML pages -- enables audit trail
 
-**Defer to v2+ (Phase 3+):**
-- D-1 AI: NL-to-SQL semantic layer (requires BI semantic layer as prerequisite; accuracy too low without curated context)
-- D-3: Self-service data marketplace (organizational change, not just tooling)
-- D-5: Cost management / FinOps chargeback (meaningful only at scale)
-- D-6: Data mesh domain ownership (pilot with 2-3 domains, not organization-wide)
-- Real-time streaming (batch-first; Iceberg supports streaming writes when ready)
-
-**Anti-features (deliberately avoid):**
-- Full Teradata decommission in Phase 1
-- Multi-cloud deployment (AWS + MinIO is sufficient)
-- NL-to-SQL for all data on day one (accuracy collapses to 10-20% without semantic curation)
-- Custom ETL framework from scratch (use Airflow + standardized patterns)
-- Row-level lineage tracking (wait for Iceberg V3 ecosystem maturity)
+**Defer to v2+:**
+- Data lineage visualization in catalog docs -- high complexity, requires validating OpenLineage completeness first
+- Automated Sphinx/pdoc build pipeline for initial authoring -- manual authoring is faster and higher quality for first pass
+- PDF generation pipeline -- browser Print-to-PDF is sufficient; WeasyPrint adds CI complexity
+- Video walkthroughs -- high production effort, goes stale, not searchable
+- Embedded UI screenshots -- stale immediately after UI updates
 
 ### Architecture Approach
 
-The architecture follows a layered pattern with clear separation of concerns: source systems feed a Python ETL framework (PySpark + Airflow) that writes data through Bronze/Silver/Gold medallion layers into Iceberg tables on S3/MinIO. A shared Iceberg catalog (Glue in Phase 1, Polaris target for Phase 2+) provides unified metadata access for all engines. Write operations are owned by a single engine per table (PySpark for ETL, dbt-on-Trino for Gold aggregations) to avoid optimistic concurrency conflicts. Read operations are distributed: Trino for interactive analytics, Teradata OTF for legacy workloads, Snowflake for external consumers. The BI semantic layer (Cube) sits between Trino and BI tools. See [ARCHITECTURE.md](ARCHITECTURE.md) for full component diagrams and data flow.
+The system uses a two-track output model. Track A produces standalone HTML files (self-contained, emailable, browser-openable) for SWOT analyses and architecture pages -- built by Jinja2 Python scripts reading YAML/Markdown source. Track B produces a searchable MkDocs Material site for developer documentation -- built by `mkdocs build` consuming Markdown guides and Python docstrings via mkdocstrings. Both tracks share a common source layer (same repo, same PR process) and are orchestrated by a single `docs.yml` GitHub Actions workflow. All generated output lives in `docs/_build/` which is gitignored. See [ARCHITECTURE.md](ARCHITECTURE.md) for the full directory structure, configuration files, and build-order rationale.
 
 **Major components:**
-1. **Ingestion Layer (PySpark + Airflow):** Extracts from 300+ sources (mainframe primary), writes Bronze Iceberg tables, orchestrates all ETL
-2. **Medallion Layers (Bronze/Silver/Gold):** Progressive data quality layers -- raw, cleansed, business-ready -- all as Iceberg tables
-3. **Iceberg Catalog (Glue -> Polaris):** Central metadata registry, the architectural linchpin for multi-engine access
-4. **Query Engine Layer (Trino + Teradata OTF + Snowflake):** Multi-engine read access with write-engine separation
-5. **Semantic Layer (Cube):** Unified metrics for BI tools with pre-aggregation caching
-6. **Governance Layer (OpenMetadata + OpenLineage):** Lineage, quality metrics, PII classification, audit trails
-7. **Storage Layer (S3 + on-prem S3-compatible):** Hybrid cloud/on-prem with data stored in one location per table
-
-**Key architectural patterns:**
-- Multi-engine Iceberg with shared catalog (core pattern)
-- Medallion architecture (Bronze/Silver/Gold) for progressive quality
-- Write-engine separation (one writer per table)
-- Hybrid cloud storage with unified catalog
-- Semantic layer abstraction between query engine and BI tools
+1. **Shared CSS template** (`docs/_static/style.css`) -- color palette, typography, print styles, status badges; required before any HTML deliverable
+2. **Jinja2 SWOT renderer** (`docs/_scripts/render_swots.py`) -- parses YAML front matter from SWOT Markdown, converts body to HTML, inlines CSS into standalone file
+3. **Mermaid diagram pipeline** (`docs/architecture/*.mmd` + `generate_diagrams.py`) -- diagram-as-code source rendered to SVG by CI; GitHub natively previews `.mmd` files in Markdown
+4. **Architecture HTML renderer** (`docs/_scripts/render_architecture.py`) -- embeds SVG diagrams into standalone HTML pages with Jinja2
+5. **MkDocs Material site** (`docs/mkdocs.yml`) -- developer guides, ETL patterns, contributor docs, API reference via mkdocstrings
+6. **OpenMetadata glossary exporter** (`docs/_scripts/export_glossary.py`) -- pulls live glossary terms from OpenMetadata REST API; caches to `docs/catalog/glossary.md` in git; fails gracefully when OM unavailable
+7. **GitHub Actions docs.yml** -- path-filtered workflow (triggers on `docs/**` or `etl/src/**` changes) that runs all build steps sequentially and uploads artifact
 
 ### Critical Pitfalls
 
-See [PITFALLS.md](PITFALLS.md) for all 11 pitfalls with full prevention and recovery strategies.
+The full pitfall catalog with recovery strategies is in [PITFALLS.md](PITFALLS.md). The top items with direct roadmap impact:
 
-1. **Teradata OTF catalog mismatch** -- Teradata OTF does not support REST catalogs (Polaris/Nessie). Use AWS Glue as Phase 1 common denominator; validate REST support before committing to Polaris. This is a gate decision.
-2. **Iceberg file explosion at PB scale** -- Without automated compaction, tables accumulate millions of small files and queries degrade to 10+ minute planning times. Implement compaction, snapshot expiration, and orphan cleanup as Day 1 operational requirements, not afterthoughts.
-3. **MinIO is effectively abandoned** -- Open-source MinIO entered maintenance mode Dec 2025. Do not deploy for new on-prem storage. Evaluate RustFS (Apache 2.0, 2.3x faster) or Ceph RGW as replacements immediately.
-4. **DataStage migration complexity underestimated** -- 40% of 300+ jobs contain complex logic requiring 10x migration effort. Tier all jobs by complexity before starting. Budget 3-5x more effort for complex jobs. Run parallel validation for every migrated job.
-5. **Governance gaps create regulatory exposure** -- BCBS 239 requires attribute-level lineage from source to report. Lineage must be a Day 1 requirement. Deploy OpenLineage from the first migrated ETL job. Engage compliance team early.
-6. **BI performance regression kills adoption** -- Trino-over-Iceberg is 2-10x slower than optimized Teradata for BI dashboards without pre-aggregated Gold tables and a semantic layer. Benchmark top 50 dashboards before any BI cutover.
-7. **Timeline underestimation** -- Full scope is 18-24 months, not 6-12. Redefine success at 6 months as "Phase 1 validated, first 50 jobs migrated" rather than full migration complete.
+1. **SWOT analyses reflect author bias, not evidence** -- Every SWOT item must include quantified evidence (benchmark results, vendor spec citations, internal test data). Add a "Confidence" or "Evidence" column to the SWOT template. Use the existing Nessie SWOT (`docs/swot/nessie-catalog-swot.md`) as the quality bar. Warning sign: Strengths/Opportunities section is 2x longer than Weaknesses/Threats.
+
+2. **Architecture diagrams diverge from reality on day one** -- Store all diagram source as `.mmd` files in git, add CI rendering on every merge, include a "Last verified" date on every diagram. The platform has 12+ major components still evolving through Phase 2 -- static images will be wrong within weeks.
+
+3. **Data catalog fails BCBS 239 auditability** -- Static HTML glossary must be generated from or tightly linked to OpenMetadata. Only 2 of 31 G-SIBs are fully BCBS 239 compliant; the most common failure is exactly this documentation gap. Map every glossary term to its OpenMetadata asset ID, Ranger policy, OpenLineage lineage path, and Soda quality check results.
+
+4. **Developer docs go stale within one sprint** -- API reference must be auto-generated from docstrings (pdoc or mkdocstrings), never hand-written. Add a CI smoke test that runs onboarding guide setup commands in a clean environment.
+
+5. **SWOT HTML breaks in financial services environments** -- All HTML must pass the `file://` protocol test with no internet connection. No CDN links. No web fonts. Target under 500 KB per file. Print-to-PDF must produce readable output. Financial services IT blocks external CDN requests and executives email these files as attachments.
+
+6. **Marketecture and architecture serve the wrong audience** -- Define audience personas before creating either diagram. Marketecture rule: no technical component names ("Data Catalog" not "OpenMetadata", "Query Engine" not "Trino 479"). Detailed architecture rule: every component shows actual deployment name, version, port, and protocol. Have the target audience review their respective diagram.
+
+---
 
 ## Implications for Roadmap
 
-Based on combined research across stack, features, architecture, and pitfalls, the following phase structure is recommended. The ordering is driven by three principles: (1) validate the riskiest assumptions first, (2) establish governance from day one, (3) build infrastructure before consumers.
+### Phase 1: Foundation and SWOT Analyses
 
-### Phase 0: Team Setup and Standards (Weeks 1-3)
-**Rationale:** Pitfall research is emphatic -- 40+ engineers working in parallel without coordination infrastructure creates integration hell. Standards must exist before code is written.
-**Delivers:** Platform team (5-7 engineers), Iceberg table creation policies, shared development environment, CI/CD templates, naming conventions, communication cadence
-**Addresses:** Team coordination (Pitfall 10), timeline expectations (Pitfall 11)
-**Avoids:** Schema/partition inconsistency, integration failures, scope confusion
+**Rationale:** Two of the six SWOTs (Snowflake Strategy, Data Model Strategy) have undecided outcomes blocking active strategic decisions. Leadership is waiting on these. The shared CSS template is a prerequisite for all HTML deliverables -- it must be approved before generating 6+ pages that will need retroactive rework if design changes. The existing Nessie SWOT validates the template with low authoring effort before tackling the full-research SWOTs.
 
-### Phase 1: Foundation and Feasibility Validation (Months 1-4)
-**Rationale:** The entire architecture depends on catalog interoperability and storage layer viability. These must be proven before any migration begins. This is the gate decision phase.
-**Delivers:** Proven catalog (Glue), validated storage (S3 + on-prem alternative), Trino + Teradata OTF reading same Iceberg tables, first 10 ETL jobs migrated (Bronze layer), basic security (RBAC), governance framework (OpenLineage deployed), DataStage job complexity assessment
-**Addresses:** TS-1 (Iceberg on storage), TS-2 (multi-engine access), TS-3 (catalog), TS-4 (pilot ETL), TS-6 (basic security), TS-7 (basic quality/reconciliation)
-**Avoids:** Catalog mismatch (Pitfall 1), MinIO risk (Pitfall 4), Teradata OTF performance surprises (Pitfall 3)
-**Gate criteria:** Cross-engine read/write through shared catalog succeeds at 1+ TB scale; on-prem storage alternative validated; OTF performance benchmarked
+**Delivers:** Shared CSS template (print-friendly, system fonts, color palette, status badges), Jinja2 SWOT renderer script, 6 SWOT analyses as standalone HTML, cross-SWOT index page
 
-### Phase 2: Core Platform and ETL Migration (Months 5-10)
-**Rationale:** With foundation proven, scale the migration. ETL jobs migrate in waves (Tier 1 simple jobs first, Tier 2 moderate second). Silver layer construction begins. Lineage enforcement for every migrated job.
-**Delivers:** 100-150 ETL jobs migrated with parallel-run validation, Silver layer for priority domains, full data quality framework (Soda Core), column-level lineage in OpenMetadata, query federation (Trino across Teradata + Iceberg), pipeline observability, Snowflake Iceberg external table validation
-**Addresses:** TS-4 (scaled ETL), TS-5 (lineage enforcement), TS-7 (full quality), D-2 (federation), D-4 (observability)
-**Uses:** PySpark, Airflow 3.0, Soda Core, OpenLineage, OpenMetadata, dbt-trino (initial Gold models)
-**Avoids:** DataStage migration underestimation (Pitfall 5), governance gaps (Pitfall 6), FSDM confusion (Pitfall 8)
+**Features from FEATURES.md:** Standard 2x2 SWOT grid, executive summary with recommendation, decision matrix, threat mitigations, decision status badges, collapsible sections, responsive design, consistent structure
 
-### Phase 3: BI Migration and Semantic Layer (Months 11-15)
-**Rationale:** BI migration requires stable Gold-layer data. Build the semantic layer, benchmark dashboards against Trino, and cut over only after performance parity is proven. FSDM Silver/Gold denormalization for high-use subject areas.
-**Delivers:** Cube semantic layer serving Tableau and Power BI, Gold-layer pre-aggregates for top 50 dashboards, BI tools pointed at Cube/Trino (with Teradata fallback), Snowflake long-term strategy decided, catalog migration to Polaris (if Teradata REST support confirmed)
-**Addresses:** D-1 (BI semantic layer), remaining TS-4 (ETL migration waves), Snowflake SWOT resolution
-**Avoids:** BI performance regression (Pitfall 7), Snowflake feature incompatibility (Pitfall 9)
+**Avoids:** Pitfall 1 (SWOT bias -- establish evidence-based template and review process before writing all 6), Pitfall 6 (HTML accessibility -- establish `file://` test and 500 KB target before generating all 6 files)
 
-### Phase 4: AI Layer, Optimization, and Teradata Wind-Down (Months 16-24)
-**Rationale:** AI semantic layer requires BI semantic layer as prerequisite. Teradata wind-down begins only after workloads are validated on Trino. Cost optimization and data mesh patterns become relevant at full scale.
-**Delivers:** NL-to-SQL via Cube AI API (curated domains first), remaining ETL job migration (Tier 3 complex jobs), Teradata workload migration to Trino, FinOps showback, data mesh pilot (2-3 domains), full DataStage retirement
-**Addresses:** D-1 AI (NL-to-SQL), D-5 (cost management), D-6 (data mesh pilot)
-**Uses:** Cube AI API, Wren AI (if needed), Polaris (catalog upgrade)
+**Content readiness note:** Nessie SWOT is complete (convert only, 1-2 hours). DataStage, BI Semantic Layer, and AI Semantic Layer are partial (2-4 hours each). Snowflake Strategy and Data Model Strategy require full research and domain expert input -- these are the longest-effort SWOTs and must be started immediately to avoid blocking leadership.
+
+**Research flag: Needs `/gsd:research-phase`** -- Snowflake Strategy SWOT requires research on Snowflake ICEBERG_REST capabilities, cost model, and contract status. Data Model Strategy SWOT requires domain expert input on FSDM adoption level and medallion evolution path. These cannot be authored from existing repo content alone.
+
+---
+
+### Phase 2: Architecture Diagrams
+
+**Rationale:** Architecture deliverables depend on the CSS template (Phase 1) and require a distinct toolchain (Mermaid CLI rendering pipeline). The marketecture is the second-highest leadership priority after SWOTs. The detailed architecture page serves engineers and requires the most content extraction work (20+ services from docker-compose.yml). Both share the same diagram-as-code infrastructure and HTML renderer.
+
+**Delivers:** 3 Mermaid diagram source files (`marketecture.mmd`, `detailed-architecture.mmd`, `data-flow.mmd`), SVG rendering pipeline, 2 standalone architecture HTML pages
+
+**Features from FEATURES.md:** Marketecture with plain-English labels and key numbers callout; detailed architecture with port numbers, protocols, service dependencies, security layer (Ranger integration), governance stack detail (OpenLineage -> Marquez -> Grafana), environment differences table
+
+**Uses:** Mermaid.js 11.x for diagram-as-code, `render_architecture.py` script, shared Jinja2 template from Phase 1
+
+**Avoids:** Pitfall 2 (architecture drift -- establish `.mmd` source-in-git and CI rendering before first diagram is published), Pitfall 5 (wrong audience -- define personas and conduct audience-specific reviews before finalizing either diagram)
+
+**Research flag: Standard patterns** -- Mermaid diagram-as-code is well-documented with extensive official docs and native GitHub Markdown preview. No additional research phase needed. The main effort is content extraction from `docker-compose.yml` (574 lines, 20+ services) and `infra/terraform/`.
+
+---
+
+### Phase 3: Developer Documentation
+
+**Rationale:** Developer docs (onboarding, API reference, contributor guidelines) can run in parallel with Phase 2 but share the same repo structure established in Phase 1. They use a different build system (MkDocs Material) from standalone HTML deliverables. Most content already exists in `etl-patterns.md` (565 lines), `ci/README.md`, and `README.md` -- this phase is primarily reorganization, formatting, and pipeline setup. API reference quality depends on docstring coverage, which must be assessed before committing to mkdocstrings output quality.
+
+**Delivers:** MkDocs Material site with developer onboarding guide, repository structure walkthrough, pipeline authoring tutorial, testing guide, contributor guidelines, auto-generated API reference for all 8 packages (config, governance, iceberg_utils, inventory, lineage, pipelines, quality, semantic), Day 1 Checklist
+
+**Features from FEATURES.md:** Prerequisites and local setup, first pipeline tutorial (from etl-patterns.md Sections 2-4), CI/CD workflow explanation, service URL reference table (10+ services), troubleshooting FAQ, API module listing with usage examples, import path quick reference, class hierarchy visualization
+
+**Uses:** MkDocs Material >= 9.5.0, mkdocstrings[python] >= 0.27.0, `markdown` library for converting existing `.md` content
+
+**Avoids:** Pitfall 4 (developer doc staleness -- auto-generate API reference from docstrings, add CI onboarding smoke test, reference CI config files by path not narrative description)
+
+**Research flag: Docstring audit required** -- The 47 Python source files across 8 packages have unknown docstring coverage. A 1-hour audit of `etl/src/` is needed before starting this phase to determine whether mkdocstrings output will be acceptable or whether docstring improvement is a prerequisite sub-task that adds 1-2 days to the phase estimate.
+
+---
+
+### Phase 4: Data Catalog and Glossary
+
+**Rationale:** Data catalog documentation has the highest regulatory risk (BCBS 239 compliance) and requires integration with OpenMetadata -- an external service dependency not needed by other phases. Placing this last allows validation of OpenMetadata API access and glossary export pipeline before building the generation infrastructure. The 17 glossary terms in `glossary-seed.json` and 4 Cube YAML model files provide content foundation, but all definitions must be reconciled with OpenMetadata as the authoritative source.
+
+**Delivers:** Business glossary HTML with BCBS 239 term mapping, metric definitions from Cube YAML, medallion layer explanation for business users, term-to-table mapping, data freshness SLA documentation (Gold: 24h/48h, Silver: 12h/24h, Bronze: 6h/12h), OpenMetadata glossary export script with git-cached fallback
+
+**Features from FEATURES.md:** Plain-language business glossary, term-to-table mapping, medallion layer explanation, data freshness SLAs, metric calculation logic (total_notional, trade_count, avg_price, VaR, expected shortfall), regulatory term definitions (BCBS 239, PII, VaR)
+
+**Uses:** `export_glossary.py` with OpenMetadata Python SDK, Jinja2 catalog template, `glossary-seed.json` and Cube YAML models (`trading_metrics.yml`, `risk_exposure.yml`, views) as content sources
+
+**Avoids:** Pitfall 3 (BCBS 239 catalog failure -- link every term to OpenMetadata asset ID, Ranger policy, and OpenLineage lineage path), Pitfall 7 (duplicate catalog vs OpenMetadata -- establish single source of truth rule, generate static docs from OpenMetadata API, never hand-write definitions OM already has)
+
+**Research flag: Needs OpenMetadata API validation** -- Before building `export_glossary.py`, confirm: (1) which glossary terms already exist in the live OpenMetadata instance vs only in `glossary-seed.json`, (2) whether OpenMetadata SDK can be used in CI without a full OM service container, (3) what BCBS 239 principle-to-feature mapping already exists in OpenMetadata. This is a scoping/discovery question, not a technology research question.
+
+---
+
+### Phase 5: CI/CD Integration and Finalization
+
+**Rationale:** The `docs.yml` GitHub Actions workflow consolidates all previous phases into a single automated pipeline. It should be built after individual components are working locally to avoid simultaneously debugging CI configuration and content issues. This phase also covers the "Looks Done But Isn't" audit checklist from PITFALLS.md: `file://` protocol testing of all HTML deliverables, print-to-PDF validation, security scan for real data in docs, and docs-freshness CI check setup.
+
+**Delivers:** `docs.yml` GitHub Actions workflow (path-filtered triggers, sequential build steps, artifact upload), `.gitignore` update for `docs/_build/`, `pyproject.toml` docs optional dependency group, CI smoke test for onboarding guide commands, docs-freshness check, security scan for PII/real data in documentation
+
+**Avoids:** All pitfalls -- this phase is the enforcement layer. CI rendering prevents diagram drift. Smoke tests prevent stale onboarding docs. Security scan prevents real data exposure per PITFALLS.md security section. Freshness check flags docs that lag behind code changes.
+
+**Research flag: Standard patterns** -- GitHub Actions workflow for MkDocs Material documentation builds is fully covered by MkDocs Material's official publishing guide. No additional research phase needed.
+
+---
 
 ### Phase Ordering Rationale
 
-- **Catalog and storage first (Phase 1)** because every component in the architecture depends on them. The catalog compatibility matrix shows AWS Glue as the only safe choice for all engines -- start there, evolve later.
-- **ETL before BI (Phase 2 before Phase 3)** because BI tools need business-ready Gold-layer data that does not exist until ETL pipelines build it. The feature dependency graph shows TS-4 (ingestion) enables TS-7 (quality) enables TS-5 (lineage) enables D-1 (semantic layer).
-- **BI semantic layer before AI semantic layer (Phase 3 before Phase 4)** because NL-to-SQL accuracy collapses from 86-95% to 10-20% without curated metric definitions. The AI layer reads from the BI layer's semantic model.
-- **Governance throughout, not at the end** because BCBS 239 does not grant grace periods. OpenLineage deploys in Phase 1, enforces in Phase 2, dashboards in Phase 3.
-- **18-24 month total timeline** because comparable enterprise migrations at this scale (300+ sources, 1.5 PB) consistently take 18-24 months. The 6-month milestone should be "Phase 1 complete and first 50 jobs migrated," not "done."
+- **CSS template before HTML deliverables** -- All 15+ HTML pages inherit from the base template. Visual design approval before content generation prevents rework.
+- **SWOTs before architecture diagrams** -- SWOTs are blocking strategic decisions, require the most stakeholder interaction (evidence review, cross-SWOT consistency checks), and have the longest content-authoring timeline for the two undecided topics.
+- **Architecture diagrams as a distinct phase** -- Shares the CSS infrastructure from Phase 1 but requires a separate Mermaid toolchain and distinct audience review process. Decoupling avoids blocking diagram work on SWOT content completion.
+- **Developer docs parallel to architecture diagrams** -- No cross-dependency between Phase 2 and Phase 3. The docstring audit should be the first Phase 3 task and can run immediately after Phase 1 CSS template work begins.
+- **Data catalog last** -- External dependency (OpenMetadata API), highest regulatory complexity, and the need to reconcile with the live catalog make this the highest-risk phase. Isolating it last prevents OpenMetadata availability from blocking leadership deliverables.
+- **CI/CD integration as a finishing phase** -- Building the workflow after components work locally is less risky than debugging component logic inside CI. Path filters also require all deliverable output paths to be known before the workflow can be written correctly.
+
+---
 
 ### Research Flags
 
-Phases likely needing deeper research during planning:
-- **Phase 1:** HIGH priority. Catalog interoperability testing (Teradata OTF + Glue + Trino + Snowflake), on-prem storage alternative evaluation (RustFS vs Ceph vs MinIO AIStor commercial), Teradata OTF performance benchmarking at 1+ TB. Sparse public documentation on Teradata REST catalog support.
-- **Phase 2:** MEDIUM priority. Mainframe source connectivity from Python (COBOL copybook parsing, EBCDIC handling), DataStage job complexity tiers, Soda Core data contracts for medallion layer boundaries.
-- **Phase 3:** MEDIUM priority. Cube performance tuning for Trino pre-aggregation, Tableau/Power BI connector optimization, Polaris operational maturity (HA/DR story for self-hosted catalog).
+**Needs `/gsd:research-phase` during planning:**
+- **Phase 1 (Snowflake Strategy SWOT):** Snowflake ICEBERG_REST table format capabilities, cost model vs Teradata/Trino, contract status -- external vendor research required, cannot be authored from repo content
+- **Phase 1 (Data Model Strategy SWOT):** FSDM adoption rate in current pipelines, medallion evolution path, backward compatibility constraints -- requires domain expert sessions
+- **Phase 4 (Data Catalog):** OpenMetadata API validation, BCBS 239 principle-to-feature mapping audit, OpenLineage lineage completeness assessment -- discovery/scoping research before building
 
-Phases with standard patterns (skip deep research):
-- **Phase 0:** Team setup is organizational, not technical. Standard platform team patterns apply.
-- **Phase 2 (ETL core):** PySpark + Airflow + dbt-trino is extremely well-documented. Focus research on the Teradata-specific and mainframe-specific integration points, not the core ETL patterns.
-- **Phase 4 (NL-to-SQL):** Rapidly evolving space; research at Phase 3 completion will be more current than research now.
+**Standard patterns (skip research-phase):**
+- **Phase 1 CSS + Jinja2 renderer:** Jinja2 template inheritance is well-documented; already proven in this project via Airflow
+- **Phase 2 Architecture Diagrams:** Mermaid diagram-as-code has complete official documentation and native GitHub preview
+- **Phase 3 MkDocs Material + mkdocstrings:** Both tools are mature with extensive documentation; configuration examples are fully specified in ARCHITECTURE.md
+- **Phase 5 GitHub Actions:** MkDocs Material's official publishing guide covers this exact pattern
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Iceberg, Trino, PySpark, Airflow, dbt are industry-standard with extensive production evidence. Polaris is newer (TLP Feb 2026) but REST catalog is well-specified. |
-| Features | HIGH | Feature landscape and prioritization are well-grounded in enterprise lakehouse patterns. Regulatory requirements (BCBS 239, SOX) are well-documented. Feature dependency graph is clear. |
-| Architecture | MEDIUM-HIGH | Core patterns (medallion, multi-engine Iceberg, write-engine separation) are proven. Teradata OTF + Polaris/Nessie interop is LOW confidence -- limited direct evidence of REST catalog support. Hybrid cloud storage pattern is MEDIUM -- depends on on-prem storage choice. |
-| Pitfalls | MEDIUM-HIGH | Strong evidence for Iceberg operational issues (file explosion, compaction), MinIO abandonment, and DataStage migration complexity from multiple documented cases. Teradata OTF-specific pitfalls have moderate evidence (official docs + limited production reports). |
+| Stack | HIGH | All recommended tools are mature Python ecosystem staples. Jinja2 and PyYAML are already installed. pdoc and Markdown are straightforward additions. Minor divergence between STACK.md (pdoc-focused) and ARCHITECTURE.md (MkDocs-focused) -- both are valid and complementary, not conflicting. |
+| Features | HIGH | Deliverable scope is well-defined. Content sources are inventoried in FEATURES.md's content source table. Two SWOTs require full authoring -- effort is bounded but content depends on domain expert availability. |
+| Architecture | HIGH | Two-track output model is proven. Build order is explicit with rationale. Configuration files are fully specified in ARCHITECTURE.md. Node.js is the only non-obvious CI dependency (required for Mermaid CLI). |
+| Pitfalls | HIGH | Pitfalls are evidence-based (BCBS 239 literature, financial services specifics, behavioral economics research on SWOT bias). The "Looks Done But Isn't" checklist is actionable and directly maps to deliverable completion criteria. |
 
-**Overall confidence:** MEDIUM-HIGH
+**Overall confidence:** HIGH
+
+---
 
 ### Gaps to Address
 
-These could not be fully resolved by research and need validation during planning or Phase 1 execution:
+- **Docstring coverage unknown:** The 47 Python source files have not been audited for docstring quality. mkdocstrings output will be poor if coverage is low. Audit `etl/src/` as the first Phase 3 task. If coverage is inadequate, docstring authoring becomes a prerequisite sub-task that adds 1-2 days to the phase estimate.
 
-- **Teradata OTF REST catalog support:** No documentation confirms or denies REST catalog (Polaris) compatibility with Teradata OTF. This is the single biggest architectural uncertainty. Validate with Teradata engineering or hands-on testing in Phase 1 week 1.
-- **On-prem storage replacement for MinIO:** RustFS is promising (Apache 2.0, direct replacement, faster) but very new. Ceph RGW is battle-tested but operationally heavy. Neither has been validated against full Iceberg operational patterns (atomic renames, multipart uploads, listing consistency) at PB scale. Needs hands-on PoC.
-- **MinIO AIStor (commercial) viability:** If commercial MinIO (AIStor) is acceptable, it may still be viable despite open-source abandonment. Needs pricing inquiry and contractual assessment.
-- **Spark cluster sizing for 1.5 PB:** AWS EMR vs self-managed Kubernetes vs spark-on-k8s-operator. Sizing depends on ETL job profiles not yet cataloged. Defer to Phase 1 job assessment.
-- **Snowflake catalog-linked database costs:** Billing started Dec 2025. Projected costs at expected query volumes are unknown. Model before Phase 2 architecture solidifies.
-- **FSDM subject area active usage:** Nobody has audited which of the 300+ FSDM subject areas are actively queried. This inventory is prerequisite to efficient Silver/Gold layer design.
-- **Mainframe connectivity from Python:** DataStage mainframe connectors have no direct Python equivalent. COBOL copybook parsing libraries (cobrix for Spark) exist but need validation against this organization's specific mainframe formats.
-- **Polaris HA/DR:** Self-hosted Polaris requires PostgreSQL backend. HA/DR story for production catalog is not well-documented. Must be designed before Polaris becomes the primary catalog.
+- **OpenMetadata API accessibility in CI:** `export_glossary.py` requires a live OpenMetadata instance (6 GB RAM, Elasticsearch, PostgreSQL). This cannot run as a CI service container on every commit. The git-cached fallback pattern (commit last-known-good export, refresh via scheduled/manual trigger) is the correct mitigation. Confirm with the team before Phase 4 planning that this pattern is acceptable for regulatory audit purposes.
+
+- **Snowflake Strategy and Data Model Strategy SWOT content:** Both require inputs beyond documentation work. The Snowflake SWOT needs Snowflake ICEBERG_REST capability research. The Data Model SWOT needs architectural input on FSDM evolution. These have potential to slip if domain experts are not engaged at the start of Phase 1.
+
+- **Toolchain note -- pdoc vs mkdocstrings:** STACK.md recommends pdoc (standalone HTML output). ARCHITECTURE.md recommends mkdocstrings within MkDocs Material (site-integrated). Both are valid for different use cases. Recommended resolution: use mkdocstrings for the MkDocs developer site (Phase 3); add pdoc as a fallback if standalone API reference HTML is separately requested. No decision needed before Phase 3 begins.
+
+---
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- [Apache Iceberg Releases](https://iceberg.apache.org/releases/) -- Iceberg 1.10.1, V2 spec stability
-- [Trino Iceberg Connector](https://trino.io/docs/current/connector/iceberg.html) -- Full DML, REST/Glue/HMS/Nessie catalogs
-- [Teradata OTF Documentation](https://docs.teradata.com/r/Enterprise_IntelliFlex_Lake_VMware/Teradata-Open-Table-Format-for-Apache-Iceberg-and-Delta-Lake-User-Guide) -- Catalog support, performance guidelines, limitations
-- [Snowflake Iceberg Tables](https://docs.snowflake.com/en/user-guide/tables-iceberg) -- External table capabilities and limitations
-- [Apache Airflow 3.0](https://airflow.apache.org/blog/airflow-three-point-oh-is-here/) -- Asset-aware scheduling, DAG versioning
-- [AWS Iceberg Compaction Best Practices](https://docs.aws.amazon.com/prescriptive-guidance/latest/apache-iceberg-on-aws/best-practices-compaction.html) -- File maintenance patterns
-- [BCBS 239 Compliance](https://www.ovaledge.com/blog/bcbs-239-data-lineage) -- Attribute-level lineage requirement
-- [OpenLineage](https://openlineage.io/) -- Lineage event standard specification
-- [MinIO Maintenance Mode (InfoQ)](https://www.infoq.com/news/2025/12/minio-s3-api-alternatives/) -- Confirmed project archival
-- [RustFS (GitHub)](https://github.com/rustfs/rustfs) -- MinIO replacement candidate
+- [Jinja2 Template Designer Documentation](https://jinja.palletsprojects.com/en/stable/templates/) -- Template inheritance, filters, autoescaping
+- [pdoc documentation](https://pdoc.dev/) -- Zero-config usage, custom templates, output modes
+- [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/) -- MkDocs Material theme, v9.7.x
+- [mkdocstrings documentation](https://mkdocstrings.github.io/) -- Python handler, Griffe AST parsing
+- [Mermaid.js official site](https://mermaid.js.org/) -- Version 11.x, CDN usage guide
+- [OpenMetadata Python SDK](https://docs.open-metadata.org/latest/sdk/python/api-reference) -- Glossary export API
+- [BCBS 239 Guide 2025 -- Alation](https://www.alation.com/blog/bcbs-239-guide-compliance-best-practices-2025/) -- Compliance requirements for data catalog documentation
+- [BCBS 239 compliance: findings, failures and fixes -- IBM](https://www.ibm.com/new/product-blog/bcbs239-compliance) -- G-SIB compliance rates (only 2 of 31 fully compliant)
+- Existing project content: `docs/swot/nessie-catalog-swot.md`, `docs/etl-patterns.md`, `docs/adr/001-teradata-otf-nessie-feasibility.md`, `glossary-seed.json`, `docker-compose.yml`, `README.md`, `ci/README.md`
 
 ### Secondary (MEDIUM confidence)
-- [Apache Polaris GitHub / TLP Announcement](https://github.com/apache/polaris) -- REST catalog, TLP graduation Feb 2026
-- [Iceberg Catalogs 2025 Survey](https://www.e6data.com/blog/iceberg-catalogs-2025-emerging-catalogs-modern-metadata-management) -- Adoption data: Glue 39.3%, Nessie 28.6%, Polaris 21.4%
-- [Cube Semantic Layer](https://cube.dev/docs/product/configuration/data-sources/trino) -- Trino integration, pre-aggregation
-- [Soda Core v4](https://docs.soda.io/soda-v4/release-notes/soda-core-release-notes) -- Data Contracts feature
-- [OpenMetadata 1.12.x](https://docs.open-metadata.org/v1.12.x) -- Unified catalog, lineage, governance
-- [DataStage to PySpark Migration](https://medium.com/@one.step.analytics.on.data/my-first-data-engineering-project-phase-2-migrating-datastage-etl-jobs-to-pyspark-161a8b4e5f18) -- Enterprise case study
-- [Iceberg Production Anti-Patterns 2026](https://iomete.com/resources/blog/apache-iceberg-production-antipatterns-2026) -- File explosion, compaction failures
-- [NL-to-SQL Enterprise Guide](https://www.blazesql.com/blog/natural-language-to-sql) -- Accuracy challenges with raw vs semantic-enhanced approaches
-
-### Tertiary (LOW confidence -- needs validation)
-- Teradata OTF REST catalog support -- NO documentation found; assumed unsupported pending validation
-- RustFS at PB-scale Iceberg operations -- too new for production evidence
-- Polaris HA/DR patterns -- limited operational documentation for self-hosted deployment
-- Wren AI / Vanna AI production deployments in financial services -- limited evidence
+- [Diagrams as Code comparison](https://simmering.dev/blog/diagrams/) -- Mermaid vs D2 vs Python diagrams tradeoffs
+- [Making Documentation Simpler: Docs-as-Code Journey -- Squarespace Engineering](https://engineering.squarespace.com/blog/2025/making-documentation-simpler-and-practical-our-docs-as-code-journey) -- Real-world docs-as-code at scale
+- [Your SWOT Analysis is Broken -- Psychology Today](https://www.psychologytoday.com/us/blog/intentional-insights/201911/your-swot-analysis-is-broken-heres-how-you-can-fix-it) -- Evidence-based SWOT methodology and confirmation bias research
+- [Software Architecture: Marketecture vs Tarchitecture -- InformIT](https://www.informit.com/articles/article.aspx?p=31933) -- Audience separation principles for architecture documentation
+- [Business Glossary Implementation Plan -- OvalEdge](https://www.ovaledge.com/blog/business-glossary-implementation-plan) -- Glossary-to-catalog integration patterns
 
 ---
-*Research completed: 2026-03-13*
+*Research completed: 2026-03-14*
 *Ready for roadmap: yes*
