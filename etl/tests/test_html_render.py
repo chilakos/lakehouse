@@ -1,4 +1,4 @@
-"""Tests for the SWOT and Architecture HTML render pipeline.
+"""Tests for the SWOT, Architecture, and Developer Documentation HTML render pipeline.
 
 Validates that rendered HTML meets all phase requirements:
 - SWOT-01: Shared CSS template with embedded styles
@@ -9,6 +9,10 @@ Validates that rendered HTML meets all phase requirements:
 - ARCH-01: Marketecture HTML with stats banner and capability groups
 - ARCH-02: Detailed architecture with all services grouped by layer
 - ARCH-08: CSS hover tooltips on service nodes
+- DEV-01: Developer onboarding guide
+- DEV-02: Repository structure walkthrough
+- DEV-03: First pipeline tutorial
+- DEV-09: Day 1 checklist (printable)
 """
 
 from __future__ import annotations
@@ -26,6 +30,7 @@ sys.path.insert(0, str(_project_root))
 
 from docs.render_html import extract_versions, render_swots  # noqa: E402
 from docs.render_html import extract_services, render_architecture  # noqa: E402
+from docs.render_html import render_developer_docs  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -515,3 +520,220 @@ def test_architecture_index_links(rendered_architecture: dict[str, str]) -> None
     assert "Engineers" in html, "Missing 'Engineers' audience tag"
     assert "Security" in html, "Missing 'Security' audience tag"
     assert "Compliance" in html, "Missing 'Compliance' audience tag"
+
+
+# ---------------------------------------------------------------------------
+# Developer Docs: Fixtures
+# ---------------------------------------------------------------------------
+
+SAMPLE_GUIDE_YAML = textwrap.dedent("""\
+    title: "Test Guide"
+    subtitle: "A test guide page"
+    page_type: "guide"
+    sections:
+      - heading: "Getting Started"
+        content: "Follow these steps to set up your environment."
+        code_blocks:
+          - language: "bash"
+            code: "docker-compose up -d"
+      - heading: "Verify"
+        content: "Check that services are running."
+""")
+
+SAMPLE_CHECKLIST_YAML = textwrap.dedent("""\
+    title: "Test Checklist"
+    subtitle: "Day 1 items"
+    page_type: "checklist"
+    sections:
+      - heading: "Setup"
+        items:
+          - text: "Clone the repo"
+            verify: "ls -la"
+          - text: "Docker Compose up"
+            verify: "docker ps | wc -l"
+      - heading: "First Steps"
+        items:
+          - text: "Run tests"
+            verify: "pytest"
+""")
+
+SAMPLE_REFERENCE_YAML = textwrap.dedent("""\
+    title: "Test Reference"
+    subtitle: "API reference page"
+    page_type: "reference"
+    sections:
+      - heading: "Module: pipelines"
+        entries:
+          - name: "BasePipeline"
+            type: "class"
+            description: "Abstract base class for all pipelines."
+          - name: "PipelineConfig"
+            type: "class"
+            description: "Frozen dataclass for pipeline configuration."
+""")
+
+SAMPLE_FAQ_YAML = textwrap.dedent("""\
+    title: "Test FAQ"
+    subtitle: "Troubleshooting"
+    page_type: "faq"
+    sections:
+      - category: "Docker"
+        entries:
+          - symptom: "OOM killed"
+            fix: "Increase memory"
+            why: "Spark needs more than 2GB"
+          - symptom: "Port conflict"
+            fix: "Stop other containers"
+            why: "Ports are already bound"
+""")
+
+
+@pytest.fixture
+def dev_data_dir(tmp_path: Path) -> Path:
+    """Create a temporary directory with sample developer docs YAML files."""
+    data_dir = tmp_path / "dev_data"
+    data_dir.mkdir()
+    return data_dir
+
+
+@pytest.fixture
+def dev_output_dir(tmp_path: Path) -> Path:
+    """Create a temporary output directory for developer docs."""
+    out = tmp_path / "dev_output"
+    out.mkdir()
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Developer Docs: render_developer_docs() - guide page_type
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_docs_render_guide(
+    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+) -> None:
+    """render_developer_docs() with page_type: guide produces valid HTML with DOCTYPE, navy branding, and version footer."""
+    (dev_data_dir / "test-guide.yml").write_text(SAMPLE_GUIDE_YAML)
+    results = render_developer_docs(
+        data_dir=dev_data_dir,
+        template_dir=template_dir,
+        output_dir=dev_output_dir,
+    )
+    assert len(results) >= 1, "render_developer_docs should produce at least one file"
+    html = results[0].read_text()
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    assert "#1a2332" in html, "Missing navy branding"
+    assert "Generated:" in html, "Missing version footer"
+    assert "Test Guide" in html, "Missing page title"
+    assert "Getting Started" in html, "Missing section heading"
+    assert "docker-compose up -d" in html, "Missing code block content"
+
+
+# ---------------------------------------------------------------------------
+# Developer Docs: render_developer_docs() - checklist page_type
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_docs_render_checklist(
+    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+) -> None:
+    """render_developer_docs() with page_type: checklist produces HTML with checkbox items and @media print CSS."""
+    (dev_data_dir / "test-checklist.yml").write_text(SAMPLE_CHECKLIST_YAML)
+    results = render_developer_docs(
+        data_dir=dev_data_dir,
+        template_dir=template_dir,
+        output_dir=dev_output_dir,
+    )
+    assert len(results) >= 1
+    html = results[0].read_text()
+    assert 'type="checkbox"' in html, "Missing checkbox input elements"
+    assert "@media print" in html, "Missing @media print CSS"
+    assert "Clone the repo" in html, "Missing checklist item text"
+    assert "docker ps" in html, "Missing verify command"
+
+
+# ---------------------------------------------------------------------------
+# Developer Docs: render_developer_docs() - reference page_type
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_docs_render_reference(
+    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+) -> None:
+    """render_developer_docs() with page_type: reference produces HTML with table structures."""
+    (dev_data_dir / "test-reference.yml").write_text(SAMPLE_REFERENCE_YAML)
+    results = render_developer_docs(
+        data_dir=dev_data_dir,
+        template_dir=template_dir,
+        output_dir=dev_output_dir,
+    )
+    assert len(results) >= 1
+    html = results[0].read_text()
+    assert "<table" in html, "Missing table element"
+    assert "BasePipeline" in html, "Missing class name in reference"
+    assert "PipelineConfig" in html, "Missing PipelineConfig in reference"
+
+
+# ---------------------------------------------------------------------------
+# Developer Docs: render_developer_docs() - faq page_type
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_docs_render_faq(
+    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+) -> None:
+    """render_developer_docs() with page_type: faq produces HTML with details/summary collapsible entries."""
+    (dev_data_dir / "test-faq.yml").write_text(SAMPLE_FAQ_YAML)
+    results = render_developer_docs(
+        data_dir=dev_data_dir,
+        template_dir=template_dir,
+        output_dir=dev_output_dir,
+    )
+    assert len(results) >= 1
+    html = results[0].read_text()
+    assert "<details" in html, "Missing <details> element for FAQ"
+    assert "<summary" in html, "Missing <summary> element for FAQ"
+    assert "OOM killed" in html, "Missing FAQ symptom"
+    assert "Increase memory" in html, "Missing FAQ fix"
+
+
+# ---------------------------------------------------------------------------
+# Developer Docs: render_developer_docs() - skip empty YAML
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_docs_render_skip_empty(
+    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+) -> None:
+    """render_developer_docs() skips empty/None YAML files without error."""
+    (dev_data_dir / "empty.yml").write_text("")
+    (dev_data_dir / "valid.yml").write_text(SAMPLE_GUIDE_YAML)
+    results = render_developer_docs(
+        data_dir=dev_data_dir,
+        template_dir=template_dir,
+        output_dir=dev_output_dir,
+    )
+    # Should only produce 1 file (skip empty)
+    assert len(results) == 1, f"Expected 1 file (empty skipped), got {len(results)}"
+
+
+# ---------------------------------------------------------------------------
+# Developer Docs: code_block macro
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_docs_code_block_macro(
+    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+) -> None:
+    """code_block macro produces pre/code HTML with syntax class."""
+    (dev_data_dir / "code-test.yml").write_text(SAMPLE_GUIDE_YAML)
+    results = render_developer_docs(
+        data_dir=dev_data_dir,
+        template_dir=template_dir,
+        output_dir=dev_output_dir,
+    )
+    assert len(results) >= 1
+    html = results[0].read_text()
+    assert "<pre>" in html, "Missing <pre> element from code_block macro"
+    assert "<code" in html, "Missing <code> element from code_block macro"
+    assert "language-" in html, "Missing language class on code element"
