@@ -27,7 +27,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 5: HTML Foundation and SWOT Analyses** - Shared CSS template, version-stamped footers, Jinja2 renderer, all 6 SWOT analyses, cross-SWOT index, interactive and responsive design
 - [ ] **Phase 6: Architecture Visualizations** - Marketecture and detailed architecture HTML pages with Mermaid diagrams, data flow paths, service dependencies, security/governance layers, environment table
-- [ ] **Phase 7: Developer Documentation** - MkDocs Material site with onboarding guide, pipeline tutorial, testing/CI/CD guides, API reference, contributor guidelines, Day 1 checklist
+- [ ] **Phase 7: Developer Documentation** - Standalone HTML pages with onboarding guide, pipeline tutorial, testing/CI/CD guides, API reference, contributor guidelines, Day 1 checklist
 - [ ] **Phase 8: Data Catalog and Glossary** - Business glossary from OpenMetadata, term-to-table mapping, medallion explanation, freshness SLAs, metric definitions, regulatory terms, lineage and relationship visualizations
 
 ## Phase Details
@@ -74,12 +74,12 @@ Plans:
   3. The contributor guidelines specify the complete PR workflow (branch naming, ruff style, pytest markers, commit format) and a developer can follow them to submit a conforming PR
   4. Service URLs for all platform services, CI/CD workflow stages, ETL patterns, testing strategy, and common troubleshooting solutions are findable in the documentation site
   5. A printable Day 1 checklist combines setup, first pipeline, and first PR into a single-page onboarding accelerator
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 07-01: MkDocs Material site setup, onboarding guide, repo structure walkthrough, first pipeline tutorial, Day 1 checklist
-- [ ] 07-02: ETL patterns reference, testing guide, CI/CD workflow, service URL table, troubleshooting FAQ
-- [ ] 07-03: API/module reference (all 8 packages), class hierarchy visualization, contributor guidelines
+- [ ] 07-01-PLAN.md -- Developer docs template infrastructure (base_developer.html, macros, render_developer_docs()), onboarding guide, repo structure, first pipeline tutorial, Day 1 checklist
+- [ ] 07-02-PLAN.md -- ETL patterns reference, testing guide, CI/CD workflow with Mermaid diagram, service URL table, troubleshooting FAQ
+- [ ] 07-03-PLAN.md -- API/module reference (AST extraction for all 8 packages), class hierarchy visualization, contributor guidelines, developer docs index page
 
 ### Phase 8: Data Catalog and Glossary
 **Goal**: Business users and compliance officers have a searchable catalog with plain-language definitions linked to physical tables, metric calculations, data freshness SLAs, and regulatory terms -- all traceable to the live OpenMetadata instance for BCBS 239 auditability
@@ -111,5 +111,5 @@ Note: Phases 6 and 7 can execute in parallel after Phase 5 completes (no cross-d
 | 4. Semantic Layers and Consumer Migration | v1.0 | 3/3 | Complete | 2026-03-13 |
 | 5. HTML Foundation and SWOT Analyses | v1.1 | 0/2 | Planning complete | - |
 | 6. Architecture Visualizations | v1.1 | 0/2 | Planning complete | - |
-| 7. Developer Documentation | v1.1 | 0/3 | Not started | - |
+| 7. Developer Documentation | v1.1 | 0/3 | Planning complete | - |
 | 8. Data Catalog and Glossary | v1.1 | 0/2 | Not started | - |
