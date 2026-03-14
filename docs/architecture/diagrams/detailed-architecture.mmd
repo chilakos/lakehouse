@@ -1,11 +1,12 @@
 flowchart TD
     subgraph Storage["Storage Layer"]
+        direction LR
         postgres[PostgreSQL]
         minio[MinIO S3]
     end
 
     subgraph Catalog["Catalog"]
-        nessie[Nessie]
+        nessie[Nessie REST Catalog]
     end
 
     subgraph QueryEngines["Query Engines"]
@@ -13,6 +14,7 @@ flowchart TD
     end
 
     subgraph ETL["ETL / Orchestration"]
+        direction LR
         airflow-ws[Airflow Webserver]
         airflow-sched[Airflow Scheduler]
         airflow-worker[Airflow Worker]
@@ -21,11 +23,13 @@ flowchart TD
     end
 
     subgraph SemanticLayer["Semantic Layer"]
+        direction LR
         cube-api[Cube API]
         cubestore[Cubestore]
     end
 
-    subgraph Governance["Governance & Lineage"]
+    subgraph GovernanceLineage["Governance & Lineage"]
+        direction LR
         marquez[Marquez]
         marquez-db[Marquez DB]
         marquez-web[Marquez Web]
@@ -35,7 +39,8 @@ flowchart TD
         elasticsearch[Elasticsearch]
     end
 
-    subgraph Security["Security"]
+    subgraph SecurityLayer["Security"]
+        direction LR
         ranger-admin[Ranger Admin]
         ranger-db[Ranger DB]
         ranger-solr[Ranger Solr]
@@ -44,16 +49,50 @@ flowchart TD
     end
 
     subgraph Monitoring["Monitoring"]
+        direction LR
         grafana[Grafana]
         grafana-reporter[Grafana Reporter]
         prometheus[Prometheus]
         statsd-exporter[StatsD Exporter]
     end
 
-    Storage --> Catalog
-    Catalog --> QueryEngines
-    QueryEngines --> SemanticLayer
-    ETL --> Storage
-    Governance --> ETL
-    Security --> QueryEngines
-    Monitoring --> ETL
+    %% Core data path
+    postgres --> nessie
+    minio --> nessie
+    nessie --> trino
+    trino --> cube-api
+    cubestore --> cube-api
+
+    %% ETL dependencies
+    airflow-db --> airflow-ws
+    airflow-db --> airflow-sched
+    airflow-db --> airflow-worker
+    redis --> airflow-ws
+    redis --> airflow-sched
+    redis --> airflow-worker
+
+    %% Governance dependencies
+    marquez-db --> marquez
+    marquez --> marquez-web
+    om-db --> om-server
+    elasticsearch --> om-server
+    om-server --> om-ingestion
+
+    %% Security dependencies
+    ranger-zk --> ranger-solr
+    ranger-zk --> ranger-admin
+    ranger-db --> ranger-admin
+
+    %% Monitoring dependencies
+    statsd-exporter --> prometheus
+    prometheus --> grafana
+    grafana --> grafana-reporter
+
+    classDef storageStyle fill:#2563eb,stroke:#1a2332,color:#fff
+    classDef catalogStyle fill:#7c3aed,stroke:#1a2332,color:#fff
+    classDef queryStyle fill:#059669,stroke:#1a2332,color:#fff
+    classDef etlStyle fill:#d97706,stroke:#1a2332,color:#fff
+    classDef semanticStyle fill:#0891b2,stroke:#1a2332,color:#fff
+    classDef govStyle fill:#be185d,stroke:#1a2332,color:#fff
+    classDef secStyle fill:#dc2626,stroke:#1a2332,color:#fff
+    classDef monStyle fill:#65a30d,stroke:#1a2332,color:#fff

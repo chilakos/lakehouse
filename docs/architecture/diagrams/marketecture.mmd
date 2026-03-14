@@ -4,45 +4,54 @@ flowchart TD
         S1[Mainframes]
         S2[Market Data]
         S3[Databases]
-        S4[Files/APIs]
+        S4[Files / APIs]
     end
 
     subgraph Ingestion["ETL / Ingestion"]
         direction LR
-        I1[Apache Airflow]
-        I2[PySpark + PyIceberg]
+        I1["Apache Airflow<br/><i>Orchestration</i>"]
+        I2["PySpark + PyIceberg<br/><i>Processing</i>"]
+        I3["OpenLineage<br/><i>Lineage Capture</i>"]
     end
 
-    subgraph Lakehouse["Iceberg Lakehouse"]
+    subgraph Lakehouse["Iceberg Lakehouse<br/><i>Single Source of Truth</i>"]
         direction LR
-        L1["Bronze
-Raw Data"]
-        L2["Silver
-Cleansed"]
-        L3["Gold
-Business-Ready"]
+        L1["Bronze<br/>Raw Data"]
+        L2["Silver<br/>Cleansed"]
+        L3["Gold<br/>Business-Ready"]
     end
 
-    subgraph Query["Query Engines"]
+    subgraph Query["Query Engines<br/><i>Query Anything, Anywhere</i>"]
         direction LR
-        Q1[Trino]
-        Q2[Teradata OTF]
-        Q3[Snowflake]
+        Q1["Trino<br/><i>Federated SQL</i>"]
+        Q2["Teradata OTF<br/><i>Legacy Compat</i>"]
+        Q3["Snowflake<br/><i>Compute-Only</i>"]
     end
 
-    subgraph Semantic["Semantic Layers"]
+    subgraph Semantic["Semantic Layers<br/><i>Consistent Metrics</i>"]
         direction LR
-        SM1["Cube
-BI Metrics"]
-        SM2["NL-to-SQL
-AI Layer"]
+        SM1["Cube<br/>BI Metrics"]
+        SM2["NL-to-SQL<br/>AI Layer"]
     end
 
-    subgraph Consumers["BI / AI Consumers"]
+    subgraph Consumers["BI / AI Consumers<br/><i>Self-Service Analytics</i>"]
         direction LR
         C1[Tableau]
         C2[Power BI]
         C3[Claude AI]
+    end
+
+    subgraph Governance["Governance<br/><i>BCBS 239 Compliance</i>"]
+        direction LR
+        G1[OpenLineage]
+        G2[Marquez]
+        G3[OpenMetadata]
+    end
+
+    subgraph Security["Security<br/><i>Fine-Grained RBAC</i>"]
+        direction LR
+        SEC1[Apache Ranger]
+        SEC2[Audit Trail]
     end
 
     Sources --> Ingestion
@@ -50,6 +59,12 @@ AI Layer"]
     Lakehouse --> Query
     Query --> Semantic
     Semantic --> Consumers
+    Ingestion -.-> Governance
+    Governance -.-> Lakehouse
+    Security -.-> Query
 
     classDef layerBox fill:#1a2332,stroke:#c8a961,color:#fff,stroke-width:2px
     classDef nodeBox fill:#f8fafc,stroke:#1a2332,color:#1a2332
+    class Sources,Ingestion,Lakehouse,Query,Semantic,Consumers layerBox
+    class Governance,Security layerBox
+    class S1,S2,S3,S4,I1,I2,I3,L1,L2,L3,Q1,Q2,Q3,SM1,SM2,C1,C2,C3,G1,G2,G3,SEC1,SEC2 nodeBox

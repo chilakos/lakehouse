@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Platform Marketecture - Lakehouse Architecture</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+
+    /* === STATS BANNER === */
+    .stats-banner {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      background: linear-gradient(135deg, #1a2332 0%, #2d3a4a 100%);
+      padding: 1.5rem 2rem;
+      border-radius: 8px;
+      margin: 1.5rem 0 2rem 0;
+    }
+    .stats-banner .stat {
+      text-align: center;
+      color: white;
+    }
+    .stats-banner .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: #c8a961;
+      display: block;
+    }
+    .stats-banner .stat-label {
+      font-size: 0.85rem;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* === CAPABILITY GROUPS (Marketecture) === */
+    .capability-groups {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .capability-group {
+      background: #f8fafc;
+      border: 2px solid #1a2332;
+      border-radius: 8px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+    .capability-group h3 {
+      color: #1a2332;
+      margin: 0 0 0.5rem 0;
+      font-size: 1.05rem;
+    }
+    .capability-group .value-tag {
+      color: #c8a961;
+      font-style: italic;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+    .capability-group .tech-list {
+      color: #475569;
+      font-size: 0.85rem;
+    }
+
+    /* === ARCHITECTURE LAYERS (Detailed) === */
+    .arch-layer {
+      margin-bottom: 2rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .layer-header {
+      padding: 0.75rem 1.25rem;
+      color: white;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    /* === SERVICE GRID === */
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      padding: 1.25rem;
+      background: #ffffff;
+    }
+
+    /* === SERVICE NODE === */
+    .service-node {
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.75rem;
+      background: #f8fafc;
+      border: 2px solid #1a2332;
+      border-radius: 6px;
+      cursor: default;
+      min-width: 120px;
+      text-align: center;
+    }
+    .service-node .service-name {
+      font-weight: 700;
+      color: #1a2332;
+      font-size: 0.9rem;
+    }
+    .service-node .service-port {
+      font-family: monospace;
+      color: #c8a961;
+      font-size: 0.8rem;
+      margin-top: 0.25rem;
+    }
+
+    /* === CSS-ONLY TOOLTIP === */
+    .service-tooltip {
+      visibility: hidden;
+      opacity: 0;
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1a2332;
+      color: #f8fafc;
+      padding: 0.75rem 1rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      white-space: nowrap;
+      z-index: 100;
+      transition: opacity 0.2s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .service-tooltip::after {
+      content: "";
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border-width: 6px;
+      border-style: solid;
+      border-color: #1a2332 transparent transparent transparent;
+    }
+    .service-node:hover .service-tooltip {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    /* === DIAGRAM CONTAINER === */
+    .diagram-container {
+      margin: 1.5rem 0;
+      text-align: center;
+      overflow-x: auto;
+    }
+    .diagram-container svg {
+      max-width: 100%;
+      height: auto;
+    }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      .stats-banner { flex-direction: column; gap: 1rem; }
+      .capability-groups { grid-template-columns: 1fr; }
+      .service-grid { grid-template-columns: 1fr; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle { color: #475569; }
+      .service-tooltip { visibility: visible !important; opacity: 1 !important; position: static; transform: none; background: #f1f5f9; color: #1a2332; white-space: normal; box-shadow: none; }
+      .service-tooltip::after { display: none; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      .stats-banner { background: #f1f5f9; }
+      .stats-banner .stat-value { color: #1a2332; }
+      @page { margin: 2cm; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>Platform Marketecture</h1>
+    <p class="subtitle">Enterprise Lakehouse Architecture Overview</p>
+  </header>
+
+
+
+  <div class="stats-banner">
+    <div class="stat">
+      <span class="stat-value">1.5 PB</span>
+      <span class="stat-label">Managed Data</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">300+</span>
+      <span class="stat-label">Data Sources</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">40+</span>
+      <span class="stat-label">Engineers</span>
+    </div>
+    <div class="stat">
+      <span class="stat-value">3</span>
+      <span class="stat-label">Query Engines</span>
+    </div>
+  </div>
+
+  <div class="diagram-container">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200"><rect width="600" height="200" fill="#f8fafc" stroke="#1a2332" stroke-width="2" rx="8"/><text x="300" y="90" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#64748b">Diagram Placeholder</text><text x="300" y="120" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#94a3b8">Install @mermaid-js/mermaid-cli to render marketecture.mmd</text></svg>
+  </div>
+
+  <h2>Platform Capabilities</h2>
+  <div class="capability-groups">
+    <div class="capability-group">
+      <h3>Sources</h3>
+      <p class="value-tag">300+ data sources feeding the lakehouse</p>
+      <p class="tech-list">Mainframes, Market Data, Databases, Files/APIs</p>
+    </div>
+    <div class="capability-group">
+      <h3>ETL / Ingestion</h3>
+      <p class="value-tag">Automated, observable data pipelines</p>
+      <p class="tech-list">Apache Airflow, PySpark, PyIceberg, OpenLineage</p>
+    </div>
+    <div class="capability-group">
+      <h3>Iceberg Lakehouse</h3>
+      <p class="value-tag">Single source of truth across Bronze/Silver/Gold</p>
+      <p class="tech-list">Apache Iceberg, Nessie Catalog, MinIO/S3</p>
+    </div>
+    <div class="capability-group">
+      <h3>Query Engines</h3>
+      <p class="value-tag">Query anything, anywhere</p>
+      <p class="tech-list">Trino, Teradata OTF, Snowflake</p>
+    </div>
+    <div class="capability-group">
+      <h3>Semantic Layers</h3>
+      <p class="value-tag">Consistent metrics for BI and AI</p>
+      <p class="tech-list">Cube (BI Metrics), NL-to-SQL (AI Layer)</p>
+    </div>
+    <div class="capability-group">
+      <h3>BI / AI Consumers</h3>
+      <p class="value-tag">Self-service analytics for every team</p>
+      <p class="tech-list">Tableau, Power BI, Claude AI</p>
+    </div>
+    <div class="capability-group">
+      <h3>Governance</h3>
+      <p class="value-tag">BCBS 239 compliance with full lineage</p>
+      <p class="tech-list">OpenLineage, Marquez, OpenMetadata, Grafana</p>
+    </div>
+    <div class="capability-group">
+      <h3>Security</h3>
+      <p class="value-tag">Fine-grained RBAC across all engines</p>
+      <p class="tech-list">Apache Ranger, ZooKeeper, Solr Audit</p>
+    </div>
+  </div>
+
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
+  </footer>
+</body>
+</html>
