@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Documentation
-status: completed
-stopped_at: Phase 6 context gathered
-last_updated: "2026-03-14T20:47:23Z"
-last_activity: 2026-03-14 -- Completed 06-01 Architecture Rendering Pipeline and Core Pages
+status: in-progress
+stopped_at: Completed 06-02-PLAN.md
+last_updated: "2026-03-14T20:59:04Z"
+last_activity: 2026-03-14 -- Completed 06-02 Specialized Architecture Diagrams and Index
 progress:
   total_phases: 4
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 33
+  completed_phases: 2
+  total_plans: 9
+  completed_plans: 4
+  percent: 44
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
-**Current focus:** v1.1 Documentation -- Phase 6: Architecture Visualizations
+**Current focus:** v1.1 Documentation -- Phase 7: Developer Docs
 
 ## Current Position
 
-Phase: 6 of 8 (Architecture Visualizations)
-Plan: 1 of 2 in current phase
+Phase: 7 of 8 (Developer Docs)
+Plan: 0 of 3 in current phase
 Status: In Progress
-Last activity: 2026-03-14 -- Completed 06-01 Architecture Rendering Pipeline and Core Pages
+Last activity: 2026-03-14 -- Completed 06-02 Specialized Architecture Diagrams and Index
 
-Progress: [███░░░░░░░] 33%
+Progress: [████░░░░░░] 44%
 
 ## v1.0 Milestone Summary
 
@@ -45,16 +45,16 @@ Progress: [███░░░░░░░] 33%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3 (v1.1) / 16 (v1.0)
+- Total plans completed: 4 (v1.1) / 16 (v1.0)
 - Average duration: 8 min
-- Total execution time: 24 min (v1.1)
+- Total execution time: 32 min (v1.1)
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 5. HTML Foundation + SWOTs | 2/2 | 17 min | 8.5 min |
-| 6. Architecture | 1/2 | 7 min | 7 min |
+| 6. Architecture | 2/2 | 15 min | 7.5 min |
 | 7. Developer Docs | 0/3 | -- | -- |
 | 8. Data Catalog | 0/2 | -- | -- |
 
@@ -85,6 +85,8 @@ Key decisions from v1.0 affecting documentation:
 - Hybrid approach for detailed architecture: HTML/CSS grid (not monolithic Mermaid SVG) enables native CSS hover tooltips
 - Graceful mmdc fallback: placeholder SVG when Mermaid CLI unavailable (Puppeteer/Chromium dependency)
 - services.yml as override layer: docker-compose.yml authoritative for ports/healthcheck; services.yml adds descriptions, layers, protocols
+- Environment comparison table on governance-stack.html (relates to operational governance, not standalone)
+- Architecture index with audience-tagged cards (Executives, Engineers, Security, Compliance)
 
 ### Pending Todos
 
@@ -101,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T20:47:23Z
-Stopped at: Completed 06-01-PLAN.md
-Resume file: .planning/phases/06-architecture-visualizations/06-01-SUMMARY.md
+Last session: 2026-03-14T20:59:04Z
+Stopped at: Completed 06-02-PLAN.md
+Resume file: .planning/phases/06-architecture-visualizations/06-02-SUMMARY.md
