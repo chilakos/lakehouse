@@ -402,6 +402,64 @@
   {% endfor %}
   {% endfor %}
 
+  {% elif page_type == "dev-index" %}
+  {# === DEVELOPER INDEX PAGE TYPE === #}
+  <style>
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin: 1rem 0 2rem 0;
+    }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.25rem;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: #c8a961;
+    }
+    .card h3 { margin-bottom: 0.5rem; font-size: 1.05rem; color: #1a2332; }
+    .card h3 a { color: inherit; text-decoration: none; }
+    .card h3 a:hover { color: #c8a961; }
+    .card .card-description {
+      font-size: 0.9rem;
+      color: #475569;
+      flex-grow: 1;
+    }
+    .audience-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .audience-new-engineers { background: #059669; color: #fff; }
+    .audience-all-engineers { background: #2563eb; color: #fff; }
+    .audience-contributors { background: #7c3aed; color: #fff; }
+  </style>
+  <p style="margin-bottom: 1.5rem; color: #475569;">
+    12 developer documentation pages organized by audience. Click any card to navigate.
+  </p>
+  {% for group in page_groups %}
+  <h2><span class="audience-badge {{ group.audience_class }}">{{ group.audience }}</span></h2>
+  <div class="card-grid">
+    {% for page in group.pages %}
+    <div class="card">
+      <h3><a href="{{ page.filename }}">{{ page.title }}</a></h3>
+      <p class="card-description">{{ page.description }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
   {% elif page_type == "api-reference" %}
   {# === API REFERENCE PAGE TYPE (DEV-10) === #}
   {% if intro %}

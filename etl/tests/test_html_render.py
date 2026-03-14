@@ -30,7 +30,8 @@ sys.path.insert(0, str(_project_root))
 
 from docs.render_html import extract_versions, render_swots  # noqa: E402
 from docs.render_html import extract_services, render_architecture  # noqa: E402
-from docs.render_html import render_developer_docs  # noqa: E402
+from docs.render_html import render_developer_docs, render_dev_index  # noqa: E402
+from docs.render_html import extract_package_api, extract_all_apis  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -972,3 +973,123 @@ def test_developer_troubleshooting(rendered_developer_pages: dict[str, str]) -> 
     # Specific troubleshooting content
     assert "OOM" in html or "memory" in html.lower(), "Missing OOM/memory troubleshooting entry"
     assert "Nessie" in html, "Missing Nessie troubleshooting entry"
+
+
+# ---------------------------------------------------------------------------
+# DEV-10: API Reference
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_api_reference(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-10: API reference HTML contains all 8 package names, BasePipeline, and function signatures."""
+    html = rendered_developer_pages["api-reference.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    # All 8 packages
+    package_names = [
+        "pipelines", "config", "governance", "quality",
+        "semantic", "iceberg_utils", "lineage", "inventory",
+    ]
+    for pkg in package_names:
+        assert pkg in html, f"Missing package '{pkg}' in API reference"
+    # Key classes
+    assert "BasePipeline" in html, "Missing BasePipeline class entry"
+    assert "PipelineConfig" in html, "Missing PipelineConfig class entry"
+    # At least one function signature (args in parentheses)
+    assert "function" in html.lower(), "Missing function type indicator"
+    # Usage examples
+    assert "Usage Example" in html, "Missing usage example sections"
+
+
+# ---------------------------------------------------------------------------
+# DEV-11: Class Hierarchy
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_class_hierarchy(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-11: Class hierarchy HTML contains SVG placeholder, BasePipeline, TradesBronzePipeline."""
+    html = rendered_developer_pages["class-hierarchy.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    assert "BasePipeline" in html, "Missing BasePipeline in class hierarchy"
+    # SVG placeholder or actual rendered SVG
+    assert "svg" in html.lower() or "Placeholder" in html, \
+        "Missing Mermaid SVG or placeholder for class hierarchy diagram"
+    # Pipeline names should be in supporting text
+    assert "TradesBronzePipeline" in html, "Missing TradesBronzePipeline reference"
+
+
+# ---------------------------------------------------------------------------
+# DEV-12: Contributor Guidelines
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_contributor(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-12: Contributor HTML contains ruff, pytest, branch naming, and pre-commit hooks."""
+    html = rendered_developer_pages["contributor.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    assert "ruff" in html, "Missing ruff code style reference"
+    assert "pytest" in html, "Missing pytest testing reference"
+    # Branch naming convention
+    assert "feature/" in html, "Missing feature/ branch naming convention"
+    # Pre-commit hooks
+    assert "trailing-whitespace" in html, "Missing trailing-whitespace hook"
+    assert "detect-secrets" in html, "Missing detect-secrets hook"
+    assert "terraform_fmt" in html or "terraform" in html.lower(), \
+        "Missing terraform_fmt hook reference"
+    # Commit format
+    assert "Conventional Commits" in html or "conventional" in html.lower(), \
+        "Missing conventional commits reference"
+    # Naming conventions
+    assert "PascalCase" in html, "Missing PascalCase naming convention"
+    assert "snake_case" in html, "Missing snake_case naming convention"
+
+
+# ---------------------------------------------------------------------------
+# Developer Index: links to all 12 pages
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_index(rendered_developer_pages: dict[str, str]) -> None:
+    """Developer index HTML contains card-grid, links to all 12 pages, and audience badges."""
+    html = rendered_developer_pages["index.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    assert "card-grid" in html, "Missing card-grid layout"
+    # Check key filenames from all 3 audience groups
+    expected_pages = [
+        "onboarding.html", "repo-structure.html", "first-pipeline.html",
+        "day1-checklist.html", "etl-patterns.html", "testing.html",
+        "cicd.html", "service-urls.html", "troubleshooting.html",
+        "api-reference.html", "class-hierarchy.html", "contributor.html",
+    ]
+    for page in expected_pages:
+        assert page in html, f"Missing link to '{page}' in developer index"
+    # Audience badges
+    assert "New Engineers" in html, "Missing 'New Engineers' audience badge"
+    assert "All Engineers" in html, "Missing 'All Engineers' audience badge"
+    assert "Contributors" in html, "Missing 'Contributors' audience badge"
+    # Audience CSS classes
+    assert "audience-new-engineers" in html, "Missing audience-new-engineers CSS class"
+    assert "audience-all-engineers" in html, "Missing audience-all-engineers CSS class"
+    assert "audience-contributors" in html, "Missing audience-contributors CSS class"
+
+
+# ---------------------------------------------------------------------------
+# extract_package_api() unit test
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_extract_package_api() -> None:
+    """extract_package_api() parses etl/src/config (simplest package) and finds Settings class."""
+    config_dir = _project_root / "etl" / "src" / "config"
+    if not config_dir.exists():
+        pytest.skip("etl/src/config not found")
+    api = extract_package_api(config_dir)
+    assert isinstance(api, dict)
+    assert api["package_name"] == "config"
+    assert len(api["modules"]) >= 1
+    # Find Settings class
+    all_classes = [
+        cls["name"]
+        for mod in api["modules"]
+        for cls in mod["classes"]
+    ]
+    assert "Settings" in all_classes, f"Expected 'Settings' in classes, got {all_classes}"

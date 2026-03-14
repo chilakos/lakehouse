@@ -855,6 +855,53 @@ def render_developer_docs(
     return rendered_files
 
 
+def render_dev_index(
+    template_dir: Path | None = None,
+    output_dir: Path | None = None,
+    compose_path: Path | str | None = None,
+) -> Path:
+    """Render the developer docs index page with audience-tagged navigation cards.
+
+    Loads dev-index.yml and renders through base_developer.html with the
+    dev-index page_type, producing docs/developer/index.html.
+
+    Args:
+        template_dir: Directory containing Jinja2 templates.
+        output_dir: Directory for rendered HTML output.
+        compose_path: Path to docker-compose.yml for version extraction.
+
+    Returns:
+        Path to the rendered index.html file.
+    """
+    if template_dir is None:
+        template_dir = TEMPLATE_DIR
+    if output_dir is None:
+        output_dir = DEV_OUTPUT_DIR
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    env = _create_jinja_env(template_dir)
+    versions = extract_versions(compose_path)
+    generation_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # Load dev-index data
+    index_data_path = DEV_DATA_DIR / "dev-index.yml"
+    index_data = yaml.safe_load(index_data_path.read_text())
+
+    template = env.get_template("base_developer.html")
+    html = template.render(
+        **index_data,
+        versions=versions,
+        generation_date=generation_date,
+    )
+
+    output_path = output_dir / "index.html"
+    output_path.write_text(html)
+    print(f"  Rendered: developer/index.html")
+    return output_path
+
+
 if __name__ == "__main__":
     print("Rendering SWOT analyses...")
     rendered = render_swots()
@@ -872,5 +919,9 @@ if __name__ == "__main__":
     print("\nRendering developer docs...")
     dev_rendered = render_developer_docs()
     print(f"\n  {len(dev_rendered)} developer doc(s) rendered.")
+
+    print("\nRendering developer index...")
+    dev_index = render_dev_index()
+    print(f"\n  Index: {dev_index}")
 
     print("\nDone.")

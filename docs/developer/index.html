@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Developer Documentation - Lakehouse Developer Docs</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+    a { color: #3b82f6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.5rem; }
+
+    /* === CODE BLOCKS === */
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 0.75rem 0 1rem 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    code {
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+    }
+    p code, li code, td code {
+      background: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.88em;
+      color: #1a2332;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === SECTION BLOCKS === */
+    .section-block {
+      margin-bottom: 1.5rem;
+    }
+
+    /* === STEP NUMBERS (Tutorial) === */
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: #1a2332;
+      color: #c8a961;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-right: 0.5rem;
+    }
+
+    /* === CHECKLIST === */
+    .checklist-section {
+      margin-bottom: 1.5rem;
+    }
+    .checklist-item {
+      display: block;
+      padding: 0.4rem 0;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .checklist-item input[type="checkbox"] {
+      margin-right: 0.5rem;
+      transform: scale(1.2);
+    }
+    .checklist-item .verify {
+      color: #64748b;
+      font-size: 0.85em;
+      font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+    }
+
+    /* === FAQ === */
+    .faq-entry {
+      margin-bottom: 0.5rem;
+    }
+    .faq-entry .faq-fix {
+      background: #f0fdf4;
+      border-left: 3px solid #22c55e;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.92rem;
+    }
+    .faq-entry .faq-why {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.88rem;
+      color: #475569;
+    }
+
+    /* === REFERENCE ENTRIES === */
+    .ref-entry {
+      margin-bottom: 0.75rem;
+    }
+    .ref-entry .ref-name {
+      font-weight: 700;
+      color: #1a2332;
+    }
+    .ref-entry .ref-type {
+      display: inline-block;
+      background: #e2e8f0;
+      padding: 0.1rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.8em;
+      color: #475569;
+      margin-left: 0.5rem;
+    }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT (general) === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      pre { background: #f1f5f9; color: #1a2332; border: 1px solid #e2e8f0; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>Developer Documentation</h1>
+    <p class="subtitle">Guides, References, and Tools for Lakehouse Engineers</p>
+  </header>
+
+  <style>
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin: 1rem 0 2rem 0;
+    }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.25rem;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: #c8a961;
+    }
+    .card h3 { margin-bottom: 0.5rem; font-size: 1.05rem; color: #1a2332; }
+    .card h3 a { color: inherit; text-decoration: none; }
+    .card h3 a:hover { color: #c8a961; }
+    .card .card-description {
+      font-size: 0.9rem;
+      color: #475569;
+      flex-grow: 1;
+    }
+    .audience-badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+    }
+    .audience-new-engineers { background: #059669; color: #fff; }
+    .audience-all-engineers { background: #2563eb; color: #fff; }
+    .audience-contributors { background: #7c3aed; color: #fff; }
+  </style>
+  <p style="margin-bottom: 1.5rem; color: #475569;">
+    12 developer documentation pages organized by audience. Click any card to navigate.
+  </p>
+  <h2><span class="audience-badge audience-new-engineers">New Engineers</span></h2>
+  <div class="card-grid">
+    <div class="card">
+      <h3><a href="onboarding.html">Getting Started</a></h3>
+      <p class="card-description">Prerequisites, local setup, Docker Compose launch</p>
+    </div>
+    <div class="card">
+      <h3><a href="repo-structure.html">Repository Structure</a></h3>
+      <p class="card-description">Directory layout and key files</p>
+    </div>
+    <div class="card">
+      <h3><a href="first-pipeline.html">Write Your First Pipeline</a></h3>
+      <p class="card-description">Step-by-step CSV-to-Bronze tutorial</p>
+    </div>
+    <div class="card">
+      <h3><a href="day1-checklist.html">Day 1 Checklist</a></h3>
+      <p class="card-description">Printable onboarding checklist</p>
+    </div>
+  </div>
+  <h2><span class="audience-badge audience-all-engineers">All Engineers</span></h2>
+  <div class="card-grid">
+    <div class="card">
+      <h3><a href="etl-patterns.html">ETL Patterns Reference</a></h3>
+      <p class="card-description">Medallion, quality, DAGs, incremental, mainframe</p>
+    </div>
+    <div class="card">
+      <h3><a href="testing.html">Testing Guide</a></h3>
+      <p class="card-description">Unit tests, markers, CI gates, pytest patterns</p>
+    </div>
+    <div class="card">
+      <h3><a href="cicd.html">CI/CD Workflow</a></h3>
+      <p class="card-description">PR to production promotion path</p>
+    </div>
+    <div class="card">
+      <h3><a href="service-urls.html">Service URLs</a></h3>
+      <p class="card-description">All platform services with ports and credentials</p>
+    </div>
+    <div class="card">
+      <h3><a href="troubleshooting.html">Troubleshooting FAQ</a></h3>
+      <p class="card-description">Common issues with Symptom-Fix-Why format</p>
+    </div>
+  </div>
+  <h2><span class="audience-badge audience-contributors">Contributors</span></h2>
+  <div class="card-grid">
+    <div class="card">
+      <h3><a href="api-reference.html">API Reference</a></h3>
+      <p class="card-description">All 8 packages with signatures and examples</p>
+    </div>
+    <div class="card">
+      <h3><a href="class-hierarchy.html">Pipeline Class Hierarchy</a></h3>
+      <p class="card-description">BasePipeline inheritance visualization</p>
+    </div>
+    <div class="card">
+      <h3><a href="contributor.html">Contributor Guidelines</a></h3>
+      <p class="card-description">Branch naming, PR process, code style, testing</p>
+    </div>
+  </div>
+
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Developer Documentation</p>
+  </footer>
+</body>
+</html>

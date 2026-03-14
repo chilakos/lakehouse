@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API and Module Reference - Lakehouse Developer Docs</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+    a { color: #3b82f6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.5rem; }
+
+    /* === CODE BLOCKS === */
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 0.75rem 0 1rem 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    code {
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+    }
+    p code, li code, td code {
+      background: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.88em;
+      color: #1a2332;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === SECTION BLOCKS === */
+    .section-block {
+      margin-bottom: 1.5rem;
+    }
+
+    /* === STEP NUMBERS (Tutorial) === */
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: #1a2332;
+      color: #c8a961;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-right: 0.5rem;
+    }
+
+    /* === CHECKLIST === */
+    .checklist-section {
+      margin-bottom: 1.5rem;
+    }
+    .checklist-item {
+      display: block;
+      padding: 0.4rem 0;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .checklist-item input[type="checkbox"] {
+      margin-right: 0.5rem;
+      transform: scale(1.2);
+    }
+    .checklist-item .verify {
+      color: #64748b;
+      font-size: 0.85em;
+      font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+    }
+
+    /* === FAQ === */
+    .faq-entry {
+      margin-bottom: 0.5rem;
+    }
+    .faq-entry .faq-fix {
+      background: #f0fdf4;
+      border-left: 3px solid #22c55e;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.92rem;
+    }
+    .faq-entry .faq-why {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.88rem;
+      color: #475569;
+    }
+
+    /* === REFERENCE ENTRIES === */
+    .ref-entry {
+      margin-bottom: 0.75rem;
+    }
+    .ref-entry .ref-name {
+      font-weight: 700;
+      color: #1a2332;
+    }
+    .ref-entry .ref-type {
+      display: inline-block;
+      background: #e2e8f0;
+      padding: 0.1rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.8em;
+      color: #475569;
+      margin-left: 0.5rem;
+    }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT (general) === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      pre { background: #f1f5f9; color: #1a2332; border: 1px solid #e2e8f0; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>API and Module Reference</h1>
+    <p class="subtitle">All 8 ETL Packages -- Public APIs, Signatures, and Usage</p>
+  </header>
+
+  <div class="section-block">
+    <p>This reference documents the public API for all 8 ETL packages in <code>etl/src/</code>.
+Signatures, parameters, return types, and docstrings are extracted directly from
+source code via Python AST parsing -- no runtime imports required.
+Each entry includes a usage example with full import paths.
+</p>
+  </div>
+  <h2>Package: pipelines</h2>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>pipelines.base <span class="ref-type">base.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">MedallionLayer</span> <span class="ref-type">class</span>
+ extends Enum</p>
+      <p style="font-size: 0.9rem; color: #475569;">Medallion architecture layer designation.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.pipelines.base import MedallionLayer
+layer = MedallionLayer.BRONZE
+print(layer.value)  # "bronze"
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">SchemaValidationError</span> <span class="ref-type">class</span>
+ extends Exception</p>
+      <p style="font-size: 0.9rem; color: #475569;">Raised when a DataFrame schema does not match the target StructType.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">QualityGateError</span> <span class="ref-type">class</span>
+ extends Exception</p>
+      <p style="font-size: 0.9rem; color: #475569;">Raised when critical quality checks fail, blocking layer promotion.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">PipelineConfig</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Configuration for a medallion pipeline.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>full_table_name</code></td>
+            <td><code></code></td>
+            <td><code>str</code></td>
+            <td>Full Iceberg table name: lakehouse.{layer}.{table}.</td>
+          </tr>
+          <tr>
+            <td><code>source_table_name</code></td>
+            <td><code></code></td>
+            <td><code>str | None</code></td>
+            <td>Full Iceberg source table name if source_layer is set.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.pipelines.base import PipelineConfig, MedallionLayer
+from pyspark.sql.types import StructType, StructField, StringType
+
+config = PipelineConfig(
+    name="trades-bronze",
+    target_layer=MedallionLayer.BRONZE,
+    target_table="trades",
+    target_schema=StructType([StructField("trade_id", StringType())]),
+    quality_checks_path="checks/trades.yml",
+    critical_checks=["row_count_check"],
+)
+print(config.full_table_name)  # "lakehouse.bronze.trades"
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">BasePipeline</span> <span class="ref-type">class</span>
+ extends ABC</p>
+      <p style="font-size: 0.9rem; color: #475569;">Abstract base class for all medallion ETL pipelines.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code></code></td>
+            <td><code>DataFrame</code></td>
+            <td>Extract source data and return as DataFrame.</td>
+          </tr>
+          <tr>
+            <td><code>transform</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>DataFrame</code></td>
+            <td>Transform the extracted DataFrame.</td>
+          </tr>
+          <tr>
+            <td><code>validate_schema</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>bool</code></td>
+            <td>Validate DataFrame schema against the target schema.</td>
+          </tr>
+          <tr>
+            <td><code>add_metadata_columns</code></td>
+            <td><code>df: DataFrame, source_system: str, batch_id: str</code></td>
+            <td><code>DataFrame</code></td>
+            <td>Add Bronze-layer metadata columns to a DataFrame.</td>
+          </tr>
+          <tr>
+            <td><code>write</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>None</code></td>
+            <td>Write validated DataFrame to the target Iceberg table.</td>
+          </tr>
+          <tr>
+            <td><code>run_quality_checks</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>dict[str, Any]</code></td>
+            <td>Run data quality checks on the DataFrame using Soda Core.</td>
+          </tr>
+          <tr>
+            <td><code>execute</code></td>
+            <td><code></code></td>
+            <td><code>dict[str, Any]</code></td>
+            <td>Orchestrate the full pipeline: extract -> transform -> validate -> write.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.pipelines.base import BasePipeline, PipelineConfig, MedallionLayer
+from pyspark.sql.types import StructType, StructField, StringType
+
+class MyPipeline(BasePipeline):
+    def extract(self):
+        return self.spark.read.csv(self.config.source_path)
+    def transform(self, df):
+        return df.filter(df["status"] == "active")
+
+config = PipelineConfig(
+    name="my-pipeline",
+    target_layer=MedallionLayer.BRONZE,
+    target_table="my_table",
+    target_schema=StructType([StructField("id", StringType())]),
+)
+result = MyPipeline(spark, config).execute()
+</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>pipelines.mainframe_ingest <span class="ref-type">bronze/mainframe_ingest.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">CobrixNotAvailableError</span> <span class="ref-type">class</span>
+ extends Exception</p>
+      <p style="font-size: 0.9rem; color: #475569;">Raised when Cobrix JAR is not on the Spark classpath.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">MainframeBronzePipeline</span> <span class="ref-type">class</span>
+ extends BasePipeline</p>
+      <p style="font-size: 0.9rem; color: #475569;">Concrete Bronze pipeline for mainframe COBOL data ingestion.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>validate_schema</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>bool</code></td>
+            <td>Override schema validation for mainframe data.</td>
+          </tr>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code></code></td>
+            <td><code>DataFrame</code></td>
+            <td>Read mainframe data using Cobrix with COBOL copybook.</td>
+          </tr>
+          <tr>
+            <td><code>transform</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>DataFrame</code></td>
+            <td>Add metadata columns and cast packed decimal fields.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">is_cobrix_available</span><code>(spark: SparkSession)</code>
+ &rarr; <code>bool</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Check if Cobrix JAR is available on the Spark classpath.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>pipelines.positions_ingest <span class="ref-type">bronze/positions_ingest.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">PositionsBronzePipeline</span> <span class="ref-type">class</span>
+ extends BasePipeline</p>
+      <p style="font-size: 0.9rem; color: #475569;">Concrete Bronze pipeline for positions ingestion.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code></code></td>
+            <td><code>DataFrame</code></td>
+            <td>Create DataFrame from source position data.</td>
+          </tr>
+          <tr>
+            <td><code>transform</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>DataFrame</code></td>
+            <td>Add metadata columns to raw positions DataFrame.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>pipelines.trades_ingest <span class="ref-type">bronze/trades_ingest.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">TradesBronzePipeline</span> <span class="ref-type">class</span>
+ extends BasePipeline</p>
+      <p style="font-size: 0.9rem; color: #475569;">Concrete Bronze pipeline for trades ingestion.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code></code></td>
+            <td><code>DataFrame</code></td>
+            <td>Create DataFrame from source trade data.</td>
+          </tr>
+          <tr>
+            <td><code>transform</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>DataFrame</code></td>
+            <td>Add metadata columns to raw trade DataFrame.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>pipelines.risk_exposure <span class="ref-type">gold/risk_exposure.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">RiskExposureGoldPipeline</span> <span class="ref-type">class</span>
+ extends BasePipeline</p>
+      <p style="font-size: 0.9rem; color: #475569;">Concrete Gold pipeline for aggregated risk exposure metrics.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code></code></td>
+            <td><code>DataFrame</code></td>
+            <td>Read positions and risk_metrics from Silver layer.</td>
+          </tr>
+          <tr>
+            <td><code>transform</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>DataFrame</code></td>
+            <td>Aggregate risk exposure metrics per account_id/sector/currency.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>pipelines.trading_metrics <span class="ref-type">gold/trading_metrics.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">TradingMetricsGoldPipeline</span> <span class="ref-type">class</span>
+ extends BasePipeline</p>
+      <p style="font-size: 0.9rem; color: #475569;">Concrete Gold pipeline for pre-aggregated trading metrics.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code></code></td>
+            <td><code>DataFrame</code></td>
+            <td>Read cleaned trades from Silver layer.</td>
+          </tr>
+          <tr>
+            <td><code>transform</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>DataFrame</code></td>
+            <td>Compute per-symbol/side aggregated trading metrics.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>pipelines.incremental <span class="ref-type">incremental.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">IncrementalConfig</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Configuration for incremental loading.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.pipelines.incremental import IncrementalConfig
+config = IncrementalConfig(
+    watermark_column="updated_at",
+    watermark_table="lakehouse.bronze.trades",
+)
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_last_watermark</span><code>(spark: SparkSession, iceberg_table: str, watermark_column: str)</code>
+ &rarr; <code>Any | None</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Get the last watermark value from an Iceberg table.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.pipelines.incremental import get_last_watermark
+watermark = get_last_watermark(spark, "lakehouse.bronze.trades", "updated_at")
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">incremental_extract</span><code>(spark: SparkSession, source_query_template: str, watermark_column: str, last_watermark: Any | None)</code>
+ &rarr; <code>DataFrame</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Extract data incrementally using a watermark-based filter.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.pipelines.incremental import incremental_extract
+df = incremental_extract(spark, "lakehouse.bronze.trades", "updated_at", last_watermark)
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">merge_incremental</span><code>(spark: SparkSession, target_table: str, df: DataFrame, merge_key: str)</code>
+ &rarr; <code>None</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Perform MERGE INTO for upserts using Iceberg's merge-on-read capability.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.pipelines.incremental import merge_incremental
+merge_incremental(spark, source_df, "lakehouse.silver.trades", ["trade_id"])
+</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>pipelines.positions_clean <span class="ref-type">silver/positions_clean.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">PositionsSilverPipeline</span> <span class="ref-type">class</span>
+ extends BasePipeline</p>
+      <p style="font-size: 0.9rem; color: #475569;">Concrete Silver pipeline for positions cleaning and deduplication.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code></code></td>
+            <td><code>DataFrame</code></td>
+            <td>Read raw positions from Bronze layer.</td>
+          </tr>
+          <tr>
+            <td><code>transform</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>DataFrame</code></td>
+            <td>Clean and deduplicate positions.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>pipelines.trades_clean <span class="ref-type">silver/trades_clean.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">TradesSilverPipeline</span> <span class="ref-type">class</span>
+ extends BasePipeline</p>
+      <p style="font-size: 0.9rem; color: #475569;">Concrete Silver pipeline for trades cleaning and deduplication.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code></code></td>
+            <td><code>DataFrame</code></td>
+            <td>Read raw trades from Bronze layer.</td>
+          </tr>
+          <tr>
+            <td><code>transform</code></td>
+            <td><code>df: DataFrame</code></td>
+            <td><code>DataFrame</code></td>
+            <td>Clean and deduplicate trades.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <h2>Package: config</h2>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>config.settings <span class="ref-type">settings.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">Settings</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Lakehouse ETL configuration settings.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>nessie_api_url</code></td>
+            <td><code></code></td>
+            <td><code>str</code></td>
+            <td>Full Nessie REST API v2 URL.</td>
+          </tr>
+          <tr>
+            <td><code>nessie_iceberg_url</code></td>
+            <td><code></code></td>
+            <td><code>str</code></td>
+            <td>Nessie Iceberg REST catalog URL.</td>
+          </tr>
+          <tr>
+            <td><code>trino_url</code></td>
+            <td><code></code></td>
+            <td><code>str</code></td>
+            <td>Trino JDBC-style connection URL.</td>
+          </tr>
+          <tr>
+            <td><code>from_env</code></td>
+            <td><code>cls</code></td>
+            <td><code>'Settings'</code></td>
+            <td>Create Settings instance from current environment variables.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.config.settings import Settings
+settings = Settings()
+print(settings.SPARK_MASTER)
+</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+  <h2>Package: governance</h2>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>governance.anomaly_detector <span class="ref-type">anomaly_detector.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">AnomalyType</span> <span class="ref-type">class</span>
+ extends Enum</p>
+      <p style="font-size: 0.9rem; color: #475569;">Types of suspicious access patterns detected by the anomaly detector.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">AnomalyReport</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Structured anomaly report with evidence and severity classification.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">detect_anomalies</span><code>(records: list, business_hours: tuple[int, int], bulk_download_threshold: int, high_freq_threshold: int, restricted_schemas: Optional[set[str]])</code>
+ &rarr; <code>list[AnomalyReport]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Run all anomaly detection heuristics against audit records.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.governance.anomaly_detector import detect_anomalies
+anomalies = detect_anomalies(audit_records)
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">format_anomaly_report</span><code>(anomalies: list[AnomalyReport])</code>
+ &rarr; <code>str</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Generate a markdown-formatted daily anomaly report.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>governance.audit_aggregator <span class="ref-type">audit_aggregator.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">TrinoAuditExtractor</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Extract Trino audit events from the HTTP event listener receiver service.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code>since: datetime</code></td>
+            <td><code>list</code></td>
+            <td>Fetch Trino audit events since the given timestamp.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">TeradataAuditExtractor</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Extract Teradata DBQL audit logs from DBC.QryLogV.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code>since: datetime</code></td>
+            <td><code>list</code></td>
+            <td>Extract Teradata DBQL records since the given timestamp.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">SnowflakeAuditExtractor</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Extract Snowflake ACCESS_HISTORY audit records.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>extract</code></td>
+            <td><code>since: datetime</code></td>
+            <td><code>list</code></td>
+            <td>Extract Snowflake access history records since the given timestamp.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">aggregate_audit_records</span><code>(records: list, db_connection_string: str)</code>
+ &rarr; <code>int</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Insert normalized audit records into the PostgreSQL audit table.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.governance.audit_aggregator import aggregate_audit_records
+count = aggregate_audit_records(records, db_connection_string)
+</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>governance.audit_archiver <span class="ref-type">audit_archiver.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">archive_old_records</span><code>(db_connection_string: str, s3_bucket: str, archive_after_days: int, s3_prefix: str, dry_run: bool)</code>
+ &rarr; <code>int</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Archive audit records older than archive_after_days to S3 Parquet.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>governance.audit_schema <span class="ref-type">audit_schema.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">AuditRecord</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Common audit record format for cross-engine audit aggregation.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>to_dict</code></td>
+            <td><code></code></td>
+            <td><code>dict[str, Any]</code></td>
+            <td>Convert AuditRecord to a plain dictionary for serialization.</td>
+          </tr>
+          <tr>
+            <td><code>to_insert_values</code></td>
+            <td><code></code></td>
+            <td><code>tuple</code></td>
+            <td>Return ordered tuple matching AUDIT_SCHEMA column order for INSERT statements.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">normalize_trino_audit</span><code>(event_payload: dict)</code>
+ &rarr; <code>AuditRecord</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Convert a Trino HTTP event listener JSON payload to AuditRecord.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.governance.audit_schema import normalize_trino_audit
+record = normalize_trino_audit(event_payload)
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">normalize_teradata_audit</span><code>(dbql_row: dict)</code>
+ &rarr; <code>AuditRecord</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Convert a Teradata DBC.QryLogV row to AuditRecord.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">normalize_snowflake_audit</span><code>(access_history_row: dict)</code>
+ &rarr; <code>AuditRecord</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Convert a Snowflake ACCESS_HISTORY view row to AuditRecord.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>governance.classification <span class="ref-type">classification.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">SensitivityLevel</span> <span class="ref-type">class</span>
+ extends str, Enum</p>
+      <p style="font-size: 0.9rem; color: #475569;">Sensitivity classification levels for data columns.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">classify_column</span><code>(column_name: str)</code>
+ &rarr; <code>SensitivityLevel</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Classify a column name to a sensitivity level using regex pattern matching.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.governance.classification import classify_column, SensitivityLevel
+level = classify_column("ssn")
+assert level == SensitivityLevel.PII
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">classify_table_columns</span><code>(columns: list[str])</code>
+ &rarr; <code>dict[str, SensitivityLevel]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Classify a list of column names to their sensitivity levels.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_columns_by_level</span><code>(classified: dict[str, SensitivityLevel], level: SensitivityLevel)</code>
+ &rarr; <code>list[str]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Filter classified columns to return only those at the specified sensitivity level.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>governance.freshness_tracker <span class="ref-type">freshness_tracker.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">FreshnessStatus</span> <span class="ref-type">class</span>
+ extends Enum</p>
+      <p style="font-size: 0.9rem; color: #475569;">Traffic-light status for data freshness SLA compliance.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">FreshnessSLA</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Service Level Agreement for data freshness per table.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">check_table_freshness</span><code>(last_updated: Optional[datetime], sla: FreshnessSLA)</code>
+ &rarr; <code>FreshnessStatus</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Check data freshness status for a single table against its SLA.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_freshness_badge</span><code>(status: FreshnessStatus)</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Return traffic-light UI metadata for a freshness status.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_all_freshness</span><code>(table_slas: dict[str, FreshnessSLA], last_updated_map: dict[str, Optional[datetime]])</code>
+ &rarr; <code>list[dict]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Batch freshness check for multiple tables.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>governance.lineage_stubs <span class="ref-type">lineage_stubs.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">register_legacy_lineage_stub</span><code>(marquez_url: str, namespace: str, source_name: str, dataset_name: str, description: str, fields: Optional[list[dict]], tags: Optional[list[str]])</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Register a legacy dataset stub in Marquez via REST API.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">register_teradata_sources</span><code>(marquez_url: str, namespace: str)</code>
+ &rarr; <code>list[dict]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Register all known Teradata source tables as lineage stubs in Marquez.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">register_snowflake_sources</span><code>(marquez_url: str, namespace: str)</code>
+ &rarr; <code>list[dict]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Register all known Snowflake datasets as lineage stubs in Marquez.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>governance.ranger_policies <span class="ref-type">ranger_policies.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">create_masking_policy</span><code>(service: str, policy_name: str, tag_or_resource: dict, groups: list[str], mask_type: str)</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Build a Ranger data masking policy (policyType=1).</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">create_row_filter_policy</span><code>(service: str, policy_name: str, catalog: str, schema: str, table: str, groups: list[str], filter_expr: str)</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Build a Ranger row-level filter policy (policyType=2).</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">create_tag_policy</span><code>(tag_service: str, policy_name: str, tag_name: str, groups: list[str], mask_type: str)</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Build a Ranger tag-based masking policy (policyType=1 on tag service).</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">create_access_policy</span><code>(service: str, policy_name: str, catalog: str, schema: str, table: str, groups_permissions: dict[str, list[str]])</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Build a Ranger standard access control policy (policyType=0).</p>
+    </div>
+  </div>
+  <h2>Package: quality</h2>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>quality.reconciliation <span class="ref-type">reconciliation.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">ReconciliationResult</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Result of a source-to-target reconciliation comparison.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">reconcile_table</span><code>(spark: SparkSession, source_df: DataFrame, target_table: str, checksum_columns: list[str] | None, aggregate_columns: dict[str, str] | None, tolerance: Decimal)</code>
+ &rarr; <code>ReconciliationResult</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Compare source DataFrame with target Iceberg table for migration validation.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.quality.reconciliation import reconcile_table
+result = reconcile_table(
+    source_conn=teradata_conn,
+    target_spark=spark,
+    table_name="trades",
+)
+</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>quality.scanner <span class="ref-type">scanner.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">QualityCheckResult</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Result of a single quality check execution.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>to_dict</code></td>
+            <td><code></code></td>
+            <td><code>dict[str, Any]</code></td>
+            <td>Serialize to dictionary for JSON/alerting integration.</td>
+          </tr>
+          <tr>
+            <td><code>to_json</code></td>
+            <td><code></code></td>
+            <td><code>str</code></td>
+            <td>Serialize to JSON string for alerting systems (e.g., Grafana).</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">run_soda_checks</span><code>(spark_session: SparkSession, df: DataFrame, checks_yaml_path: str, critical_check_names: list[str] | None, data_source_name: str)</code>
+ &rarr; <code>dict[str, Any]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Run Soda Core quality checks on a PySpark DataFrame.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.quality.scanner import run_soda_checks
+results = run_soda_checks(
+    spark_session=spark,
+    df=df,
+    checks_yaml_path="checks/trades.yml",
+    critical_check_names=["row_count_check"],
+)
+</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+  <h2>Package: semantic</h2>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>semantic.benchmark <span class="ref-type">benchmark.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">BenchmarkResult</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Result of a single benchmark query execution.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">benchmark_query</span><code>(conn: Connection, query_name: str, sql: str, iterations: int, source: str)</code>
+ &rarr; <code>list[BenchmarkResult]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Run a query multiple times and record execution latency.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">generate_benchmark_report</span><code>(results: list[BenchmarkResult])</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Generate statistical summary from benchmark results.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>semantic.cross_tool_validation <span class="ref-type">cross_tool_validation.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">validate_metric_consistency</span><code>(trino_conn: Any, cube_conn: Any, queries: list[dict[str, str]])</code>
+ &rarr; <code>dict[str, Any]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Compare query results between Cube SQL API and direct Trino queries.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.semantic.cross_tool_validation import validate_metric_consistency
+report = validate_metric_consistency(trino_conn, cube_conn, metric_queries)
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">validate_glossary_links</span><code>(model_dir: str, glossary_path: str)</code>
+ &rarr; <code>dict[str, Any]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Validate that all meta.glossary_term values exist in the glossary.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">validate_cube_yaml_structure</span><code>(model_dir: str)</code>
+ &rarr; <code>dict[str, Any]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Validate Cube YAML files have required structural fields.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>semantic.evaluation <span class="ref-type">evaluation.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">EvalResult</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Result of evaluating a single NL-to-SQL question.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">load_golden_dataset</span><code>(path: str)</code>
+ &rarr; <code>list[dict]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Load a golden Q&A dataset from a JSON file.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">evaluate_accuracy</span><code>(results: list[EvalResult], complexity_filter: str | None)</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Compute accuracy metrics from evaluation results.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.semantic.evaluation import evaluate_accuracy
+results = evaluate_accuracy(engine, golden_dataset)
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">run_evaluation</span><code>(engine: NLToSQLEngine, conn: object, dataset: list[dict])</code>
+ &rarr; <code>list[EvalResult]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Run NL-to-SQL evaluation against a golden dataset.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">generate_evaluation_report</span><code>(results: list[EvalResult])</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Generate a structured accuracy report from evaluation results.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>semantic.metric_context <span class="ref-type">metric_context.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">load_cube_definitions</span><code>(model_dir: str)</code>
+ &rarr; <code>list[dict]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Load and parse all Cube YAML definitions from a model directory.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">build_metric_context</span><code>(definitions: list[dict])</code>
+ &rarr; <code>str</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Build structured text context from Cube definitions for LLM prompts.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>semantic.nl_to_sql <span class="ref-type">nl_to_sql.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">NLToSQLError</span> <span class="ref-type">class</span>
+ extends Exception</p>
+      <p style="font-size: 0.9rem; color: #475569;">Raised when NL-to-SQL generation fails.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">NLToSQLEngine</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">NL-to-SQL engine that generates Trino SQL via Claude on Bedrock.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>generate_sql</code></td>
+            <td><code>question: str, domain: str | None</code></td>
+            <td><code>str</code></td>
+            <td>Generate Trino SQL from a natural language question.</td>
+          </tr>
+          <tr>
+            <td><code>ask</code></td>
+            <td><code>question: str, domain: str | None</code></td>
+            <td><code>str</code></td>
+            <td>Convenience wrapper for generate_sql.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.semantic.nl_to_sql import NLToSQLEngine
+engine = NLToSQLEngine(bedrock_client=client, model_id="anthropic.claude-3-sonnet")
+sql = engine.generate_sql("Show total trades by desk for Q1 2026")
+</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>semantic.prompt_builder <span class="ref-type">prompt_builder.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">build_prompt</span><code>(question: str, metric_context: str, few_shot_examples: str)</code>
+ &rarr; <code>list[dict[str, str]]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Build a structured message list for LLM-based NL-to-SQL generation.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.semantic.prompt_builder import build_prompt
+prompt = build_prompt(question="What is total notional?", context=metric_context)
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">build_few_shot_examples</span><code>(domain: str | None)</code>
+ &rarr; <code>str</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Return formatted few-shot Q&A pairs for a specific domain.</p>
+    </div>
+  </div>
+  <h2>Package: iceberg_utils</h2>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>iceberg_utils.benchmark <span class="ref-type">benchmark.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">BenchmarkResult</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Single benchmark measurement result.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">run_benchmark</span><code>(conn: Connection, query: str, query_name: str, engine: str, iterations: int)</code>
+ &rarr; <code>list[BenchmarkResult]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Run a query multiple times and record latency for each iteration.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">generate_benchmark_queries</span><code>(namespace: str)</code>
+ &rarr; <code>list[dict]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Generate standard benchmark queries for a given namespace.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">format_results</span><code>(results: list[BenchmarkResult])</code>
+ &rarr; <code>str</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Format benchmark results as a markdown table.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">save_results</span><code>(results: list[BenchmarkResult], output_path: str)</code>
+ &rarr; <code>None</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Save benchmark results to a JSON file.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>iceberg_utils.catalog <span class="ref-type">catalog.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_spark_session</span><code>(nessie_uri: str | None, warehouse: str | None, s3_endpoint: str | None, app_name: str, enable_lineage: bool)</code>
+ &rarr; <code>SparkSession</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Create a SparkSession configured for Iceberg with Nessie REST catalog.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.iceberg_utils.catalog import get_spark_session
+spark = get_spark_session(app_name="my-etl", catalog_uri="http://nessie:19120/api/v1")
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">create_namespace</span><code>(spark: SparkSession, namespace: str)</code>
+ &rarr; <code>None</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Create an Iceberg namespace if it does not already exist.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">create_iceberg_table</span><code>(spark: SparkSession, namespace: str, table_name: str, schema: StructType, location: str, partition_by: list[str] | None)</code>
+ &rarr; <code>None</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Create an Iceberg table with the specified schema and location.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.iceberg_utils.catalog import create_iceberg_table
+create_iceberg_table(spark, "lakehouse.bronze.trades", schema, partition_by=["trade_date"])
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">write_data</span><code>(spark: SparkSession, namespace: str, table_name: str, data: list[dict], schema: StructType)</code>
+ &rarr; <code>None</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Write data to an Iceberg table in append mode.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">read_table</span><code>(spark: SparkSession, namespace: str, table_name: str)</code>
+ &rarr; <code>DataFrame</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Read an Iceberg table and return as DataFrame.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>iceberg_utils.maintenance <span class="ref-type">maintenance.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">compact_table</span><code>(spark: SparkSession, namespace: str, table_name: str, target_file_size_bytes: int)</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Compact small data files into larger ones using rewrite_data_files.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.iceberg_utils.maintenance import compact_table
+compact_table(spark, "lakehouse.bronze.trades", target_file_size_bytes=128*1024*1024)
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">expire_snapshots</span><code>(spark: SparkSession, namespace: str, table_name: str, older_than_days: int, retain_last: int)</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Expire old snapshots beyond the retention policy.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">remove_orphan_files</span><code>(spark: SparkSession, namespace: str, table_name: str, older_than_days: int)</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Remove orphan files not referenced by any snapshot.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">rewrite_manifests</span><code>(spark: SparkSession, namespace: str, table_name: str)</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Rewrite manifest files for faster query planning.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">full_maintenance</span><code>(spark: SparkSession, namespace: str, table_name: str, compact_target_bytes: int, expire_older_than_days: int, expire_retain_last: int, orphan_older_than_days: int)</code>
+ &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Run all four maintenance operations in sequence.</p>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>iceberg_utils.trino <span class="ref-type">trino.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_trino_connection</span><code>(host: str | None, port: int | None, user: str, catalog: str, schema: str)</code>
+ &rarr; <code>Connection</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Create a Trino DBAPI connection.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.iceberg_utils.trino import get_trino_connection
+conn = get_trino_connection(host="localhost", port=8080, catalog="iceberg")
+</code></pre>
+        </div>
+      </details>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">execute_query</span><code>(conn: Connection, sql: str)</code>
+ &rarr; <code>list[tuple]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Execute a SQL query and return all result rows.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">execute_ddl</span><code>(conn: Connection, sql: str)</code>
+ &rarr; <code>None</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Execute a DDL statement (CREATE, ALTER, DROP, INSERT, UPDATE, DELETE, MERGE).</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_table_schema</span><code>(conn: Connection, schema: str, table: str)</code>
+ &rarr; <code>list[dict]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Get column names and types from a table using DESCRIBE.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_table_row_count</span><code>(conn: Connection, schema: str, table: str)</code>
+ &rarr; <code>int</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Get the row count of a table.</p>
+    </div>
+  </div>
+  <h2>Package: lineage</h2>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>lineage.config <span class="ref-type">config.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_openlineage_spark_config</span><code>(url: str | None, namespace: str | None)</code>
+ &rarr; <code>dict[str, str]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Return Spark configuration dict for OpenLineage integration.</p>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.lineage.config import get_openlineage_spark_config
+config = get_openlineage_spark_config(marquez_url="http://marquez:5000")
+</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+  <h2>Package: inventory</h2>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>inventory.catalog <span class="ref-type">catalog.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">JobInventory</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Manages a collection of DataStage jobs for migration planning.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>add_job</code></td>
+            <td><code>job: DataStageJob</code></td>
+            <td><code>None</code></td>
+            <td>Add a job to the inventory.</td>
+          </tr>
+          <tr>
+            <td><code>remove_job</code></td>
+            <td><code>job_id: str</code></td>
+            <td><code>None</code></td>
+            <td>Remove a job from the inventory by job_id.</td>
+          </tr>
+          <tr>
+            <td><code>filter_by_complexity</code></td>
+            <td><code>complexity: JobComplexity</code></td>
+            <td><code>list[DataStageJob]</code></td>
+            <td>Filter jobs by complexity level.</td>
+          </tr>
+          <tr>
+            <td><code>filter_by_source_system</code></td>
+            <td><code>system: str</code></td>
+            <td><code>list[DataStageJob]</code></td>
+            <td>Filter jobs that use a specific source system.</td>
+          </tr>
+          <tr>
+            <td><code>filter_by_status</code></td>
+            <td><code>status: str</code></td>
+            <td><code>list[DataStageJob]</code></td>
+            <td>Filter jobs by migration status.</td>
+          </tr>
+          <tr>
+            <td><code>get_migration_stats</code></td>
+            <td><code></code></td>
+            <td><code>dict</code></td>
+            <td>Compute migration statistics for the inventory.</td>
+          </tr>
+          <tr>
+            <td><code>classify_complexity</code></td>
+            <td><code>job: DataStageJob</code></td>
+            <td><code>JobComplexity</code></td>
+            <td>Classify a job's complexity based on its characteristics.</td>
+          </tr>
+          <tr>
+            <td><code>save_to_json</code></td>
+            <td><code>path: str</code></td>
+            <td><code>None</code></td>
+            <td>Persist the inventory to a JSON file.</td>
+          </tr>
+          <tr>
+            <td><code>load_from_json</code></td>
+            <td><code>cls, path: str</code></td>
+            <td><code>JobInventory</code></td>
+            <td>Load an inventory from a JSON file.</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.inventory.catalog import JobInventory
+inventory = JobInventory()
+inventory.load_from_yaml("inventory.yml")
+</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>inventory.models <span class="ref-type">models.py</span></h3>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">JobComplexity</span> <span class="ref-type">class</span>
+ extends Enum</p>
+      <p style="font-size: 0.9rem; color: #475569;">Complexity classification for DataStage jobs.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">DataStageJob</span> <span class="ref-type">class</span>
+</p>
+      <p style="font-size: 0.9rem; color: #475569;">Represents a DataStage job in the migration inventory.</p>
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          <tr>
+            <td><code>to_dict</code></td>
+            <td><code></code></td>
+            <td><code>dict</code></td>
+            <td>Serialize to dictionary for JSON persistence.</td>
+          </tr>
+          <tr>
+            <td><code>from_dict</code></td>
+            <td><code>cls, data: dict</code></td>
+            <td><code>DataStageJob</code></td>
+            <td>Deserialize from dictionary (e.g., loaded from JSON).</td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">from src.inventory.models import DataStageJob, JobComplexity
+job = DataStageJob(name="DS_TRADES_LOAD", complexity=JobComplexity.HIGH)
+</code></pre>
+        </div>
+      </details>
+    </div>
+  </div>
+
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Developer Documentation</p>
+  </footer>
+</body>
+</html>
