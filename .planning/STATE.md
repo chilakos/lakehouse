@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Documentation
 status: executing
-stopped_at: Phase 7 context gathered
-last_updated: "2026-03-14T21:19:44.567Z"
-last_activity: 2026-03-14 -- Completed 06-02 Specialized Architecture Diagrams and Index
+stopped_at: Completed 07-02-PLAN.md
+last_updated: "2026-03-14T23:30:53Z"
+last_activity: 2026-03-14 -- Completed 07-02 All Engineers Documentation Batch
 progress:
   total_phases: 4
   completed_phases: 2
-  total_plans: 4
-  completed_plans: 5
+  total_plans: 7
+  completed_plans: 6
   percent: 55
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 ## Current Position
 
 Phase: 7 of 8 (Developer Docs)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In Progress
-Last activity: 2026-03-14 -- Completed 07-01 Developer Documentation Infrastructure and First Batch
+Last activity: 2026-03-14 -- Completed 07-02 All Engineers Documentation Batch
 
-Progress: [█████░░░░░] 55%
+Progress: [██████████] 96%
 
 ## v1.0 Milestone Summary
 
@@ -45,9 +45,9 @@ Progress: [█████░░░░░] 55%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5 (v1.1) / 16 (v1.0)
+- Total plans completed: 6 (v1.1) / 16 (v1.0)
 - Average duration: 8 min
-- Total execution time: 40 min (v1.1)
+- Total execution time: 47 min (v1.1)
 
 **By Phase:**
 
@@ -55,7 +55,7 @@ Progress: [█████░░░░░] 55%
 |-------|-------|-------|----------|
 | 5. HTML Foundation + SWOTs | 2/2 | 17 min | 8.5 min |
 | 6. Architecture | 2/2 | 15 min | 7.5 min |
-| 7. Developer Docs | 1/3 | 8 min | 8 min |
+| 7. Developer Docs | 2/3 | 15 min | 7.5 min |
 | 8. Data Catalog | 0/2 | -- | -- |
 
 *Updated after each plan completion*
@@ -90,6 +90,9 @@ Key decisions from v1.0 affecting documentation:
 - Developer docs: bullet_items key in YAML (not items) to avoid Jinja2 dict.items() method collision
 - Single base_developer.html template with page_type conditional blocks for all developer doc variants
 - Compact checklist print CSS: 8pt font, 1cm margins for single-page A4 output
+- Dynamic services table from extract_services() in reference page_type when annotations dict present
+- Guide page_type diagram_ref key for embedding Mermaid SVG diagrams within guide sections
+- Service-urls annotations dict for developer metadata (credentials, actions) while ports from extract_services()
 
 ### Pending Todos
 
@@ -107,5 +110,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-14
-Stopped at: Completed 07-01-PLAN.md
-Resume file: .planning/phases/07-developer-documentation/07-02-PLAN.md
+Stopped at: Completed 07-02-PLAN.md
+Resume file: .planning/phases/07-developer-documentation/07-03-PLAN.md

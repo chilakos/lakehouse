@@ -37,11 +37,11 @@ Requirements for v1.1 Documentation milestone. Each maps to roadmap phases.
 - [x] **DEV-01**: Developer onboarding guide with prerequisites, local environment setup, and step-by-step Docker Compose stack launch
 - [x] **DEV-02**: Repository structure walkthrough explaining each directory and key files
 - [x] **DEV-03**: "Write your first pipeline" hands-on tutorial (extend BasePipeline, define schema, add quality checks, create DAG, run tests)
-- [ ] **DEV-04**: ETL pattern reference incorporating etl-patterns.md content (medallion, quality, DAGs, incremental, mainframe)
-- [ ] **DEV-05**: Testing guide covering unit tests, integration tests, pytest markers, CI gate behavior
-- [ ] **DEV-06**: CI/CD workflow explanation (PR-dev-staging-prod flow, checks at each gate, environment promotion)
-- [ ] **DEV-07**: Service URL reference table for all 10+ platform services (Trino UI, Airflow, MinIO, Grafana, etc.)
-- [ ] **DEV-08**: Common troubleshooting FAQ (Docker memory, Nessie health, Spark JARs, Airflow init, Ranger startup)
+- [x] **DEV-04**: ETL pattern reference incorporating etl-patterns.md content (medallion, quality, DAGs, incremental, mainframe)
+- [x] **DEV-05**: Testing guide covering unit tests, integration tests, pytest markers, CI gate behavior
+- [x] **DEV-06**: CI/CD workflow explanation (PR-dev-staging-prod flow, checks at each gate, environment promotion)
+- [x] **DEV-07**: Service URL reference table for all 10+ platform services (Trino UI, Airflow, MinIO, Grafana, etc.)
+- [x] **DEV-08**: Common troubleshooting FAQ (Docker memory, Nessie health, Spark JARs, Airflow init, Ranger startup)
 - [x] **DEV-09**: Day 1 checklist — printable single-page onboarding checklist combining setup, first pipeline, and first PR
 - [ ] **DEV-10**: API/module reference with complete module listing, public API signatures, import paths, and usage examples for all 8 packages
 - [ ] **DEV-11**: Class hierarchy visualization showing BasePipeline inheritance tree and all concrete implementations
@@ -213,11 +213,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEV-01 | Phase 7 | Complete |
 | DEV-02 | Phase 7 | Complete |
 | DEV-03 | Phase 7 | Complete |
-| DEV-04 | Phase 7 | Pending |
-| DEV-05 | Phase 7 | Pending |
-| DEV-06 | Phase 7 | Pending |
-| DEV-07 | Phase 7 | Pending |
-| DEV-08 | Phase 7 | Pending |
+| DEV-04 | Phase 7 | Complete |
+| DEV-05 | Phase 7 | Complete |
+| DEV-06 | Phase 7 | Complete |
+| DEV-07 | Phase 7 | Complete |
+| DEV-08 | Phase 7 | Complete |
 | DEV-09 | Phase 7 | Complete |
 | DEV-10 | Phase 7 | Pending |
 | DEV-11 | Phase 7 | Pending |
