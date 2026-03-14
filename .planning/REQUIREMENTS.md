@@ -191,51 +191,57 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SWOT-01 | TBD | Pending |
-| SWOT-02 | TBD | Pending |
-| SWOT-03 | TBD | Pending |
-| SWOT-04 | TBD | Pending |
-| SWOT-05 | TBD | Pending |
-| SWOT-06 | TBD | Pending |
-| SWOT-07 | TBD | Pending |
-| SWOT-08 | TBD | Pending |
-| SWOT-09 | TBD | Pending |
-| SWOT-10 | TBD | Pending |
-| ARCH-01 | TBD | Pending |
-| ARCH-02 | TBD | Pending |
-| ARCH-03 | TBD | Pending |
-| ARCH-04 | TBD | Pending |
-| ARCH-05 | TBD | Pending |
-| ARCH-06 | TBD | Pending |
-| ARCH-07 | TBD | Pending |
-| ARCH-08 | TBD | Pending |
-| ARCH-09 | TBD | Pending |
-| DEV-01 | TBD | Pending |
-| DEV-02 | TBD | Pending |
-| DEV-03 | TBD | Pending |
-| DEV-04 | TBD | Pending |
-| DEV-05 | TBD | Pending |
-| DEV-06 | TBD | Pending |
-| DEV-07 | TBD | Pending |
-| DEV-08 | TBD | Pending |
-| DEV-09 | TBD | Pending |
-| DEV-10 | TBD | Pending |
-| DEV-11 | TBD | Pending |
-| DEV-12 | TBD | Pending |
-| CAT-01 | TBD | Pending |
-| CAT-02 | TBD | Pending |
-| CAT-03 | TBD | Pending |
-| CAT-04 | TBD | Pending |
-| CAT-05 | TBD | Pending |
-| CAT-06 | TBD | Pending |
-| CAT-07 | TBD | Pending |
-| CAT-08 | TBD | Pending |
+| SWOT-01 | Phase 5 | Pending |
+| SWOT-02 | Phase 5 | Pending |
+| SWOT-03 | Phase 5 | Pending |
+| SWOT-04 | Phase 5 | Pending |
+| SWOT-05 | Phase 5 | Pending |
+| SWOT-06 | Phase 5 | Pending |
+| SWOT-07 | Phase 5 | Pending |
+| SWOT-08 | Phase 5 | Pending |
+| SWOT-09 | Phase 5 | Pending |
+| SWOT-10 | Phase 5 | Pending |
+| ARCH-01 | Phase 6 | Pending |
+| ARCH-02 | Phase 6 | Pending |
+| ARCH-03 | Phase 6 | Pending |
+| ARCH-04 | Phase 6 | Pending |
+| ARCH-05 | Phase 6 | Pending |
+| ARCH-06 | Phase 6 | Pending |
+| ARCH-07 | Phase 6 | Pending |
+| ARCH-08 | Phase 6 | Pending |
+| ARCH-09 | Phase 5 | Pending |
+| DEV-01 | Phase 7 | Pending |
+| DEV-02 | Phase 7 | Pending |
+| DEV-03 | Phase 7 | Pending |
+| DEV-04 | Phase 7 | Pending |
+| DEV-05 | Phase 7 | Pending |
+| DEV-06 | Phase 7 | Pending |
+| DEV-07 | Phase 7 | Pending |
+| DEV-08 | Phase 7 | Pending |
+| DEV-09 | Phase 7 | Pending |
+| DEV-10 | Phase 7 | Pending |
+| DEV-11 | Phase 7 | Pending |
+| DEV-12 | Phase 7 | Pending |
+| CAT-01 | Phase 8 | Pending |
+| CAT-02 | Phase 8 | Pending |
+| CAT-03 | Phase 8 | Pending |
+| CAT-04 | Phase 8 | Pending |
+| CAT-05 | Phase 8 | Pending |
+| CAT-06 | Phase 8 | Pending |
+| CAT-07 | Phase 8 | Pending |
+| CAT-08 | Phase 8 | Pending |
 
 **Coverage:**
 - v1.1 requirements: 39 total
-- Mapped to phases: 0
-- Unmapped: 39 (pending roadmap creation)
+- Mapped to phases: 39/39
+- Unmapped: 0
+
+**Phase distribution:**
+- Phase 5 (HTML Foundation + SWOTs): 11 requirements (SWOT-01 through SWOT-10, ARCH-09)
+- Phase 6 (Architecture Visualizations): 8 requirements (ARCH-01 through ARCH-08)
+- Phase 7 (Developer Documentation): 12 requirements (DEV-01 through DEV-12)
+- Phase 8 (Data Catalog and Glossary): 8 requirements (CAT-01 through CAT-08)
 
 ---
 *Requirements defined: 2026-03-13*
-*Last updated: 2026-03-14 after v1.1 milestone requirements definition*
+*Last updated: 2026-03-14 after roadmap creation -- all 39 requirements mapped to phases*

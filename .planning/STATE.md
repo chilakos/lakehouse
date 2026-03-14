@@ -4,12 +4,12 @@ milestone: v1.1
 milestone_name: Documentation
 status: active
 stopped_at: null
-last_updated: "2026-03-14T14:30:00.000Z"
-last_activity: 2026-03-14 -- Milestone v1.1 Documentation started
+last_updated: "2026-03-14T15:00:00.000Z"
+last_activity: 2026-03-14 -- Roadmap created for v1.1 Documentation (Phases 5-8)
 progress:
-  total_phases: 0
+  total_phases: 4
   completed_phases: 0
-  total_plans: 0
+  total_plans: 9
   completed_plans: 0
   percent: 0
 ---
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
-**Current focus:** v1.1 Documentation -- SWOT analyses, architecture diagrams, developer docs, data catalog
+**Current focus:** v1.1 Documentation -- Phase 5: HTML Foundation and SWOT Analyses
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-14 — Milestone v1.1 Documentation started
+Phase: 5 of 8 (HTML Foundation and SWOT Analyses) -- first phase of v1.1
+Plan: 0 of 2 in current phase
+Status: Ready to plan
+Last activity: 2026-03-14 -- Roadmap created for v1.1 Documentation milestone
 
 Progress: [░░░░░░░░░░] 0%
 
@@ -41,6 +41,24 @@ Progress: [░░░░░░░░░░] 0%
 - Phase 4: Semantic Layers and Consumer Migration (3 plans)
 
 480 unit tests passing. All requirements verified.
+
+## Performance Metrics
+
+**Velocity:**
+- Total plans completed: 0 (v1.1) / 16 (v1.0)
+- Average duration: -- (no v1.1 plans yet)
+- Total execution time: 0 hours (v1.1)
+
+**By Phase:**
+
+| Phase | Plans | Total | Avg/Plan |
+|-------|-------|-------|----------|
+| 5. HTML Foundation + SWOTs | 0/2 | -- | -- |
+| 6. Architecture | 0/2 | -- | -- |
+| 7. Developer Docs | 0/3 | -- | -- |
+| 8. Data Catalog | 0/2 | -- | -- |
+
+*Updated after each plan completion*
 
 ## Accumulated Context
 
@@ -63,13 +81,15 @@ None yet.
 
 ### Blockers/Concerns
 
-- Pending: Snowflake Strategy SWOT (undecided)
-- Pending: Data Model Strategy SWOT (undecided)
+- Pending: Snowflake Strategy SWOT (undecided) -- highest leadership priority
+- Pending: Data Model Strategy SWOT (undecided) -- highest leadership priority
 - Carried from v1.0: Teradata OTF REST catalog support unconfirmed
 - Carried from v1.0: MinIO replacement decision needed (RustFS vs Ceph vs AIStor)
+- Phase 5 risk: Snowflake and Data Model SWOTs require domain expert input beyond repo content
+- Phase 8 risk: OpenMetadata API accessibility in CI unknown -- git-cached fallback pattern needed
 
 ## Session Continuity
 
-Last session: 2026-03-14T14:30:00Z
-Stopped at: Milestone v1.1 started, defining requirements
+Last session: 2026-03-14T15:00:00Z
+Stopped at: Roadmap created for v1.1 Documentation, ready to plan Phase 5
 Resume file: None
