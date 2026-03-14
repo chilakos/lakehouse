@@ -1,11 +1,66 @@
 # Requirements: Lakehouse Architecture Transformation
 
 **Defined:** 2026-03-13
-**Core Value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
+**Core Value:** A single, governed copy of data in Iceberg format that every consumer — Teradata, Trino, Snowflake, BI tools, and AI — can access without creating additional copies.
 
-## v1 Requirements
+## v1.1 Requirements
 
-Requirements for initial release. Each maps to roadmap phases.
+Requirements for v1.1 Documentation milestone. Each maps to roadmap phases.
+
+### SWOT Analyses
+
+- [ ] **SWOT-01**: Shared CSS template with embedded styles, print-friendly layout, professional typography, and consistent color palette across all HTML deliverables
+- [ ] **SWOT-02**: Iceberg Catalog SWOT (Glue vs Nessie vs HMS vs Polaris) as standalone HTML with 2x2 grid, executive summary, decision matrix, and recommendation (Decided: Nessie)
+- [ ] **SWOT-03**: Snowflake Strategy SWOT (Retire vs Keep vs Maintain) as standalone HTML with full research, competitive analysis, and recommendation (Undecided)
+- [ ] **SWOT-04**: DataStage Migration SWOT (Big-bang vs phased vs parallel-run) as standalone HTML with evidence from existing ETL framework (Decided: Phased Python)
+- [ ] **SWOT-05**: Data Model Strategy SWOT (Keep FSDM vs evolve vs new medallion) as standalone HTML with backward compatibility analysis (Undecided)
+- [ ] **SWOT-06**: BI Semantic Layer SWOT (Direct vs dbt vs AtScale vs Cube) as standalone HTML with comparison analysis (Decided: Cube)
+- [ ] **SWOT-07**: AI Semantic Layer SWOT (Build vs buy) as standalone HTML with commercial alternative analysis (Decided: Build-own)
+- [ ] **SWOT-08**: Cross-SWOT index page linking all 6 SWOTs with decision status summary, badges (Decided/Undecided), and recommendation overview
+- [ ] **SWOT-09**: Interactive collapsible sections (CSS-only details/summary) in all SWOT documents
+- [ ] **SWOT-10**: Responsive tablet-friendly design across all SWOT HTML deliverables
+
+### Architecture Visualizations
+
+- [ ] **ARCH-01**: Marketecture HTML page with boxes-and-arrows platform overview, technology labels with value propositions, key numbers callout (1.5 PB, 300+ sources, 40+ engineers)
+- [ ] **ARCH-02**: Detailed architecture HTML page with every component, port numbers, protocols, health check endpoints for all 20+ services
+- [ ] **ARCH-03**: Data flow direction diagrams showing Bronze-Silver-Gold paths and consumer-semantic-query engine paths
+- [ ] **ARCH-04**: Service dependency graph showing which services depend on which
+- [ ] **ARCH-05**: Security layer visualization showing Ranger integration points and RBAC flow
+- [ ] **ARCH-06**: Governance stack detail (OpenLineage-Marquez-Grafana flow for BCBS 239)
+- [ ] **ARCH-07**: Environment differences table (dev/staging/prod) showing Terraform vs Docker Compose deployment
+- [ ] **ARCH-08**: CSS hover tooltips on detailed architecture diagram showing component descriptions
+- [ ] **ARCH-09**: Version-stamped footers on all HTML deliverables with generation date and component versions
+
+### Developer Documentation
+
+- [ ] **DEV-01**: Developer onboarding guide with prerequisites, local environment setup, and step-by-step Docker Compose stack launch
+- [ ] **DEV-02**: Repository structure walkthrough explaining each directory and key files
+- [ ] **DEV-03**: "Write your first pipeline" hands-on tutorial (extend BasePipeline, define schema, add quality checks, create DAG, run tests)
+- [ ] **DEV-04**: ETL pattern reference incorporating etl-patterns.md content (medallion, quality, DAGs, incremental, mainframe)
+- [ ] **DEV-05**: Testing guide covering unit tests, integration tests, pytest markers, CI gate behavior
+- [ ] **DEV-06**: CI/CD workflow explanation (PR-dev-staging-prod flow, checks at each gate, environment promotion)
+- [ ] **DEV-07**: Service URL reference table for all 10+ platform services (Trino UI, Airflow, MinIO, Grafana, etc.)
+- [ ] **DEV-08**: Common troubleshooting FAQ (Docker memory, Nessie health, Spark JARs, Airflow init, Ranger startup)
+- [ ] **DEV-09**: Day 1 checklist — printable single-page onboarding checklist combining setup, first pipeline, and first PR
+- [ ] **DEV-10**: API/module reference with complete module listing, public API signatures, import paths, and usage examples for all 8 packages
+- [ ] **DEV-11**: Class hierarchy visualization showing BasePipeline inheritance tree and all concrete implementations
+- [ ] **DEV-12**: Contributor guidelines covering branch naming, PR process, testing requirements, code style (Ruff), naming conventions, commit format
+
+### Data Catalog
+
+- [ ] **CAT-01**: Business glossary with plain-language definitions for all terms in glossary-seed.json
+- [ ] **CAT-02**: Term-to-table mapping linking glossary terms to physical table locations in lakehouse.gold.*
+- [ ] **CAT-03**: Medallion layer explanation for non-technical users (Bronze/Silver/Gold narrative)
+- [ ] **CAT-04**: Data freshness SLA documentation with thresholds and RED/YELLOW/GREEN status definitions
+- [ ] **CAT-05**: Metric definitions with calculation logic pulled from Cube YAML measure definitions
+- [ ] **CAT-06**: Regulatory term definitions section (BCBS 239, PII, VaR, Expected Shortfall) with precise compliance definitions
+- [ ] **CAT-07**: Data lineage visualization showing end-to-end flow from source through Bronze-Silver-Gold to Cube to BI/AI per data domain
+- [ ] **CAT-08**: Glossary term relationship graph visualizing connections between related terms
+
+## v1.0 Requirements (Validated)
+
+Requirements shipped and confirmed in v1.0 milestone (2026-03-13). 16 plans, 4 phases, 480 tests.
 
 ### Foundation & Storage
 
@@ -23,31 +78,31 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **QUERY-02**: Trino writes Iceberg tables (ETL output, Silver/Gold transformations)
 - [ ] **QUERY-03**: Teradata OTF reads Iceberg tables from S3 via shared catalog (feasibility validated)
 - [ ] **QUERY-04**: Snowflake reads Iceberg tables via external tables (compute-only, no data copies)
-- [ ] **QUERY-05**: All three engines (Trino, Teradata OTF, Snowflake) see consistent table metadata from shared catalog
-- [ ] **QUERY-06**: Query performance benchmarked: Trino vs Teradata OTF vs direct Teradata on representative workloads
+- [ ] **QUERY-05**: All three engines see consistent table metadata from shared catalog
+- [ ] **QUERY-06**: Query performance benchmarked: Trino vs Teradata OTF vs direct Teradata
 
 ### ETL & Ingestion
 
 - [x] **ETL-01**: Python ETL framework established using PySpark + PyIceberg for Iceberg writes
 - [x] **ETL-02**: Pilot ETL migration of 5-10 representative DataStage jobs to Python
-- [x] **ETL-03**: Mainframe source connectivity validated in Python (COBOL copybook parsing, DB2 z/OS, flat files)
+- [x] **ETL-03**: Mainframe source connectivity validated in Python (COBOL copybook parsing)
 - [x] **ETL-04**: Apache Airflow deployed for workflow orchestration with DAG dependency management
-- [x] **ETL-05**: Incremental/delta loading patterns implemented (watermark-based, CDC where available)
+- [x] **ETL-05**: Incremental/delta loading patterns implemented (watermark-based)
 - [ ] **ETL-06**: Standardized ETL patterns documented and reusable across 40+ engineer team
-- [ ] **ETL-07**: Full DataStage job inventory cataloged with complexity classification (simple/medium/complex)
+- [ ] **ETL-07**: Full DataStage job inventory cataloged with complexity classification
 
 ### CI/CD & DevOps
 
-- [x] **CICD-01**: GitHub repository structure established for ETL code, dbt models, and infrastructure
+- [x] **CICD-01**: GitHub repository structure established for ETL code and infrastructure
 - [x] **CICD-02**: CI/CD pipeline deployed via GitHub Actions for automated testing and deployment
-- [x] **CICD-03**: Environment promotion workflow (dev -> staging -> production) for ETL and infrastructure changes
-- [x] **CICD-04**: Infrastructure as Code for lakehouse components (Trino, Airflow, catalog, storage)
+- [x] **CICD-03**: Environment promotion workflow (dev -> staging -> production)
+- [x] **CICD-04**: Infrastructure as Code for lakehouse components
 
 ### Governance & Lineage
 
-- [x] **GOVN-01**: End-to-end data lineage captured via OpenLineage from source to consumption layer
-- [x] **GOVN-02**: Lineage visualization available for regulatory reporting (BCBS 239, SOX compliance)
-- [x] **GOVN-03**: Data classification and sensitivity labeling applied to PII and regulated financial data
+- [x] **GOVN-01**: End-to-end data lineage captured via OpenLineage
+- [x] **GOVN-02**: Lineage visualization available for regulatory reporting (BCBS 239)
+- [x] **GOVN-03**: Data classification and sensitivity labeling applied to PII and regulated data
 - [x] **GOVN-04**: Business glossary with data definitions accessible to business users
 - [x] **GOVN-05**: Audit trail capturing all data access across Trino, Teradata, and Snowflake
 
@@ -55,40 +110,47 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **SEC-01**: SSO/LDAP/Active Directory authentication integrated with Trino
 - [ ] **SEC-02**: Role-based access control (RBAC) enforced on catalogs, schemas, and tables
-- [x] **SEC-03**: Column-level security (masking PII and sensitive financial fields) via Apache Ranger
+- [x] **SEC-03**: Column-level security (masking PII) via Apache Ranger
 - [x] **SEC-04**: Row-level security for multi-business-unit data access via Apache Ranger
-- [x] **SEC-05**: Encryption at rest (S3 SSE-KMS, MinIO equivalent) for all Iceberg data
-- [x] **SEC-06**: Encryption in transit (TLS) for all data movement and query traffic
+- [x] **SEC-05**: Encryption at rest (S3 SSE-KMS, MinIO equivalent)
+- [x] **SEC-06**: Encryption in transit (TLS)
 
 ### Data Quality
 
-- [x] **QUAL-01**: Schema validation enforced on all ingestion pipelines before Iceberg writes
-- [x] **QUAL-02**: Data quality checks (null rates, range validation, uniqueness) integrated into ETL
-- [x] **QUAL-03**: Source-to-lakehouse reconciliation (row counts, checksums, aggregates) for migrated tables
-- [x] **QUAL-04**: Data quality monitoring with alerting for degradation detection
+- [x] **QUAL-01**: Schema validation enforced on all ingestion pipelines
+- [x] **QUAL-02**: Data quality checks integrated into ETL
+- [x] **QUAL-03**: Source-to-lakehouse reconciliation
+- [x] **QUAL-04**: Data quality monitoring with alerting
 
 ### BI Semantic Layer
 
-- [x] **BISEM-01**: Unified metric definitions (revenue, risk exposure, etc.) in a semantic layer
-- [x] **BISEM-02**: Tableau connected to lakehouse via semantic layer (replacing direct Teradata queries)
-- [x] **BISEM-03**: Power BI connected to lakehouse via semantic layer (replacing direct Teradata queries)
-- [x] **BISEM-04**: BI query performance validated against current Teradata direct-query baselines
+- [x] **BISEM-01**: Unified metric definitions in a semantic layer
+- [x] **BISEM-02**: Tableau connected to lakehouse via semantic layer
+- [x] **BISEM-03**: Power BI connected to lakehouse via semantic layer
+- [x] **BISEM-04**: BI query performance validated
 
 ### AI Semantic Layer
 
-- [x] **AISEM-01**: NL-to-SQL capability deployed on curated high-confidence data domains
-- [x] **AISEM-02**: NL-to-SQL leverages BI semantic layer definitions for accuracy
-- [x] **AISEM-03**: NL-to-SQL accuracy benchmarked and meeting target threshold on pilot domains
+- [x] **AISEM-01**: NL-to-SQL capability deployed on curated domains
+- [x] **AISEM-02**: NL-to-SQL leverages BI semantic layer definitions
+- [x] **AISEM-03**: NL-to-SQL accuracy benchmarked and meeting targets
 
 ### Self-Service & Observability
 
-- [x] **PLAT-01**: Data catalog deployed for self-service data discovery (search, profiling, glossary)
-- [ ] **PLAT-02**: Pipeline observability dashboard with SLA monitoring and failure alerting
+- [x] **PLAT-01**: Data catalog deployed for self-service discovery
+- [ ] **PLAT-02**: Pipeline observability dashboard with SLA monitoring
 - [x] **PLAT-03**: Data freshness tracking visible to business users
 
-## v2 Requirements
+## Future Requirements
 
-Deferred to future release. Tracked but not in current roadmap.
+Deferred to future milestone.
+
+### Documentation Automation
+
+- **AUTO-01**: Automated API docs generation pipeline (Sphinx/pdoc) integrated into CI/CD
+- **AUTO-02**: OpenMetadata API integration for live glossary sync
+- **AUTO-03**: Automated architecture diagram generation from docker-compose.yml
+- **AUTO-04**: Documentation freshness CI checks with staleness alerts
 
 ### ETL Migration Scale
 
@@ -104,24 +166,24 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ### Teradata Transition
 
-- **TERA-V2-01**: Teradata OTF writing Iceberg tables (ETL output from Teradata)
+- **TERA-V2-01**: Teradata OTF writing Iceberg tables
 - **TERA-V2-02**: Teradata workload migration plan to Trino
 - **TERA-V2-03**: Teradata decommission roadmap
 
 ## Out of Scope
 
-Explicitly excluded. Documented to prevent scope creep.
+Explicitly excluded for v1.1.
 
 | Feature | Reason |
 |---------|--------|
-| Real-time streaming ingestion (Kafka/Flink) | Batch-first migration; streaming adds massive complexity. Add for specific use cases after batch is stable |
-| Full Teradata decommission | This phase validates OTF/Iceberg feasibility. Decommission requires full ETL migration first |
-| Multi-cloud (Azure/GCP) | AWS S3 + MinIO is the stated architecture. Iceberg is cloud-agnostic; add clouds later if needed |
-| Enterprise-wide data mesh | Organizational transformation that requires working infrastructure. Pilot 2-3 domains in v2 |
-| Row-level lineage tracking | Iceberg V3 feature, still bleeding edge. Column-level and dataset-level lineage is sufficient for now |
-| Custom-built data catalog | Mature open-source options exist (DataHub, OpenMetadata). Invest engineering in quality and lineage instead |
-| Unified query gateway/proxy | Adds latency and single point of failure. Let Trino handle federation; direct access during transition |
-| NL-to-SQL for all data domains | Accuracy requires curated semantic context per domain. Deploy incrementally, not enterprise-wide |
+| JavaScript-dependent interactivity | Standalone HTML must work in email clients, SharePoint, corporate intranets that strip JS |
+| External CSS framework (Bootstrap, Tailwind CDN) | CDN links break offline/email viewing; custom embedded CSS is sufficient |
+| Multi-page HTML site with navigation | Contradicts standalone single-file requirement |
+| PDF generation pipeline | @media print CSS rules allow browser-native PDF |
+| Video walkthroughs | High production effort, not searchable, impossible to update incrementally |
+| Custom web fonts | External font loading fails in restricted networks |
+| TOGAF/ArchiMate formal notation | Overkill; plain English boxes-and-arrows is more accessible |
+| Embedded UI screenshots | Go stale immediately; text descriptions with URLs are maintainable |
 
 ## Traceability
 
@@ -129,61 +191,51 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FNDTN-01 | Phase 1 | Complete |
-| FNDTN-02 | Phase 1 | Complete |
-| FNDTN-03 | Phase 1 | Complete |
-| FNDTN-04 | Phase 1 | Complete |
-| FNDTN-05 | Phase 1 | Complete |
-| FNDTN-06 | Phase 1 | Complete |
-| FNDTN-07 | Phase 2 | Complete |
-| QUERY-01 | Phase 1 | Pending |
-| QUERY-02 | Phase 1 | Pending |
-| QUERY-03 | Phase 1 | Pending |
-| QUERY-04 | Phase 1 | Pending |
-| QUERY-05 | Phase 1 | Pending |
-| QUERY-06 | Phase 1 | Pending |
-| ETL-01 | Phase 2 | Complete |
-| ETL-02 | Phase 2 | Complete |
-| ETL-03 | Phase 2 | Complete |
-| ETL-04 | Phase 2 | Complete |
-| ETL-05 | Phase 2 | Complete |
-| ETL-06 | Phase 2 | Pending |
-| ETL-07 | Phase 2 | Pending |
-| CICD-01 | Phase 1 | Complete (01-01) |
-| CICD-02 | Phase 1 | Complete (01-03) |
-| CICD-03 | Phase 1 | Complete (01-03) |
-| CICD-04 | Phase 1 | Complete (01-01) |
-| GOVN-01 | Phase 2 | Complete |
-| GOVN-02 | Phase 3 | Complete |
-| GOVN-03 | Phase 3 | Complete |
-| GOVN-04 | Phase 3 | Complete |
-| GOVN-05 | Phase 3 | Complete |
-| SEC-01 | Phase 1 | Pending |
-| SEC-02 | Phase 1 | Pending |
-| SEC-03 | Phase 3 | Complete |
-| SEC-04 | Phase 3 | Complete |
-| SEC-05 | Phase 1 | Complete (01-03) |
-| SEC-06 | Phase 1 | Complete (01-03) |
-| QUAL-01 | Phase 2 | Complete |
-| QUAL-02 | Phase 2 | Complete |
-| QUAL-03 | Phase 2 | Complete |
-| QUAL-04 | Phase 2 | Complete |
-| BISEM-01 | Phase 4 | Complete |
-| BISEM-02 | Phase 4 | Complete |
-| BISEM-03 | Phase 4 | Complete |
-| BISEM-04 | Phase 4 | Complete |
-| AISEM-01 | Phase 4 | Complete |
-| AISEM-02 | Phase 4 | Complete |
-| AISEM-03 | Phase 4 | Complete |
-| PLAT-01 | Phase 3 | Complete |
-| PLAT-02 | Phase 2 | Pending |
-| PLAT-03 | Phase 3 | Complete |
+| SWOT-01 | TBD | Pending |
+| SWOT-02 | TBD | Pending |
+| SWOT-03 | TBD | Pending |
+| SWOT-04 | TBD | Pending |
+| SWOT-05 | TBD | Pending |
+| SWOT-06 | TBD | Pending |
+| SWOT-07 | TBD | Pending |
+| SWOT-08 | TBD | Pending |
+| SWOT-09 | TBD | Pending |
+| SWOT-10 | TBD | Pending |
+| ARCH-01 | TBD | Pending |
+| ARCH-02 | TBD | Pending |
+| ARCH-03 | TBD | Pending |
+| ARCH-04 | TBD | Pending |
+| ARCH-05 | TBD | Pending |
+| ARCH-06 | TBD | Pending |
+| ARCH-07 | TBD | Pending |
+| ARCH-08 | TBD | Pending |
+| ARCH-09 | TBD | Pending |
+| DEV-01 | TBD | Pending |
+| DEV-02 | TBD | Pending |
+| DEV-03 | TBD | Pending |
+| DEV-04 | TBD | Pending |
+| DEV-05 | TBD | Pending |
+| DEV-06 | TBD | Pending |
+| DEV-07 | TBD | Pending |
+| DEV-08 | TBD | Pending |
+| DEV-09 | TBD | Pending |
+| DEV-10 | TBD | Pending |
+| DEV-11 | TBD | Pending |
+| DEV-12 | TBD | Pending |
+| CAT-01 | TBD | Pending |
+| CAT-02 | TBD | Pending |
+| CAT-03 | TBD | Pending |
+| CAT-04 | TBD | Pending |
+| CAT-05 | TBD | Pending |
+| CAT-06 | TBD | Pending |
+| CAT-07 | TBD | Pending |
+| CAT-08 | TBD | Pending |
 
 **Coverage:**
-- v1 requirements: 49 total
-- Mapped to phases: 49
-- Unmapped: 0
+- v1.1 requirements: 39 total
+- Mapped to phases: 0
+- Unmapped: 39 (pending roadmap creation)
 
 ---
 *Requirements defined: 2026-03-13*
-*Last updated: 2026-03-13 after roadmap creation*
+*Last updated: 2026-03-14 after v1.1 milestone requirements definition*
