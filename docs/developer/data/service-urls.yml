@@ -1,0 +1,60 @@
+title: "Service URL Reference"
+subtitle: "All platform services with ports, protocols, and developer quick-reference"
+page_type: "reference"
+output_filename: "service-urls.html"
+
+annotations:
+  airflow-webserver:
+    default_credentials: "admin / admin"
+    common_actions: "View DAG runs, trigger pipeline, check task logs"
+  trino:
+    default_credentials: "any username (no password)"
+    common_actions: "Run SQL queries, check catalogs, SHOW SCHEMAS FROM lakehouse"
+  minio:
+    default_credentials: "minioadmin / minioadmin"
+    common_actions: "Browse buckets, check data files, verify Bronze/Silver/Gold paths"
+  grafana:
+    default_credentials: "admin / admin"
+    common_actions: "View dashboards, check alerts, monitor pipeline quality metrics"
+  nessie:
+    default_credentials: "no auth required"
+    common_actions: "Browse catalog, check table metadata, view branch history"
+  openmetadata:
+    default_credentials: "admin / admin"
+    common_actions: "View lineage, browse glossary, check data quality profiles"
+
+sections:
+  - heading: "Platform Services"
+    description: "All services from docker-compose.yml with ports, protocols, and health checks. Ports and health check commands are extracted dynamically from docker-compose.yml at render time via <code>extract_services()</code>."
+    entries: []
+
+  - heading: "Developer Quick Reference"
+    description: "Common services with default credentials and typical developer actions."
+    entries:
+      - name: "Airflow Webserver"
+        type: "UI"
+        description: "Pipeline orchestration. Access at <code>http://localhost:8081</code>. Login: admin / admin. View DAG runs, trigger pipelines, check task logs."
+      - name: "Trino"
+        type: "SQL"
+        description: "Query engine. Access at <code>http://localhost:8080</code>. Any username, no password. Run <code>docker exec trino trino --execute 'SHOW SCHEMAS FROM lakehouse'</code>."
+      - name: "MinIO Console"
+        type: "UI"
+        description: "Object storage browser. Access at <code>http://localhost:9001</code>. Login: minioadmin / minioadmin. Browse Bronze/Silver/Gold data buckets."
+      - name: "Grafana"
+        type: "UI"
+        description: "Monitoring dashboards. Access at <code>http://localhost:3001</code>. Login: admin / admin. View pipeline quality metrics and alerts."
+      - name: "Nessie"
+        type: "REST"
+        description: "Iceberg catalog REST API. Access at <code>http://localhost:19120</code>. No auth. Check config: <code>curl http://localhost:19120/api/v2/config</code>."
+      - name: "Marquez"
+        type: "UI"
+        description: "Data lineage viewer. Access at <code>http://localhost:3000</code>. No auth. View OpenLineage events and pipeline lineage graphs."
+      - name: "Ranger Admin"
+        type: "UI"
+        description: "Security policy manager. Access at <code>http://localhost:6080</code>. Login: admin / rangerR0cks!. Manage RBAC policies for Trino/Iceberg."
+      - name: "OpenMetadata"
+        type: "UI"
+        description: "Data catalog and governance. Access at <code>http://localhost:8585</code>. Login: admin / admin. Browse glossary, view lineage, check quality."
+      - name: "Cube Playground"
+        type: "UI"
+        description: "Semantic layer explorer. Access at <code>http://localhost:4000</code>. No auth. Test Cube queries against lakehouse data models."

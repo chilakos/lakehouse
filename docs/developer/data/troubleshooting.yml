@@ -1,0 +1,53 @@
+title: "Troubleshooting FAQ"
+subtitle: "Common issues and fixes for the lakehouse platform"
+page_type: "faq"
+output_filename: "troubleshooting.html"
+
+sections:
+  - category: "Docker and Services"
+    entries:
+      - symptom: "Spark executor OOM killed during large Bronze ingest"
+        fix: "Increase Docker Desktop memory allocation to 8 GB minimum (16 GB recommended). In Docker Desktop: Settings -> Resources -> Memory. Then restart Docker and run <code>docker compose down && docker compose up -d</code>."
+        why: "Spark executors run inside Docker containers. The default 2 GB memory limit is insufficient for large Bronze ingests that buffer source data in memory before writing to Iceberg. Each Spark executor needs at least 2 GB, and with multiple executors plus the driver, 8 GB is the minimum."
+
+      - symptom: "Nessie health check fails on startup"
+        fix: "Wait 30 seconds for PostgreSQL to initialize, then restart Nessie: <code>docker compose restart nessie</code>. Verify with <code>curl http://localhost:19120/api/v2/config</code>."
+        why: "Nessie depends on PostgreSQL for its version store backend. On first startup, PostgreSQL needs to initialize its data directory and run schema migrations. If Nessie starts its health check before PostgreSQL is ready, it reports unhealthy. The depends_on condition ensures ordering but the PostgreSQL healthcheck may pass before migrations complete."
+
+      - symptom: "Airflow webserver won't start or shows 'database not initialized'"
+        fix: "The <code>airflow-init</code> container must complete first. Check its status: <code>docker compose logs airflow-init</code>. If it failed, remove volumes and retry: <code>docker compose down -v && docker compose up -d</code>."
+        why: "Airflow requires database schema initialization (airflow db init) before the webserver or scheduler can start. The airflow-init container runs this migration. If it fails (often due to PostgreSQL not being ready), downstream Airflow services cannot start."
+
+      - symptom: "Ranger Admin UI inaccessible at localhost:6080"
+        fix: "Ranger has a strict startup chain: ZooKeeper -> Solr -> Ranger DB -> Ranger Admin. Restart in order: <code>docker compose restart ranger-zk ranger-solr ranger-db ranger-admin</code>. Wait 60 seconds between each."
+        why: "Ranger Admin depends on Solr for audit indexing and its own database for policy storage. Solr depends on ZooKeeper for coordination. If any service in the chain fails, Ranger Admin cannot initialize its plugin registry and returns connection errors."
+
+      - symptom: "MinIO bucket not found error when running pipelines"
+        fix: "The <code>minio-init</code> container creates required buckets on first startup. Re-run it: <code>docker compose up minio-init</code>. Verify buckets exist: <code>docker exec minio mc ls local/</code>."
+        why: "Pipelines expect buckets like lakehouse-data and lakehouse-warehouse to exist. The minio-init container creates these via mc (MinIO Client) commands. If minio-init ran before MinIO was healthy, the bucket creation silently fails."
+
+  - category: "Query Engine"
+    entries:
+      - symptom: "Spark JAR conflict: NoSuchMethodError in Iceberg operations"
+        fix: "Clean rebuild of all containers: <code>docker compose down -v && docker compose up -d</code>. This removes cached JARs and forces fresh downloads."
+        why: "Iceberg Spark runtime JARs must match the Spark version exactly (e.g., iceberg-spark-runtime-3.5_2.12 for Spark 3.5). A cached older JAR version causes NoSuchMethodError when the Iceberg API has changed. The -v flag removes volumes including the Maven cache."
+
+      - symptom: "Trino queries fail after catalog config change"
+        fix: "Restart Trino workers to pick up the new configuration: <code>docker compose restart trino</code>. Verify with <code>docker exec trino trino --execute 'SHOW CATALOGS'</code>."
+        why: "Trino loads catalog configurations at startup and does not hot-reload them. Changes to catalog properties files (e.g., lakehouse.properties pointing to Nessie) require a worker restart. The Trino coordinator caches catalog metadata and must be restarted to pick up changes."
+
+      - symptom: "Cube pre-aggregation build times out"
+        fix: "Check Trino connectivity from the Cube container: <code>docker exec cube-api curl -s http://trino:8080/v1/info</code>. Verify the <code>CUBE_DB_HOST</code> environment variable is set to <code>trino</code> (Docker service name, not localhost)."
+        why: "Cube pre-aggregations are built by querying Trino. If the Cube container cannot reach Trino (wrong host, network isolation, or Trino is down), the build query hangs until the timeout. The CUBE_DB_HOST must use the Docker Compose service name for internal networking."
+
+  - category: "ETL Pipeline"
+    entries:
+      - symptom: "OpenMetadata ingestion workflow hangs or shows 'indexing' status"
+        fix: "Check Elasticsearch health: <code>docker exec elasticsearch curl -s http://localhost:9200/_cluster/health</code>. If status is red, restart Elasticsearch: <code>docker compose restart elasticsearch</code>. Then retry the ingestion."
+        why: "OpenMetadata uses Elasticsearch for search indexing. When ingestion completes, metadata is sent to ES for indexing. If ES is unhealthy (disk pressure, memory issues), the indexing step blocks indefinitely. The ingestion workflow reports 'indexing' status but never completes."
+
+  - category: "Testing"
+    entries:
+      - symptom: "pytest markers not recognized: 'Unknown pytest.mark.unit'"
+        fix: "Ensure markers are registered in <code>etl/pyproject.toml</code> under <code>[tool.pytest.ini_options]</code>. The <code>markers</code> list must include all custom markers (unit, integration, slow, snowflake). Run from the <code>etl/</code> directory so pytest finds <code>pyproject.toml</code>."
+        why: "The project uses <code>--strict-markers</code> which requires all markers to be explicitly registered. If you run pytest from the repository root instead of <code>etl/</code>, pytest does not find <code>pyproject.toml</code> and the markers are unregistered. Always <code>cd etl</code> before running tests."

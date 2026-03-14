@@ -272,7 +272,7 @@
     {% endif %}
     {% if section.subsections %}
     {% for sub in section.subsections %}
-    <h3>{{ sub.heading }}</h3>
+    {% if sub.heading %}<h3>{{ sub.heading }}</h3>{% endif %}
     {% if sub.content %}
     <p>{{ sub.content }}</p>
     {% endif %}
@@ -289,6 +289,13 @@
     {% endfor %}
     {% endif %}
     {% endfor %}
+    {% endif %}
+    {% if section.diagram_ref and svg_diagrams %}
+    {% if section.diagram_ref in svg_diagrams %}
+    <div class="diagram-container" style="margin: 1.5rem 0; text-align: center; overflow-x: auto;">
+      {{ svg_diagrams[section.diagram_ref] }}
+    </div>
+    {% endif %}
     {% endif %}
   </div>
   {% endfor %}
@@ -314,6 +321,41 @@
 
   {% elif page_type == "reference" %}
   {# === REFERENCE PAGE TYPE === #}
+  {% if annotations is defined and annotations and services %}
+  {# Dynamic services table from extract_services() for service-urls page #}
+  <div class="section-block">
+    <h2>All Platform Services</h2>
+    <p>Ports and health checks extracted dynamically from <code>docker-compose.yml</code> via <code>extract_services()</code>.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th>URL</th>
+            <th>Protocol</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for svc_name, svc in services.items() %}
+          <tr>
+            <td><code>{{ svc_name }}</code></td>
+            <td>
+              {% for port in svc.ports %}
+              {% set host_port = port.split(':')[0] %}
+              <code>localhost:{{ host_port }}</code>{% if not loop.last %}, {% endif %}
+              {% endfor %}
+              {% if not svc.ports %}<span style="color:#94a3b8">no exposed port</span>{% endif %}
+            </td>
+            <td>{{ svc.protocol | default('HTTP') }}</td>
+            <td>{{ svc.description | default('') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
   {% for section in sections %}
   <div class="section-block">
     <h2>{{ section.heading }}</h2>

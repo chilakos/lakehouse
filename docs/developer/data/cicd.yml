@@ -1,0 +1,95 @@
+title: "CI/CD Workflow"
+subtitle: "From pull request to production: CI gates, environment promotion, and deploy workflows"
+page_type: "guide"
+output_filename: "cicd.html"
+
+sections:
+  - heading: "Overview"
+    content: "Code moves from feature branch to production through a series of CI gates and environment promotions. Every pull request triggers automated checks. Merges to environment branches trigger deployments via Terraform. The full path is: feature branch -> PR to dev -> merge -> PR to staging -> merge -> PR to main -> production deploy + smoke tests."
+
+  - heading: "CI Pipeline (ci.yml)"
+    content: "Triggered on every pull request to <code>main</code>, <code>staging</code>, or <code>dev</code>. All jobs must pass before merge is allowed."
+    subsections:
+      - heading: "CI Jobs"
+        bullet_items:
+          - "<strong>python-lint</strong> (Python Lint & Format): Runs <code>ruff check .</code> and <code>ruff format --check .</code> in <code>etl/</code>. Enforces line-length 120, pycodestyle, pyflakes, isort, pep8-naming, pyupgrade, bugbear, simplify rules."
+          - "<strong>python-test</strong> (Python Unit Tests): Runs <code>pytest tests/unit/ -x --tb=short</code>. Unit tests only -- no Docker services required. Fast feedback loop."
+          - "<strong>cube-yaml-validate</strong> (Cube YAML Validation): Validates Cube semantic model YAML structure and verifies glossary term links against OpenMetadata seed data."
+          - "<strong>terraform-validate</strong> (Terraform Validate): Runs <code>terraform init -backend=false && terraform validate</code> in <code>infra/terraform/</code>."
+          - "<strong>terraform-fmt</strong> (Terraform Format Check): Runs <code>terraform fmt -check -recursive infra/terraform/</code>. Enforces consistent HCL formatting."
+
+  - heading: "Environment Promotion"
+    content: "Three environments with increasing gates at each stage."
+    subsections:
+      - heading: "Dev Environment"
+        bullet_items:
+          - "Trigger: Push to <code>dev</code> branch"
+          - "Workflow: <code>deploy-dev.yml</code>"
+          - "Terraform workspace: <code>dev</code>"
+          - "Post-deploy: Optional integration tests"
+          - "Purpose: Early integration testing, feature validation"
+
+      - heading: "Staging Environment"
+        bullet_items:
+          - "Trigger: Push to <code>staging</code> branch"
+          - "Workflow: <code>deploy-staging.yml</code>"
+          - "Terraform workspace: <code>staging</code>"
+          - "Post-deploy: Integration tests run against staging environment"
+          - "Purpose: Pre-production validation, performance testing"
+
+      - heading: "Production Environment"
+        bullet_items:
+          - "Trigger: Push to <code>main</code> branch"
+          - "Workflow: <code>deploy-prod.yml</code>"
+          - "Terraform workspace: <code>prod</code>"
+          - "Post-deploy: Smoke tests -- Nessie health (<code>/q/health/ready</code>), Trino health (<code>/v1/info</code>)"
+          - "Purpose: Live production serving 40+ engineers and BI consumers"
+
+  - heading: "Deploy Workflows"
+    content: "All deploy workflows use OIDC authentication with AWS and Terraform workspaces for environment isolation."
+    subsections:
+      - heading: "Common Steps"
+        bullet_items:
+          - "Checkout code"
+          - "Configure AWS credentials via OIDC (<code>aws-actions/configure-aws-credentials@v4</code>)"
+          - "Setup Terraform 1.7 (<code>hashicorp/setup-terraform@v3</code>)"
+          - "<code>terraform init</code>"
+          - "<code>terraform workspace select -or-create {env}</code>"
+          - "<code>terraform plan -var-file=environments/{env}/terraform.tfvars -out=tfplan</code>"
+          - "<code>terraform apply tfplan</code>"
+
+      - heading: "deploy-dev.yml"
+        content: "Triggered on push to <code>dev</code> branch. Uses <code>dev</code> Terraform workspace and <code>environments/dev/terraform.tfvars</code>. Optional integration tests after deploy."
+
+      - heading: "deploy-staging.yml"
+        content: "Triggered on push to <code>staging</code> branch. Uses <code>staging</code> Terraform workspace. Runs integration tests against the staging environment after successful deploy."
+
+      - heading: "deploy-prod.yml"
+        content: "Triggered on push to <code>main</code> branch. Uses <code>prod</code> Terraform workspace. Runs smoke tests with retries: Nessie health check (<code>curl -sf --retry 3 --retry-delay 10 https://nessie.lakehouse.internal:19120/q/health/ready</code>), Trino health check (<code>curl -sf --retry 3 --retry-delay 10 https://trino.lakehouse.internal:8443/v1/info</code>)."
+
+  - heading: "Branch Naming"
+    content: "Use the <code>feature/TICKET-description</code> convention for all feature branches."
+    subsections:
+      - heading: "Convention"
+        bullet_items:
+          - "Format: <code>feature/TICKET-description</code> (e.g., <code>feature/DATA-123-add-positions-pipeline</code>)"
+          - "CI parses the branch prefix for environment routing and PR labeling"
+          - "Bugfix branches: <code>bugfix/TICKET-description</code>"
+          - "Hotfix branches: <code>hotfix/TICKET-description</code>"
+
+      - heading: "Promotion Flow"
+        bullet_items:
+          - "1. Create <code>feature/TICKET-desc</code> branch from <code>dev</code>"
+          - "2. Open PR to <code>dev</code> -- CI runs lint + unit tests + Terraform validate"
+          - "3. Merge to <code>dev</code> -- deploy-dev.yml deploys to dev environment"
+          - "4. Open PR from <code>dev</code> to <code>staging</code> -- CI gates re-run"
+          - "5. Merge to <code>staging</code> -- deploy-staging.yml deploys + integration tests"
+          - "6. Open PR from <code>staging</code> to <code>main</code> -- CI gates re-run"
+          - "7. Merge to <code>main</code> -- deploy-prod.yml deploys + smoke tests"
+
+  - heading: "CI/CD Flow Diagram"
+    content: "Visual representation of the PR-to-production promotion path. See the Mermaid flowchart below showing the complete CI/CD pipeline."
+    diagram_ref: "cicd-flow"
+    subsections:
+      - heading: "Promotion Flowchart"
+        content: ""

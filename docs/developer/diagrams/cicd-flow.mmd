@@ -1,0 +1,13 @@
+flowchart TD
+    A[feature/TICKET-desc branch] --> B{PR to dev}
+    B --> C[CI: lint + unit tests + validate]
+    C -->|Pass| D[Merge to dev]
+    D --> E[Deploy to dev environment]
+    E --> F{PR to staging}
+    F --> G[CI gates]
+    G -->|Pass| H[Merge to staging]
+    H --> I[Deploy to staging + integration tests]
+    I --> J{PR to main}
+    J --> K[CI gates]
+    K -->|Pass| L[Merge to main]
+    L --> M[Deploy to production + smoke tests]

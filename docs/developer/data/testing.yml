@@ -1,0 +1,171 @@
+title: "Testing Guide"
+subtitle: "Unit tests, integration tests, markers, and CI gate behavior"
+page_type: "guide"
+output_filename: "testing.html"
+
+sections:
+  - heading: "Test Organization"
+    content: "All tests live under <code>etl/tests/</code>. The <code>conftest.py</code> at the root provides session-scoped fixtures for Spark, Nessie, Trino, MinIO, and S3."
+    subsections:
+      - heading: "Directory Structure"
+        bullet_items:
+          - "<code>etl/tests/</code> -- test root with conftest.py"
+          - "<code>etl/tests/unit/</code> -- unit tests (no external services)"
+          - "<code>etl/tests/integration/</code> -- integration tests (requires Docker services)"
+          - "<code>etl/tests/fixtures/</code> -- test data files (COBOL copybooks, sample CSVs)"
+
+      - heading: "Key Fixtures (conftest.py)"
+        bullet_items:
+          - "<code>spark_session</code> -- Session-scoped SparkSession configured for Iceberg/Nessie REST catalog. Skips if PySpark unavailable or Nessie unreachable."
+          - "<code>nessie_url</code> -- Nessie REST API base URL (default: <code>http://localhost:19120</code>)"
+          - "<code>minio_endpoint</code> -- MinIO S3-compatible endpoint (default: <code>http://localhost:9000</code>)"
+          - "<code>trino_connection</code> -- Trino DBAPI connection. Skips if Trino unreachable."
+          - "<code>minio_client</code> -- boto3 S3 client configured for MinIO."
+          - "<code>s3_client</code> -- boto3 S3 client for AWS. Skips if credentials unavailable."
+
+  - heading: "Pytest Markers"
+    content: "Four markers are defined in <code>etl/pyproject.toml</code> under <code>[tool.pytest.ini_options]</code>. The <code>--strict-markers</code> flag is enabled, so unregistered markers cause errors."
+    subsections:
+      - heading: "Marker Reference"
+        content: "Use these markers to categorize and selectively run tests."
+
+  - heading: "Marker Reference Table"
+    content: ""
+    subsections:
+      - heading: ""
+        bullet_items:
+          - "<strong>unit</strong> -- Unit tests with no external services required. Run with <code>pytest -m unit</code>. These are the default CI gate tests."
+          - "<strong>integration</strong> -- Integration tests requiring Docker services (Nessie, MinIO, Spark, Trino). Run with <code>pytest -m integration</code>."
+          - "<strong>slow</strong> -- Slow-running tests (large datasets, full pipeline execution). Excluded from default runs. Run with <code>pytest -m slow</code>."
+          - "<strong>snowflake</strong> -- Snowflake integration tests requiring Snowflake credentials. Run with <code>pytest -m snowflake</code>. Skipped in CI by default."
+
+  - heading: "Running Tests"
+    content: "Common test invocations from the <code>etl/</code> directory."
+    code_blocks:
+      - language: "bash"
+        code: |-
+          # Unit tests only (fastest, no Docker needed)
+          pytest tests/ -m unit -x --tb=short
+
+          # Integration tests only (requires Docker stack)
+          pytest tests/ -m integration -x --tb=short
+
+          # Full test suite (all markers)
+          pytest tests/ -x --tb=short
+
+          # Single test file
+          pytest tests/test_base_pipeline.py -x --tb=short -v
+
+          # Verbose output with coverage
+          pytest tests/ -m unit --cov=src --cov-report=term-missing -v
+
+  - heading: "CI Gate Behavior"
+    content: "The CI pipeline runs on every pull request to <code>main</code>, <code>staging</code>, and <code>dev</code> branches."
+    subsections:
+      - heading: "On Pull Request (ci.yml)"
+        bullet_items:
+          - "<strong>python-lint</strong>: Runs <code>ruff check .</code> and <code>ruff format --check .</code> in <code>etl/</code>"
+          - "<strong>python-test</strong>: Runs <code>pytest tests/unit/ -x --tb=short</code> -- unit tests only, fast feedback"
+          - "<strong>cube-yaml-validate</strong>: Validates Cube YAML structure and glossary links"
+          - "<strong>terraform-validate</strong>: Runs <code>terraform init -backend=false && terraform validate</code>"
+          - "<strong>terraform-fmt</strong>: Checks Terraform formatting with <code>terraform fmt -check -recursive</code>"
+
+      - heading: "On Merge to Dev/Staging/Prod"
+        bullet_items:
+          - "Full integration test suite runs against deployed environment"
+          - "Staging deployment includes integration tests"
+          - "Production deployment includes smoke tests (Nessie health, Trino health)"
+
+      - heading: "Handling CI Failures"
+        bullet_items:
+          - "Lint failure: Run <code>ruff check --fix . && ruff format .</code> locally, commit, push"
+          - "Test failure: Run the failing test locally with <code>-v --tb=long</code> for full traceback"
+          - "Terraform failure: Run <code>terraform validate</code> and <code>terraform fmt -recursive</code> in <code>infra/terraform/</code>"
+
+  - heading: "Writing New Tests"
+    content: "Follow these conventions when adding tests."
+    subsections:
+      - heading: "File Naming"
+        bullet_items:
+          - "Test files: <code>test_{module}.py</code> (e.g., <code>test_base_pipeline.py</code>)"
+          - "Place unit tests in <code>tests/</code> or <code>tests/unit/</code>"
+          - "Place integration tests in <code>tests/integration/</code>"
+
+      - heading: "Marker Decoration"
+        content: "Always apply the appropriate marker. Classes inherit markers from the class decorator."
+        code_blocks:
+          - language: "python"
+            code: |-
+              import pytest
+
+              @pytest.mark.unit
+              class TestMyFeature:
+                  def test_basic_behavior(self):
+                      """Describe what this test validates."""
+                      result = my_function("input")
+                      assert result == "expected"
+
+                  def test_edge_case(self):
+                      with pytest.raises(ValueError, match="invalid"):
+                          my_function("")
+
+      - heading: "Fixture Usage"
+        content: "Use conftest.py fixtures for integration tests. Fixtures skip gracefully when services are unavailable."
+        code_blocks:
+          - language: "python"
+            code: |-
+              @pytest.mark.integration
+              def test_full_pipeline(spark_session):
+                  """End-to-end test with real Iceberg tables."""
+                  pipeline = MyBronzePipeline(spark_session, data, "test", "batch-001")
+                  result = pipeline.execute()
+                  assert result["rows_written"] > 0
+
+      - heading: "Assertion Patterns"
+        bullet_items:
+          - "Use descriptive assertion messages: <code>assert count > 0, f'Expected rows, got {count}'</code>"
+          - "For PySpark schemas, compare StructType objects directly"
+          - "For quality results, check <code>result['passed']</code> and <code>result['critical_failures']</code>"
+          - "Mock external services in unit tests: <code>@patch('src.pipelines.base.lit')</code>"
+
+  - heading: "Example Output"
+    content: "What passing and failing test output looks like."
+    subsections:
+      - heading: "Passing Tests"
+        code_blocks:
+          - language: "text"
+            code: |-
+              $ pytest tests/ -m unit -x --tb=short
+              ========================= test session starts =========================
+              platform linux -- Python 3.11.7, pytest-8.3.4
+              markers: unit, integration, slow, snowflake
+              collected 487 items / 12 deselected / 475 selected
+
+              tests/test_base_pipeline.py ............                         [  3%]
+              tests/test_bronze_ingest.py ..........                           [  5%]
+              tests/test_classification.py ..........                           [  7%]
+              tests/test_gold_metrics.py .........                             [  9%]
+              tests/test_html_render.py ....................................   [ 17%]
+              tests/test_incremental.py .........                              [ 19%]
+              tests/test_job_inventory.py ..............                        [ 22%]
+              tests/test_quality.py ...............                             [ 25%]
+              ...
+              ========================= 475 passed in 12.34s =========================
+
+      - heading: "Failing Tests"
+        code_blocks:
+          - language: "text"
+            code: |-
+              $ pytest tests/test_base_pipeline.py::TestExtract -x --tb=short -v
+              ========================= test session starts =========================
+              collected 3 items
+
+              tests/test_base_pipeline.py::TestExtract::test_extract_returns_df PASSED
+              tests/test_base_pipeline.py::TestExtract::test_extract_with_empty FAILED
+
+              ================================ FAILURES ================================
+              _______________ TestExtract.test_extract_with_empty ________________
+              tests/test_base_pipeline.py:45: in test_extract_with_empty
+                  assert result.count() == 0
+              E   AssertionError: assert 1 == 0
+              ========================= 1 failed, 1 passed in 0.42s =========================
