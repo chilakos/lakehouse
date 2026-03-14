@@ -1,0 +1,131 @@
+title: "API and Module Reference"
+subtitle: "All 8 ETL Packages -- Public APIs, Signatures, and Usage"
+page_type: "api-reference"
+
+# This page uses the api-reference page_type which iterates over
+# api_packages context variable populated dynamically by extract_all_apis().
+# The examples dict below provides static usage snippets keyed by class/function name.
+
+intro: |
+  This reference documents the public API for all 8 ETL packages in <code>etl/src/</code>.
+  Signatures, parameters, return types, and docstrings are extracted directly from
+  source code via Python AST parsing -- no runtime imports required.
+  Each entry includes a usage example with full import paths.
+
+examples:
+  BasePipeline: |
+    from src.pipelines.base import BasePipeline, PipelineConfig, MedallionLayer
+    from pyspark.sql.types import StructType, StructField, StringType
+
+    class MyPipeline(BasePipeline):
+        def extract(self):
+            return self.spark.read.csv(self.config.source_path)
+        def transform(self, df):
+            return df.filter(df["status"] == "active")
+
+    config = PipelineConfig(
+        name="my-pipeline",
+        target_layer=MedallionLayer.BRONZE,
+        target_table="my_table",
+        target_schema=StructType([StructField("id", StringType())]),
+    )
+    result = MyPipeline(spark, config).execute()
+  PipelineConfig: |
+    from src.pipelines.base import PipelineConfig, MedallionLayer
+    from pyspark.sql.types import StructType, StructField, StringType
+
+    config = PipelineConfig(
+        name="trades-bronze",
+        target_layer=MedallionLayer.BRONZE,
+        target_table="trades",
+        target_schema=StructType([StructField("trade_id", StringType())]),
+        quality_checks_path="checks/trades.yml",
+        critical_checks=["row_count_check"],
+    )
+    print(config.full_table_name)  # "lakehouse.bronze.trades"
+  MedallionLayer: |
+    from src.pipelines.base import MedallionLayer
+    layer = MedallionLayer.BRONZE
+    print(layer.value)  # "bronze"
+  IncrementalConfig: |
+    from src.pipelines.incremental import IncrementalConfig
+    config = IncrementalConfig(
+        watermark_column="updated_at",
+        watermark_table="lakehouse.bronze.trades",
+    )
+  get_last_watermark: |
+    from src.pipelines.incremental import get_last_watermark
+    watermark = get_last_watermark(spark, "lakehouse.bronze.trades", "updated_at")
+  incremental_extract: |
+    from src.pipelines.incremental import incremental_extract
+    df = incremental_extract(spark, "lakehouse.bronze.trades", "updated_at", last_watermark)
+  merge_incremental: |
+    from src.pipelines.incremental import merge_incremental
+    merge_incremental(spark, source_df, "lakehouse.silver.trades", ["trade_id"])
+  Settings: |
+    from src.config.settings import Settings
+    settings = Settings()
+    print(settings.SPARK_MASTER)
+  run_soda_checks: |
+    from src.quality.scanner import run_soda_checks
+    results = run_soda_checks(
+        spark_session=spark,
+        df=df,
+        checks_yaml_path="checks/trades.yml",
+        critical_check_names=["row_count_check"],
+    )
+  reconcile_table: |
+    from src.quality.reconciliation import reconcile_table
+    result = reconcile_table(
+        source_conn=teradata_conn,
+        target_spark=spark,
+        table_name="trades",
+    )
+  classify_column: |
+    from src.governance.classification import classify_column, SensitivityLevel
+    level = classify_column("ssn")
+    assert level == SensitivityLevel.PII
+  detect_anomalies: |
+    from src.governance.anomaly_detector import detect_anomalies
+    anomalies = detect_anomalies(audit_records)
+  normalize_trino_audit: |
+    from src.governance.audit_schema import normalize_trino_audit
+    record = normalize_trino_audit(event_payload)
+  aggregate_audit_records: |
+    from src.governance.audit_aggregator import aggregate_audit_records
+    count = aggregate_audit_records(records, db_connection_string)
+  NLToSQLEngine: |
+    from src.semantic.nl_to_sql import NLToSQLEngine
+    engine = NLToSQLEngine(bedrock_client=client, model_id="anthropic.claude-3-sonnet")
+    sql = engine.generate_sql("Show total trades by desk for Q1 2026")
+  build_prompt: |
+    from src.semantic.prompt_builder import build_prompt
+    prompt = build_prompt(question="What is total notional?", context=metric_context)
+  evaluate_accuracy: |
+    from src.semantic.evaluation import evaluate_accuracy
+    results = evaluate_accuracy(engine, golden_dataset)
+  validate_metric_consistency: |
+    from src.semantic.cross_tool_validation import validate_metric_consistency
+    report = validate_metric_consistency(trino_conn, cube_conn, metric_queries)
+  get_spark_session: |
+    from src.iceberg_utils.catalog import get_spark_session
+    spark = get_spark_session(app_name="my-etl", catalog_uri="http://nessie:19120/api/v1")
+  create_iceberg_table: |
+    from src.iceberg_utils.catalog import create_iceberg_table
+    create_iceberg_table(spark, "lakehouse.bronze.trades", schema, partition_by=["trade_date"])
+  compact_table: |
+    from src.iceberg_utils.maintenance import compact_table
+    compact_table(spark, "lakehouse.bronze.trades", target_file_size_bytes=128*1024*1024)
+  get_trino_connection: |
+    from src.iceberg_utils.trino import get_trino_connection
+    conn = get_trino_connection(host="localhost", port=8080, catalog="iceberg")
+  get_openlineage_spark_config: |
+    from src.lineage.config import get_openlineage_spark_config
+    config = get_openlineage_spark_config(marquez_url="http://marquez:5000")
+  JobInventory: |
+    from src.inventory.catalog import JobInventory
+    inventory = JobInventory()
+    inventory.load_from_yaml("inventory.yml")
+  DataStageJob: |
+    from src.inventory.models import DataStageJob, JobComplexity
+    job = DataStageJob(name="DS_TRADES_LOAD", complexity=JobComplexity.HIGH)

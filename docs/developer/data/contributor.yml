@@ -1,0 +1,172 @@
+title: "Contributor Guidelines"
+subtitle: "Branch Naming, PR Process, Code Style, Testing, and Commit Format"
+page_type: "reference"
+
+sections:
+  - heading: "Branch Naming"
+    description: |
+      Use the pattern <code>feature/TICKET-description</code> for feature branches,
+      <code>fix/TICKET-description</code> for bug fixes, and <code>docs/TICKET-description</code> for documentation.
+      <strong>Why:</strong> CI parses the branch prefix to route deployments to the correct environment
+      (feature/ &rarr; dev, release/ &rarr; staging). Consistent naming also makes PR lists scannable.
+    entries:
+      - name: "feature/DATA-123-add-risk-pipeline"
+        type: "feature"
+        description: "New pipeline or functionality"
+      - name: "fix/DATA-456-null-trade-ids"
+        type: "fix"
+        description: "Bug fix with ticket reference"
+      - name: "docs/DATA-789-api-reference"
+        type: "docs"
+        description: "Documentation changes"
+      - name: "refactor/DATA-101-extract-base-class"
+        type: "refactor"
+        description: "Code restructuring without behavior change"
+
+  - heading: "PR Process"
+    description: |
+      Follow this workflow for all changes:
+      (1) Create a branch from <code>main</code> using the naming convention above.
+      (2) Make changes, ensuring each commit is atomic and follows the commit format below.
+      (3) Run <code>pre-commit run --all-files</code> locally before pushing.
+      (4) Push your branch and create a PR with a clear title and description.
+      (5) Wait for CI checks to pass (lint, unit tests, integration tests).
+      (6) Request review from at least one team member.
+      (7) Address review feedback, then squash-merge once approved.
+      <strong>Why:</strong> Pre-commit catches style and security issues before CI, saving pipeline minutes.
+      Squash-merge keeps main history clean and bisectable.
+
+  - heading: "Code Style (ruff)"
+    description: |
+      The project uses <a href="https://docs.astral.sh/ruff/">ruff</a> for linting and formatting,
+      configured in <code>etl/pyproject.toml</code>.
+      <strong>Why:</strong> ruff replaces flake8 + isort + pyupgrade in a single tool with 10-100x faster execution.
+      The selected rule sets catch real bugs (flake8-bugbear) and enforce modern Python patterns (pyupgrade).
+    entries:
+      - name: "line-length"
+        type: "setting"
+        description: "120 characters (configured in pyproject.toml)"
+      - name: "target-version"
+        type: "setting"
+        description: "py311 -- Python 3.11 minimum"
+      - name: "E, W"
+        type: "rule set"
+        description: "pycodestyle errors and warnings"
+      - name: "F"
+        type: "rule set"
+        description: "pyflakes -- undefined names, unused imports"
+      - name: "I"
+        type: "rule set"
+        description: "isort -- import sorting and grouping"
+      - name: "N"
+        type: "rule set"
+        description: "pep8-naming -- class and function naming conventions"
+      - name: "UP"
+        type: "rule set"
+        description: "pyupgrade -- modernize syntax for target Python version"
+      - name: "B"
+        type: "rule set"
+        description: "flake8-bugbear -- common bug patterns and design problems"
+      - name: "SIM"
+        type: "rule set"
+        description: "flake8-simplify -- simplifiable expressions and control flow"
+
+  - heading: "Testing Requirements"
+    description: |
+      All new code requires tests. Use the appropriate pytest markers for test categorization.
+      Run <code>python3 -m pytest -m unit -x</code> before pushing to catch failures early.
+      <strong>Why:</strong> The <code>-x</code> flag stops on first failure for fast feedback.
+      Markers let CI run fast unit tests on every PR and slow integration tests on merge to main.
+    entries:
+      - name: "@pytest.mark.unit"
+        type: "marker"
+        description: "Unit tests -- no external services required. Run on every PR."
+      - name: "@pytest.mark.integration"
+        type: "marker"
+        description: "Integration tests -- requires Docker services running."
+      - name: "@pytest.mark.slow"
+        type: "marker"
+        description: "Slow-running tests -- benchmarks, large dataset processing."
+      - name: "@pytest.mark.snowflake"
+        type: "marker"
+        description: "Snowflake integration tests -- requires Snowflake credentials."
+
+  - heading: "Pre-commit Hooks"
+    description: |
+      The project uses <code>pre-commit</code> with hooks defined in <code>.pre-commit-config.yaml</code>.
+      Install with <code>pre-commit install</code> after cloning. Run all hooks manually with
+      <code>pre-commit run --all-files</code>.
+      <strong>Why:</strong> Catches formatting, trailing whitespace, YAML/TOML syntax errors, secrets,
+      and Terraform formatting before code reaches CI. Saves review cycles and pipeline minutes.
+    entries:
+      - name: "ruff check --fix"
+        type: "hook"
+        description: "Lint Python files with auto-fix (astral-sh/ruff-pre-commit v0.9.6)"
+      - name: "ruff format"
+        type: "hook"
+        description: "Format Python files (astral-sh/ruff-pre-commit v0.9.6)"
+      - name: "trailing-whitespace"
+        type: "hook"
+        description: "Remove trailing whitespace from all files"
+      - name: "end-of-file-fixer"
+        type: "hook"
+        description: "Ensure files end with a newline"
+      - name: "check-yaml"
+        type: "hook"
+        description: "Validate YAML syntax"
+      - name: "check-toml"
+        type: "hook"
+        description: "Validate TOML syntax"
+      - name: "check-added-large-files"
+        type: "hook"
+        description: "Block files larger than 1000 KB (--maxkb=1000)"
+      - name: "detect-secrets"
+        type: "hook"
+        description: "Scan for accidentally committed secrets (Yelp/detect-secrets v1.5.0)"
+      - name: "terraform_fmt"
+        type: "hook"
+        description: "Format Terraform files (antonbabenko/pre-commit-terraform v1.96.3)"
+
+  - heading: "Commit Format"
+    description: |
+      Use <a href="https://www.conventionalcommits.org/">Conventional Commits</a> format.
+      <strong>Why:</strong> Enables automated changelog generation and makes git log scannable.
+      The scope is optional but recommended for multi-package changes.
+    entries:
+      - name: "feat(pipelines): add risk exposure gold pipeline"
+        type: "feat"
+        description: "New feature, endpoint, component, or pipeline"
+      - name: "fix(quality): handle null values in reconciliation"
+        type: "fix"
+        description: "Bug fix or error correction"
+      - name: "test(governance): add anomaly detector edge cases"
+        type: "test"
+        description: "Test-only changes -- new tests or test fixes"
+      - name: "refactor(semantic): extract prompt building to module"
+        type: "refactor"
+        description: "Code cleanup with no behavior change"
+      - name: "docs(developer): update API reference for v0.2"
+        type: "docs"
+        description: "Documentation-only changes"
+      - name: "chore(deps): upgrade ruff to v0.10.0"
+        type: "chore"
+        description: "Config, tooling, or dependency changes"
+
+  - heading: "Naming Conventions"
+    description: |
+      Follow standard Python naming conventions consistently across the codebase.
+      <strong>Why:</strong> The ruff N rule set enforces these automatically. Consistency
+      reduces cognitive load when navigating 33 source files across 8 packages.
+    entries:
+      - name: "PascalCase"
+        type: "convention"
+        description: "Classes: BasePipeline, PipelineConfig, MedallionLayer, QualityCheckResult"
+      - name: "snake_case"
+        type: "convention"
+        description: "Functions and variables: extract_package_api, run_soda_checks, target_table"
+      - name: "UPPER_SNAKE_CASE"
+        type: "convention"
+        description: "Constants: PROJECT_ROOT, COMPOSE_PATH, DEV_DATA_DIR"
+      - name: "test_*.py"
+        type: "convention"
+        description: "Test files: test_html_render.py, test_base_pipeline.py, test_scanner.py"

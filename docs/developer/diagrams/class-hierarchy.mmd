@@ -1,0 +1,81 @@
+classDiagram
+    class BasePipeline {
+        <<abstract>>
+        +spark: SparkSession
+        +config: PipelineConfig
+        +extract() DataFrame
+        +transform(df: DataFrame) DataFrame
+        +validate_schema(df: DataFrame) bool
+        +add_metadata_columns(df, source_system, batch_id) DataFrame
+        +write(df: DataFrame)
+        +run_quality_checks(df: DataFrame) dict
+        +execute() dict
+    }
+    class PipelineConfig {
+        <<frozen dataclass>>
+        +name: str
+        +target_layer: MedallionLayer
+        +target_table: str
+        +target_schema: StructType
+        +source_layer: MedallionLayer | None
+        +quality_checks_path: str
+        +critical_checks: list[str]
+        +max_retries: int
+        +retry_delay_seconds: int
+        +full_table_name() str
+        +source_table_name() str | None
+    }
+    class MedallionLayer {
+        <<enum>>
+        BRONZE
+        SILVER
+        GOLD
+    }
+    class SchemaValidationError {
+        <<exception>>
+    }
+    class QualityGateError {
+        <<exception>>
+    }
+    class IncrementalConfig {
+        <<dataclass>>
+        +watermark_column: str
+        +watermark_table: str
+    }
+    class TradesBronzePipeline {
+        +extract() DataFrame
+        +transform(df) DataFrame
+    }
+    class PositionsBronzePipeline {
+        +extract() DataFrame
+        +transform(df) DataFrame
+    }
+    class MainframeBronzePipeline {
+        +extract() DataFrame
+        +transform(df) DataFrame
+    }
+    class TradesSilverPipeline {
+        +extract() DataFrame
+        +transform(df) DataFrame
+    }
+    class PositionsSilverPipeline {
+        +extract() DataFrame
+        +transform(df) DataFrame
+    }
+    class TradingMetricsGoldPipeline {
+        +extract() DataFrame
+        +transform(df) DataFrame
+    }
+    class RiskExposureGoldPipeline {
+        +extract() DataFrame
+        +transform(df) DataFrame
+    }
+    BasePipeline <|-- TradesBronzePipeline
+    BasePipeline <|-- PositionsBronzePipeline
+    BasePipeline <|-- MainframeBronzePipeline
+    BasePipeline <|-- TradesSilverPipeline
+    BasePipeline <|-- PositionsSilverPipeline
+    BasePipeline <|-- TradingMetricsGoldPipeline
+    BasePipeline <|-- RiskExposureGoldPipeline
+    BasePipeline --> PipelineConfig : uses
+    PipelineConfig --> MedallionLayer : target_layer

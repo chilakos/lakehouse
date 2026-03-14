@@ -1,0 +1,41 @@
+title: "Pipeline Class Hierarchy"
+subtitle: "BasePipeline Inheritance Tree and Supporting Classes"
+page_type: "visualization"
+
+sections:
+  - heading: "Design Philosophy"
+    content: |
+      All ETL pipelines extend <code>BasePipeline</code>, which enforces the contract:
+      <strong>extract &rarr; transform &rarr; validate_schema &rarr; quality_check &rarr; write</strong>.
+      This abstract base pattern ensures schema validation and quality gates cannot be bypassed.
+      The <code>MedallionLayer</code> enum (BRONZE, SILVER, GOLD) provides type-safe layer designation,
+      while <code>PipelineConfig</code> encapsulates all pipeline metadata as a frozen dataclass.
+
+  - heading: "Medallion Layers"
+    content: |
+      <strong>Bronze</strong> pipelines (<code>TradesBronzePipeline</code>, <code>PositionsBronzePipeline</code>,
+      <code>MainframeBronzePipeline</code>) ingest raw data from external sources with metadata columns
+      (source_system, ingestion_ts, batch_id).
+      <strong>Silver</strong> pipelines (<code>TradesSilverPipeline</code>, <code>PositionsSilverPipeline</code>)
+      clean, deduplicate, and standardize Bronze data.
+      <strong>Gold</strong> pipelines (<code>TradingMetricsGoldPipeline</code>, <code>RiskExposureGoldPipeline</code>)
+      produce business-ready aggregations that cross source boundaries.
+
+  - heading: "Adding a New Pipeline"
+    content: |
+      To add a new pipeline: (1) Create a new class extending <code>BasePipeline</code>,
+      (2) implement <code>extract()</code> to return a DataFrame from your source,
+      (3) implement <code>transform(df)</code> to return the cleaned/transformed DataFrame,
+      (4) define a <code>PipelineConfig</code> with target layer, table name, and schema.
+      The base class handles schema validation, quality checks, and Iceberg writes automatically.
+      See the <a href="first-pipeline.html">First Pipeline Tutorial</a> for a step-by-step example.
+
+  - heading: "Supporting Classes"
+    content: |
+      <code>PipelineConfig</code> (frozen dataclass) -- holds name, target_layer, target_table,
+      target_schema, optional source_layer, quality checks path, critical checks list, and retry settings.
+      Properties <code>full_table_name</code> and <code>source_table_name</code> compute Iceberg table paths.
+      <code>MedallionLayer</code> (enum) -- BRONZE, SILVER, GOLD with string values.
+      <code>SchemaValidationError</code> -- raised when DataFrame schema does not match target.
+      <code>QualityGateError</code> -- raised when critical quality checks fail, blocking layer promotion.
+      <code>IncrementalConfig</code> -- configuration for incremental/watermark-based extraction.

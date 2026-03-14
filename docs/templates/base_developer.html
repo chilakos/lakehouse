@@ -402,6 +402,92 @@
   {% endfor %}
   {% endfor %}
 
+  {% elif page_type == "api-reference" %}
+  {# === API REFERENCE PAGE TYPE (DEV-10) === #}
+  {% if intro %}
+  <div class="section-block">
+    <p>{{ intro }}</p>
+  </div>
+  {% endif %}
+  {% if api_packages %}
+  {% for pkg in api_packages %}
+  <h2>Package: {{ pkg.package_name }}</h2>
+  {% for mod in pkg.modules %}
+  <div class="section-block" style="margin-left: 1rem;">
+    <h3>{{ pkg.package_name }}.{{ mod.name }} <span class="ref-type">{{ mod.path }}</span></h3>
+    {% if mod.classes %}
+    {% for cls in mod.classes %}
+    <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
+      <p><span class="ref-name">{{ cls.name }}</span> <span class="ref-type">class</span>
+      {% if cls.bases %} extends {{ cls.bases | join(", ") }}{% endif %}</p>
+      {% if cls.docstring %}
+      <p style="font-size: 0.9rem; color: #475569;">{{ cls.docstring.split('\n')[0] }}</p>
+      {% endif %}
+      {% if cls.methods %}
+      <div class="table-container">
+        <table>
+          <thead><tr><th>Method</th><th>Args</th><th>Returns</th><th>Description</th></tr></thead>
+          <tbody>
+          {% for method in cls.methods %}
+          <tr>
+            <td><code>{{ method.name }}</code></td>
+            <td><code>{{ method.args | join(", ") }}</code></td>
+            <td><code>{{ method.return_annotation or "None" }}</code></td>
+            <td>{{ method.docstring.split('\n')[0] if method.docstring else "" }}</td>
+          </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% endif %}
+      {% if examples is defined and cls.name in examples %}
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">{{ examples[cls.name] }}</code></pre>
+        </div>
+      </details>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% if mod.functions %}
+    {% for func in mod.functions %}
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">{{ func.name }}</span><code>({{ func.args | join(", ") }})</code>
+      {% if func.return_annotation %} &rarr; <code>{{ func.return_annotation }}</code>{% endif %}
+      <span class="ref-type">function</span></p>
+      {% if func.docstring %}
+      <p style="font-size: 0.9rem; color: #475569;">{{ func.docstring.split('\n')[0] }}</p>
+      {% endif %}
+      {% if examples is defined and func.name in examples %}
+      <details>
+        <summary>Usage Example</summary>
+        <div class="details-body">
+          <pre><code class="language-python">{{ examples[func.name] }}</code></pre>
+        </div>
+      </details>
+      {% endif %}
+    </div>
+    {% endfor %}
+    {% endif %}
+  </div>
+  {% endfor %}
+  {% endfor %}
+  {% else %}
+  <p>No API packages found. Ensure <code>etl/src/</code> contains the 8 ETL packages.</p>
+  {% endif %}
+  {% if sections %}
+  {% for section in sections %}
+  <div class="section-block">
+    <h2>{{ section.heading }}</h2>
+    {% if section.description %}
+    <p>{{ section.description }}</p>
+    {% endif %}
+  </div>
+  {% endfor %}
+  {% endif %}
+
   {% elif page_type == "visualization" %}
   {# === VISUALIZATION PAGE TYPE === #}
   {% if svg_diagrams %}

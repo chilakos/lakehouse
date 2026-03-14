@@ -15,8 +15,10 @@ Usage:
 
 from __future__ import annotations
 
+import ast
 import subprocess
 import tempfile
+import warnings
 from datetime import date, timezone, datetime
 from pathlib import Path
 
@@ -632,6 +634,145 @@ def render_arch_index(
     return output_path
 
 
+def extract_package_api(package_dir: Path) -> dict:
+    """Extract public API from a Python package directory using AST parsing.
+
+    Walks all .py files in the package (recursively), parsing each with the ast
+    module to extract public classes, functions, their signatures, docstrings,
+    and type annotations. Does NOT import any modules at runtime, avoiding
+    PySpark and other heavy dependencies.
+
+    Args:
+        package_dir: Path to the Python package directory.
+
+    Returns:
+        Dict with keys: package_name (str), modules (list of module dicts).
+        Each module dict has: name, path, classes (list), functions (list).
+    """
+    package_name = package_dir.name
+    modules: list[dict] = []
+
+    py_files = sorted(package_dir.rglob("*.py"))
+    for py_file in py_files:
+        if "__pycache__" in str(py_file):
+            continue
+        rel_path = py_file.relative_to(package_dir)
+
+        # Skip __init__.py files that are empty or only have docstrings
+        if py_file.name == "__init__.py":
+            content = py_file.read_text().strip()
+            if not content or all(
+                line.strip() == "" or line.strip().startswith("#") or line.strip().startswith('"""') or line.strip().startswith("'''")
+                for line in content.split("\n")
+            ):
+                continue
+
+        try:
+            source = py_file.read_text()
+            tree = ast.parse(source, filename=str(py_file))
+        except SyntaxError:
+            warnings.warn(f"Failed to parse {py_file}, skipping")
+            continue
+
+        classes: list[dict] = []
+        functions: list[dict] = []
+
+        for node in ast.iter_child_nodes(tree):
+            if isinstance(node, ast.ClassDef) and not node.name.startswith("_"):
+                cls_info = _extract_class_info(node)
+                classes.append(cls_info)
+            elif isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
+                func_info = _extract_function_info(node)
+                functions.append(func_info)
+
+        if classes or functions:
+            modules.append({
+                "name": py_file.stem,
+                "path": str(rel_path),
+                "classes": classes,
+                "functions": functions,
+            })
+
+    return {"package_name": package_name, "modules": modules}
+
+
+def _extract_class_info(node: ast.ClassDef) -> dict:
+    """Extract class metadata from an AST ClassDef node."""
+    bases = []
+    for base in node.bases:
+        try:
+            bases.append(ast.unparse(base))
+        except Exception:
+            bases.append("?")
+
+    docstring = ast.get_docstring(node) or ""
+    methods: list[dict] = []
+
+    for item in node.body:
+        if isinstance(item, ast.FunctionDef) and not item.name.startswith("_"):
+            methods.append(_extract_function_info(item, is_method=True))
+
+    return {
+        "name": node.name,
+        "bases": bases,
+        "docstring": docstring,
+        "methods": methods,
+    }
+
+
+def _extract_function_info(node: ast.FunctionDef, *, is_method: bool = False) -> dict:
+    """Extract function/method metadata from an AST FunctionDef node."""
+    docstring = ast.get_docstring(node) or ""
+
+    args: list[str] = []
+    for arg in node.args.args:
+        if is_method and arg.arg == "self":
+            continue
+        if arg.annotation:
+            try:
+                annotation = ast.unparse(arg.annotation)
+                args.append(f"{arg.arg}: {annotation}")
+            except Exception:
+                args.append(arg.arg)
+        else:
+            args.append(arg.arg)
+
+    return_annotation = ""
+    if node.returns:
+        try:
+            return_annotation = ast.unparse(node.returns)
+        except Exception:
+            pass
+
+    return {
+        "name": node.name,
+        "args": args,
+        "docstring": docstring,
+        "return_annotation": return_annotation,
+    }
+
+
+def extract_all_apis(etl_src_dir: Path) -> list[dict]:
+    """Extract APIs from all 8 ETL packages using AST parsing.
+
+    Args:
+        etl_src_dir: Path to etl/src/ directory containing the 8 packages.
+
+    Returns:
+        List of package API dicts from extract_package_api().
+    """
+    package_names = [
+        "pipelines", "config", "governance", "quality",
+        "semantic", "iceberg_utils", "lineage", "inventory",
+    ]
+    results: list[dict] = []
+    for pkg_name in package_names:
+        pkg_dir = etl_src_dir / pkg_name
+        if pkg_dir.is_dir():
+            results.append(extract_package_api(pkg_dir))
+    return results
+
+
 def render_developer_docs(
     data_dir: Path | None = None,
     diagram_dir: Path | None = None,
@@ -677,6 +818,10 @@ def render_developer_docs(
     overrides_path = ARCH_DATA_DIR / "services.yml"
     services = extract_services(compose_path, overrides_path)
 
+    # Extract API data for DEV-10 (api-reference page)
+    etl_src_dir = PROJECT_ROOT / "etl" / "src"
+    api_packages = extract_all_apis(etl_src_dir) if etl_src_dir.is_dir() else []
+
     # Render Mermaid diagrams for DEV-06/DEV-11
     svg_content: dict[str, str] = {}
     if diagram_dir.exists():
@@ -698,6 +843,7 @@ def render_developer_docs(
             versions=versions,
             services=services,
             svg_diagrams=svg_content,
+            api_packages=api_packages,
             generation_date=generation_date,
         )
         output_name = doc_data.get("output_filename", f"{data_file.stem}.html")
