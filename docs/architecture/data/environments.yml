@@ -1,0 +1,37 @@
+# docs/architecture/data/environments.yml
+# Environment comparison data sourced from infra/terraform/environments/*/terraform.tfvars.
+# Used by render_architecture() to produce the environment differences table (ARCH-07).
+
+environments:
+  - name: "Development"
+    deployment: "Docker Compose"
+    orchestration: "docker-compose up"
+    storage: "MinIO (local)"
+    bucket: "lakehouse-dev-data"
+    nessie_replicas: 1
+    trino_workers: 1
+    domain: "dev.lakehouse.internal"
+    infra_as_code: "docker-compose.yml"
+    notes: "Single-node, all services on one host"
+
+  - name: "Staging"
+    deployment: "Terraform + Docker"
+    orchestration: "Terraform apply + Docker Compose"
+    storage: "MinIO (multi-node)"
+    bucket: "lakehouse-staging-data"
+    nessie_replicas: 2
+    trino_workers: 2
+    domain: "staging.lakehouse.internal"
+    infra_as_code: "infra/terraform/environments/staging/"
+    notes: "Multi-node, mirrors prod topology at reduced scale"
+
+  - name: "Production"
+    deployment: "Terraform + EKS"
+    orchestration: "Terraform apply + Helm charts"
+    storage: "S3"
+    bucket: "lakehouse-prod-data"
+    nessie_replicas: 3
+    trino_workers: 3
+    domain: "lakehouse.internal"
+    infra_as_code: "infra/terraform/environments/prod/"
+    notes: "HA configuration, auto-scaling, encrypted at rest (SSE-KMS)"

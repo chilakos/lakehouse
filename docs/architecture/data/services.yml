@@ -1,0 +1,152 @@
+# docs/architecture/data/services.yml
+# Supplements docker-compose.yml with display metadata for architecture diagrams.
+# docker-compose.yml is the authoritative source for ports, health checks, depends_on.
+# This file adds: descriptions, layer groupings, protocols, exclude list.
+
+layers:
+  storage:
+    label: "Storage"
+    color: "#2563eb"
+    services: [postgres, minio]
+  catalog:
+    label: "Catalog"
+    color: "#7c3aed"
+    services: [nessie]
+  query:
+    label: "Query Engines"
+    color: "#059669"
+    services: [trino]
+  etl:
+    label: "ETL / Orchestration"
+    color: "#d97706"
+    services: [airflow-webserver, airflow-scheduler, airflow-worker, airflow-db, redis]
+  semantic:
+    label: "Semantic Layer"
+    color: "#0891b2"
+    services: [cube-api, cubestore]
+  governance:
+    label: "Governance & Lineage"
+    color: "#be185d"
+    services: [marquez, marquez-db, marquez-web, openmetadata-server, openmetadata-ingestion, om-db, elasticsearch]
+  security:
+    label: "Security"
+    color: "#dc2626"
+    services: [ranger-admin, ranger-db, ranger-solr, ranger-zk, audit-receiver]
+  monitoring:
+    label: "Monitoring"
+    color: "#65a30d"
+    services: [grafana, grafana-reporter, prometheus, statsd-exporter]
+
+services:
+  postgres:
+    description: "PostgreSQL backing store for Nessie catalog metadata"
+    protocol: "PostgreSQL wire (5432)"
+    primary_port: 5432
+  minio:
+    description: "S3-compatible object storage for lakehouse data (on-prem)"
+    protocol: "S3 API (HTTP)"
+    primary_port: 9000
+  nessie:
+    description: "Iceberg REST catalog with Git-like branching for schema management"
+    protocol: "REST (HTTP)"
+    primary_port: 19120
+  trino:
+    description: "Distributed SQL query engine for federated queries over Iceberg tables"
+    protocol: "HTTP / JDBC"
+    primary_port: 8080
+  airflow-db:
+    description: "PostgreSQL backing store for Airflow metadata and task state"
+    protocol: "PostgreSQL wire (5432)"
+    primary_port: 5433
+  redis:
+    description: "In-memory message broker for Airflow Celery task queue"
+    protocol: "Redis wire"
+    primary_port: 6379
+  airflow-webserver:
+    description: "Airflow UI for DAG management, monitoring, and manual triggers"
+    protocol: "HTTP"
+    primary_port: 8081
+  airflow-scheduler:
+    description: "Airflow scheduler responsible for DAG parsing and task scheduling"
+    protocol: "Internal"
+    primary_port: null
+  airflow-worker:
+    description: "Airflow Celery worker executing ETL tasks (PySpark + PyIceberg)"
+    protocol: "Internal"
+    primary_port: null
+  marquez-db:
+    description: "PostgreSQL backing store for Marquez lineage metadata"
+    protocol: "PostgreSQL wire (5432)"
+    primary_port: 5434
+  marquez:
+    description: "OpenLineage-compatible lineage server tracking data pipeline provenance"
+    protocol: "REST (HTTP)"
+    primary_port: 5000
+  marquez-web:
+    description: "Marquez web UI for exploring data lineage graphs"
+    protocol: "HTTP"
+    primary_port: 3000
+  statsd-exporter:
+    description: "StatsD-to-Prometheus metrics bridge for Airflow telemetry"
+    protocol: "StatsD (UDP) / HTTP"
+    primary_port: 9102
+  prometheus:
+    description: "Time-series metrics store scraping all instrumented services"
+    protocol: "HTTP"
+    primary_port: 9090
+  grafana:
+    description: "Dashboarding and alerting platform for BCBS 239 compliance monitoring"
+    protocol: "HTTP"
+    primary_port: 3001
+  grafana-reporter:
+    description: "PDF/HTML compliance report generator for audit evidence archives"
+    protocol: "HTTP"
+    primary_port: 8686
+  ranger-zk:
+    description: "Apache ZooKeeper for Ranger service coordination"
+    protocol: "ZooKeeper wire"
+    primary_port: 2181
+  ranger-solr:
+    description: "Apache Solr for Ranger audit log indexing and search"
+    protocol: "HTTP"
+    primary_port: 8983
+  ranger-db:
+    description: "PostgreSQL backing store for Ranger policy metadata"
+    protocol: "PostgreSQL wire (5432)"
+    primary_port: 5435
+  ranger-admin:
+    description: "Apache Ranger admin server for RBAC policy management on Trino"
+    protocol: "HTTP"
+    primary_port: 6080
+  audit-receiver:
+    description: "Lightweight HTTP service capturing Trino query audit events"
+    protocol: "HTTP"
+    primary_port: 8090
+  cube-api:
+    description: "Cube semantic layer providing unified BI metrics over Trino/Iceberg Gold tables"
+    protocol: "REST (HTTP) / SQL (PostgreSQL wire)"
+    primary_port: 4000
+  cubestore:
+    description: "Cube pre-aggregation storage engine for materialized metric caches"
+    protocol: "gRPC"
+    primary_port: 9999
+  om-db:
+    description: "PostgreSQL backing store for OpenMetadata catalog"
+    protocol: "PostgreSQL wire (5432)"
+    primary_port: 5436
+  elasticsearch:
+    description: "Search engine for OpenMetadata full-text discovery and indexing"
+    protocol: "REST (HTTP)"
+    primary_port: 9200
+  openmetadata-server:
+    description: "OpenMetadata catalog server for data asset discovery and governance"
+    protocol: "REST (HTTP)"
+    primary_port: 8585
+  openmetadata-ingestion:
+    description: "OpenMetadata ingestion service for automated metadata harvesting"
+    protocol: "HTTP"
+    primary_port: 8086
+
+exclude_from_diagrams:
+  - minio-init
+  - airflow-init

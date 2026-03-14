@@ -1,0 +1,55 @@
+flowchart TD
+    subgraph Sources["Data Sources (300+)"]
+        direction LR
+        S1[Mainframes]
+        S2[Market Data]
+        S3[Databases]
+        S4[Files/APIs]
+    end
+
+    subgraph Ingestion["ETL / Ingestion"]
+        direction LR
+        I1[Apache Airflow]
+        I2[PySpark + PyIceberg]
+    end
+
+    subgraph Lakehouse["Iceberg Lakehouse"]
+        direction LR
+        L1["Bronze
+Raw Data"]
+        L2["Silver
+Cleansed"]
+        L3["Gold
+Business-Ready"]
+    end
+
+    subgraph Query["Query Engines"]
+        direction LR
+        Q1[Trino]
+        Q2[Teradata OTF]
+        Q3[Snowflake]
+    end
+
+    subgraph Semantic["Semantic Layers"]
+        direction LR
+        SM1["Cube
+BI Metrics"]
+        SM2["NL-to-SQL
+AI Layer"]
+    end
+
+    subgraph Consumers["BI / AI Consumers"]
+        direction LR
+        C1[Tableau]
+        C2[Power BI]
+        C3[Claude AI]
+    end
+
+    Sources --> Ingestion
+    Ingestion --> Lakehouse
+    Lakehouse --> Query
+    Query --> Semantic
+    Semantic --> Consumers
+
+    classDef layerBox fill:#1a2332,stroke:#c8a961,color:#fff,stroke-width:2px
+    classDef nodeBox fill:#f8fafc,stroke:#1a2332,color:#1a2332

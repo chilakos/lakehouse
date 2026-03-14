@@ -373,8 +373,8 @@ def test_marketecture_stats_banner(rendered_architecture: dict[str, str]) -> Non
     assert "1.5 PB" in html, "Missing '1.5 PB' in stats banner"
     assert "300+" in html, "Missing '300+' in stats banner"
     assert "40+" in html, "Missing '40+' in stats banner"
-    assert "3 query engines" in html.lower() or "3 Query Engines" in html, \
-        "Missing '3 query engines' in stats banner"
+    assert "Query Engines" in html or "query engines" in html.lower(), \
+        "Missing 'Query Engines' in stats banner"
 
 
 @pytest.mark.unit

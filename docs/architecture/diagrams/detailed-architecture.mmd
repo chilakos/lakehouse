@@ -1,0 +1,59 @@
+flowchart TD
+    subgraph Storage["Storage Layer"]
+        postgres[PostgreSQL]
+        minio[MinIO S3]
+    end
+
+    subgraph Catalog["Catalog"]
+        nessie[Nessie]
+    end
+
+    subgraph QueryEngines["Query Engines"]
+        trino[Trino]
+    end
+
+    subgraph ETL["ETL / Orchestration"]
+        airflow-ws[Airflow Webserver]
+        airflow-sched[Airflow Scheduler]
+        airflow-worker[Airflow Worker]
+        airflow-db[Airflow DB]
+        redis[Redis]
+    end
+
+    subgraph SemanticLayer["Semantic Layer"]
+        cube-api[Cube API]
+        cubestore[Cubestore]
+    end
+
+    subgraph Governance["Governance & Lineage"]
+        marquez[Marquez]
+        marquez-db[Marquez DB]
+        marquez-web[Marquez Web]
+        om-server[OpenMetadata Server]
+        om-ingestion[OpenMetadata Ingestion]
+        om-db[OM DB]
+        elasticsearch[Elasticsearch]
+    end
+
+    subgraph Security["Security"]
+        ranger-admin[Ranger Admin]
+        ranger-db[Ranger DB]
+        ranger-solr[Ranger Solr]
+        ranger-zk[Ranger ZK]
+        audit-receiver[Audit Receiver]
+    end
+
+    subgraph Monitoring["Monitoring"]
+        grafana[Grafana]
+        grafana-reporter[Grafana Reporter]
+        prometheus[Prometheus]
+        statsd-exporter[StatsD Exporter]
+    end
+
+    Storage --> Catalog
+    Catalog --> QueryEngines
+    QueryEngines --> SemanticLayer
+    ETL --> Storage
+    Governance --> ETL
+    Security --> QueryEngines
+    Monitoring --> ETL
