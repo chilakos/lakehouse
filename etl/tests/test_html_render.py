@@ -490,3 +490,28 @@ def test_environment_table_columns(rendered_architecture: dict[str, str]) -> Non
     assert "Production" in html, "Missing 'Production' environment column"
     assert "Docker Compose" in html, "Missing 'Docker Compose' deployment method"
     assert "Terraform" in html, "Missing 'Terraform' deployment method"
+
+
+# ---------------------------------------------------------------------------
+# Architecture Index: links to all 6 architecture pages
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_architecture_index_links(rendered_architecture: dict[str, str]) -> None:
+    """Architecture index.html links to all 6 architecture HTML pages."""
+    html = rendered_architecture["index.html"]
+    expected_pages = [
+        "marketecture.html",
+        "detailed-architecture.html",
+        "data-flow.html",
+        "service-dependency.html",
+        "security-layer.html",
+        "governance-stack.html",
+    ]
+    for page in expected_pages:
+        assert page in html, f"Missing link to '{page}' in architecture index"
+    # Verify audience tags are present
+    assert "Executives" in html, "Missing 'Executives' audience tag"
+    assert "Engineers" in html, "Missing 'Engineers' audience tag"
+    assert "Security" in html, "Missing 'Security' audience tag"
+    assert "Compliance" in html, "Missing 'Compliance' audience tag"

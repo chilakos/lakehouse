@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architecture Documentation - Lakehouse Architecture</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+    .doc-header .meta { color: #94a3b8; font-size: 0.9rem; }
+
+    /* === CARD GRID === */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: #c8a961;
+    }
+    .card h3 { margin-bottom: 0.5rem; font-size: 1.05rem; color: #1a2332; }
+    .card h3 a { color: inherit; text-decoration: none; }
+    .card h3 a:hover { color: #c8a961; }
+    .card .card-description {
+      font-size: 0.9rem;
+      color: #475569;
+      margin-bottom: 0.75rem;
+      flex-grow: 1;
+    }
+    .card .card-audience {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .audience-executives { background: #c8a961; color: #1a2332; }
+    .audience-engineers { background: #059669; color: #fff; }
+    .audience-security { background: #dc2626; color: #fff; }
+    .audience-compliance { background: #7c3aed; color: #fff; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      .card-grid { grid-template-columns: 1fr; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>Architecture Documentation</h1>
+    <p class="subtitle">Platform Architecture Visualizations and Service Reference</p>
+    <p class="meta">2026-03-14</p>
+  </header>
+
+  <p style="margin-bottom: 1.5rem; color: #475569;">
+    6 architecture visualizations covering executive overview, service reference, data flows, dependencies, security, and governance.
+  </p>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3><a href="marketecture.html">Marketecture</a></h3>
+      <p class="card-description">Executive overview of the lakehouse platform with key statistics, capability groups, and technology landscape.</p>
+      <span class="card-audience audience-executives">Executives</span>
+    </div>
+    <div class="card">
+      <h3><a href="detailed-architecture.html">Detailed Architecture</a></h3>
+      <p class="card-description">Complete service reference with ports, protocols, health checks, and dependencies for all 23 platform services.</p>
+      <span class="card-audience audience-engineers">Engineers</span>
+    </div>
+    <div class="card">
+      <h3><a href="data-flow.html">Data Flow</a></h3>
+      <p class="card-description">Bronze-Silver-Gold medallion pipeline from source ingestion through quality checks to business-ready analytics.</p>
+      <span class="card-audience audience-engineers">Engineers</span>
+    </div>
+    <div class="card">
+      <h3><a href="service-dependency.html">Service Dependencies</a></h3>
+      <p class="card-description">Infrastructure dependency graph auto-generated from docker-compose.yml depends_on relationships.</p>
+      <span class="card-audience audience-engineers">Engineers</span>
+    </div>
+    <div class="card">
+      <h3><a href="security-layer.html">Security Layer</a></h3>
+      <p class="card-description">Apache Ranger RBAC architecture with column-level masking, row-level security, and audit trail.</p>
+      <span class="card-audience audience-security">Security</span>
+    </div>
+    <div class="card">
+      <h3><a href="governance-stack.html">Governance Stack</a></h3>
+      <p class="card-description">OpenLineage, Marquez, Grafana, and OpenMetadata for BCBS 239 compliance and data lineage.</p>
+      <span class="card-audience audience-compliance">Compliance</span>
+    </div>
+  </div>
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
+  </footer>
+</body>
+</html>

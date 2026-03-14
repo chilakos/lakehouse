@@ -537,7 +537,96 @@ def render_architecture(
     rendered_files.append(governance_path)
     print(f"  Rendered: governance-stack.html")
 
+    # --- Architecture index page ---
+    index_path = render_arch_index(
+        template_dir=template_dir,
+        output_dir=output_dir,
+        compose_path=compose_path,
+    )
+    rendered_files.append(index_path)
+
     return rendered_files
+
+
+def render_arch_index(
+    template_dir: Path | None = None,
+    output_dir: Path | None = None,
+    compose_path: Path | str | None = None,
+) -> Path:
+    """Render the architecture index page with cards linking to all architecture pages.
+
+    Args:
+        template_dir: Directory containing Jinja2 templates.
+        output_dir: Directory for rendered HTML output.
+        compose_path: Path to docker-compose.yml for version extraction.
+
+    Returns:
+        Path to the rendered index.html file.
+    """
+    if template_dir is None:
+        template_dir = TEMPLATE_DIR
+    if output_dir is None:
+        output_dir = ARCH_OUTPUT_DIR
+
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    env = _create_jinja_env(template_dir)
+    versions = extract_versions(compose_path)
+    generation_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    arch_pages = [
+        {
+            "title": "Marketecture",
+            "description": "Executive overview of the lakehouse platform with key statistics, capability groups, and technology landscape.",
+            "audience": "Executives",
+            "filename": "marketecture.html",
+        },
+        {
+            "title": "Detailed Architecture",
+            "description": "Complete service reference with ports, protocols, health checks, and dependencies for all 23 platform services.",
+            "audience": "Engineers",
+            "filename": "detailed-architecture.html",
+        },
+        {
+            "title": "Data Flow",
+            "description": "Bronze-Silver-Gold medallion pipeline from source ingestion through quality checks to business-ready analytics.",
+            "audience": "Engineers",
+            "filename": "data-flow.html",
+        },
+        {
+            "title": "Service Dependencies",
+            "description": "Infrastructure dependency graph auto-generated from docker-compose.yml depends_on relationships.",
+            "audience": "Engineers",
+            "filename": "service-dependency.html",
+        },
+        {
+            "title": "Security Layer",
+            "description": "Apache Ranger RBAC architecture with column-level masking, row-level security, and audit trail.",
+            "audience": "Security",
+            "filename": "security-layer.html",
+        },
+        {
+            "title": "Governance Stack",
+            "description": "OpenLineage, Marquez, Grafana, and OpenMetadata for BCBS 239 compliance and data lineage.",
+            "audience": "Compliance",
+            "filename": "governance-stack.html",
+        },
+    ]
+
+    template = env.get_template("base_arch_index.html")
+    html = template.render(
+        title="Architecture Documentation",
+        subtitle="Platform Architecture Visualizations and Service Reference",
+        arch_pages=arch_pages,
+        versions=versions,
+        generation_date=generation_date,
+    )
+
+    output_path = output_dir / "index.html"
+    output_path.write_text(html)
+    print(f"  Rendered: architecture/index.html")
+    return output_path
 
 
 if __name__ == "__main__":
