@@ -1,14 +1,10 @@
-{# docs/templates/base_architecture.html -- Jinja2 architecture page template with embedded CSS #}
-{% from "macros/collapsible.html" import collapsible %}
-{% from "macros/environment_table.html" import environment_table %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ title }} - Lakehouse Architecture</title>
+  <title>Governance Stack Architecture - Lakehouse Architecture</title>
   <style>
-    {% block styles %}
     /* === RESET & BASE === */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -339,211 +335,18 @@
       .stats-banner .stat-value { color: #1a2332; }
       @page { margin: 2cm; }
     }
-    {% endblock styles %}
   </style>
 </head>
 <body>
-  {% block header %}
   <header class="doc-header">
-    <h1>{{ title }}</h1>
-    {% if subtitle %}
-    <p class="subtitle">{{ subtitle }}</p>
-    {% endif %}
+    <h1>Governance Stack Architecture</h1>
+    <p class="subtitle">OpenLineage, Marquez, Grafana, and OpenMetadata for BCBS 239 Compliance</p>
   </header>
-  {% endblock header %}
 
-  {% block content %}
 
-  {% if page_type == "marketecture" %}
-  {# === MARKETECTURE PAGE === #}
-
-  <div class="stats-banner">
-    <div class="stat">
-      <span class="stat-value">1.5 PB</span>
-      <span class="stat-label">Managed Data</span>
-    </div>
-    <div class="stat">
-      <span class="stat-value">300+</span>
-      <span class="stat-label">Data Sources</span>
-    </div>
-    <div class="stat">
-      <span class="stat-value">40+</span>
-      <span class="stat-label">Engineers</span>
-    </div>
-    <div class="stat">
-      <span class="stat-value">3</span>
-      <span class="stat-label">Query Engines</span>
-    </div>
-  </div>
 
   <div class="diagram-container">
-    {{ svg_diagram }}
-  </div>
-
-  <h2>Platform Capabilities</h2>
-  <div class="capability-groups">
-    <div class="capability-group">
-      <h3>Sources</h3>
-      <p class="value-tag">300+ data sources feeding the lakehouse</p>
-      <p class="tech-list">Mainframes, Market Data, Databases, Files/APIs</p>
-    </div>
-    <div class="capability-group">
-      <h3>ETL / Ingestion</h3>
-      <p class="value-tag">Automated, observable data pipelines</p>
-      <p class="tech-list">Apache Airflow, PySpark, PyIceberg, OpenLineage</p>
-    </div>
-    <div class="capability-group">
-      <h3>Iceberg Lakehouse</h3>
-      <p class="value-tag">Single source of truth across Bronze/Silver/Gold</p>
-      <p class="tech-list">Apache Iceberg, Nessie Catalog, MinIO/S3</p>
-    </div>
-    <div class="capability-group">
-      <h3>Query Engines</h3>
-      <p class="value-tag">Query anything, anywhere</p>
-      <p class="tech-list">Trino, Teradata OTF, Snowflake</p>
-    </div>
-    <div class="capability-group">
-      <h3>Semantic Layers</h3>
-      <p class="value-tag">Consistent metrics for BI and AI</p>
-      <p class="tech-list">Cube (BI Metrics), NL-to-SQL (AI Layer)</p>
-    </div>
-    <div class="capability-group">
-      <h3>BI / AI Consumers</h3>
-      <p class="value-tag">Self-service analytics for every team</p>
-      <p class="tech-list">Tableau, Power BI, Claude AI</p>
-    </div>
-    <div class="capability-group">
-      <h3>Governance</h3>
-      <p class="value-tag">BCBS 239 compliance with full lineage</p>
-      <p class="tech-list">OpenLineage, Marquez, OpenMetadata, Grafana</p>
-    </div>
-    <div class="capability-group">
-      <h3>Security</h3>
-      <p class="value-tag">Fine-grained RBAC across all engines</p>
-      <p class="tech-list">Apache Ranger, ZooKeeper, Solr Audit</p>
-    </div>
-  </div>
-
-  {% elif page_type == "detailed" %}
-  {# === DETAILED ARCHITECTURE PAGE === #}
-
-  <details open>
-    <summary>Architecture Overview Diagram</summary>
-    <div class="details-body">
-      <div class="diagram-container">
-        {{ svg_diagram }}
-      </div>
-    </div>
-  </details>
-
-  <h2>Service Reference by Layer</h2>
-  <p>Hover over any service to view version, protocol, health check endpoint, and dependencies.</p>
-
-  {% for layer_slug, layer_info in layers.items() %}
-  {% set layer_svcs = services_by_layer.get(layer_slug, []) %}
-  {% if layer_svcs %}
-  <div class="arch-layer">
-    <div class="layer-header" style="background: {{ layer_info.color }};">
-      {{ layer_info.label }} ({{ layer_svcs | length }} services)
-    </div>
-    <div class="service-grid">
-      {% for svc in layer_svcs %}
-      <div class="service-node">
-        <div class="service-name">{{ svc.name }}</div>
-        <div class="service-port">:{{ svc.primary_port or (svc.ports[0].split(':')[0] if svc.ports else 'N/A') }}</div>
-        <div class="service-tooltip">
-          <strong>{{ svc.name }}</strong><br>
-          Version: {{ svc.version }}<br>
-          Protocol: {{ svc.get('protocol', 'N/A') }}<br>
-          Health: <code>{{ svc.healthcheck or 'N/A' }}</code><br>
-          Depends on: {{ svc.depends_on | join(', ') or 'none' }}
-        </div>
-      </div>
-      {% endfor %}
-    </div>
-  </div>
-  {% endif %}
-  {% endfor %}
-
-  {% elif page_type == "data-flow" %}
-  {# === DATA FLOW PAGE (ARCH-03) === #}
-
-  <div class="diagram-container">
-    {{ svg_diagram }}
-  </div>
-
-  <div class="narrative">
-    <h3>Medallion Architecture: Bronze - Silver - Gold</h3>
-    <p>All 300+ data sources follow this standardized medallion pattern from raw ingestion to business-ready analytics:</p>
-    <ul>
-      <li><strong>Sources:</strong> Market data feeds, mainframe extracts, database CDC, files, and APIs are ingested via Apache Airflow DAGs running PySpark + PyIceberg.</li>
-      <li><strong>Bronze (Raw):</strong> Append-only ingestion preserves source fidelity. Schema-on-read. Data arrives in its original format as Apache Iceberg tables.</li>
-      <li><strong>Silver (Cleansed):</strong> Schema validation, null/range checks, and deduplication produce typed, clean records. Failed records are quarantined for review.</li>
-      <li><strong>Gold (Business-Ready):</strong> Business rules, per-symbol aggregation, and cross-source joins create curated datasets ready for analytics consumption.</li>
-      <li><strong>Consumers:</strong> Gold tables are queried via Trino, Teradata OTF, and Snowflake. Cube provides a unified BI metrics layer. Tableau, Power BI, and Claude AI consume the data.</li>
-    </ul>
-    <p>OpenLineage captures lineage at every transformation step, providing full BCBS 239 auditability from source to consumer.</p>
-  </div>
-
-  {% elif page_type == "service-dependency" %}
-  {# === SERVICE DEPENDENCY PAGE (ARCH-04) === #}
-
-  <div class="diagram-container">
-    {{ svg_diagram }}
-  </div>
-
-  <div class="narrative">
-    <h3>Service Dependency Graph</h3>
-    <p>This diagram is auto-generated from the <code>depends_on</code> relationships defined in <code>docker-compose.yml</code>. Arrows point from a service to the services it depends on.</p>
-  </div>
-
-  <h2>Key Dependency Chains</h2>
-  <div class="dep-chain">
-    <p><strong>Query Path:</strong> <code>cube-api</code> &rarr; <code>trino</code> &rarr; <code>nessie</code> &rarr; <code>postgres</code> + <code>minio</code></p>
-    <p><strong>ETL Path:</strong> <code>airflow-worker</code> &rarr; <code>airflow-db</code> + <code>redis</code></p>
-    <p><strong>Lineage Path:</strong> <code>marquez-web</code> &rarr; <code>marquez</code> &rarr; <code>marquez-db</code></p>
-    <p><strong>Monitoring Path:</strong> <code>grafana-reporter</code> &rarr; <code>grafana</code> &rarr; <code>prometheus</code> &rarr; <code>statsd-exporter</code></p>
-    <p><strong>Security Path:</strong> <code>ranger-admin</code> &rarr; <code>ranger-db</code> + <code>ranger-solr</code> + <code>ranger-zk</code></p>
-    <p><strong>Metadata Path:</strong> <code>openmetadata-ingestion</code> &rarr; <code>openmetadata-server</code> &rarr; <code>om-db</code> + <code>elasticsearch</code></p>
-  </div>
-
-  {% elif page_type == "security-layer" %}
-  {# === SECURITY LAYER PAGE (ARCH-05) === #}
-
-  <div class="diagram-container">
-    {{ svg_diagram }}
-  </div>
-
-  <div class="narrative">
-    <h3>Apache Ranger RBAC Architecture</h3>
-    <p>Apache Ranger provides centralized role-based access control (RBAC) across the lakehouse platform. The Ranger Trino plugin acts as the policy enforcement point, intercepting every SQL query before execution.</p>
-    <ul>
-      <li><strong>ranger-admin (:6080):</strong> Central policy management server. Defines who can access what data at table, column, and row level.</li>
-      <li><strong>ranger-db (:5435):</strong> PostgreSQL store for all RBAC policy definitions and access rules.</li>
-      <li><strong>ranger-solr (:8983):</strong> Apache Solr indexes all audit events for searchable access history.</li>
-      <li><strong>ranger-zk (:2181):</strong> ZooKeeper coordinates Ranger service discovery and configuration synchronization.</li>
-      <li><strong>audit-receiver (:8090):</strong> Captures Trino query audit events for compliance reporting.</li>
-    </ul>
-  </div>
-
-  <h2>Access Control Tiers</h2>
-  <div class="dep-chain">
-    <p><strong>data_readers:</strong> SELECT-only access to Silver and Gold tables. PII columns are masked (SSN, account numbers).</p>
-    <p><strong>data_engineers:</strong> SELECT + INSERT on Bronze/Silver/Gold. Can create tables in Silver/Gold schemas. PII visible.</p>
-    <p><strong>data_admin:</strong> Full access including DDL, policy management, and audit review.</p>
-  </div>
-
-  <h2>Fine-Grained Security</h2>
-  <div class="dep-chain">
-    <p><strong>Column-Level Masking:</strong> PII columns (SSN, account numbers, personal identifiers) are automatically masked for data_readers. Masking policies are defined in ranger-admin and enforced by the Trino plugin at query time.</p>
-    <p><strong>Row-Level Security:</strong> Row filter policies restrict data visibility by region or business unit. A data_reader in the EMEA region sees only EMEA records from cross-region Gold tables.</p>
-  </div>
-
-  {% elif page_type == "governance-stack" %}
-  {# === GOVERNANCE STACK PAGE (ARCH-06) === #}
-
-  <div class="diagram-container">
-    {{ svg_diagram }}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200"><rect width="600" height="200" fill="#f8fafc" stroke="#1a2332" stroke-width="2" rx="8"/><text x="300" y="90" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#64748b">Diagram Placeholder</text><text x="300" y="120" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#94a3b8">Install @mermaid-js/mermaid-cli to render governance-stack.mmd</text></svg>
   </div>
 
   <div class="narrative">
@@ -560,21 +363,107 @@
 
   <h2>Environment Comparison</h2>
   <p>Deployment topology varies across environments. This table shows key differences relevant to operational governance and capacity planning.</p>
-  {{ environment_table(environments) }}
+  <div class="env-table-wrapper">
+  <table class="env-table">
+    <thead>
+      <tr>
+        <th class="env-table-label">Aspect</th>
+        <th>Development</th>
+        <th>Staging</th>
+        <th>Production</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="env-table-label">Deployment Method</td>
+        <td>Docker Compose</td>
+        <td>Terraform + Docker</td>
+        <td>Terraform + EKS</td>
+      </tr>
+      <tr>
+        <td class="env-table-label">Orchestration</td>
+        <td>docker-compose up</td>
+        <td>Terraform apply + Docker Compose</td>
+        <td>Terraform apply + Helm charts</td>
+      </tr>
+      <tr>
+        <td class="env-table-label">Storage</td>
+        <td>MinIO (local)</td>
+        <td>MinIO (multi-node)</td>
+        <td>S3</td>
+      </tr>
+      <tr>
+        <td class="env-table-label">S3 Bucket</td>
+        <td><code>lakehouse-dev-data</code></td>
+        <td><code>lakehouse-staging-data</code></td>
+        <td><code>lakehouse-prod-data</code></td>
+      </tr>
+      <tr>
+        <td class="env-table-label">Nessie Replicas</td>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+      </tr>
+      <tr>
+        <td class="env-table-label">Trino Workers</td>
+        <td>1</td>
+        <td>2</td>
+        <td>3</td>
+      </tr>
+      <tr>
+        <td class="env-table-label">Domain</td>
+        <td><code>dev.lakehouse.internal</code></td>
+        <td><code>staging.lakehouse.internal</code></td>
+        <td><code>lakehouse.internal</code></td>
+      </tr>
+      <tr>
+        <td class="env-table-label">Infrastructure-as-Code</td>
+        <td><code>docker-compose.yml</code></td>
+        <td><code>infra/terraform/environments/staging/</code></td>
+        <td><code>infra/terraform/environments/prod/</code></td>
+      </tr>
+      <tr>
+        <td class="env-table-label">Notes</td>
+        <td>Single-node, all services on one host</td>
+        <td>Multi-node, mirrors prod topology at reduced scale</td>
+        <td>HA configuration, auto-scaling, encrypted at rest (SSE-KMS)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
 
-  {% endif %}
-  {% endblock content %}
 
-  {% block footer %}
+
   <footer class="doc-footer">
-    <p>Generated: {{ generation_date }}</p>
+    <p>Generated: 2026-03-14</p>
     <div class="versions">
-      {% for name, info in versions.items() %}
-      <span class="version-item">{{ name }}: {{ info.version }}</span>
-      {% endfor %}
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
     </div>
     <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
   </footer>
-  {% endblock footer %}
 </body>
 </html>

@@ -465,6 +465,78 @@ def render_architecture(
     rendered_files.append(detailed_path)
     print(f"  Rendered: detailed-architecture.html")
 
+    # --- Data flow page (ARCH-03) ---
+    data_flow_html = template.render(
+        page_type="data-flow",
+        title="Data Flow Architecture",
+        subtitle="Bronze - Silver - Gold Medallion Pipeline from Source to Consumer",
+        svg_diagram=svg_content.get("data-flow", _placeholder_svg()),
+        services=services,
+        services_by_layer=services_by_layer,
+        layers=layers_config,
+        environments=environments,
+        versions=versions,
+        generation_date=generation_date,
+    )
+    data_flow_path = output_dir / "data-flow.html"
+    data_flow_path.write_text(data_flow_html)
+    rendered_files.append(data_flow_path)
+    print(f"  Rendered: data-flow.html")
+
+    # --- Service dependency page (ARCH-04) ---
+    svc_dep_html = template.render(
+        page_type="service-dependency",
+        title="Service Dependency Graph",
+        subtitle="Infrastructure Dependencies Auto-Generated from docker-compose.yml",
+        svg_diagram=svg_content.get("service-dependency", _placeholder_svg()),
+        services=services,
+        services_by_layer=services_by_layer,
+        layers=layers_config,
+        environments=environments,
+        versions=versions,
+        generation_date=generation_date,
+    )
+    svc_dep_path = output_dir / "service-dependency.html"
+    svc_dep_path.write_text(svc_dep_html)
+    rendered_files.append(svc_dep_path)
+    print(f"  Rendered: service-dependency.html")
+
+    # --- Security layer page (ARCH-05) ---
+    security_html = template.render(
+        page_type="security-layer",
+        title="Security Layer Architecture",
+        subtitle="Apache Ranger RBAC, Column Masking, and Row-Level Security",
+        svg_diagram=svg_content.get("security-layer", _placeholder_svg()),
+        services=services,
+        services_by_layer=services_by_layer,
+        layers=layers_config,
+        environments=environments,
+        versions=versions,
+        generation_date=generation_date,
+    )
+    security_path = output_dir / "security-layer.html"
+    security_path.write_text(security_html)
+    rendered_files.append(security_path)
+    print(f"  Rendered: security-layer.html")
+
+    # --- Governance stack page (ARCH-06 + ARCH-07 env table) ---
+    governance_html = template.render(
+        page_type="governance-stack",
+        title="Governance Stack Architecture",
+        subtitle="OpenLineage, Marquez, Grafana, and OpenMetadata for BCBS 239 Compliance",
+        svg_diagram=svg_content.get("governance-stack", _placeholder_svg()),
+        services=services,
+        services_by_layer=services_by_layer,
+        layers=layers_config,
+        environments=environments,
+        versions=versions,
+        generation_date=generation_date,
+    )
+    governance_path = output_dir / "governance-stack.html"
+    governance_path.write_text(governance_html)
+    rendered_files.append(governance_path)
+    print(f"  Rendered: governance-stack.html")
+
     return rendered_files
 
 

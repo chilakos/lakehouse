@@ -186,6 +186,84 @@
       height: auto;
     }
 
+    /* === ENVIRONMENT TABLE === */
+    .env-table-wrapper {
+      overflow-x: auto;
+      margin: 1.5rem 0;
+    }
+    .env-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .env-table thead th {
+      background: #1a2332;
+      color: #fff;
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 700;
+    }
+    .env-table thead th:first-child {
+      background: #2d3a4a;
+    }
+    .env-table tbody td {
+      padding: 0.6rem 1rem;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    .env-table tbody tr:nth-child(even) {
+      background: #f8fafc;
+    }
+    .env-table tbody tr:hover {
+      background: #f1f5f9;
+    }
+    .env-table .env-table-label {
+      font-weight: 600;
+      color: #1a2332;
+      white-space: nowrap;
+    }
+    .env-table code {
+      background: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.85em;
+    }
+
+    /* === NARRATIVE SECTION === */
+    .narrative {
+      background: #f8fafc;
+      border-left: 4px solid #c8a961;
+      padding: 1.25rem 1.5rem;
+      margin: 1.5rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .narrative h3 {
+      margin-top: 0;
+      color: #1a2332;
+    }
+    .narrative ul {
+      margin: 0.5rem 0;
+      padding-left: 1.5rem;
+    }
+    .narrative li {
+      margin-bottom: 0.35rem;
+    }
+
+    /* === DEPENDENCY LIST === */
+    .dep-chain {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+    .dep-chain code {
+      background: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+
     /* === DETAILS/SUMMARY (CSS-only collapsible) === */
     details {
       border: 1px solid #e2e8f0;

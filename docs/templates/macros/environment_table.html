@@ -1,0 +1,72 @@
+{# docs/templates/macros/environment_table.html -- Jinja2 macro for environment comparison table (ARCH-07) #}
+
+{% macro environment_table(environments) %}
+<div class="env-table-wrapper">
+  <table class="env-table">
+    <thead>
+      <tr>
+        <th class="env-table-label">Aspect</th>
+        {% for env in environments %}
+        <th>{{ env.name }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="env-table-label">Deployment Method</td>
+        {% for env in environments %}
+        <td>{{ env.deployment }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="env-table-label">Orchestration</td>
+        {% for env in environments %}
+        <td>{{ env.orchestration }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="env-table-label">Storage</td>
+        {% for env in environments %}
+        <td>{{ env.storage }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="env-table-label">S3 Bucket</td>
+        {% for env in environments %}
+        <td><code>{{ env.bucket }}</code></td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="env-table-label">Nessie Replicas</td>
+        {% for env in environments %}
+        <td>{{ env.nessie_replicas }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="env-table-label">Trino Workers</td>
+        {% for env in environments %}
+        <td>{{ env.trino_workers }}</td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="env-table-label">Domain</td>
+        {% for env in environments %}
+        <td><code>{{ env.domain }}</code></td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="env-table-label">Infrastructure-as-Code</td>
+        {% for env in environments %}
+        <td><code>{{ env.infra_as_code }}</code></td>
+        {% endfor %}
+      </tr>
+      <tr>
+        <td class="env-table-label">Notes</td>
+        {% for env in environments %}
+        <td>{{ env.notes }}</td>
+        {% endfor %}
+      </tr>
+    </tbody>
+  </table>
+</div>
+{% endmacro %}

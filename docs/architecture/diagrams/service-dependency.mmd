@@ -1,0 +1,94 @@
+flowchart TD
+    subgraph Storage["Storage"]
+        postgres["postgres<br/>:5432"]
+        minio["minio<br/>:9000"]
+    end
+
+    subgraph Catalog["Catalog"]
+        nessie["nessie<br/>:19120"]
+    end
+
+    subgraph QueryLayer["Query Engines"]
+        trino["trino<br/>:8080"]
+    end
+
+    subgraph ETL["ETL / Orchestration"]
+        airflow-db["airflow-db<br/>:5433"]
+        redis["redis<br/>:6379"]
+        airflow-webserver["airflow-webserver<br/>:8081"]
+        airflow-scheduler["airflow-scheduler"]
+        airflow-worker["airflow-worker"]
+    end
+
+    subgraph SemanticLayer["Semantic Layer"]
+        cubestore["cubestore<br/>:9999"]
+        cube-api["cube-api<br/>:4000"]
+    end
+
+    subgraph GovernanceLineage["Governance & Lineage"]
+        marquez-db["marquez-db<br/>:5434"]
+        marquez["marquez<br/>:5000"]
+        marquez-web["marquez-web<br/>:3000"]
+        om-db["om-db<br/>:5436"]
+        elasticsearch["elasticsearch<br/>:9200"]
+        openmetadata-server["openmetadata-server<br/>:8585"]
+        openmetadata-ingestion["openmetadata-ingestion<br/>:8086"]
+    end
+
+    subgraph Security["Security"]
+        ranger-zk["ranger-zk<br/>:2181"]
+        ranger-solr["ranger-solr<br/>:8983"]
+        ranger-db["ranger-db<br/>:5435"]
+        ranger-admin["ranger-admin<br/>:6080"]
+        audit-receiver["audit-receiver<br/>:8090"]
+    end
+
+    subgraph Monitoring["Monitoring"]
+        statsd-exporter["statsd-exporter<br/>:9102"]
+        prometheus["prometheus<br/>:9090"]
+        grafana["grafana<br/>:3001"]
+        grafana-reporter["grafana-reporter<br/>:8686"]
+    end
+
+    %% depends_on relationships (arrow points TO what is depended ON)
+    nessie --> postgres
+    nessie --> minio
+    trino --> nessie
+    airflow-webserver --> airflow-db
+    airflow-webserver --> redis
+    airflow-scheduler --> airflow-db
+    airflow-scheduler --> redis
+    airflow-worker --> airflow-db
+    airflow-worker --> redis
+    cube-api --> trino
+    cube-api --> cubestore
+    marquez --> marquez-db
+    marquez-web --> marquez
+    openmetadata-server --> om-db
+    openmetadata-server --> elasticsearch
+    openmetadata-ingestion --> openmetadata-server
+    ranger-solr --> ranger-zk
+    ranger-admin --> ranger-db
+    ranger-admin --> ranger-solr
+    ranger-admin --> ranger-zk
+    prometheus --> statsd-exporter
+    grafana --> prometheus
+    grafana-reporter --> grafana
+
+    classDef storageNode fill:#2563eb,stroke:#1a2332,color:#fff
+    classDef catalogNode fill:#7c3aed,stroke:#1a2332,color:#fff
+    classDef queryNode fill:#059669,stroke:#1a2332,color:#fff
+    classDef etlNode fill:#d97706,stroke:#1a2332,color:#fff
+    classDef semanticNode fill:#0891b2,stroke:#1a2332,color:#fff
+    classDef govNode fill:#be185d,stroke:#1a2332,color:#fff
+    classDef secNode fill:#dc2626,stroke:#1a2332,color:#fff
+    classDef monNode fill:#65a30d,stroke:#1a2332,color:#fff
+
+    class postgres,minio storageNode
+    class nessie catalogNode
+    class trino queryNode
+    class airflow-db,redis,airflow-webserver,airflow-scheduler,airflow-worker etlNode
+    class cubestore,cube-api semanticNode
+    class marquez-db,marquez,marquez-web,om-db,elasticsearch,openmetadata-server,openmetadata-ingestion govNode
+    class ranger-zk,ranger-solr,ranger-db,ranger-admin,audit-receiver secNode
+    class statsd-exporter,prometheus,grafana,grafana-reporter monNode

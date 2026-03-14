@@ -1,0 +1,84 @@
+flowchart TD
+    subgraph Sources["Market Data Sources"]
+        direction LR
+        S1["Reuters / Bloomberg<br/>Real-time Feeds"]
+        S2["Mainframe Extracts<br/>Batch Files"]
+        S3["Database CDC<br/>Change Data Capture"]
+    end
+
+    subgraph Ingestion["PySpark / Airflow Ingestion"]
+        direction LR
+        I1["Airflow DAGs<br/><i>Schedule + Monitor</i>"]
+        I2["PySpark + PyIceberg<br/><i>Transform + Write</i>"]
+        I3["OpenLineage<br/><i>Lineage Capture</i>"]
+    end
+
+    subgraph Bronze["Bronze Layer (Raw)"]
+        direction LR
+        B1["Raw Ingested Data<br/>Schema-on-read"]
+    end
+
+    subgraph QC["Quality Checks"]
+        direction LR
+        QC1["Schema Validation"]
+        QC2["Null / Range Checks"]
+        QC3["Deduplication"]
+    end
+
+    subgraph Silver["Silver Layer (Cleansed)"]
+        direction LR
+        SV1["Validated + Deduped<br/>Typed Columns"]
+    end
+
+    subgraph Agg["Aggregation"]
+        direction LR
+        AG1["Business Rules"]
+        AG2["Per-Symbol Aggregation"]
+        AG3["Cross-Source Joins"]
+    end
+
+    subgraph Gold["Gold Layer (Business-Ready)"]
+        direction LR
+        GD1["Curated Datasets<br/>Analytics-Ready"]
+    end
+
+    subgraph QueryEngines["Query Engines"]
+        direction LR
+        QE1["Trino<br/>Federated SQL"]
+        QE2["Teradata OTF"]
+        QE3["Snowflake"]
+    end
+
+    subgraph SemanticLayer["Semantic Layer"]
+        direction LR
+        SEM1["Cube<br/>BI Metrics"]
+    end
+
+    subgraph Consumers["BI / AI Consumers"]
+        direction LR
+        CON1["Tableau"]
+        CON2["Power BI"]
+        CON3["Claude AI"]
+    end
+
+    Sources -->|"raw files + streams"| Ingestion
+    Ingestion -->|"append-only writes"| Bronze
+    Bronze -->|"schema validation"| QC
+    QC -->|"cleansed records"| Silver
+    Silver -->|"dedup + business rules"| Agg
+    Agg -->|"aggregate per-symbol"| Gold
+    Gold -->|"Iceberg tables"| QueryEngines
+    QueryEngines -->|"SQL API"| SemanticLayer
+    SemanticLayer -->|"unified metrics"| Consumers
+
+    classDef bronzeLayer fill:#cd7f32,stroke:#1a2332,color:#fff,stroke-width:2px
+    classDef silverLayer fill:#c0c0c0,stroke:#1a2332,color:#1a2332,stroke-width:2px
+    classDef goldLayer fill:#c8a961,stroke:#1a2332,color:#1a2332,stroke-width:2px
+    classDef defaultLayer fill:#f8fafc,stroke:#1a2332,color:#1a2332,stroke-width:2px
+
+    class Bronze bronzeLayer
+    class Silver silverLayer
+    class Gold goldLayer
+    class Sources,Ingestion,QC,Agg,QueryEngines,SemanticLayer,Consumers defaultLayer
+
+    %% Note: All 300+ sources follow this medallion pattern

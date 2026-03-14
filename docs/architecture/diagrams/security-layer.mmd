@@ -1,0 +1,73 @@
+flowchart TD
+    subgraph UserRequest["User Access Request"]
+        U1["Data Reader<br/><i>SELECT only</i>"]
+        U2["Data Engineer<br/><i>SELECT + INSERT</i>"]
+        U3["Data Admin<br/><i>Full Access</i>"]
+    end
+
+    subgraph TrinoEngine["Query Engine"]
+        T1["Trino<br/>:8080"]
+        T2["Ranger Trino Plugin<br/><i>Policy Enforcement Point</i>"]
+    end
+
+    subgraph RangerCore["Ranger RBAC Policy Engine"]
+        RA["ranger-admin<br/>:6080<br/><i>Policy Management</i>"]
+        RDB["ranger-db<br/>:5435<br/><i>Policy Storage</i>"]
+        RS["ranger-solr<br/>:8983<br/><i>Audit Indexing</i>"]
+        RZK["ranger-zk<br/>:2181<br/><i>Service Coordination</i>"]
+    end
+
+    subgraph PolicyDecision["Access Decision"]
+        ALLOW["ALLOW<br/><i>Query proceeds</i>"]
+        DENY["DENY<br/><i>Access denied</i>"]
+    end
+
+    subgraph ColumnSecurity["Column-Level Security"]
+        MASK["PII Column Masking<br/><i>SSN, Account #</i>"]
+        REDACT["Column Redaction<br/><i>Hidden from role</i>"]
+    end
+
+    subgraph RowSecurity["Row-Level Security"]
+        RLS["Row Filter Policies<br/><i>Region / Business Unit</i>"]
+    end
+
+    subgraph AuditTrail["Audit Trail"]
+        AR["audit-receiver<br/>:8090<br/><i>Query Audit Events</i>"]
+    end
+
+    %% RBAC Flow
+    UserRequest -->|"SQL query"| T1
+    T1 -->|"intercept query"| T2
+    T2 -->|"check policy"| RA
+    RA -->|"lookup rules"| RDB
+    RA --> ALLOW
+    RA --> DENY
+
+    %% Ranger internal dependencies
+    RA --> RS
+    RA --> RZK
+    RS --> RZK
+
+    %% Fine-grained security
+    ALLOW --> ColumnSecurity
+    ALLOW --> RowSecurity
+
+    %% Audit
+    T1 -->|"log all queries"| AR
+    AR -->|"index audit events"| RS
+
+    classDef userNode fill:#f8fafc,stroke:#1a2332,color:#1a2332,stroke-width:2px
+    classDef trinoNode fill:#059669,stroke:#1a2332,color:#fff,stroke-width:2px
+    classDef rangerNode fill:#dc2626,stroke:#1a2332,color:#fff,stroke-width:2px
+    classDef decisionAllow fill:#22c55e,stroke:#1a2332,color:#fff,stroke-width:2px
+    classDef decisionDeny fill:#ef4444,stroke:#1a2332,color:#fff,stroke-width:2px
+    classDef securityNode fill:#f59e0b,stroke:#1a2332,color:#1a2332,stroke-width:2px
+    classDef auditNode fill:#6366f1,stroke:#1a2332,color:#fff,stroke-width:2px
+
+    class U1,U2,U3 userNode
+    class T1,T2 trinoNode
+    class RA,RDB,RS,RZK rangerNode
+    class ALLOW decisionAllow
+    class DENY decisionDeny
+    class MASK,REDACT,RLS securityNode
+    class AR auditNode

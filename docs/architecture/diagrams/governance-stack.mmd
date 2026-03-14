@@ -1,0 +1,69 @@
+flowchart TD
+    subgraph LineageCapture["Lineage Capture"]
+        direction LR
+        AF["Airflow DAGs<br/><i>ETL Orchestration</i>"]
+        SP["PySpark Jobs<br/><i>Data Processing</i>"]
+        OL["OpenLineage Events<br/><i>Run/Job/Dataset</i>"]
+    end
+
+    subgraph LineageStore["Lineage Storage (Marquez)"]
+        MQ["Marquez API<br/>:5000<br/><i>Lineage Server</i>"]
+        MQDB["marquez-db<br/>:5434<br/><i>Lineage Metadata</i>"]
+        MQW["Marquez Web UI<br/>:3000<br/><i>Lineage Explorer</i>"]
+    end
+
+    subgraph Observability["Pipeline Observability"]
+        direction LR
+        SD["Airflow StatsD<br/><i>Metrics Emitter</i>"]
+        SE["statsd-exporter<br/>:9102<br/><i>Prometheus Bridge</i>"]
+        PM["Prometheus<br/>:9090<br/><i>Metrics Store</i>"]
+        GR["Grafana<br/>:3001<br/><i>Dashboards + Alerts</i>"]
+        GRR["grafana-reporter<br/>:8686<br/><i>PDF Reports</i>"]
+    end
+
+    subgraph MetadataCatalog["Metadata Catalog (OpenMetadata)"]
+        OM["openmetadata-server<br/>:8585<br/><i>Data Asset Discovery</i>"]
+        ES["elasticsearch<br/>:9200<br/><i>Search Index</i>"]
+        OMDB["om-db<br/>:5436<br/><i>Metadata Store</i>"]
+        OMI["openmetadata-ingestion<br/>:8086<br/><i>Metadata Harvesting</i>"]
+    end
+
+    subgraph Compliance["BCBS 239 Compliance"]
+        BCBS["Lineage for BCBS 239<br/><i>Auditability + Traceability</i>"]
+    end
+
+    %% Lineage flow
+    AF -->|"emit OpenLineage events"| OL
+    SP -->|"emit OpenLineage events"| OL
+    OL -->|"POST /api/v1/lineage"| MQ
+    MQ --> MQDB
+    MQDB --> MQW
+
+    %% Observability flow
+    AF -->|"StatsD metrics"| SD
+    SD --> SE
+    SE --> PM
+    PM --> GR
+    GR --> GRR
+
+    %% Metadata catalog flow
+    OM --> ES
+    OM --> OMDB
+    OMI --> OM
+
+    %% Compliance link
+    MQ -->|"lineage evidence"| BCBS
+    GR -->|"SLA dashboards"| BCBS
+    OM -->|"data classification"| BCBS
+
+    classDef captureNode fill:#d97706,stroke:#1a2332,color:#fff,stroke-width:2px
+    classDef marquezNode fill:#be185d,stroke:#1a2332,color:#fff,stroke-width:2px
+    classDef monitorNode fill:#65a30d,stroke:#1a2332,color:#fff,stroke-width:2px
+    classDef catalogNode fill:#7c3aed,stroke:#1a2332,color:#fff,stroke-width:2px
+    classDef complianceNode fill:#1a2332,stroke:#c8a961,color:#c8a961,stroke-width:3px
+
+    class AF,SP,OL captureNode
+    class MQ,MQDB,MQW marquezNode
+    class SD,SE,PM,GR,GRR monitorNode
+    class OM,ES,OMDB,OMI catalogNode
+    class BCBS complianceNode
