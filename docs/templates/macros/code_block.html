@@ -1,0 +1,5 @@
+{# docs/templates/macros/code_block.html -- code example macro with syntax class #}
+
+{% macro code_block(code, language="python") %}
+<pre><code class="language-{{ language }}">{{ code }}</code></pre>
+{% endmacro %}

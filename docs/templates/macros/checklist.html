@@ -1,0 +1,5 @@
+{# docs/templates/macros/checklist.html -- checkbox list macro for Day 1 checklist #}
+
+{% macro checklist_item(text, verify="") %}
+<label class="checklist-item"><input type="checkbox"> {{ text }}{% if verify %} <span class="verify">({{ verify }})</span>{% endif %}</label>
+{% endmacro %}

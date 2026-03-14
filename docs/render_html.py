@@ -31,6 +31,9 @@ COMPOSE_PATH = PROJECT_ROOT / "docker-compose.yml"
 ARCH_DIAGRAM_DIR = PROJECT_ROOT / "docs" / "architecture" / "diagrams"
 ARCH_DATA_DIR = PROJECT_ROOT / "docs" / "architecture" / "data"
 ARCH_OUTPUT_DIR = PROJECT_ROOT / "docs" / "architecture"
+DEV_DATA_DIR = PROJECT_ROOT / "docs" / "developer" / "data"
+DEV_DIAGRAM_DIR = PROJECT_ROOT / "docs" / "developer" / "diagrams"
+DEV_OUTPUT_DIR = PROJECT_ROOT / "docs" / "developer"
 
 
 def extract_versions(compose_path: Path | str | None = None) -> dict[str, dict[str, str]]:
@@ -629,6 +632,83 @@ def render_arch_index(
     return output_path
 
 
+def render_developer_docs(
+    data_dir: Path | None = None,
+    diagram_dir: Path | None = None,
+    template_dir: Path | None = None,
+    output_dir: Path | None = None,
+    compose_path: Path | str | None = None,
+) -> list[Path]:
+    """Render all developer documentation pages from YAML data + Jinja2 templates.
+
+    Iterates YAML files in data_dir, renders each through base_developer.html
+    template, and writes standalone HTML to output_dir. Supports page_type variants:
+    guide, reference, faq, checklist, visualization.
+
+    Args:
+        data_dir: Directory containing developer docs YAML data files.
+        diagram_dir: Directory containing .mmd Mermaid source files.
+        template_dir: Directory containing Jinja2 templates.
+        output_dir: Directory for rendered HTML output.
+        compose_path: Path to docker-compose.yml for version extraction.
+
+    Returns:
+        List of Paths to rendered HTML files.
+    """
+    if data_dir is None:
+        data_dir = DEV_DATA_DIR
+    if diagram_dir is None:
+        diagram_dir = DEV_DIAGRAM_DIR
+    if template_dir is None:
+        template_dir = TEMPLATE_DIR
+    if output_dir is None:
+        output_dir = DEV_OUTPUT_DIR
+
+    data_dir = Path(data_dir)
+    diagram_dir = Path(diagram_dir)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    env = _create_jinja_env(template_dir)
+    versions = extract_versions(compose_path)
+    generation_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # Extract services for DEV-07/DEV-08
+    overrides_path = ARCH_DATA_DIR / "services.yml"
+    services = extract_services(compose_path, overrides_path)
+
+    # Render Mermaid diagrams for DEV-06/DEV-11
+    svg_content: dict[str, str] = {}
+    if diagram_dir.exists():
+        for mmd_file in sorted(diagram_dir.glob("*.mmd")):
+            try:
+                svg_content[mmd_file.stem] = render_mermaid_to_svg(mmd_file)
+            except (RuntimeError, FileNotFoundError, subprocess.TimeoutExpired) as exc:
+                svg_content[mmd_file.stem] = _placeholder_svg(str(exc))
+
+    rendered_files: list[Path] = []
+    template = env.get_template("base_developer.html")
+
+    for data_file in sorted(data_dir.glob("*.yml")):
+        doc_data = yaml.safe_load(data_file.read_text())
+        if doc_data is None:
+            continue
+        html = template.render(
+            **doc_data,
+            versions=versions,
+            services=services,
+            svg_diagrams=svg_content,
+            generation_date=generation_date,
+        )
+        output_name = doc_data.get("output_filename", f"{data_file.stem}.html")
+        output_path = output_dir / output_name
+        output_path.write_text(html)
+        rendered_files.append(output_path)
+        print(f"  Rendered: developer/{output_name}")
+
+    return rendered_files
+
+
 if __name__ == "__main__":
     print("Rendering SWOT analyses...")
     rendered = render_swots()
@@ -642,5 +722,9 @@ if __name__ == "__main__":
     print("\nRendering architecture pages...")
     arch_rendered = render_architecture()
     print(f"\n  {len(arch_rendered)} architecture page(s) rendered.")
+
+    print("\nRendering developer docs...")
+    dev_rendered = render_developer_docs()
+    print(f"\n  {len(dev_rendered)} developer doc(s) rendered.")
 
     print("\nDone.")

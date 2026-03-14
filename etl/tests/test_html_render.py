@@ -546,13 +546,13 @@ SAMPLE_CHECKLIST_YAML = textwrap.dedent("""\
     page_type: "checklist"
     sections:
       - heading: "Setup"
-        items:
+        bullet_items:
           - text: "Clone the repo"
             verify: "ls -la"
           - text: "Docker Compose up"
             verify: "docker ps | wc -l"
       - heading: "First Steps"
-        items:
+        bullet_items:
           - text: "Run tests"
             verify: "pytest"
 """)
