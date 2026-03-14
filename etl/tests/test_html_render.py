@@ -413,3 +413,80 @@ def test_css_hover_tooltips(rendered_architecture: dict[str, str]) -> None:
     assert "service-tooltip" in html, "Missing 'service-tooltip' CSS class"
     assert ".service-node:hover .service-tooltip" in html, \
         "Missing CSS hover rule for tooltips"
+
+
+# ---------------------------------------------------------------------------
+# ARCH-03: Data flow medallion path
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_data_flow_medallion_path(rendered_architecture: dict[str, str]) -> None:
+    """Data-flow.html contains Bronze, Silver, Gold medallion layers (ARCH-03)."""
+    html = rendered_architecture["data-flow.html"]
+    assert "Bronze" in html, "Missing 'Bronze' in data flow page"
+    assert "Silver" in html, "Missing 'Silver' in data flow page"
+    assert "Gold" in html, "Missing 'Gold' in data flow page"
+    # Should show at least one end-to-end path element
+    assert "Sources" in html or "Ingestion" in html, \
+        "Missing source/ingestion reference in data flow"
+
+
+# ---------------------------------------------------------------------------
+# ARCH-04: Service dependency edges
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_service_dependency_edges(rendered_architecture: dict[str, str]) -> None:
+    """Service-dependency.html shows depends_on relationships (ARCH-04)."""
+    html = rendered_architecture["service-dependency.html"]
+    html_lower = html.lower()
+    # Should contain key dependency terms
+    assert "nessie" in html_lower, "Missing 'nessie' in dependency graph"
+    assert "trino" in html_lower, "Missing 'trino' in dependency graph"
+    assert "depends" in html_lower, "Missing 'depends' keyword in dependency page"
+
+
+# ---------------------------------------------------------------------------
+# ARCH-05: Security layer with Ranger
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_security_ranger_services(rendered_architecture: dict[str, str]) -> None:
+    """Security-layer.html contains Ranger services and RBAC flow (ARCH-05)."""
+    html = rendered_architecture["security-layer.html"]
+    html_lower = html.lower()
+    assert "ranger-admin" in html_lower, "Missing 'ranger-admin' in security page"
+    assert "ranger-solr" in html_lower, "Missing 'ranger-solr' in security page"
+    assert "ranger-zk" in html_lower, "Missing 'ranger-zk' in security page"
+    assert "rbac" in html_lower or "role-based" in html_lower, \
+        "Missing RBAC reference in security page"
+
+
+# ---------------------------------------------------------------------------
+# ARCH-06: Governance lineage flow
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_governance_lineage_flow(rendered_architecture: dict[str, str]) -> None:
+    """Governance-stack.html contains OpenLineage-Marquez-Grafana flow (ARCH-06)."""
+    html = rendered_architecture["governance-stack.html"]
+    assert "OpenLineage" in html, "Missing 'OpenLineage' in governance page"
+    assert "Marquez" in html, "Missing 'Marquez' in governance page"
+    assert "Grafana" in html, "Missing 'Grafana' in governance page"
+    assert "BCBS 239" in html or "lineage" in html.lower(), \
+        "Missing BCBS 239 or lineage reference in governance page"
+
+
+# ---------------------------------------------------------------------------
+# ARCH-07: Environment comparison table
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_environment_table_columns(rendered_architecture: dict[str, str]) -> None:
+    """Governance-stack.html contains environment table with dev/staging/prod (ARCH-07)."""
+    html = rendered_architecture["governance-stack.html"]
+    assert "Development" in html, "Missing 'Development' environment column"
+    assert "Staging" in html, "Missing 'Staging' environment column"
+    assert "Production" in html, "Missing 'Production' environment column"
+    assert "Docker Compose" in html, "Missing 'Docker Compose' deployment method"
+    assert "Terraform" in html, "Missing 'Terraform' deployment method"
