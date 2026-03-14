@@ -1,0 +1,292 @@
+title: "Iceberg Catalog SWOT Analysis"
+subtitle: "Glue vs Nessie vs HMS vs Polaris"
+status: decided
+decision: "Nessie"
+prepared_for: "Leadership Review"
+date: "2026-03-13"
+phase: "Phase 1 - Foundation and Feasibility Validation"
+next_review: "2026-Q2"
+
+executive_summary: |
+  Nessie is an open-source transactional catalog for Apache Iceberg that implements the
+  Iceberg REST catalog specification. It provides Git-like branching for schema management,
+  supports multiple query engines (Trino, Spark, Flink), and uses PostgreSQL as its backing
+  store. This SWOT analysis evaluates Nessie's suitability as the unified Iceberg catalog
+  for our lakehouse architecture.
+
+  Nessie is the recommended catalog choice for this project. Its REST catalog compliance,
+  multi-engine support, and branching capabilities align with our architecture requirements.
+  The identified threats are manageable with the mitigations outlined below.
+
+recommendation: |
+  Nessie is recommended as the Iceberg catalog for the lakehouse architecture based on:
+
+  1. REST catalog compliance for multi-engine interoperability
+  2. Git-like branching for safe schema evolution (unique differentiator)
+  3. Successful Phase 1 feasibility validation (Spark + Trino confirmed working)
+  4. Cloud-agnostic design supporting our hybrid S3/MinIO architecture
+  5. No license cost and open-source governance
+  6. Manageable risk profile with documented mitigations for each threat
+
+  The primary risk (Teradata OTF REST catalog gap) has a validated fallback
+  (Trino query federation) that meets performance requirements.
+
+strengths:
+  - id: S1
+    title: "Open-Source with No License Cost"
+    description: |
+      Nessie is Apache 2.0 licensed with no vendor lock-in or per-query pricing.
+      Total cost of ownership is infrastructure plus engineering time only. This
+      contrasts with commercial options: Unity Catalog requires Databricks, and
+      Polaris SaaS has consumption pricing.
+    evidence: "Apache 2.0 license; $0 license cost vs commercial alternatives"
+
+  - id: S2
+    title: "REST Catalog Specification Compliance"
+    description: |
+      Nessie implements the Apache Iceberg REST catalog specification, which is
+      becoming the industry standard for catalog interoperability. Any engine that
+      supports REST catalog can connect to Nessie without custom integration code.
+    evidence: "Implements Apache Iceberg REST catalog spec; standard API for all engines"
+
+  - id: S3
+    title: "Git-Like Branching for Schema Changes"
+    description: |
+      Nessie provides branching and tagging semantics (similar to Git) for catalog
+      metadata. This enables zero-downtime schema migrations by testing changes on
+      a branch before merging to main, reproducible queries via tagged catalog state
+      for regulatory reporting, rollback capability without data loss, and a full
+      audit trail of metadata changes with timestamps.
+    evidence: "Zero-downtime migrations, reproducible queries, rollback capability; unique among catalog alternatives"
+
+  - id: S4
+    title: "Multi-Engine Support (Trino, Spark, Flink)"
+    description: |
+      Nessie serves as a single catalog for multiple query engines. Phase 1
+      feasibility validation confirmed PySpark reads and writes Iceberg tables
+      through Nessie REST catalog, Trino reads Spark-created tables and writes
+      back through the same catalog, cross-engine metadata consistency is maintained
+      (same schema, same row counts), and both MinIO (on-prem) and S3 (cloud)
+      storage backends work through one catalog.
+    evidence: "Phase 1 validated: PySpark + Trino cross-engine reads/writes with consistent metadata"
+
+  - id: S5
+    title: "PostgreSQL Backing Store"
+    description: |
+      Nessie uses PostgreSQL for metadata storage, providing enterprise-grade
+      durability and ACID transactions, familiar operational model for DBAs,
+      well-understood backup, replication, and HA patterns, and no dependency
+      on cloud-specific storage such as DynamoDB.
+    evidence: "ACID transactions via PostgreSQL; familiar ops model for existing DBA team"
+
+  - id: S6
+    title: "Single Catalog Serving Multiple Storage Backends"
+    description: |
+      One Nessie instance serves tables across both S3 (cloud) and MinIO
+      (on-premises), enabling the hybrid architecture without catalog
+      duplication or synchronization.
+    evidence: "One Nessie instance serves S3 + MinIO; no catalog sync required"
+
+weaknesses:
+  - id: W1
+    title: "Smaller Community Than Hive Metastore"
+    description: |
+      Hive Metastore has decades of production deployment history across thousands
+      of organizations. Nessie's community, while growing, is significantly smaller.
+      This means fewer Stack Overflow answers, a smaller pool of engineers with
+      production Nessie experience, and less third-party tooling integration.
+    evidence: "Hive Metastore: thousands of production deployments; Nessie: hundreds; Stack Overflow tag ratio ~20:1"
+
+  - id: W2
+    title: "No Native High Availability Without External Orchestration"
+    description: |
+      Nessie does not include built-in clustering or leader election. HA requires
+      Kubernetes deployment with multiple replicas, PostgreSQL HA (e.g., Patroni,
+      RDS Multi-AZ), and a load balancer in front of Nessie instances. This is
+      achievable but adds operational complexity compared to managed services.
+    evidence: "HA requires K8s + PostgreSQL HA + load balancer; no built-in clustering"
+
+  - id: W3
+    title: "Limited Vendor Support"
+    description: |
+      Unlike commercial catalogs (Unity Catalog backed by Databricks, AWS Glue
+      backed by Amazon), Nessie relies on community support and Dremio's
+      stewardship. Enterprise support contracts are available through Dremio
+      but at additional cost.
+    evidence: "Community + Dremio support only; no major cloud vendor backing"
+
+  - id: W4
+    title: "Teradata OTF Does Not Natively Support REST Catalog"
+    description: |
+      As documented in ADR-001, Teradata's Open Table Format feature supports
+      AWS Glue and HMS but not REST catalog. This requires either Trino query
+      federation as a fallback (validated in Phase 1) or a future Teradata OTF
+      update to add REST catalog support.
+    evidence: "ADR-001: Teradata OTF supports Glue/HMS, not REST catalog; Trino federation validated as fallback"
+
+  - id: W5
+    title: "Learning Curve for Branching Semantics"
+    description: |
+      While branching is a strength, teams unfamiliar with Git-like catalog
+      management need training. Incorrect branch management could lead to
+      metadata divergence or confusion.
+    evidence: "Git-like branching model requires team training; risk of metadata divergence if misused"
+
+opportunities:
+  - id: O1
+    title: "REST Catalog Spec Becoming Industry Standard"
+    description: |
+      The Apache Iceberg REST catalog specification is gaining rapid adoption.
+      Snowflake added ICEBERG_REST catalog integration, AWS Lake Formation is
+      adding REST catalog support, and Confluent, Tabular, and others are
+      implementing the spec. As REST catalog becomes the standard, Nessie's
+      position strengthens.
+    evidence: "Snowflake ICEBERG_REST GA; AWS Lake Formation adding REST support; 6+ major vendors adopting"
+
+  - id: O2
+    title: "Zero-Downtime Schema Migrations via Branching"
+    description: |
+      Nessie branching enables a schema migration workflow not possible with
+      traditional catalogs: create a branch, apply schema changes, run validation
+      queries, then merge to main when verified. This eliminates the downtime
+      window for schema changes in production.
+    evidence: "Branch-test-merge workflow eliminates production downtime for schema changes"
+
+  - id: O3
+    title: "Snowflake ICEBERG_REST Integration"
+    description: |
+      Snowflake's native support for ICEBERG_REST catalog type allows direct
+      integration with Nessie. This eliminates the need for data copy or ETL
+      to provide Snowflake access to the lakehouse data.
+    evidence: "Snowflake ICEBERG_REST catalog integration GA; direct Nessie-to-Snowflake reads without data copy"
+
+  - id: O4
+    title: "Growing Ecosystem Adoption"
+    description: |
+      The Nessie project is actively developed with regular releases. The
+      Dremio-backed governance model provides stability while the Apache
+      Iceberg ecosystem grows.
+    evidence: "Regular release cadence (0.107.4 current); Dremio provides governance stability"
+
+  - id: O5
+    title: "Regulatory Compliance via Catalog Versioning"
+    description: |
+      Nessie's full audit trail of metadata changes supports BCBS 239 data
+      lineage requirements, point-in-time query reproducibility for regulatory
+      reporting, and change management documentation for audits.
+    evidence: "BCBS 239 compliance: point-in-time queries, full metadata audit trail, change documentation"
+
+threats:
+  - id: T1
+    title: "Apache Polaris Gaining Momentum"
+    description: |
+      Apache Polaris (incubating) is a competing REST catalog implementation
+      backed by Snowflake. If Polaris gains broader adoption, Nessie may
+      face community fragmentation.
+    evidence: "Polaris rebranded as Snowflake Open Catalog; backed by Snowflake's resources and market position"
+    mitigation: |
+      Both Nessie and Polaris implement the same REST catalog spec. Migration between
+      them is possible because the REST API is standardized. Our code uses
+      catalog.type=rest (not Nessie-specific), enabling catalog switching without
+      application changes.
+
+  - id: T2
+    title: "Vendor Lock-In Risk if Migrating to Managed Catalog"
+    description: |
+      If we later decide to move to a managed catalog (AWS Glue, Polaris SaaS),
+      migration effort includes metadata export/import, connection string changes
+      across all engines, and testing and validation.
+    evidence: "Migration to managed catalog requires metadata export, connection changes, full revalidation"
+    mitigation: |
+      The REST catalog spec provides a standard API. Migration effort is primarily
+      operational, not architectural. Our infrastructure-as-code approach means
+      connection configuration changes are automated through Terraform.
+
+  - id: T3
+    title: "REST Catalog Specification Still Evolving"
+    description: |
+      The Iceberg REST catalog spec is not yet fully finalized. Breaking changes,
+      while unlikely, could require Nessie updates.
+    evidence: "REST catalog spec still evolving; breaking changes possible in future versions"
+    mitigation: |
+      Pin Nessie to a specific version in production. Test upgrades in staging
+      before promotion. Docker Compose and Helm chart configurations lock the
+      version (currently 0.107.4).
+
+  - id: T4
+    title: "Nessie Project Governance Changes"
+    description: |
+      Nessie is primarily maintained by Dremio. A change in Dremio's strategy
+      (acquisition, pivot) could affect project maintenance.
+    evidence: "Dremio is primary maintainer; governance risk if Dremio strategy changes"
+    mitigation: |
+      Nessie is Apache 2.0 licensed and the code can be forked if necessary.
+      Multiple organizations contribute beyond Dremio. The REST catalog spec
+      ensures our architecture is not Nessie-specific. We maintain the ability
+      to switch to Polaris with less than 1 week of engineering effort.
+
+  - id: T5
+    title: "Scale Limitations Under Extreme Load"
+    description: |
+      Nessie's performance characteristics at extreme scale (millions of tables,
+      thousands of concurrent connections) are less proven than AWS Glue or
+      Hive Metastore.
+    evidence: "Limited production data at extreme scale (millions of tables); AWS Glue and HMS have broader scale evidence"
+    mitigation: |
+      Our lakehouse has hundreds of tables, not millions. Benchmark harness
+      established in Phase 1 will track catalog response times. PostgreSQL
+      backing store scales well for our volume. If needed, a caching layer
+      can be added.
+
+decision_matrix:
+  criteria:
+    - "License cost"
+    - "REST catalog spec"
+    - "Multi-engine support"
+    - "Branching"
+    - "Teradata OTF"
+    - "Snowflake integration"
+    - "Cloud-agnostic"
+    - "HA complexity"
+    - "Community size"
+  options:
+    Nessie:
+      - "Free"
+      - "Yes"
+      - "Trino, Spark, Flink"
+      - "Yes (unique)"
+      - "Via Trino federation"
+      - "Yes (ICEBERG_REST)"
+      - "Yes"
+      - "Medium (K8s)"
+      - "Growing"
+    Polaris:
+      - "Free (OSS) / Paid (SaaS)"
+      - "Yes"
+      - "Trino, Spark"
+      - "No"
+      - "Unknown"
+      - "Yes (ICEBERG_REST)"
+      - "Yes"
+      - "Medium (K8s)"
+      - "Emerging"
+    AWS Glue:
+      - "Per-request pricing"
+      - "Partial"
+      - "Spark, Athena"
+      - "No"
+      - "Yes (Glue)"
+      - "No"
+      - "AWS only"
+      - "Low (managed)"
+      - "Large (AWS)"
+    Hive Metastore:
+      - "Free"
+      - "No"
+      - "Trino, Spark, Hive"
+      - "No"
+      - "Yes"
+      - "No"
+      - "Yes"
+      - "High (HMS HA)"
+      - "Largest"
