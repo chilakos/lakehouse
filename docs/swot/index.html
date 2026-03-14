@@ -106,6 +106,73 @@
   </header>
 
 
+  <p style="margin-bottom: 1.5rem; color: #475569;">
+    6 strategic analyses covering the lakehouse architecture transformation.
+    4 decisions confirmed, 2 pending leadership review.
+  </p>
+
+  <h2>Pending Decision</h2>
+  <div class="card-grid">
+    <div class="card">
+      <h3><a href="data-model-strategy-swot.html">Data Model Strategy SWOT Analysis</a></h3>
+      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">Keep FSDM vs Evolve Incrementally vs New Medallion-Native Model</p>
+      <p><span class="status-badge status-undecided">Undecided</span></p>
+      <p>The lakehouse architecture currently uses a Financial Services Data Model (FSDM) that is
+partially aligned across Bronze, Silver, and Gold layers. The Gold layer has already evolved
+organically toward</p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">S5 / W4 / O4 / T4</p>
+    </div>
+    <div class="card">
+      <h3><a href="snowflake-strategy-swot.html">Snowflake Strategy SWOT Analysis</a></h3>
+      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">Retire vs Keep as Iceberg Compute vs Maintain Current State</p>
+      <p><span class="status-badge status-undecided">Undecided</span></p>
+      <p>Snowflake currently operates as a full analytics platform with data copies from Teradata and
+Cloudera, generating significant license and compute costs through consumption-based pricing.
+The lakehouse</p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">S5 / W5 / O4 / T4</p>
+    </div>
+  </div>
+
+  <h2>Completed Analyses</h2>
+  <div class="card-grid">
+    <div class="card">
+      <h3><a href="ai-semantic-layer-swot.html">AI Semantic Layer SWOT Analysis</a></h3>
+      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">Build NL-to-SQL vs Buy Commercial Solution</p>
+      <p><span class="status-badge status-decided">Decided</span> | Decision: <strong>Build-own with Claude on Bedrock</strong></p>
+      <p>The AI semantic layer strategy was evaluated between building a custom NL-to-SQL engine
+using Claude on AWS Bedrock versus purchasing a commercial NL-to-SQL solution (ThoughtSpot,
+Databricks AI/BI, Sn</p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">S5 / W3 / O4 / T4</p>
+    </div>
+    <div class="card">
+      <h3><a href="bi-semantic-layer-swot.html">BI Semantic Layer SWOT Analysis</a></h3>
+      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">Direct Access vs dbt Metrics vs AtScale vs Cube</p>
+      <p><span class="status-badge status-decided">Decided</span> | Decision: <strong>Cube v0.36.0</strong></p>
+      <p>The BI semantic layer evaluation compared four approaches for providing a unified metric
+definition layer between the lakehouse and BI consumers (Tableau, Power BI). Cube v0.36.0
+was selected for its </p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">S5 / W3 / O4 / T4</p>
+    </div>
+    <div class="card">
+      <h3><a href="datastage-migration-swot.html">DataStage Migration SWOT Analysis</a></h3>
+      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">Big-Bang vs Phased Python vs Parallel-Run</p>
+      <p><span class="status-badge status-decided">Decided</span> | Decision: <strong>Phased Python Migration</strong></p>
+      <p>The DataStage-to-Python migration strategy was evaluated across three approaches:
+big-bang replacement, phased Python migration using the BasePipeline framework, and
+parallel-run with DataStage mainta</p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">S5 / W4 / O4 / T4</p>
+    </div>
+    <div class="card">
+      <h3><a href="nessie-catalog-swot.html">Iceberg Catalog SWOT Analysis</a></h3>
+      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">Glue vs Nessie vs HMS vs Polaris</p>
+      <p><span class="status-badge status-decided">Decided</span> | Decision: <strong>Nessie</strong></p>
+      <p>Nessie is an open-source transactional catalog for Apache Iceberg that implements the
+Iceberg REST catalog specification. It provides Git-like branching for schema management,
+supports multiple query </p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">S6 / W5 / O5 / T5</p>
+    </div>
+  </div>
+
   <footer class="doc-footer">
     <p>Generated: 2026-03-14 | Next review: 2026-Q2</p>
     <div class="versions">

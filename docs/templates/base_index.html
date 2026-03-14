@@ -112,7 +112,47 @@
   </header>
   {% endblock header %}
 
-  {% block content %}{% endblock content %}
+  {% block content %}
+  {% if swot_summaries %}
+  {% set undecided = swot_summaries | selectattr("status", "equalto", "undecided") | list %}
+  {% set decided = swot_summaries | selectattr("status", "equalto", "decided") | list %}
+
+  <p style="margin-bottom: 1.5rem; color: #475569;">
+    {{ swot_summaries | length }} strategic analyses covering the lakehouse architecture transformation.
+    {{ decided | length }} decisions confirmed, {{ undecided | length }} pending leadership review.
+  </p>
+
+  {% if undecided %}
+  <h2>Pending Decision</h2>
+  <div class="card-grid">
+    {% for swot in undecided %}
+    <div class="card">
+      <h3><a href="{{ swot.filename }}">{{ swot.title }}</a></h3>
+      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">{{ swot.subtitle }}</p>
+      <p><span class="status-badge status-{{ swot.status }}">{{ swot.status | capitalize }}</span></p>
+      <p>{{ swot.executive_summary }}</p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">S{{ swot.strengths_count }} / W{{ swot.weaknesses_count }} / O{{ swot.opportunities_count }} / T{{ swot.threats_count }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if decided %}
+  <h2>Completed Analyses</h2>
+  <div class="card-grid">
+    {% for swot in decided %}
+    <div class="card">
+      <h3><a href="{{ swot.filename }}">{{ swot.title }}</a></h3>
+      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">{{ swot.subtitle }}</p>
+      <p><span class="status-badge status-{{ swot.status }}">{{ swot.status | capitalize }}</span> | Decision: <strong>{{ swot.decision }}</strong></p>
+      <p>{{ swot.executive_summary }}</p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">S{{ swot.strengths_count }} / W{{ swot.weaknesses_count }} / O{{ swot.opportunities_count }} / T{{ swot.threats_count }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+  {% endblock content %}
 
   {% block footer %}
   <footer class="doc-footer">
