@@ -1,4 +1,4 @@
-"""Tests for the SWOT HTML render pipeline.
+"""Tests for the SWOT and Architecture HTML render pipeline.
 
 Validates that rendered HTML meets all phase requirements:
 - SWOT-01: Shared CSS template with embedded styles
@@ -6,6 +6,9 @@ Validates that rendered HTML meets all phase requirements:
 - SWOT-09: Interactive collapsible sections (CSS-only details/summary)
 - SWOT-10: Responsive tablet-friendly design
 - ARCH-09: Version-stamped footers with generation date and component versions
+- ARCH-01: Marketecture HTML with stats banner and capability groups
+- ARCH-02: Detailed architecture with all services grouped by layer
+- ARCH-08: CSS hover tooltips on service nodes
 """
 
 from __future__ import annotations
@@ -22,6 +25,7 @@ _project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_project_root))
 
 from docs.render_html import extract_versions, render_swots  # noqa: E402
+from docs.render_html import extract_services, render_architecture  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -256,3 +260,156 @@ def test_render_swots_produces_html(
         assert p.exists(), f"Rendered file does not exist: {p}"
         content = p.read_text()
         assert "<!DOCTYPE html>" in content, "Missing DOCTYPE in rendered HTML"
+
+
+# ---------------------------------------------------------------------------
+# Architecture: Fixtures
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def compose_path() -> Path:
+    """Return path to the project's docker-compose.yml."""
+    p = _project_root / "docker-compose.yml"
+    if not p.exists():
+        pytest.skip("docker-compose.yml not found")
+    return p
+
+
+@pytest.fixture
+def arch_data_dir() -> Path:
+    """Return path to architecture data directory."""
+    return _project_root / "docs" / "architecture" / "data"
+
+
+@pytest.fixture
+def arch_diagram_dir() -> Path:
+    """Return path to architecture diagrams directory."""
+    return _project_root / "docs" / "architecture" / "diagrams"
+
+
+@pytest.fixture
+def arch_output_dir(tmp_path: Path) -> Path:
+    """Create a temporary output directory for architecture pages."""
+    out = tmp_path / "arch_output"
+    out.mkdir()
+    return out
+
+
+@pytest.fixture
+def rendered_architecture(
+    arch_diagram_dir: Path,
+    arch_data_dir: Path,
+    template_dir: Path,
+    arch_output_dir: Path,
+    compose_path: Path,
+) -> dict[str, str]:
+    """Render architecture pages and return dict of filename -> HTML content."""
+    results = render_architecture(
+        diagram_dir=arch_diagram_dir,
+        data_dir=arch_data_dir,
+        template_dir=template_dir,
+        output_dir=arch_output_dir,
+        compose_path=compose_path,
+    )
+    return {p.name: p.read_text() for p in results}
+
+
+# ---------------------------------------------------------------------------
+# ARCH-01: extract_services() metadata
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_extract_services_ports(compose_path: Path) -> None:
+    """extract_services() returns dict with ports, healthcheck, depends_on for all services."""
+    services = extract_services(compose_path=compose_path)
+    assert isinstance(services, dict)
+    # Should have all 25 docker-compose services
+    assert len(services) >= 25, f"Expected >= 25 services, got {len(services)}"
+    # Check specific port values
+    assert any("8080" in str(p) for p in services["trino"]["ports"]), \
+        "Trino should have port 8080"
+    assert any("9000" in str(p) for p in services["minio"]["ports"]), \
+        "MinIO should have port 9000"
+    # Each service should have required keys
+    for name, svc in services.items():
+        assert "ports" in svc, f"{name} missing 'ports'"
+        assert "healthcheck" in svc, f"{name} missing 'healthcheck'"
+        assert "depends_on" in svc, f"{name} missing 'depends_on'"
+
+
+@pytest.mark.unit
+def test_extract_services_excludes_init(compose_path: Path, arch_data_dir: Path) -> None:
+    """After merging with services.yml, init containers are filtered out."""
+    services = extract_services(
+        compose_path=compose_path,
+        overrides_path=arch_data_dir / "services.yml",
+    )
+    assert "minio-init" not in services, "minio-init should be excluded"
+    assert "airflow-init" not in services, "airflow-init should be excluded"
+
+
+@pytest.mark.unit
+def test_extract_services_layer_assignment(compose_path: Path, arch_data_dir: Path) -> None:
+    """Services merged with services.yml have layer, description, protocol keys."""
+    services = extract_services(
+        compose_path=compose_path,
+        overrides_path=arch_data_dir / "services.yml",
+    )
+    # After merge with overrides, services should have layer metadata
+    for name, svc in services.items():
+        assert "layer" in svc, f"{name} missing 'layer' after override merge"
+        assert "description" in svc, f"{name} missing 'description' after override merge"
+        assert "protocol" in svc, f"{name} missing 'protocol' after override merge"
+
+
+# ---------------------------------------------------------------------------
+# ARCH-01: Marketecture stats banner and capability groups
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_marketecture_stats_banner(rendered_architecture: dict[str, str]) -> None:
+    """Marketecture HTML contains stats banner with key numbers (ARCH-01)."""
+    html = rendered_architecture["marketecture.html"]
+    assert "1.5 PB" in html, "Missing '1.5 PB' in stats banner"
+    assert "300+" in html, "Missing '300+' in stats banner"
+    assert "40+" in html, "Missing '40+' in stats banner"
+    assert "3 query engines" in html.lower() or "3 Query Engines" in html, \
+        "Missing '3 query engines' in stats banner"
+
+
+@pytest.mark.unit
+def test_marketecture_capability_groups(rendered_architecture: dict[str, str]) -> None:
+    """Marketecture HTML contains all 8 capability group labels (ARCH-01)."""
+    html = rendered_architecture["marketecture.html"]
+    groups = [
+        "Sources", "ETL", "Ingestion", "Iceberg Lakehouse",
+        "Query Engines", "Semantic", "Consumers", "Governance", "Security",
+    ]
+    for group in groups:
+        assert group in html, f"Missing capability group label: '{group}'"
+
+
+# ---------------------------------------------------------------------------
+# ARCH-02: Detailed architecture all services
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_detailed_arch_all_services(rendered_architecture: dict[str, str]) -> None:
+    """Detailed architecture HTML contains at least 20 service-node divs (ARCH-02)."""
+    html = rendered_architecture["detailed-architecture.html"]
+    count = html.count("service-node")
+    # At least 20 service-node occurrences (CSS class + div instances for 23 non-init services)
+    assert count >= 20, f"Expected >= 20 service-node occurrences, got {count}"
+
+
+# ---------------------------------------------------------------------------
+# ARCH-08: CSS hover tooltips
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_css_hover_tooltips(rendered_architecture: dict[str, str]) -> None:
+    """Detailed architecture HTML contains tooltip CSS class and hover rule (ARCH-08)."""
+    html = rendered_architecture["detailed-architecture.html"]
+    assert "service-tooltip" in html, "Missing 'service-tooltip' CSS class"
+    assert ".service-node:hover .service-tooltip" in html, \
+        "Missing CSS hover rule for tooltips"
