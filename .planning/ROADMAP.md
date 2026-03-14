@@ -42,11 +42,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The 2 undecided SWOTs (Snowflake Strategy, Data Model Strategy) present balanced options with clear trade-offs that enable leadership to make a decision
   4. The cross-SWOT index page shows all 6 analyses with Decided/Undecided status badges and links to each standalone file
   5. Every HTML deliverable has a version-stamped footer with generation date; all SWOT pages have collapsible sections (CSS-only) and render correctly on tablet-width screens
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: Shared CSS template, Jinja2 SWOT renderer, version-stamped footer, ARCH-09 infrastructure
-- [ ] 05-02: All 6 SWOT analyses as standalone HTML (prioritizing undecided SWOTs), cross-SWOT index page, collapsible sections, responsive design
+- [ ] 05-01-PLAN.md -- Shared CSS template, Jinja2 SWOT renderer, version-stamped footer, Nessie SWOT, test scaffold
+- [ ] 05-02-PLAN.md -- 5 remaining SWOT analyses (prioritizing undecided SWOTs), cross-SWOT index page
 
 ### Phase 6: Architecture Visualizations
 **Goal**: Executives and engineers have accurate, audience-appropriate architecture documentation -- a plain-English marketecture for leadership and a detailed technical diagram with every service, port, and protocol for engineers
@@ -109,7 +109,7 @@ Note: Phases 6 and 7 can execute in parallel after Phase 5 completes (no cross-d
 | 2. ETL Migration and Data Pipeline | v1.0 | 5/5 | Complete | 2026-03-13 |
 | 3. Governance, Security Hardening, and Platform | v1.0 | 4/4 | Complete | 2026-03-13 |
 | 4. Semantic Layers and Consumer Migration | v1.0 | 3/3 | Complete | 2026-03-13 |
-| 5. HTML Foundation and SWOT Analyses | v1.1 | 0/2 | Not started | - |
+| 5. HTML Foundation and SWOT Analyses | v1.1 | 0/2 | Planning complete | - |
 | 6. Architecture Visualizations | v1.1 | 0/2 | Not started | - |
 | 7. Developer Documentation | v1.1 | 0/3 | Not started | - |
 | 8. Data Catalog and Glossary | v1.1 | 0/2 | Not started | - |
