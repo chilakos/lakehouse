@@ -22,14 +22,14 @@ Requirements for v1.1 Documentation milestone. Each maps to roadmap phases.
 
 ### Architecture Visualizations
 
-- [ ] **ARCH-01**: Marketecture HTML page with boxes-and-arrows platform overview, technology labels with value propositions, key numbers callout (1.5 PB, 300+ sources, 40+ engineers)
-- [ ] **ARCH-02**: Detailed architecture HTML page with every component, port numbers, protocols, health check endpoints for all 20+ services
+- [x] **ARCH-01**: Marketecture HTML page with boxes-and-arrows platform overview, technology labels with value propositions, key numbers callout (1.5 PB, 300+ sources, 40+ engineers)
+- [x] **ARCH-02**: Detailed architecture HTML page with every component, port numbers, protocols, health check endpoints for all 20+ services
 - [ ] **ARCH-03**: Data flow direction diagrams showing Bronze-Silver-Gold paths and consumer-semantic-query engine paths
 - [ ] **ARCH-04**: Service dependency graph showing which services depend on which
 - [ ] **ARCH-05**: Security layer visualization showing Ranger integration points and RBAC flow
 - [ ] **ARCH-06**: Governance stack detail (OpenLineage-Marquez-Grafana flow for BCBS 239)
 - [ ] **ARCH-07**: Environment differences table (dev/staging/prod) showing Terraform vs Docker Compose deployment
-- [ ] **ARCH-08**: CSS hover tooltips on detailed architecture diagram showing component descriptions
+- [x] **ARCH-08**: CSS hover tooltips on detailed architecture diagram showing component descriptions
 - [x] **ARCH-09**: Version-stamped footers on all HTML deliverables with generation date and component versions
 
 ### Developer Documentation
@@ -201,14 +201,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SWOT-08 | Phase 5 | Complete |
 | SWOT-09 | Phase 5 | Complete |
 | SWOT-10 | Phase 5 | Complete |
-| ARCH-01 | Phase 6 | Pending |
-| ARCH-02 | Phase 6 | Pending |
+| ARCH-01 | Phase 6 | Complete |
+| ARCH-02 | Phase 6 | Complete |
 | ARCH-03 | Phase 6 | Pending |
 | ARCH-04 | Phase 6 | Pending |
 | ARCH-05 | Phase 6 | Pending |
 | ARCH-06 | Phase 6 | Pending |
 | ARCH-07 | Phase 6 | Pending |
-| ARCH-08 | Phase 6 | Pending |
+| ARCH-08 | Phase 6 | Complete |
 | ARCH-09 | Phase 5 | Complete |
 | DEV-01 | Phase 7 | Pending |
 | DEV-02 | Phase 7 | Pending |

@@ -58,11 +58,11 @@ Plans:
   3. Data flow diagrams show the complete path from source through Bronze/Silver/Gold to consumers, and service dependency, security (Ranger), and governance (OpenLineage/Marquez/Grafana) layers are each documented
   4. Environment differences (dev/staging/prod, Docker Compose vs Terraform) are documented in a clear comparison table
   5. Hovering over components in the detailed architecture diagram reveals descriptions via CSS tooltips
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 06-01: Mermaid diagram source files and rendering pipeline, marketecture and detailed architecture HTML pages
-- [ ] 06-02: Data flow, service dependency, security, governance diagrams, environment table, CSS tooltips
+- [ ] 06-01-PLAN.md -- Render pipeline (extract_services, render_architecture), services.yml/environments.yml data, marketecture HTML, detailed architecture HTML with CSS tooltips
+- [ ] 06-02-PLAN.md -- Data flow, service dependency, security layer, governance stack diagrams, environment table, architecture index page
 
 ### Phase 7: Developer Documentation
 **Goal**: A new developer can go from zero to running their first pipeline and submitting their first PR using only the documentation site, with auto-generated API reference covering all 8 packages
@@ -110,6 +110,6 @@ Note: Phases 6 and 7 can execute in parallel after Phase 5 completes (no cross-d
 | 3. Governance, Security Hardening, and Platform | v1.0 | 4/4 | Complete | 2026-03-13 |
 | 4. Semantic Layers and Consumer Migration | v1.0 | 3/3 | Complete | 2026-03-13 |
 | 5. HTML Foundation and SWOT Analyses | v1.1 | 0/2 | Planning complete | - |
-| 6. Architecture Visualizations | v1.1 | 0/2 | Not started | - |
+| 6. Architecture Visualizations | v1.1 | 0/2 | Planning complete | - |
 | 7. Developer Documentation | v1.1 | 0/3 | Not started | - |
 | 8. Data Catalog and Glossary | v1.1 | 0/2 | Not started | - |

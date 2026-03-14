@@ -4,14 +4,14 @@ milestone: v1.1
 milestone_name: Documentation
 status: completed
 stopped_at: Phase 6 context gathered
-last_updated: "2026-03-14T16:35:51.660Z"
-last_activity: 2026-03-14 -- Completed 05-02 Remaining SWOT Analyses and Cross-SWOT Index
+last_updated: "2026-03-14T20:47:23Z"
+last_activity: 2026-03-14 -- Completed 06-01 Architecture Rendering Pipeline and Core Pages
 progress:
   total_phases: 4
   completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
-  percent: 22
+  total_plans: 3
+  completed_plans: 3
+  percent: 33
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
-**Current focus:** v1.1 Documentation -- Phase 5: HTML Foundation and SWOT Analyses
+**Current focus:** v1.1 Documentation -- Phase 6: Architecture Visualizations
 
 ## Current Position
 
-Phase: 5 of 8 (HTML Foundation and SWOT Analyses) -- first phase of v1.1
-Plan: 2 of 2 in current phase (COMPLETE)
-Status: Phase 5 Complete
-Last activity: 2026-03-14 -- Completed 05-02 Remaining SWOT Analyses and Cross-SWOT Index
+Phase: 6 of 8 (Architecture Visualizations)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-03-14 -- Completed 06-01 Architecture Rendering Pipeline and Core Pages
 
-Progress: [██░░░░░░░░] 22%
+Progress: [███░░░░░░░] 33%
 
 ## v1.0 Milestone Summary
 
@@ -45,16 +45,16 @@ Progress: [██░░░░░░░░] 22%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2 (v1.1) / 16 (v1.0)
-- Average duration: 8.5 min
-- Total execution time: 17 min (v1.1)
+- Total plans completed: 3 (v1.1) / 16 (v1.0)
+- Average duration: 8 min
+- Total execution time: 24 min (v1.1)
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 5. HTML Foundation + SWOTs | 2/2 | 17 min | 8.5 min |
-| 6. Architecture | 0/2 | -- | -- |
+| 6. Architecture | 1/2 | 7 min | 7 min |
 | 7. Developer Docs | 0/3 | -- | -- |
 | 8. Data Catalog | 0/2 | -- | -- |
 
@@ -82,6 +82,9 @@ Key decisions from v1.0 affecting documentation:
 - Snowflake Strategy recommends "Keep as Iceberg Compute-Only" (Option 2 of 3) -- preserves skills/BI, eliminates copies
 - Data Model Strategy recommends "Evolve FSDM Incrementally" (Option 2 of 3) -- formalizes organic Gold layer evolution
 - base_index.html updated with card rendering and status-based grouping (Pending Decision / Completed Analyses)
+- Hybrid approach for detailed architecture: HTML/CSS grid (not monolithic Mermaid SVG) enables native CSS hover tooltips
+- Graceful mmdc fallback: placeholder SVG when Mermaid CLI unavailable (Puppeteer/Chromium dependency)
+- services.yml as override layer: docker-compose.yml authoritative for ports/healthcheck; services.yml adds descriptions, layers, protocols
 
 ### Pending Todos
 
@@ -98,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T16:35:51.658Z
-Stopped at: Phase 6 context gathered
-Resume file: .planning/phases/06-architecture-visualizations/06-CONTEXT.md
+Last session: 2026-03-14T20:47:23Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: .planning/phases/06-architecture-visualizations/06-01-SUMMARY.md
