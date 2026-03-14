@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DataStage Migration SWOT Analysis - Lakehouse Architecture</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+    .doc-header .meta { color: #94a3b8; font-size: 0.9rem; }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: capitalize;
+    }
+    .status-decided { background: #22c55e; color: white; }
+    .status-undecided { background: #f59e0b; color: #1a2332; }
+
+    /* === SWOT GRID === */
+    .swot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .swot-quadrant {
+      padding: 1.25rem;
+      border-radius: 6px;
+      border: 2px solid;
+    }
+    .swot-quadrant h3 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.05rem; }
+    .swot-quadrant ul { margin-left: 1.25rem; }
+    .swot-quadrant li { font-size: 0.92rem; }
+    .swot-strengths { border-color: #22c55e; background: #f0fdf4; }
+    .swot-weaknesses { border-color: #eab308; background: #fefce8; }
+    .swot-opportunities { border-color: #3b82f6; background: #eff6ff; }
+    .swot-threats { border-color: #ef4444; background: #fef2f2; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === EVIDENCE CALLOUT === */
+    .evidence {
+      background: #f1f5f9;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    /* === MITIGATION CALLOUT === */
+    .mitigation {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      .swot-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+      .table-container { overflow-x: auto; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle, .doc-header .meta { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      .swot-grid { break-inside: avoid; }
+      .swot-quadrant { break-inside: avoid; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>DataStage Migration SWOT Analysis</h1>
+    <p class="subtitle">Big-Bang vs Phased Python vs Parallel-Run</p>
+    <p class="meta">
+      <span class="status-badge status-decided">Decided</span>
+ | Decision: <strong>Phased Python Migration</strong>      | 2026-03-14
+ | Prepared for: Leadership Review    </p>
+  </header>
+
+  <details open>
+    <summary>Executive Summary</summary>
+    <div class="details-body">
+      The DataStage-to-Python migration strategy was evaluated across three approaches: big-bang replacement, phased Python migration using the BasePipeline framework, and parallel-run with DataStage maintained alongside Python pipelines. The phased Python migration was selected based on its proven track record -- 5-10 pilot DataStage jobs have been successfully migrated, 480 tests pass in CI, and the BasePipeline framework provides a repeatable pattern for the remaining 300+ jobs.</p><p>The phased approach balances migration speed with risk management. Each job is classified by complexity, migrated individually with full test coverage, and validated against DataStage output before the original job is decommissioned. This eliminates the all-or-nothing risk of a big-bang approach while avoiding the indefinite dual-maintenance cost of parallel-run.
+    </div>
+  </details>
+
+  <details open>
+    <summary>Recommendation</summary>
+    <div class="details-body">
+      The Phased Python Migration is recommended and already in progress. The BasePipeline framework is proven (480 tests passing), pilot migrations are complete (5-10 DataStage jobs), and the complexity classification system enables prioritized migration of the remaining 300+ jobs.</p><p>Next steps: (1) Complete complexity classification of all 300+ DataStage jobs, (2) Prioritize high-value/low-complexity jobs for the next migration wave, (3) Establish parallel validation framework for medium/high-complexity jobs, (4) Target 50% job migration by end of Phase 2.
+    </div>
+  </details>
+
+  <h2>SWOT Overview</h2>
+  <div class="swot-grid">
+  <div class="swot-quadrant swot-strengths">
+    <h3>Strengths</h3>
+    <ul>
+      <li><strong>S1: BasePipeline Framework Is Proven</strong> &mdash; The BasePipeline framework in etl/src/pipelines/ provides a standardized contract
+for all ETL pipelines: extract, transform, validate_schema, quality_check, write.
+This framework has been validated with 480 passing tests and 5-10 pilot DataStage
+job migrations.</li>
+      <li><strong>S2: Python Is Testable and CI-Friendly</strong> &mdash; Unlike DataStage's proprietary runtime, Python pipelines are fully testable in CI
+with standard tooling. The existing CI pipeline runs ruff linting, pytest with unit
+and integration tests, and terraform validation on every commit.</li>
+      <li><strong>S3: Airflow Orchestration Operational</strong> &mdash; Apache Airflow is operational for DAG dependency management, scheduling, and monitoring.
+The watermark-based incremental loading pattern enables efficient processing without
+full table scans.</li>
+      <li><strong>S4: Phased Approach Reduces Risk</strong> &mdash; Each DataStage job is migrated individually with its own test suite, output validation
+against DataStage, and rollback capability. This eliminates the all-or-nothing risk
+of a big-bang migration.</li>
+      <li><strong>S5: Iceberg-Native ETL Enables Medallion Quality</strong> &mdash; Python pipelines write directly to Iceberg tables through the Nessie REST catalog,
+enabling native Bronze/Silver/Gold quality progression with schema validation and
+quality checks at each layer transition.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-weaknesses">
+    <h3>Weaknesses</h3>
+    <ul>
+      <li><strong>W1: Full Migration of 300+ Jobs Will Take Months</strong> &mdash; The remaining DataStage job inventory is substantial. Even with the proven BasePipeline
+framework, migrating 300+ jobs with full validation requires significant engineering
+effort spread across multiple quarters.</li>
+      <li><strong>W2: Python Performance vs DataStage for Complex Transformations</strong> &mdash; Some complex DataStage transformations (multi-way joins, complex aggregations, COBOL
+data type handling) may require PySpark rather than plain Python for equivalent
+performance, adding complexity to the migration.</li>
+      <li><strong>W3: Team Retraining from DataStage to Python/PySpark</strong> &mdash; Engineers experienced with DataStage's visual designer and proprietary transformation
+stages need retraining on Python, PySpark, and the BasePipeline framework. This
+creates a temporary productivity dip during transition.</li>
+      <li><strong>W4: Loss of DataStage Metadata and Lineage</strong> &mdash; DataStage maintains its own metadata repository with job dependencies, data lineage,
+and impact analysis. This metadata must be replicated in the new stack (Marquez for
+lineage, OpenMetadata for catalog) during migration.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-opportunities">
+    <h3>Opportunities</h3>
+    <ul>
+      <li><strong>O1: Iceberg-Native ETL Enables Medallion Data Quality</strong> &mdash; Writing directly to Iceberg tables enables native schema evolution, partition management,
+and time travel capabilities that DataStage's traditional target formats cannot provide.
+Quality checks are embedded in the pipeline contract.</li>
+      <li><strong>O2: COBOL Copybook Parsing Validated</strong> &mdash; The mainframe source connectivity pattern has been validated, including COBOL copybook
+parsing for mainframe data integration. This removes a key technical risk for the
+migration of mainframe-sourced DataStage jobs.</li>
+      <li><strong>O3: Open-Source Stack Eliminates License Costs</strong> &mdash; Moving from IBM DataStage (proprietary licensing) to Python/PySpark/Airflow (open-source)
+eliminates annual license costs. The savings compound as more jobs are migrated.</li>
+      <li><strong>O4: Unified Observability and Lineage</strong> &mdash; Python pipelines integrate with Marquez for lineage tracking and OpenMetadata for
+catalog enrichment, providing unified observability across all data assets rather than
+DataStage's siloed metadata repository.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-threats">
+    <h3>Threats</h3>
+    <ul>
+      <li><strong>T1: DataStage-Specific Transformations Without Direct Equivalent</strong> &mdash; Some DataStage transformation stages (Complex Flat File, Hierarchical Data, COBOL-specific
+stages) have specialized logic that requires careful reimplementation in Python. Direct
+translation is not always possible.</li>
+      <li><strong>T2: Mainframe Connectivity Edge Cases</strong> &mdash; While core mainframe connectivity is validated, edge cases in COBOL data types (packed
+decimal variations, multi-occurrence groups, REDEFINES clauses) may surface during
+migration of specific DataStage jobs.</li>
+      <li><strong>T3: Production Stability During Migration Window</strong> &mdash; Running both DataStage and Python pipelines during the migration period increases
+operational complexity and the risk of data inconsistency if both systems write to
+overlapping targets.</li>
+      <li><strong>T4: Knowledge Concentration Risk</strong> &mdash; During early migration, BasePipeline expertise is concentrated in a small group of
+engineers. If key engineers leave, migration velocity drops.</li>
+    </ul>
+  </div>
+</div>
+
+
+  <details>
+    <summary>Strengths (5 items)</summary>
+    <div class="details-body">
+      <h3>S1: BasePipeline Framework Is Proven</h3>
+      <p>The BasePipeline framework in etl/src/pipelines/ provides a standardized contract
+for all ETL pipelines: extract, transform, validate_schema, quality_check, write.
+This framework has been validated with 480 passing tests and 5-10 pilot DataStage
+job migrations.</p>
+      <div class="evidence"><strong>Evidence:</strong> 480 tests passing; pilot migration of 5-10 DataStage jobs complete using BasePipeline; extract-transform-validate-quality-write contract enforced</div>
+      <h3>S2: Python Is Testable and CI-Friendly</h3>
+      <p>Unlike DataStage's proprietary runtime, Python pipelines are fully testable in CI
+with standard tooling. The existing CI pipeline runs ruff linting, pytest with unit
+and integration tests, and terraform validation on every commit.</p>
+      <div class="evidence"><strong>Evidence:</strong> GitHub Actions CI with ruff linting, pytest (480 tests), terraform validate; full test coverage impossible with DataStage proprietary runtime</div>
+      <h3>S3: Airflow Orchestration Operational</h3>
+      <p>Apache Airflow is operational for DAG dependency management, scheduling, and monitoring.
+The watermark-based incremental loading pattern enables efficient processing without
+full table scans.</p>
+      <div class="evidence"><strong>Evidence:</strong> Airflow DAG dependency management operational; watermark-based incremental loading validated; monitoring and alerting configured</div>
+      <h3>S4: Phased Approach Reduces Risk</h3>
+      <p>Each DataStage job is migrated individually with its own test suite, output validation
+against DataStage, and rollback capability. This eliminates the all-or-nothing risk
+of a big-bang migration.</p>
+      <div class="evidence"><strong>Evidence:</strong> 5-10 pilot jobs validated before committing to full migration; per-job rollback capability; no production impact from migration failures</div>
+      <h3>S5: Iceberg-Native ETL Enables Medallion Quality</h3>
+      <p>Python pipelines write directly to Iceberg tables through the Nessie REST catalog,
+enabling native Bronze/Silver/Gold quality progression with schema validation and
+quality checks at each layer transition.</p>
+      <div class="evidence"><strong>Evidence:</strong> Bronze/Silver/Gold with schema validation, quality checks per layer; Iceberg table writes via Nessie REST catalog</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Weaknesses (4 items)</summary>
+    <div class="details-body">
+      <h3>W1: Full Migration of 300+ Jobs Will Take Months</h3>
+      <p>The remaining DataStage job inventory is substantial. Even with the proven BasePipeline
+framework, migrating 300+ jobs with full validation requires significant engineering
+effort spread across multiple quarters.</p>
+      <div class="evidence"><strong>Evidence:</strong> 300+ DataStage jobs in inventory; pilot migration of 5-10 jobs took initial phase; full migration estimated at multiple quarters</div>
+      <h3>W2: Python Performance vs DataStage for Complex Transformations</h3>
+      <p>Some complex DataStage transformations (multi-way joins, complex aggregations, COBOL
+data type handling) may require PySpark rather than plain Python for equivalent
+performance, adding complexity to the migration.</p>
+      <div class="evidence"><strong>Evidence:</strong> DataStage parallel engine optimized for high-volume transformations; Python/PySpark equivalent for complex jobs requires tuning and benchmarking</div>
+      <h3>W3: Team Retraining from DataStage to Python/PySpark</h3>
+      <p>Engineers experienced with DataStage's visual designer and proprietary transformation
+stages need retraining on Python, PySpark, and the BasePipeline framework. This
+creates a temporary productivity dip during transition.</p>
+      <div class="evidence"><strong>Evidence:</strong> DataStage engineers require Python/PySpark training; visual-designer-to-code transition is a significant workflow change</div>
+      <h3>W4: Loss of DataStage Metadata and Lineage</h3>
+      <p>DataStage maintains its own metadata repository with job dependencies, data lineage,
+and impact analysis. This metadata must be replicated in the new stack (Marquez for
+lineage, OpenMetadata for catalog) during migration.</p>
+      <div class="evidence"><strong>Evidence:</strong> DataStage metadata repository contains job dependencies and lineage; migration to Marquez/OpenMetadata required</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Opportunities (4 items)</summary>
+    <div class="details-body">
+      <h3>O1: Iceberg-Native ETL Enables Medallion Data Quality</h3>
+      <p>Writing directly to Iceberg tables enables native schema evolution, partition management,
+and time travel capabilities that DataStage's traditional target formats cannot provide.
+Quality checks are embedded in the pipeline contract.</p>
+      <div class="evidence"><strong>Evidence:</strong> Bronze/Silver/Gold with schema validation, quality checks per layer; Iceberg provides schema evolution and time travel natively</div>
+      <h3>O2: COBOL Copybook Parsing Validated</h3>
+      <p>The mainframe source connectivity pattern has been validated, including COBOL copybook
+parsing for mainframe data integration. This removes a key technical risk for the
+migration of mainframe-sourced DataStage jobs.</p>
+      <div class="evidence"><strong>Evidence:</strong> ETL-03: Mainframe source connectivity validated; COBOL copybook parsing operational for mainframe data integration</div>
+      <h3>O3: Open-Source Stack Eliminates License Costs</h3>
+      <p>Moving from IBM DataStage (proprietary licensing) to Python/PySpark/Airflow (open-source)
+eliminates annual license costs. The savings compound as more jobs are migrated.</p>
+      <div class="evidence"><strong>Evidence:</strong> IBM DataStage licensing is per-core/per-user; Python, PySpark, Airflow are Apache 2.0 licensed with $0 license cost</div>
+      <h3>O4: Unified Observability and Lineage</h3>
+      <p>Python pipelines integrate with Marquez for lineage tracking and OpenMetadata for
+catalog enrichment, providing unified observability across all data assets rather than
+DataStage's siloed metadata repository.</p>
+      <div class="evidence"><strong>Evidence:</strong> Marquez lineage integration for Python pipelines; OpenMetadata catalog enrichment; unified observability vs DataStage-siloed metadata</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Threats (4 items)</summary>
+    <div class="details-body">
+      <h3>T1: DataStage-Specific Transformations Without Direct Equivalent</h3>
+      <p>Some DataStage transformation stages (Complex Flat File, Hierarchical Data, COBOL-specific
+stages) have specialized logic that requires careful reimplementation in Python. Direct
+translation is not always possible.</p>
+      <div class="evidence"><strong>Evidence:</strong> DataStage has 60+ proprietary transformation stages; some (Hierarchical Data, Complex Flat File) have no direct Python equivalent</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Complexity classification in job inventory identifies high-risk jobs for early attention.
+High-complexity jobs are migrated last with extended validation periods. PySpark provides
+equivalent capabilities for most transformation patterns; specialized stages are
+reimplemented as Python functions with comprehensive test suites.
+</div>
+      <h3>T2: Mainframe Connectivity Edge Cases</h3>
+      <p>While core mainframe connectivity is validated, edge cases in COBOL data types (packed
+decimal variations, multi-occurrence groups, REDEFINES clauses) may surface during
+migration of specific DataStage jobs.</p>
+      <div class="evidence"><strong>Evidence:</strong> Core mainframe patterns validated in Phase 2; edge cases in COBOL packed decimal, multi-occurrence groups, REDEFINES remain untested</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Phase 2 validated core mainframe patterns; edge cases handled incrementally as they
+surface during job migration. COBOL copybook parser is extensible for new data types.
+Parallel validation against DataStage output catches any data type mismatches.
+</div>
+      <h3>T3: Production Stability During Migration Window</h3>
+      <p>Running both DataStage and Python pipelines during the migration period increases
+operational complexity and the risk of data inconsistency if both systems write to
+overlapping targets.</p>
+      <div class="evidence"><strong>Evidence:</strong> Dual-running DataStage and Python pipelines during migration creates operational overhead and data consistency risk</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Each job migration follows a strict protocol: Python pipeline runs in shadow mode
+(read-only validation) before DataStage decommission. Output comparison validates
+row counts, checksums, and business rule compliance. Decommission only after 2-week
+validation period with zero discrepancies.
+</div>
+      <h3>T4: Knowledge Concentration Risk</h3>
+      <p>During early migration, BasePipeline expertise is concentrated in a small group of
+engineers. If key engineers leave, migration velocity drops.</p>
+      <div class="evidence"><strong>Evidence:</strong> Initial BasePipeline framework built by core team; knowledge concentration risk until broader team adoption</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Comprehensive documentation in etl-patterns.md (565 lines) serves as onboarding
+reference for 40+ engineers. Pair programming and code review requirements ensure
+knowledge transfer. Each migration wave includes new engineers to broaden expertise.
+</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Decision Matrix</summary>
+    <div class="details-body">
+      <div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Criteria</th>
+        <th>Big-Bang</th>
+        <th>Phased Python</th>
+        <th>Parallel-Run</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Risk</strong></td>
+        <td>High (all-or-nothing)</td>
+        <td>Low (per-job isolation)</td>
+        <td>Lowest (no cutover)</td>
+      </tr>
+      <tr>
+        <td><strong>Timeline</strong></td>
+        <td>Shortest (if it works)</td>
+        <td>Medium (quarterly waves)</td>
+        <td>Longest (indefinite)</td>
+      </tr>
+      <tr>
+        <td><strong>Cost</strong></td>
+        <td>Lowest (single effort)</td>
+        <td>Medium (sustained effort)</td>
+        <td>Highest (dual maintenance)</td>
+      </tr>
+      <tr>
+        <td><strong>Team disruption</strong></td>
+        <td>Highest (everything changes)</td>
+        <td>Low (gradual transition)</td>
+        <td>Low (no forced change)</td>
+      </tr>
+      <tr>
+        <td><strong>Rollback capability</strong></td>
+        <td>None (no rollback)</td>
+        <td>Full (per-job rollback)</td>
+        <td>Full (DataStage remains)</td>
+      </tr>
+      <tr>
+        <td><strong>Quality assurance</strong></td>
+        <td>Low (limited validation)</td>
+        <td>High (per-job validation)</td>
+        <td>Highest (continuous compare)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+    </div>
+  </details>
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14 | Next review: 2026-Q2</p>
+    <p>Phase: Phase 2 - ETL Migration and Data Pipeline</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
+  </footer>
+</body>
+</html>

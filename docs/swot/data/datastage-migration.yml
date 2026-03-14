@@ -1,0 +1,221 @@
+title: "DataStage Migration SWOT Analysis"
+subtitle: "Big-Bang vs Phased Python vs Parallel-Run"
+status: decided
+decision: "Phased Python Migration"
+prepared_for: "Leadership Review"
+date: "2026-03-14"
+phase: "Phase 2 - ETL Migration and Data Pipeline"
+next_review: "2026-Q2"
+
+executive_summary: |
+  The DataStage-to-Python migration strategy was evaluated across three approaches:
+  big-bang replacement, phased Python migration using the BasePipeline framework, and
+  parallel-run with DataStage maintained alongside Python pipelines. The phased Python
+  migration was selected based on its proven track record -- 5-10 pilot DataStage jobs
+  have been successfully migrated, 480 tests pass in CI, and the BasePipeline framework
+  provides a repeatable pattern for the remaining 300+ jobs.
+
+  The phased approach balances migration speed with risk management. Each job is classified
+  by complexity, migrated individually with full test coverage, and validated against
+  DataStage output before the original job is decommissioned. This eliminates the
+  all-or-nothing risk of a big-bang approach while avoiding the indefinite dual-maintenance
+  cost of parallel-run.
+
+recommendation: |
+  The Phased Python Migration is recommended and already in progress. The BasePipeline
+  framework is proven (480 tests passing), pilot migrations are complete (5-10 DataStage
+  jobs), and the complexity classification system enables prioritized migration of the
+  remaining 300+ jobs.
+
+  Next steps: (1) Complete complexity classification of all 300+ DataStage jobs,
+  (2) Prioritize high-value/low-complexity jobs for the next migration wave,
+  (3) Establish parallel validation framework for medium/high-complexity jobs,
+  (4) Target 50% job migration by end of Phase 2.
+
+strengths:
+  - id: S1
+    title: "BasePipeline Framework Is Proven"
+    description: |
+      The BasePipeline framework in etl/src/pipelines/ provides a standardized contract
+      for all ETL pipelines: extract, transform, validate_schema, quality_check, write.
+      This framework has been validated with 480 passing tests and 5-10 pilot DataStage
+      job migrations.
+    evidence: "480 tests passing; pilot migration of 5-10 DataStage jobs complete using BasePipeline; extract-transform-validate-quality-write contract enforced"
+
+  - id: S2
+    title: "Python Is Testable and CI-Friendly"
+    description: |
+      Unlike DataStage's proprietary runtime, Python pipelines are fully testable in CI
+      with standard tooling. The existing CI pipeline runs ruff linting, pytest with unit
+      and integration tests, and terraform validation on every commit.
+    evidence: "GitHub Actions CI with ruff linting, pytest (480 tests), terraform validate; full test coverage impossible with DataStage proprietary runtime"
+
+  - id: S3
+    title: "Airflow Orchestration Operational"
+    description: |
+      Apache Airflow is operational for DAG dependency management, scheduling, and monitoring.
+      The watermark-based incremental loading pattern enables efficient processing without
+      full table scans.
+    evidence: "Airflow DAG dependency management operational; watermark-based incremental loading validated; monitoring and alerting configured"
+
+  - id: S4
+    title: "Phased Approach Reduces Risk"
+    description: |
+      Each DataStage job is migrated individually with its own test suite, output validation
+      against DataStage, and rollback capability. This eliminates the all-or-nothing risk
+      of a big-bang migration.
+    evidence: "5-10 pilot jobs validated before committing to full migration; per-job rollback capability; no production impact from migration failures"
+
+  - id: S5
+    title: "Iceberg-Native ETL Enables Medallion Quality"
+    description: |
+      Python pipelines write directly to Iceberg tables through the Nessie REST catalog,
+      enabling native Bronze/Silver/Gold quality progression with schema validation and
+      quality checks at each layer transition.
+    evidence: "Bronze/Silver/Gold with schema validation, quality checks per layer; Iceberg table writes via Nessie REST catalog"
+
+weaknesses:
+  - id: W1
+    title: "Full Migration of 300+ Jobs Will Take Months"
+    description: |
+      The remaining DataStage job inventory is substantial. Even with the proven BasePipeline
+      framework, migrating 300+ jobs with full validation requires significant engineering
+      effort spread across multiple quarters.
+    evidence: "300+ DataStage jobs in inventory; pilot migration of 5-10 jobs took initial phase; full migration estimated at multiple quarters"
+
+  - id: W2
+    title: "Python Performance vs DataStage for Complex Transformations"
+    description: |
+      Some complex DataStage transformations (multi-way joins, complex aggregations, COBOL
+      data type handling) may require PySpark rather than plain Python for equivalent
+      performance, adding complexity to the migration.
+    evidence: "DataStage parallel engine optimized for high-volume transformations; Python/PySpark equivalent for complex jobs requires tuning and benchmarking"
+
+  - id: W3
+    title: "Team Retraining from DataStage to Python/PySpark"
+    description: |
+      Engineers experienced with DataStage's visual designer and proprietary transformation
+      stages need retraining on Python, PySpark, and the BasePipeline framework. This
+      creates a temporary productivity dip during transition.
+    evidence: "DataStage engineers require Python/PySpark training; visual-designer-to-code transition is a significant workflow change"
+
+  - id: W4
+    title: "Loss of DataStage Metadata and Lineage"
+    description: |
+      DataStage maintains its own metadata repository with job dependencies, data lineage,
+      and impact analysis. This metadata must be replicated in the new stack (Marquez for
+      lineage, OpenMetadata for catalog) during migration.
+    evidence: "DataStage metadata repository contains job dependencies and lineage; migration to Marquez/OpenMetadata required"
+
+opportunities:
+  - id: O1
+    title: "Iceberg-Native ETL Enables Medallion Data Quality"
+    description: |
+      Writing directly to Iceberg tables enables native schema evolution, partition management,
+      and time travel capabilities that DataStage's traditional target formats cannot provide.
+      Quality checks are embedded in the pipeline contract.
+    evidence: "Bronze/Silver/Gold with schema validation, quality checks per layer; Iceberg provides schema evolution and time travel natively"
+
+  - id: O2
+    title: "COBOL Copybook Parsing Validated"
+    description: |
+      The mainframe source connectivity pattern has been validated, including COBOL copybook
+      parsing for mainframe data integration. This removes a key technical risk for the
+      migration of mainframe-sourced DataStage jobs.
+    evidence: "ETL-03: Mainframe source connectivity validated; COBOL copybook parsing operational for mainframe data integration"
+
+  - id: O3
+    title: "Open-Source Stack Eliminates License Costs"
+    description: |
+      Moving from IBM DataStage (proprietary licensing) to Python/PySpark/Airflow (open-source)
+      eliminates annual license costs. The savings compound as more jobs are migrated.
+    evidence: "IBM DataStage licensing is per-core/per-user; Python, PySpark, Airflow are Apache 2.0 licensed with $0 license cost"
+
+  - id: O4
+    title: "Unified Observability and Lineage"
+    description: |
+      Python pipelines integrate with Marquez for lineage tracking and OpenMetadata for
+      catalog enrichment, providing unified observability across all data assets rather than
+      DataStage's siloed metadata repository.
+    evidence: "Marquez lineage integration for Python pipelines; OpenMetadata catalog enrichment; unified observability vs DataStage-siloed metadata"
+
+threats:
+  - id: T1
+    title: "DataStage-Specific Transformations Without Direct Equivalent"
+    description: |
+      Some DataStage transformation stages (Complex Flat File, Hierarchical Data, COBOL-specific
+      stages) have specialized logic that requires careful reimplementation in Python. Direct
+      translation is not always possible.
+    evidence: "DataStage has 60+ proprietary transformation stages; some (Hierarchical Data, Complex Flat File) have no direct Python equivalent"
+    mitigation: |
+      Complexity classification in job inventory identifies high-risk jobs for early attention.
+      High-complexity jobs are migrated last with extended validation periods. PySpark provides
+      equivalent capabilities for most transformation patterns; specialized stages are
+      reimplemented as Python functions with comprehensive test suites.
+
+  - id: T2
+    title: "Mainframe Connectivity Edge Cases"
+    description: |
+      While core mainframe connectivity is validated, edge cases in COBOL data types (packed
+      decimal variations, multi-occurrence groups, REDEFINES clauses) may surface during
+      migration of specific DataStage jobs.
+    evidence: "Core mainframe patterns validated in Phase 2; edge cases in COBOL packed decimal, multi-occurrence groups, REDEFINES remain untested"
+    mitigation: |
+      Phase 2 validated core mainframe patterns; edge cases handled incrementally as they
+      surface during job migration. COBOL copybook parser is extensible for new data types.
+      Parallel validation against DataStage output catches any data type mismatches.
+
+  - id: T3
+    title: "Production Stability During Migration Window"
+    description: |
+      Running both DataStage and Python pipelines during the migration period increases
+      operational complexity and the risk of data inconsistency if both systems write to
+      overlapping targets.
+    evidence: "Dual-running DataStage and Python pipelines during migration creates operational overhead and data consistency risk"
+    mitigation: |
+      Each job migration follows a strict protocol: Python pipeline runs in shadow mode
+      (read-only validation) before DataStage decommission. Output comparison validates
+      row counts, checksums, and business rule compliance. Decommission only after 2-week
+      validation period with zero discrepancies.
+
+  - id: T4
+    title: "Knowledge Concentration Risk"
+    description: |
+      During early migration, BasePipeline expertise is concentrated in a small group of
+      engineers. If key engineers leave, migration velocity drops.
+    evidence: "Initial BasePipeline framework built by core team; knowledge concentration risk until broader team adoption"
+    mitigation: |
+      Comprehensive documentation in etl-patterns.md (565 lines) serves as onboarding
+      reference for 40+ engineers. Pair programming and code review requirements ensure
+      knowledge transfer. Each migration wave includes new engineers to broaden expertise.
+
+decision_matrix:
+  criteria:
+    - "Risk"
+    - "Timeline"
+    - "Cost"
+    - "Team disruption"
+    - "Rollback capability"
+    - "Quality assurance"
+  options:
+    "Big-Bang":
+      - "High (all-or-nothing)"
+      - "Shortest (if it works)"
+      - "Lowest (single effort)"
+      - "Highest (everything changes)"
+      - "None (no rollback)"
+      - "Low (limited validation)"
+    "Phased Python":
+      - "Low (per-job isolation)"
+      - "Medium (quarterly waves)"
+      - "Medium (sustained effort)"
+      - "Low (gradual transition)"
+      - "Full (per-job rollback)"
+      - "High (per-job validation)"
+    "Parallel-Run":
+      - "Lowest (no cutover)"
+      - "Longest (indefinite)"
+      - "Highest (dual maintenance)"
+      - "Low (no forced change)"
+      - "Full (DataStage remains)"
+      - "Highest (continuous compare)"

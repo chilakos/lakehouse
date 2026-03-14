@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BI Semantic Layer SWOT Analysis - Lakehouse Architecture</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+    .doc-header .meta { color: #94a3b8; font-size: 0.9rem; }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: capitalize;
+    }
+    .status-decided { background: #22c55e; color: white; }
+    .status-undecided { background: #f59e0b; color: #1a2332; }
+
+    /* === SWOT GRID === */
+    .swot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .swot-quadrant {
+      padding: 1.25rem;
+      border-radius: 6px;
+      border: 2px solid;
+    }
+    .swot-quadrant h3 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.05rem; }
+    .swot-quadrant ul { margin-left: 1.25rem; }
+    .swot-quadrant li { font-size: 0.92rem; }
+    .swot-strengths { border-color: #22c55e; background: #f0fdf4; }
+    .swot-weaknesses { border-color: #eab308; background: #fefce8; }
+    .swot-opportunities { border-color: #3b82f6; background: #eff6ff; }
+    .swot-threats { border-color: #ef4444; background: #fef2f2; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === EVIDENCE CALLOUT === */
+    .evidence {
+      background: #f1f5f9;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    /* === MITIGATION CALLOUT === */
+    .mitigation {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      .swot-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+      .table-container { overflow-x: auto; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle, .doc-header .meta { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      .swot-grid { break-inside: avoid; }
+      .swot-quadrant { break-inside: avoid; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>BI Semantic Layer SWOT Analysis</h1>
+    <p class="subtitle">Direct Access vs dbt Metrics vs AtScale vs Cube</p>
+    <p class="meta">
+      <span class="status-badge status-decided">Decided</span>
+ | Decision: <strong>Cube v0.36.0</strong>      | 2026-03-14
+ | Prepared for: Leadership Review    </p>
+  </header>
+
+  <details open>
+    <summary>Executive Summary</summary>
+    <div class="details-body">
+      The BI semantic layer evaluation compared four approaches for providing a unified metric definition layer between the lakehouse and BI consumers (Tableau, Power BI). Cube v0.36.0 was selected for its combination of unified metric governance, PostgreSQL wire protocol compatibility (enabling any SQL-speaking BI tool to connect), and pre-aggregation caching for query performance.</p><p>The trading_metrics and risk_exposure cubes are operational, defining measures with exact calculation logic that serves as the single source of truth across all BI consumers. The PostgreSQL wire protocol on port 15432 enables Tableau and Power BI to connect via standard PostgreSQL drivers, eliminating the need for specialized connectors.
+    </div>
+  </details>
+
+  <details open>
+    <summary>Recommendation</summary>
+    <div class="details-body">
+      Cube v0.36.0 is recommended and already operational. The trading_metrics and risk_exposure cubes demonstrate the pattern: YAML-defined measures with exact calculation logic, accessible via PostgreSQL wire protocol on port 15432. BI tools connect using standard PostgreSQL drivers -- no proprietary connectors required.</p><p>Key advantages over alternatives: dbt Metrics lacks a query serving layer (requires a separate tool for BI access), AtScale adds significant infrastructure complexity and license cost, and Direct Access provides no metric governance (each BI tool defines its own calculations, leading to definition drift).
+    </div>
+  </details>
+
+  <h2>SWOT Overview</h2>
+  <div class="swot-grid">
+  <div class="swot-quadrant swot-strengths">
+    <h3>Strengths</h3>
+    <ul>
+      <li><strong>S1: Unified Metric Definitions in YAML</strong> &mdash; Cube provides a declarative YAML-based metric definition layer. The trading_metrics
+and risk_exposure cubes define measures (total_notional, trade_count, avg_price,
+total_market_value, total_var_95, etc.) with exact calculation logic, eliminating
+metric definition drift across BI tools.</li>
+      <li><strong>S2: PostgreSQL Wire Protocol for Universal BI Compatibility</strong> &mdash; Cube exposes a SQL API via PostgreSQL wire protocol on port 15432. Any BI tool that
+can connect to PostgreSQL (which is virtually all of them) can query Cube without
+specialized connectors or plugins.</li>
+      <li><strong>S3: Pre-Aggregation Layer for Performance</strong> &mdash; Cube's pre-aggregation feature caches frequently accessed query patterns, reducing
+load on the underlying Trino query engine and providing sub-second response times
+for dashboard queries.</li>
+      <li><strong>S4: Open-Source with Commercial Support Available</strong> &mdash; Cube is open-source (MIT license) with an optional cloud-hosted version for teams
+wanting managed infrastructure. Self-hosted deployment is fully supported and already
+operational in the lakehouse stack.</li>
+      <li><strong>S5: Business Glossary Term Linkage</strong> &mdash; Cube YAML definitions include metadata fields that map to business glossary terms,
+enabling business-friendly metric discovery. The glossary_term metadata on each measure
+bridges technical column names to business vocabulary.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-weaknesses">
+    <h3>Weaknesses</h3>
+    <ul>
+      <li><strong>W1: Additional Infrastructure Component to Maintain</strong> &mdash; Cube adds another service to the infrastructure stack that requires monitoring,
+upgrades, and operational attention. It runs as a separate container (cube-api)
+with its own configuration and data store.</li>
+      <li><strong>W2: Cube-Specific YAML Learning Curve</strong> &mdash; Teams need to learn Cube's YAML schema for defining cubes, measures, dimensions,
+and pre-aggregations. This is a new DSL that adds to the team's tooling vocabulary.</li>
+      <li><strong>W3: Pre-Aggregation Configuration Requires Tuning</strong> &mdash; Effective pre-aggregation requires understanding query patterns to define the right
+rollup combinations. Misconfigured pre-aggregations waste storage and compute without
+improving query performance.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-opportunities">
+    <h3>Opportunities</h3>
+    <ul>
+      <li><strong>O1: Glossary Term Linkage Enables Business-Friendly Discovery</strong> &mdash; Cube YAML definitions map to business glossary terms via the meta.glossary_term field.
+This enables business users to discover metrics using familiar vocabulary rather than
+technical column names, bridging the gap between data engineering and business analysis.</li>
+      <li><strong>O2: Caching Reduces Trino Query Load</strong> &mdash; Cube's pre-aggregation and result caching intercepts repeated dashboard queries before
+they reach Trino, reducing compute load on the lakehouse query engine and improving
+overall cluster utilization.</li>
+      <li><strong>O3: Centralized Metric Governance Prevents BI Tool Drift</strong> &mdash; With Cube as the single metric definition layer, all BI tools compute the same metrics
+the same way. This eliminates the common problem of Tableau and Power BI showing
+different numbers for the same metric due to divergent calculation logic.</li>
+      <li><strong>O4: Extensible to New Consumers Without Infrastructure Changes</strong> &mdash; Any new BI tool, reporting system, or ad-hoc query tool can connect to Cube via the
+PostgreSQL protocol. Adding a new consumer requires no infrastructure changes, just
+a standard database connection configuration.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-threats">
+    <h3>Threats</h3>
+    <ul>
+      <li><strong>T1: Cube Project Roadmap Changes</strong> &mdash; Cube is a venture-backed company (Cube Dev) that may change its open-source strategy,
+pricing model, or feature availability. Major open-source projects have historically
+changed license terms.</li>
+      <li><strong>T2: Scaling Limitations for Concurrent BI Users</strong> &mdash; Under high concurrency (50+ simultaneous BI users), Cube's single-process architecture
+may require scaling configuration. Default deployment may not handle peak dashboard
+refresh loads.</li>
+      <li><strong>T3: Trino Query Compatibility Edge Cases</strong> &mdash; Cube translates SQL queries to the underlying data source (Trino). Complex SQL
+patterns from BI tools may not always translate correctly, requiring custom SQL
+or measure definitions.</li>
+      <li><strong>T4: Vendor Ecosystem Fragmentation</strong> &mdash; The semantic layer market is fragmented with multiple competing approaches (dbt Metrics,
+AtScale, Cube, Looker Modeling, Tableau Prep). Choosing Cube means investing in one
+ecosystem while alternatives continue evolving.</li>
+    </ul>
+  </div>
+</div>
+
+
+  <details>
+    <summary>Strengths (5 items)</summary>
+    <div class="details-body">
+      <h3>S1: Unified Metric Definitions in YAML</h3>
+      <p>Cube provides a declarative YAML-based metric definition layer. The trading_metrics
+and risk_exposure cubes define measures (total_notional, trade_count, avg_price,
+total_market_value, total_var_95, etc.) with exact calculation logic, eliminating
+metric definition drift across BI tools.</p>
+      <div class="evidence"><strong>Evidence:</strong> trading_metrics and risk_exposure cubes define measures with exact calculation logic in YAML; single source of truth for all BI consumers</div>
+      <h3>S2: PostgreSQL Wire Protocol for Universal BI Compatibility</h3>
+      <p>Cube exposes a SQL API via PostgreSQL wire protocol on port 15432. Any BI tool that
+can connect to PostgreSQL (which is virtually all of them) can query Cube without
+specialized connectors or plugins.</p>
+      <div class="evidence"><strong>Evidence:</strong> SQL API on port 15432 -- Tableau and Power BI connected via standard PostgreSQL driver; no proprietary connector required</div>
+      <h3>S3: Pre-Aggregation Layer for Performance</h3>
+      <p>Cube's pre-aggregation feature caches frequently accessed query patterns, reducing
+load on the underlying Trino query engine and providing sub-second response times
+for dashboard queries.</p>
+      <div class="evidence"><strong>Evidence:</strong> Cube pre-aggregation layer caches frequent queries; reduces Trino query load for repeated dashboard patterns</div>
+      <h3>S4: Open-Source with Commercial Support Available</h3>
+      <p>Cube is open-source (MIT license) with an optional cloud-hosted version for teams
+wanting managed infrastructure. Self-hosted deployment is fully supported and already
+operational in the lakehouse stack.</p>
+      <div class="evidence"><strong>Evidence:</strong> Cube is MIT licensed; self-hosted in docker-compose.yml as cube-api service; Cube Cloud available as managed option</div>
+      <h3>S5: Business Glossary Term Linkage</h3>
+      <p>Cube YAML definitions include metadata fields that map to business glossary terms,
+enabling business-friendly metric discovery. The glossary_term metadata on each measure
+bridges technical column names to business vocabulary.</p>
+      <div class="evidence"><strong>Evidence:</strong> Cube YAML definitions include meta.glossary_term mapping (e.g., notional_value, trade_count, market_value) for business glossary integration</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Weaknesses (3 items)</summary>
+    <div class="details-body">
+      <h3>W1: Additional Infrastructure Component to Maintain</h3>
+      <p>Cube adds another service to the infrastructure stack that requires monitoring,
+upgrades, and operational attention. It runs as a separate container (cube-api)
+with its own configuration and data store.</p>
+      <div class="evidence"><strong>Evidence:</strong> cube-api service in docker-compose.yml; requires separate monitoring, upgrade cycle, and operational procedures</div>
+      <h3>W2: Cube-Specific YAML Learning Curve</h3>
+      <p>Teams need to learn Cube's YAML schema for defining cubes, measures, dimensions,
+and pre-aggregations. This is a new DSL that adds to the team's tooling vocabulary.</p>
+      <div class="evidence"><strong>Evidence:</strong> Cube YAML schema for cubes, measures, dimensions, pre-aggregations is a new DSL for the team; documentation and training needed</div>
+      <h3>W3: Pre-Aggregation Configuration Requires Tuning</h3>
+      <p>Effective pre-aggregation requires understanding query patterns to define the right
+rollup combinations. Misconfigured pre-aggregations waste storage and compute without
+improving query performance.</p>
+      <div class="evidence"><strong>Evidence:</strong> Pre-aggregation effectiveness depends on query pattern analysis; misconfiguration leads to unnecessary compute and storage consumption</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Opportunities (4 items)</summary>
+    <div class="details-body">
+      <h3>O1: Glossary Term Linkage Enables Business-Friendly Discovery</h3>
+      <p>Cube YAML definitions map to business glossary terms via the meta.glossary_term field.
+This enables business users to discover metrics using familiar vocabulary rather than
+technical column names, bridging the gap between data engineering and business analysis.</p>
+      <div class="evidence"><strong>Evidence:</strong> Cube YAML definitions map to business glossary terms (notional_value, trade_count, market_value); OpenMetadata glossary integration enables discovery</div>
+      <h3>O2: Caching Reduces Trino Query Load</h3>
+      <p>Cube's pre-aggregation and result caching intercepts repeated dashboard queries before
+they reach Trino, reducing compute load on the lakehouse query engine and improving
+overall cluster utilization.</p>
+      <div class="evidence"><strong>Evidence:</strong> Pre-aggregation caches frequent query patterns; dashboard refresh queries served from Cube cache instead of hitting Trino</div>
+      <h3>O3: Centralized Metric Governance Prevents BI Tool Drift</h3>
+      <p>With Cube as the single metric definition layer, all BI tools compute the same metrics
+the same way. This eliminates the common problem of Tableau and Power BI showing
+different numbers for the same metric due to divergent calculation logic.</p>
+      <div class="evidence"><strong>Evidence:</strong> All BI tools query Cube via PostgreSQL protocol; identical SQL execution path ensures consistent metric values across Tableau and Power BI</div>
+      <h3>O4: Extensible to New Consumers Without Infrastructure Changes</h3>
+      <p>Any new BI tool, reporting system, or ad-hoc query tool can connect to Cube via the
+PostgreSQL protocol. Adding a new consumer requires no infrastructure changes, just
+a standard database connection configuration.</p>
+      <div class="evidence"><strong>Evidence:</strong> PostgreSQL wire protocol is universal; new BI tools connect via standard database drivers with zero Cube-side configuration</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Threats (4 items)</summary>
+    <div class="details-body">
+      <h3>T1: Cube Project Roadmap Changes</h3>
+      <p>Cube is a venture-backed company (Cube Dev) that may change its open-source strategy,
+pricing model, or feature availability. Major open-source projects have historically
+changed license terms.</p>
+      <div class="evidence"><strong>Evidence:</strong> Cube backed by VC funding; open-source strategy may evolve; precedent: other data infra companies have changed OSS licenses</div>
+      <div class="mitigation"><strong>Mitigation:</strong> PostgreSQL wire protocol means BI tools connect via standard driver; switching semantic
+layer doesn't require BI reconfiguration. Metric definitions in YAML are portable to
+other tools (dbt Metrics, custom layer). MIT license snapshot can be forked if needed.
+</div>
+      <h3>T2: Scaling Limitations for Concurrent BI Users</h3>
+      <p>Under high concurrency (50+ simultaneous BI users), Cube's single-process architecture
+may require scaling configuration. Default deployment may not handle peak dashboard
+refresh loads.</p>
+      <div class="evidence"><strong>Evidence:</strong> Cube single-process default; high-concurrency BI workloads (50+ users) may require horizontal scaling configuration</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Cube supports horizontal scaling via Cube Store clustering and load balancing across
+multiple cube-api instances. Pre-aggregation reduces backend query load, making most
+dashboard queries served from cache rather than hitting Trino.
+</div>
+      <h3>T3: Trino Query Compatibility Edge Cases</h3>
+      <p>Cube translates SQL queries to the underlying data source (Trino). Complex SQL
+patterns from BI tools may not always translate correctly, requiring custom SQL
+or measure definitions.</p>
+      <div class="evidence"><strong>Evidence:</strong> Cube SQL-to-Trino translation may encounter edge cases with complex BI tool generated SQL; custom measures may be needed</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Cube supports custom SQL in measure and dimension definitions for complex cases.
+The golden dataset testing pattern (used in AI semantic layer) can be adapted for
+Cube measure validation. Most standard BI queries (aggregations, filters, grouping)
+translate without issues.
+</div>
+      <h3>T4: Vendor Ecosystem Fragmentation</h3>
+      <p>The semantic layer market is fragmented with multiple competing approaches (dbt Metrics,
+AtScale, Cube, Looker Modeling, Tableau Prep). Choosing Cube means investing in one
+ecosystem while alternatives continue evolving.</p>
+      <div class="evidence"><strong>Evidence:</strong> Semantic layer market is fragmented: dbt Metrics, AtScale, Cube, Looker, Tableau Prep all competing; no single dominant standard</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Cube's PostgreSQL wire protocol provides a standard integration point that is
+tool-agnostic. Metric definitions in YAML are human-readable and portable. The
+investment is primarily in metric definitions (business logic), not Cube-specific
+infrastructure, and that logic transfers to any alternative.
+</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Decision Matrix</summary>
+    <div class="details-body">
+      <div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Criteria</th>
+        <th>Direct Access</th>
+        <th>dbt Metrics</th>
+        <th>AtScale</th>
+        <th>Cube</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>BI tool compatibility</strong></td>
+        <td>High (native connectors)</td>
+        <td>Low (no serving layer)</td>
+        <td>High (proprietary connectors)</td>
+        <td>High (PostgreSQL protocol)</td>
+      </tr>
+      <tr>
+        <td><strong>Metric governance</strong></td>
+        <td>None (per-tool definitions)</td>
+        <td>High (YAML definitions)</td>
+        <td>High (virtual OLAP)</td>
+        <td>High (YAML definitions)</td>
+      </tr>
+      <tr>
+        <td><strong>Performance</strong></td>
+        <td>Variable (no caching)</td>
+        <td>Low (no caching layer)</td>
+        <td>High (OLAP engine)</td>
+        <td>High (pre-aggregation)</td>
+      </tr>
+      <tr>
+        <td><strong>Cost</strong></td>
+        <td>Lowest (no additional tool)</td>
+        <td>Low (open-source)</td>
+        <td>High (enterprise license)</td>
+        <td>Low (MIT open-source)</td>
+      </tr>
+      <tr>
+        <td><strong>Complexity</strong></td>
+        <td>Lowest</td>
+        <td>Medium</td>
+        <td>High (complex deployment)</td>
+        <td>Medium</td>
+      </tr>
+      <tr>
+        <td><strong>Multi-engine support</strong></td>
+        <td>N/A (per-tool)</td>
+        <td>dbt-supported engines</td>
+        <td>Multiple (proprietary)</td>
+        <td>Multiple (driver-based)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+    </div>
+  </details>
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14 | Next review: 2026-Q2</p>
+    <p>Phase: Phase 4 - Semantic Layers and Consumer Migration</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
+  </footer>
+</body>
+</html>

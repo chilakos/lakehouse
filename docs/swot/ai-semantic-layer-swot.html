@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Semantic Layer SWOT Analysis - Lakehouse Architecture</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+    .doc-header .meta { color: #94a3b8; font-size: 0.9rem; }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: capitalize;
+    }
+    .status-decided { background: #22c55e; color: white; }
+    .status-undecided { background: #f59e0b; color: #1a2332; }
+
+    /* === SWOT GRID === */
+    .swot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .swot-quadrant {
+      padding: 1.25rem;
+      border-radius: 6px;
+      border: 2px solid;
+    }
+    .swot-quadrant h3 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.05rem; }
+    .swot-quadrant ul { margin-left: 1.25rem; }
+    .swot-quadrant li { font-size: 0.92rem; }
+    .swot-strengths { border-color: #22c55e; background: #f0fdf4; }
+    .swot-weaknesses { border-color: #eab308; background: #fefce8; }
+    .swot-opportunities { border-color: #3b82f6; background: #eff6ff; }
+    .swot-threats { border-color: #ef4444; background: #fef2f2; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === EVIDENCE CALLOUT === */
+    .evidence {
+      background: #f1f5f9;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    /* === MITIGATION CALLOUT === */
+    .mitigation {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      .swot-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+      .table-container { overflow-x: auto; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle, .doc-header .meta { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      .swot-grid { break-inside: avoid; }
+      .swot-quadrant { break-inside: avoid; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>AI Semantic Layer SWOT Analysis</h1>
+    <p class="subtitle">Build NL-to-SQL vs Buy Commercial Solution</p>
+    <p class="meta">
+      <span class="status-badge status-decided">Decided</span>
+ | Decision: <strong>Build-own with Claude on Bedrock</strong>      | 2026-03-14
+ | Prepared for: Leadership Review    </p>
+  </header>
+
+  <details open>
+    <summary>Executive Summary</summary>
+    <div class="details-body">
+      The AI semantic layer strategy was evaluated between building a custom NL-to-SQL engine using Claude on AWS Bedrock versus purchasing a commercial NL-to-SQL solution (ThoughtSpot, Databricks AI/BI, Snowflake Cortex). The build-own approach was selected based on its unique integration with the existing Cube semantic layer, full control over prompt engineering for financial services domain accuracy, and AWS Bedrock's data residency guarantees.</p><p>The NLToSQLEngine in etl/src/semantic/nl_to_sql.py integrates with Cube YAML definitions via metric_context.py, using actual measure and dimension names as LLM prompt context. This approach produces more accurate SQL than generic commercial solutions because the prompt includes the exact metric definitions and domain-specific few-shot examples.
+    </div>
+  </details>
+
+  <details open>
+    <summary>Recommendation</summary>
+    <div class="details-body">
+      Build-own with Claude on Bedrock is recommended and already operational. The NLToSQLEngine integrates with Cube metric definitions for context-aware SQL generation, golden datasets provide accuracy benchmarking per domain, and AWS Bedrock ensures data stays within the VPC.</p><p>Key advantages over commercial alternatives: ThoughtSpot and Databricks AI/BI require their own data platform (vendor lock-in), Snowflake Cortex ties AI features to Snowflake (conflicts with compute-only Snowflake strategy), and all commercial solutions have limited customization of prompt engineering for domain-specific accuracy.
+    </div>
+  </details>
+
+  <h2>SWOT Overview</h2>
+  <div class="swot-grid">
+  <div class="swot-quadrant swot-strengths">
+    <h3>Strengths</h3>
+    <ul>
+      <li><strong>S1: Cube YAML Integration for Context-Aware SQL Generation</strong> &mdash; The NLToSQLEngine uses metric_context.py to load Cube YAML definitions as LLM prompt
+context. SQL generation uses actual measure names (total_notional, total_var_95),
+dimension names (symbol, side, account_id, sector), and table references
+(gold.trading_metrics, gold.risk_exposure) rather than generic schema discovery.</li>
+      <li><strong>S2: Claude on Bedrock Provides Enterprise-Grade LLM</strong> &mdash; AWS Bedrock deployment ensures all data stays within the VPC -- no external API calls,
+no data leaving the network boundary. Claude Sonnet provides strong SQL generation
+capabilities with the ability to follow domain-specific instructions.</li>
+      <li><strong>S3: Golden Dataset Evaluation Framework</strong> &mdash; The golden_datasets directory contains per-domain test cases for accuracy benchmarking.
+Each dataset has natural language questions paired with expected SQL output, enabling
+automated accuracy measurement and regression detection.</li>
+      <li><strong>S4: Full Control Over Prompt Engineering</strong> &mdash; Building in-house provides complete control over prompt structure, few-shot examples,
+chain-of-thought reasoning, and domain-specific instructions. Financial services
+terminology and calculation rules can be embedded directly in the prompt.</li>
+      <li><strong>S5: Model-Agnostic Architecture</strong> &mdash; The NLToSQLEngine architecture is model-agnostic -- the prompt format works with any
+LLM that supports text-to-SQL generation. Claude on Bedrock is the current choice,
+but switching to a different model (Anthropic API, open-source model) requires only
+a configuration change.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-weaknesses">
+    <h3>Weaknesses</h3>
+    <ul>
+      <li><strong>W1: Ongoing Prompt Maintenance as Schema Evolves</strong> &mdash; When Cube metric definitions change (new measures, renamed dimensions, new cubes),
+the NL-to-SQL prompts must be updated to reflect the new schema. This creates an
+ongoing maintenance burden tied to schema evolution.</li>
+      <li><strong>W2: LLM Accuracy Variability for Complex Joins</strong> &mdash; LLM-generated SQL for complex multi-table joins, nested subqueries, and window
+functions is less reliable than simple aggregation queries. Accuracy drops for
+queries that require reasoning about table relationships.</li>
+      <li><strong>W3: No Commercial Support Contract</strong> &mdash; A build-own solution has no vendor support contract. Bug fixes, feature development,
+and accuracy improvements rely entirely on internal engineering capacity.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-opportunities">
+    <h3>Opportunities</h3>
+    <ul>
+      <li><strong>O1: Domain-Specific Fine-Tuning Possible</strong> &mdash; The build-own approach enables domain-specific prompt optimization that commercial
+solutions cannot match. Financial services terminology, calculation conventions, and
+regulatory reporting patterns can be embedded directly in the prompt template.</li>
+      <li><strong>O2: Few-Shot Examples Per Domain Improve Accuracy Over Time</strong> &mdash; As users ask questions and validate results, correct question-SQL pairs can be added
+to the golden dataset and few-shot example library. Accuracy improves continuously
+without code changes or model retraining.</li>
+      <li><strong>O3: Claude Model Upgrades Improve Quality Without Code Changes</strong> &mdash; When Anthropic releases improved Claude models on Bedrock, the NLToSQLEngine benefits
+from accuracy improvements by updating the model_id configuration. No prompt rewriting
+or architecture changes needed.</li>
+      <li><strong>O4: Reusable Evaluation Framework for AI Quality</strong> &mdash; The golden dataset evaluation framework built for NL-to-SQL can be reused for other
+AI capabilities (data quality suggestions, anomaly detection, automated documentation).
+The investment in evaluation infrastructure has broad applicability.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-threats">
+    <h3>Threats</h3>
+    <ul>
+      <li><strong>T1: Bedrock Pricing Changes</strong> &mdash; AWS Bedrock pricing for Claude model invocations may change as the service matures.
+Increased usage (more users, more complex queries) amplifies cost exposure.</li>
+      <li><strong>T2: LLM Hallucination Risk for Financial Queries</strong> &mdash; LLMs can generate syntactically valid SQL that produces incorrect results for financial
+calculations. In a financial services context, incorrect query results could lead to
+wrong trading decisions or regulatory reporting errors.</li>
+      <li><strong>T3: Model Deprecation and API Changes</strong> &mdash; LLM models are regularly updated and deprecated. Claude model versions on Bedrock
+may be retired, requiring migration to newer versions with potential accuracy changes.</li>
+      <li><strong>T4: Competitive Commercial Solutions Improving Rapidly</strong> &mdash; ThoughtSpot, Databricks AI/BI, and Snowflake Cortex are investing heavily in
+NL-to-SQL accuracy. Commercial solutions may eventually match or exceed custom
+solution accuracy with less maintenance effort.</li>
+    </ul>
+  </div>
+</div>
+
+
+  <details>
+    <summary>Strengths (5 items)</summary>
+    <div class="details-body">
+      <h3>S1: Cube YAML Integration for Context-Aware SQL Generation</h3>
+      <p>The NLToSQLEngine uses metric_context.py to load Cube YAML definitions as LLM prompt
+context. SQL generation uses actual measure names (total_notional, total_var_95),
+dimension names (symbol, side, account_id, sector), and table references
+(gold.trading_metrics, gold.risk_exposure) rather than generic schema discovery.</p>
+      <div class="evidence"><strong>Evidence:</strong> metric_context.py loads Cube definitions as LLM prompt context; SQL generation uses actual measure/dimension names from trading_metrics and risk_exposure cubes</div>
+      <h3>S2: Claude on Bedrock Provides Enterprise-Grade LLM</h3>
+      <p>AWS Bedrock deployment ensures all data stays within the VPC -- no external API calls,
+no data leaving the network boundary. Claude Sonnet provides strong SQL generation
+capabilities with the ability to follow domain-specific instructions.</p>
+      <div class="evidence"><strong>Evidence:</strong> AWS Bedrock deployment -- data stays in VPC, no external API calls; Claude Sonnet model invoked via bedrock-runtime client</div>
+      <h3>S3: Golden Dataset Evaluation Framework</h3>
+      <p>The golden_datasets directory contains per-domain test cases for accuracy benchmarking.
+Each dataset has natural language questions paired with expected SQL output, enabling
+automated accuracy measurement and regression detection.</p>
+      <div class="evidence"><strong>Evidence:</strong> golden_datasets/ directory with per-domain test cases for accuracy benchmarking; automated accuracy measurement and regression detection</div>
+      <h3>S4: Full Control Over Prompt Engineering</h3>
+      <p>Building in-house provides complete control over prompt structure, few-shot examples,
+chain-of-thought reasoning, and domain-specific instructions. Financial services
+terminology and calculation rules can be embedded directly in the prompt.</p>
+      <div class="evidence"><strong>Evidence:</strong> prompt_builder.py constructs domain-specific prompts with few-shot examples; full control over prompt engineering for financial services accuracy</div>
+      <h3>S5: Model-Agnostic Architecture</h3>
+      <p>The NLToSQLEngine architecture is model-agnostic -- the prompt format works with any
+LLM that supports text-to-SQL generation. Claude on Bedrock is the current choice,
+but switching to a different model (Anthropic API, open-source model) requires only
+a configuration change.</p>
+      <div class="evidence"><strong>Evidence:</strong> model_id parameter in NLToSQLEngine constructor; prompt format is model-agnostic; switching models requires configuration change only</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Weaknesses (3 items)</summary>
+    <div class="details-body">
+      <h3>W1: Ongoing Prompt Maintenance as Schema Evolves</h3>
+      <p>When Cube metric definitions change (new measures, renamed dimensions, new cubes),
+the NL-to-SQL prompts must be updated to reflect the new schema. This creates an
+ongoing maintenance burden tied to schema evolution.</p>
+      <div class="evidence"><strong>Evidence:</strong> Prompt context derived from Cube YAML; schema changes require prompt regeneration and golden dataset updates</div>
+      <h3>W2: LLM Accuracy Variability for Complex Joins</h3>
+      <p>LLM-generated SQL for complex multi-table joins, nested subqueries, and window
+functions is less reliable than simple aggregation queries. Accuracy drops for
+queries that require reasoning about table relationships.</p>
+      <div class="evidence"><strong>Evidence:</strong> LLM SQL generation accuracy varies by query complexity; simple aggregations are reliable but multi-table joins and window functions have lower accuracy</div>
+      <h3>W3: No Commercial Support Contract</h3>
+      <p>A build-own solution has no vendor support contract. Bug fixes, feature development,
+and accuracy improvements rely entirely on internal engineering capacity.</p>
+      <div class="evidence"><strong>Evidence:</strong> Internal solution with no vendor SLA; maintenance, accuracy improvements, and bug fixes are internal engineering responsibility</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Opportunities (4 items)</summary>
+    <div class="details-body">
+      <h3>O1: Domain-Specific Fine-Tuning Possible</h3>
+      <p>The build-own approach enables domain-specific prompt optimization that commercial
+solutions cannot match. Financial services terminology, calculation conventions, and
+regulatory reporting patterns can be embedded directly in the prompt template.</p>
+      <div class="evidence"><strong>Evidence:</strong> prompt_builder.py supports domain-specific few-shot examples; financial services terminology and conventions embedded in prompt context</div>
+      <h3>O2: Few-Shot Examples Per Domain Improve Accuracy Over Time</h3>
+      <p>As users ask questions and validate results, correct question-SQL pairs can be added
+to the golden dataset and few-shot example library. Accuracy improves continuously
+without code changes or model retraining.</p>
+      <div class="evidence"><strong>Evidence:</strong> golden_datasets/ directory supports per-domain expansion; new examples added without code changes; accuracy improves with each validated pair</div>
+      <h3>O3: Claude Model Upgrades Improve Quality Without Code Changes</h3>
+      <p>When Anthropic releases improved Claude models on Bedrock, the NLToSQLEngine benefits
+from accuracy improvements by updating the model_id configuration. No prompt rewriting
+or architecture changes needed.</p>
+      <div class="evidence"><strong>Evidence:</strong> model_id parameter in NLToSQLEngine; Bedrock model upgrades available via configuration change; newer Claude models consistently improve SQL generation</div>
+      <h3>O4: Reusable Evaluation Framework for AI Quality</h3>
+      <p>The golden dataset evaluation framework built for NL-to-SQL can be reused for other
+AI capabilities (data quality suggestions, anomaly detection, automated documentation).
+The investment in evaluation infrastructure has broad applicability.</p>
+      <div class="evidence"><strong>Evidence:</strong> Golden dataset framework pattern is reusable; accuracy benchmarking approach applicable to any LLM-based feature</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Threats (4 items)</summary>
+    <div class="details-body">
+      <h3>T1: Bedrock Pricing Changes</h3>
+      <p>AWS Bedrock pricing for Claude model invocations may change as the service matures.
+Increased usage (more users, more complex queries) amplifies cost exposure.</p>
+      <div class="evidence"><strong>Evidence:</strong> Bedrock pricing is per-token; increased NL-to-SQL adoption increases token consumption and cost; pricing model may change</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Anthropic API available as fallback; prompt format is model-agnostic. Response caching
+for repeated query patterns reduces token consumption. Cost monitoring via AWS CloudWatch
+with alerts for unexpected usage spikes.
+</div>
+      <h3>T2: LLM Hallucination Risk for Financial Queries</h3>
+      <p>LLMs can generate syntactically valid SQL that produces incorrect results for financial
+calculations. In a financial services context, incorrect query results could lead to
+wrong trading decisions or regulatory reporting errors.</p>
+      <div class="evidence"><strong>Evidence:</strong> LLM hallucination risk: syntactically valid SQL may produce incorrect financial calculations; risk amplified in trading and risk reporting</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Golden dataset validation gates prevent deployment of prompts with regression.
+SQL validation against schema before execution prevents queries referencing
+non-existent columns or tables. Result reasonableness checks (value ranges,
+row count expectations) provide runtime safety. Critical financial queries
+require human review.
+</div>
+      <h3>T3: Model Deprecation and API Changes</h3>
+      <p>LLM models are regularly updated and deprecated. Claude model versions on Bedrock
+may be retired, requiring migration to newer versions with potential accuracy changes.</p>
+      <div class="evidence"><strong>Evidence:</strong> LLM model lifecycle: Bedrock model versions deprecated with 6-month notice; newer versions may have different accuracy characteristics</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Golden dataset benchmarking enables rapid evaluation of new model versions before
+deployment. Model-agnostic architecture means switching is a configuration change.
+Maintain golden dataset accuracy baselines for automated model comparison.
+</div>
+      <h3>T4: Competitive Commercial Solutions Improving Rapidly</h3>
+      <p>ThoughtSpot, Databricks AI/BI, and Snowflake Cortex are investing heavily in
+NL-to-SQL accuracy. Commercial solutions may eventually match or exceed custom
+solution accuracy with less maintenance effort.</p>
+      <div class="evidence"><strong>Evidence:</strong> ThoughtSpot, Databricks, Snowflake investing heavily in NL-to-SQL; commercial solution accuracy improving rapidly each quarter</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Build-own approach provides a benchmark against which commercial solutions can be
+evaluated. If a commercial solution proves superior for the workload profile, the
+golden dataset framework provides an objective comparison methodology. The Cube
+semantic layer (BI SWOT decision) is independent of the NL-to-SQL engine -- switching
+is possible without affecting BI tool integrations.
+</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Decision Matrix</summary>
+    <div class="details-body">
+      <div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Criteria</th>
+        <th>Build-own (Claude/Bedrock)</th>
+        <th>ThoughtSpot</th>
+        <th>Databricks AI/BI</th>
+        <th>Snowflake Cortex</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Cost</strong></td>
+        <td>Medium (per-token)</td>
+        <td>High (enterprise license)</td>
+        <td>High (Databricks platform)</td>
+        <td>Medium (Snowflake credits)</td>
+      </tr>
+      <tr>
+        <td><strong>Customization</strong></td>
+        <td>Full (prompt control)</td>
+        <td>Low (config only)</td>
+        <td>Low (config only)</td>
+        <td>Low (limited tuning)</td>
+      </tr>
+      <tr>
+        <td><strong>Accuracy</strong></td>
+        <td>High (domain-tuned)</td>
+        <td>Medium (generic)</td>
+        <td>Medium (Unity Catalog)</td>
+        <td>Medium (Snowflake schema)</td>
+      </tr>
+      <tr>
+        <td><strong>Data residency</strong></td>
+        <td>Full (VPC-contained)</td>
+        <td>Medium (cloud-hosted)</td>
+        <td>High (Databricks VPC)</td>
+        <td>High (Snowflake VPC)</td>
+      </tr>
+      <tr>
+        <td><strong>Integration with stack</strong></td>
+        <td>Deep (Cube YAML native)</td>
+        <td>Low (separate platform)</td>
+        <td>Low (requires Databricks)</td>
+        <td>Medium (Snowflake only)</td>
+      </tr>
+      <tr>
+        <td><strong>Vendor lock-in</strong></td>
+        <td>Low (model-agnostic)</td>
+        <td>High (full platform)</td>
+        <td>High (Databricks ecosystem)</td>
+        <td>High (Snowflake lock-in)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+    </div>
+  </details>
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14 | Next review: 2026-Q2</p>
+    <p>Phase: Phase 4 - Semantic Layers and Consumer Migration</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
+  </footer>
+</body>
+</html>

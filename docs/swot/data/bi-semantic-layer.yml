@@ -1,0 +1,219 @@
+title: "BI Semantic Layer SWOT Analysis"
+subtitle: "Direct Access vs dbt Metrics vs AtScale vs Cube"
+status: decided
+decision: "Cube v0.36.0"
+prepared_for: "Leadership Review"
+date: "2026-03-14"
+phase: "Phase 4 - Semantic Layers and Consumer Migration"
+next_review: "2026-Q2"
+
+executive_summary: |
+  The BI semantic layer evaluation compared four approaches for providing a unified metric
+  definition layer between the lakehouse and BI consumers (Tableau, Power BI). Cube v0.36.0
+  was selected for its combination of unified metric governance, PostgreSQL wire protocol
+  compatibility (enabling any SQL-speaking BI tool to connect), and pre-aggregation caching
+  for query performance.
+
+  The trading_metrics and risk_exposure cubes are operational, defining measures with exact
+  calculation logic that serves as the single source of truth across all BI consumers. The
+  PostgreSQL wire protocol on port 15432 enables Tableau and Power BI to connect via standard
+  PostgreSQL drivers, eliminating the need for specialized connectors.
+
+recommendation: |
+  Cube v0.36.0 is recommended and already operational. The trading_metrics and risk_exposure
+  cubes demonstrate the pattern: YAML-defined measures with exact calculation logic, accessible
+  via PostgreSQL wire protocol on port 15432. BI tools connect using standard PostgreSQL
+  drivers -- no proprietary connectors required.
+
+  Key advantages over alternatives: dbt Metrics lacks a query serving layer (requires a
+  separate tool for BI access), AtScale adds significant infrastructure complexity and
+  license cost, and Direct Access provides no metric governance (each BI tool defines
+  its own calculations, leading to definition drift).
+
+strengths:
+  - id: S1
+    title: "Unified Metric Definitions in YAML"
+    description: |
+      Cube provides a declarative YAML-based metric definition layer. The trading_metrics
+      and risk_exposure cubes define measures (total_notional, trade_count, avg_price,
+      total_market_value, total_var_95, etc.) with exact calculation logic, eliminating
+      metric definition drift across BI tools.
+    evidence: "trading_metrics and risk_exposure cubes define measures with exact calculation logic in YAML; single source of truth for all BI consumers"
+
+  - id: S2
+    title: "PostgreSQL Wire Protocol for Universal BI Compatibility"
+    description: |
+      Cube exposes a SQL API via PostgreSQL wire protocol on port 15432. Any BI tool that
+      can connect to PostgreSQL (which is virtually all of them) can query Cube without
+      specialized connectors or plugins.
+    evidence: "SQL API on port 15432 -- Tableau and Power BI connected via standard PostgreSQL driver; no proprietary connector required"
+
+  - id: S3
+    title: "Pre-Aggregation Layer for Performance"
+    description: |
+      Cube's pre-aggregation feature caches frequently accessed query patterns, reducing
+      load on the underlying Trino query engine and providing sub-second response times
+      for dashboard queries.
+    evidence: "Cube pre-aggregation layer caches frequent queries; reduces Trino query load for repeated dashboard patterns"
+
+  - id: S4
+    title: "Open-Source with Commercial Support Available"
+    description: |
+      Cube is open-source (MIT license) with an optional cloud-hosted version for teams
+      wanting managed infrastructure. Self-hosted deployment is fully supported and already
+      operational in the lakehouse stack.
+    evidence: "Cube is MIT licensed; self-hosted in docker-compose.yml as cube-api service; Cube Cloud available as managed option"
+
+  - id: S5
+    title: "Business Glossary Term Linkage"
+    description: |
+      Cube YAML definitions include metadata fields that map to business glossary terms,
+      enabling business-friendly metric discovery. The glossary_term metadata on each measure
+      bridges technical column names to business vocabulary.
+    evidence: "Cube YAML definitions include meta.glossary_term mapping (e.g., notional_value, trade_count, market_value) for business glossary integration"
+
+weaknesses:
+  - id: W1
+    title: "Additional Infrastructure Component to Maintain"
+    description: |
+      Cube adds another service to the infrastructure stack that requires monitoring,
+      upgrades, and operational attention. It runs as a separate container (cube-api)
+      with its own configuration and data store.
+    evidence: "cube-api service in docker-compose.yml; requires separate monitoring, upgrade cycle, and operational procedures"
+
+  - id: W2
+    title: "Cube-Specific YAML Learning Curve"
+    description: |
+      Teams need to learn Cube's YAML schema for defining cubes, measures, dimensions,
+      and pre-aggregations. This is a new DSL that adds to the team's tooling vocabulary.
+    evidence: "Cube YAML schema for cubes, measures, dimensions, pre-aggregations is a new DSL for the team; documentation and training needed"
+
+  - id: W3
+    title: "Pre-Aggregation Configuration Requires Tuning"
+    description: |
+      Effective pre-aggregation requires understanding query patterns to define the right
+      rollup combinations. Misconfigured pre-aggregations waste storage and compute without
+      improving query performance.
+    evidence: "Pre-aggregation effectiveness depends on query pattern analysis; misconfiguration leads to unnecessary compute and storage consumption"
+
+opportunities:
+  - id: O1
+    title: "Glossary Term Linkage Enables Business-Friendly Discovery"
+    description: |
+      Cube YAML definitions map to business glossary terms via the meta.glossary_term field.
+      This enables business users to discover metrics using familiar vocabulary rather than
+      technical column names, bridging the gap between data engineering and business analysis.
+    evidence: "Cube YAML definitions map to business glossary terms (notional_value, trade_count, market_value); OpenMetadata glossary integration enables discovery"
+
+  - id: O2
+    title: "Caching Reduces Trino Query Load"
+    description: |
+      Cube's pre-aggregation and result caching intercepts repeated dashboard queries before
+      they reach Trino, reducing compute load on the lakehouse query engine and improving
+      overall cluster utilization.
+    evidence: "Pre-aggregation caches frequent query patterns; dashboard refresh queries served from Cube cache instead of hitting Trino"
+
+  - id: O3
+    title: "Centralized Metric Governance Prevents BI Tool Drift"
+    description: |
+      With Cube as the single metric definition layer, all BI tools compute the same metrics
+      the same way. This eliminates the common problem of Tableau and Power BI showing
+      different numbers for the same metric due to divergent calculation logic.
+    evidence: "All BI tools query Cube via PostgreSQL protocol; identical SQL execution path ensures consistent metric values across Tableau and Power BI"
+
+  - id: O4
+    title: "Extensible to New Consumers Without Infrastructure Changes"
+    description: |
+      Any new BI tool, reporting system, or ad-hoc query tool can connect to Cube via the
+      PostgreSQL protocol. Adding a new consumer requires no infrastructure changes, just
+      a standard database connection configuration.
+    evidence: "PostgreSQL wire protocol is universal; new BI tools connect via standard database drivers with zero Cube-side configuration"
+
+threats:
+  - id: T1
+    title: "Cube Project Roadmap Changes"
+    description: |
+      Cube is a venture-backed company (Cube Dev) that may change its open-source strategy,
+      pricing model, or feature availability. Major open-source projects have historically
+      changed license terms.
+    evidence: "Cube backed by VC funding; open-source strategy may evolve; precedent: other data infra companies have changed OSS licenses"
+    mitigation: |
+      PostgreSQL wire protocol means BI tools connect via standard driver; switching semantic
+      layer doesn't require BI reconfiguration. Metric definitions in YAML are portable to
+      other tools (dbt Metrics, custom layer). MIT license snapshot can be forked if needed.
+
+  - id: T2
+    title: "Scaling Limitations for Concurrent BI Users"
+    description: |
+      Under high concurrency (50+ simultaneous BI users), Cube's single-process architecture
+      may require scaling configuration. Default deployment may not handle peak dashboard
+      refresh loads.
+    evidence: "Cube single-process default; high-concurrency BI workloads (50+ users) may require horizontal scaling configuration"
+    mitigation: |
+      Cube supports horizontal scaling via Cube Store clustering and load balancing across
+      multiple cube-api instances. Pre-aggregation reduces backend query load, making most
+      dashboard queries served from cache rather than hitting Trino.
+
+  - id: T3
+    title: "Trino Query Compatibility Edge Cases"
+    description: |
+      Cube translates SQL queries to the underlying data source (Trino). Complex SQL
+      patterns from BI tools may not always translate correctly, requiring custom SQL
+      or measure definitions.
+    evidence: "Cube SQL-to-Trino translation may encounter edge cases with complex BI tool generated SQL; custom measures may be needed"
+    mitigation: |
+      Cube supports custom SQL in measure and dimension definitions for complex cases.
+      The golden dataset testing pattern (used in AI semantic layer) can be adapted for
+      Cube measure validation. Most standard BI queries (aggregations, filters, grouping)
+      translate without issues.
+
+  - id: T4
+    title: "Vendor Ecosystem Fragmentation"
+    description: |
+      The semantic layer market is fragmented with multiple competing approaches (dbt Metrics,
+      AtScale, Cube, Looker Modeling, Tableau Prep). Choosing Cube means investing in one
+      ecosystem while alternatives continue evolving.
+    evidence: "Semantic layer market is fragmented: dbt Metrics, AtScale, Cube, Looker, Tableau Prep all competing; no single dominant standard"
+    mitigation: |
+      Cube's PostgreSQL wire protocol provides a standard integration point that is
+      tool-agnostic. Metric definitions in YAML are human-readable and portable. The
+      investment is primarily in metric definitions (business logic), not Cube-specific
+      infrastructure, and that logic transfers to any alternative.
+
+decision_matrix:
+  criteria:
+    - "BI tool compatibility"
+    - "Metric governance"
+    - "Performance"
+    - "Cost"
+    - "Complexity"
+    - "Multi-engine support"
+  options:
+    "Direct Access":
+      - "High (native connectors)"
+      - "None (per-tool definitions)"
+      - "Variable (no caching)"
+      - "Lowest (no additional tool)"
+      - "Lowest"
+      - "N/A (per-tool)"
+    "dbt Metrics":
+      - "Low (no serving layer)"
+      - "High (YAML definitions)"
+      - "Low (no caching layer)"
+      - "Low (open-source)"
+      - "Medium"
+      - "dbt-supported engines"
+    "AtScale":
+      - "High (proprietary connectors)"
+      - "High (virtual OLAP)"
+      - "High (OLAP engine)"
+      - "High (enterprise license)"
+      - "High (complex deployment)"
+      - "Multiple (proprietary)"
+    "Cube":
+      - "High (PostgreSQL protocol)"
+      - "High (YAML definitions)"
+      - "High (pre-aggregation)"
+      - "Low (MIT open-source)"
+      - "Medium"
+      - "Multiple (driver-based)"

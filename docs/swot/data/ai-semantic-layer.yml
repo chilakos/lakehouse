@@ -1,0 +1,219 @@
+title: "AI Semantic Layer SWOT Analysis"
+subtitle: "Build NL-to-SQL vs Buy Commercial Solution"
+status: decided
+decision: "Build-own with Claude on Bedrock"
+prepared_for: "Leadership Review"
+date: "2026-03-14"
+phase: "Phase 4 - Semantic Layers and Consumer Migration"
+next_review: "2026-Q2"
+
+executive_summary: |
+  The AI semantic layer strategy was evaluated between building a custom NL-to-SQL engine
+  using Claude on AWS Bedrock versus purchasing a commercial NL-to-SQL solution (ThoughtSpot,
+  Databricks AI/BI, Snowflake Cortex). The build-own approach was selected based on its
+  unique integration with the existing Cube semantic layer, full control over prompt engineering
+  for financial services domain accuracy, and AWS Bedrock's data residency guarantees.
+
+  The NLToSQLEngine in etl/src/semantic/nl_to_sql.py integrates with Cube YAML definitions
+  via metric_context.py, using actual measure and dimension names as LLM prompt context.
+  This approach produces more accurate SQL than generic commercial solutions because the
+  prompt includes the exact metric definitions and domain-specific few-shot examples.
+
+recommendation: |
+  Build-own with Claude on Bedrock is recommended and already operational. The NLToSQLEngine
+  integrates with Cube metric definitions for context-aware SQL generation, golden datasets
+  provide accuracy benchmarking per domain, and AWS Bedrock ensures data stays within the VPC.
+
+  Key advantages over commercial alternatives: ThoughtSpot and Databricks AI/BI require
+  their own data platform (vendor lock-in), Snowflake Cortex ties AI features to Snowflake
+  (conflicts with compute-only Snowflake strategy), and all commercial solutions have limited
+  customization of prompt engineering for domain-specific accuracy.
+
+strengths:
+  - id: S1
+    title: "Cube YAML Integration for Context-Aware SQL Generation"
+    description: |
+      The NLToSQLEngine uses metric_context.py to load Cube YAML definitions as LLM prompt
+      context. SQL generation uses actual measure names (total_notional, total_var_95),
+      dimension names (symbol, side, account_id, sector), and table references
+      (gold.trading_metrics, gold.risk_exposure) rather than generic schema discovery.
+    evidence: "metric_context.py loads Cube definitions as LLM prompt context; SQL generation uses actual measure/dimension names from trading_metrics and risk_exposure cubes"
+
+  - id: S2
+    title: "Claude on Bedrock Provides Enterprise-Grade LLM"
+    description: |
+      AWS Bedrock deployment ensures all data stays within the VPC -- no external API calls,
+      no data leaving the network boundary. Claude Sonnet provides strong SQL generation
+      capabilities with the ability to follow domain-specific instructions.
+    evidence: "AWS Bedrock deployment -- data stays in VPC, no external API calls; Claude Sonnet model invoked via bedrock-runtime client"
+
+  - id: S3
+    title: "Golden Dataset Evaluation Framework"
+    description: |
+      The golden_datasets directory contains per-domain test cases for accuracy benchmarking.
+      Each dataset has natural language questions paired with expected SQL output, enabling
+      automated accuracy measurement and regression detection.
+    evidence: "golden_datasets/ directory with per-domain test cases for accuracy benchmarking; automated accuracy measurement and regression detection"
+
+  - id: S4
+    title: "Full Control Over Prompt Engineering"
+    description: |
+      Building in-house provides complete control over prompt structure, few-shot examples,
+      chain-of-thought reasoning, and domain-specific instructions. Financial services
+      terminology and calculation rules can be embedded directly in the prompt.
+    evidence: "prompt_builder.py constructs domain-specific prompts with few-shot examples; full control over prompt engineering for financial services accuracy"
+
+  - id: S5
+    title: "Model-Agnostic Architecture"
+    description: |
+      The NLToSQLEngine architecture is model-agnostic -- the prompt format works with any
+      LLM that supports text-to-SQL generation. Claude on Bedrock is the current choice,
+      but switching to a different model (Anthropic API, open-source model) requires only
+      a configuration change.
+    evidence: "model_id parameter in NLToSQLEngine constructor; prompt format is model-agnostic; switching models requires configuration change only"
+
+weaknesses:
+  - id: W1
+    title: "Ongoing Prompt Maintenance as Schema Evolves"
+    description: |
+      When Cube metric definitions change (new measures, renamed dimensions, new cubes),
+      the NL-to-SQL prompts must be updated to reflect the new schema. This creates an
+      ongoing maintenance burden tied to schema evolution.
+    evidence: "Prompt context derived from Cube YAML; schema changes require prompt regeneration and golden dataset updates"
+
+  - id: W2
+    title: "LLM Accuracy Variability for Complex Joins"
+    description: |
+      LLM-generated SQL for complex multi-table joins, nested subqueries, and window
+      functions is less reliable than simple aggregation queries. Accuracy drops for
+      queries that require reasoning about table relationships.
+    evidence: "LLM SQL generation accuracy varies by query complexity; simple aggregations are reliable but multi-table joins and window functions have lower accuracy"
+
+  - id: W3
+    title: "No Commercial Support Contract"
+    description: |
+      A build-own solution has no vendor support contract. Bug fixes, feature development,
+      and accuracy improvements rely entirely on internal engineering capacity.
+    evidence: "Internal solution with no vendor SLA; maintenance, accuracy improvements, and bug fixes are internal engineering responsibility"
+
+opportunities:
+  - id: O1
+    title: "Domain-Specific Fine-Tuning Possible"
+    description: |
+      The build-own approach enables domain-specific prompt optimization that commercial
+      solutions cannot match. Financial services terminology, calculation conventions, and
+      regulatory reporting patterns can be embedded directly in the prompt template.
+    evidence: "prompt_builder.py supports domain-specific few-shot examples; financial services terminology and conventions embedded in prompt context"
+
+  - id: O2
+    title: "Few-Shot Examples Per Domain Improve Accuracy Over Time"
+    description: |
+      As users ask questions and validate results, correct question-SQL pairs can be added
+      to the golden dataset and few-shot example library. Accuracy improves continuously
+      without code changes or model retraining.
+    evidence: "golden_datasets/ directory supports per-domain expansion; new examples added without code changes; accuracy improves with each validated pair"
+
+  - id: O3
+    title: "Claude Model Upgrades Improve Quality Without Code Changes"
+    description: |
+      When Anthropic releases improved Claude models on Bedrock, the NLToSQLEngine benefits
+      from accuracy improvements by updating the model_id configuration. No prompt rewriting
+      or architecture changes needed.
+    evidence: "model_id parameter in NLToSQLEngine; Bedrock model upgrades available via configuration change; newer Claude models consistently improve SQL generation"
+
+  - id: O4
+    title: "Reusable Evaluation Framework for AI Quality"
+    description: |
+      The golden dataset evaluation framework built for NL-to-SQL can be reused for other
+      AI capabilities (data quality suggestions, anomaly detection, automated documentation).
+      The investment in evaluation infrastructure has broad applicability.
+    evidence: "Golden dataset framework pattern is reusable; accuracy benchmarking approach applicable to any LLM-based feature"
+
+threats:
+  - id: T1
+    title: "Bedrock Pricing Changes"
+    description: |
+      AWS Bedrock pricing for Claude model invocations may change as the service matures.
+      Increased usage (more users, more complex queries) amplifies cost exposure.
+    evidence: "Bedrock pricing is per-token; increased NL-to-SQL adoption increases token consumption and cost; pricing model may change"
+    mitigation: |
+      Anthropic API available as fallback; prompt format is model-agnostic. Response caching
+      for repeated query patterns reduces token consumption. Cost monitoring via AWS CloudWatch
+      with alerts for unexpected usage spikes.
+
+  - id: T2
+    title: "LLM Hallucination Risk for Financial Queries"
+    description: |
+      LLMs can generate syntactically valid SQL that produces incorrect results for financial
+      calculations. In a financial services context, incorrect query results could lead to
+      wrong trading decisions or regulatory reporting errors.
+    evidence: "LLM hallucination risk: syntactically valid SQL may produce incorrect financial calculations; risk amplified in trading and risk reporting"
+    mitigation: |
+      Golden dataset validation gates prevent deployment of prompts with regression.
+      SQL validation against schema before execution prevents queries referencing
+      non-existent columns or tables. Result reasonableness checks (value ranges,
+      row count expectations) provide runtime safety. Critical financial queries
+      require human review.
+
+  - id: T3
+    title: "Model Deprecation and API Changes"
+    description: |
+      LLM models are regularly updated and deprecated. Claude model versions on Bedrock
+      may be retired, requiring migration to newer versions with potential accuracy changes.
+    evidence: "LLM model lifecycle: Bedrock model versions deprecated with 6-month notice; newer versions may have different accuracy characteristics"
+    mitigation: |
+      Golden dataset benchmarking enables rapid evaluation of new model versions before
+      deployment. Model-agnostic architecture means switching is a configuration change.
+      Maintain golden dataset accuracy baselines for automated model comparison.
+
+  - id: T4
+    title: "Competitive Commercial Solutions Improving Rapidly"
+    description: |
+      ThoughtSpot, Databricks AI/BI, and Snowflake Cortex are investing heavily in
+      NL-to-SQL accuracy. Commercial solutions may eventually match or exceed custom
+      solution accuracy with less maintenance effort.
+    evidence: "ThoughtSpot, Databricks, Snowflake investing heavily in NL-to-SQL; commercial solution accuracy improving rapidly each quarter"
+    mitigation: |
+      Build-own approach provides a benchmark against which commercial solutions can be
+      evaluated. If a commercial solution proves superior for the workload profile, the
+      golden dataset framework provides an objective comparison methodology. The Cube
+      semantic layer (BI SWOT decision) is independent of the NL-to-SQL engine -- switching
+      is possible without affecting BI tool integrations.
+
+decision_matrix:
+  criteria:
+    - "Cost"
+    - "Customization"
+    - "Accuracy"
+    - "Data residency"
+    - "Integration with stack"
+    - "Vendor lock-in"
+  options:
+    "Build-own (Claude/Bedrock)":
+      - "Medium (per-token)"
+      - "Full (prompt control)"
+      - "High (domain-tuned)"
+      - "Full (VPC-contained)"
+      - "Deep (Cube YAML native)"
+      - "Low (model-agnostic)"
+    "ThoughtSpot":
+      - "High (enterprise license)"
+      - "Low (config only)"
+      - "Medium (generic)"
+      - "Medium (cloud-hosted)"
+      - "Low (separate platform)"
+      - "High (full platform)"
+    "Databricks AI/BI":
+      - "High (Databricks platform)"
+      - "Low (config only)"
+      - "Medium (Unity Catalog)"
+      - "High (Databricks VPC)"
+      - "Low (requires Databricks)"
+      - "High (Databricks ecosystem)"
+    "Snowflake Cortex":
+      - "Medium (Snowflake credits)"
+      - "Low (limited tuning)"
+      - "Medium (Snowflake schema)"
+      - "High (Snowflake VPC)"
+      - "Medium (Snowflake only)"
+      - "High (Snowflake lock-in)"
