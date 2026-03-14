@@ -1,0 +1,98 @@
+title: "Repository Structure"
+subtitle: "Directory layout and key files for the lakehouse platform"
+page_type: "guide"
+output_filename: "repo-structure.html"
+
+sections:
+  - heading: "Top-Level Overview"
+    content: "The repository is organized into six top-level directories, each owning a distinct concern."
+    code_blocks:
+      - language: "text"
+        code: |-
+          lakehouse/
+          ├── etl/              # Python ETL package: pipelines, governance, quality, config
+          ├── docs/             # Documentation: SWOTs, architecture, developer guides (HTML)
+          ├── infra/            # Terraform IaC for dev/staging/prod environments
+          ├── semantic/         # Cube semantic layer YAML models and measures
+          ├── ci/               # CI/CD scripts and GitHub Actions helpers
+          ├── dbt/              # dbt models for Silver/Gold transformations (future)
+          ├── .github/          # GitHub Actions workflows (ci.yml, deploy-*.yml)
+          ├── docker-compose.yml   # 25+ services: Airflow, Trino, Nessie, MinIO, Ranger, etc.
+          └── pyproject.toml       # Python project config, pytest, ruff settings
+
+  - heading: "ETL Package Deep-Dive"
+    content: "The etl/ directory contains the core data pipeline framework."
+    code_blocks:
+      - language: "text"
+        code: |-
+          etl/
+          ├── src/
+          │   ├── pipelines/        # BasePipeline + Bronze/Silver/Gold implementations
+          │   │   ├── base.py           # Abstract BasePipeline, PipelineConfig, MedallionLayer
+          │   │   ├── bronze/           # TradesBronze, PositionsBronze, MainframeBronze
+          │   │   ├── silver/           # TradesSilver, PositionsSilver
+          │   │   ├── gold/             # TradingMetricsGold, RiskExposureGold
+          │   │   └── incremental.py    # IncrementalConfig for watermark-based ingestion
+          │   ├── config/           # Settings dataclass (environment, paths, credentials)
+          │   ├── governance/       # Data classification, freshness SLAs, audit logging
+          │   ├── quality/          # Soda quality checks, reconciliation engine
+          │   ├── semantic/         # NL-to-SQL engine, metric context builder
+          │   ├── iceberg_utils/    # Spark session factory, namespace management, maintenance
+          │   ├── lineage/          # OpenLineage Spark configuration
+          │   └── inventory/        # DataStage job inventory and complexity scoring
+          ├── tests/              # pytest test suite (500+ unit tests)
+          │   ├── conftest.py       # Session fixtures, Spark mock, env defaults
+          │   └── test_*.py         # Test files matching source modules
+          └── pyproject.toml      # Package deps, pytest markers, ruff config
+
+    subsections:
+      - heading: "Package Import Paths"
+        content: "All internal imports use the src. prefix."
+        code_blocks:
+          - language: "python"
+            code: |-
+              from src.pipelines.base import BasePipeline, PipelineConfig, MedallionLayer
+              from src.config.settings import Settings
+              from src.governance.classification import classify_column, SensitivityLevel
+              from src.quality.soda_runner import run_soda_checks
+              from src.semantic.nl_to_sql import NLToSQLEngine
+              from src.iceberg_utils.catalog import get_spark_session
+              from src.lineage.openlineage_config import get_openlineage_spark_config
+              from src.inventory.datastage_inventory import JobInventory
+
+  - heading: "Documentation Directory"
+    content: "All documentation is rendered as standalone HTML from YAML data files via Jinja2 templates."
+    code_blocks:
+      - language: "text"
+        code: |-
+          docs/
+          ├── render_html.py        # Render pipeline: render_swots(), render_architecture(),
+          │                         #   render_developer_docs(), extract_versions(), extract_services()
+          ├── templates/            # Jinja2 templates
+          │   ├── base_swot.html
+          │   ├── base_architecture.html
+          │   ├── base_developer.html
+          │   └── macros/           # Reusable macros: collapsible, code_block, checklist, etc.
+          ├── swot/                 # SWOT analyses (YAML data + rendered HTML)
+          ├── architecture/         # Architecture docs (YAML data + Mermaid diagrams + rendered HTML)
+          └── developer/            # Developer docs (YAML data + rendered HTML)
+
+  - heading: "Infrastructure"
+    content: "Terraform configurations for three environments."
+    code_blocks:
+      - language: "text"
+        code: |-
+          infra/
+          ├── main.tf             # Core infrastructure resources
+          ├── variables.tf        # Environment-specific variables
+          ├── terraform.tfvars    # Default variable values
+          └── modules/            # Reusable Terraform modules
+
+  - heading: "Key Files"
+    content: "Files you will interact with most frequently."
+    bullet_items:
+      - "docker-compose.yml -- Defines all 25+ platform services with health checks and dependencies"
+      - "etl/pyproject.toml -- Python deps, pytest config (markers: unit, integration, slow, snowflake), ruff linting rules"
+      - ".pre-commit-config.yaml -- Pre-commit hooks: ruff format, ruff check, trailing whitespace, YAML/TOML validate, detect-secrets"
+      - "docs/render_html.py -- Entry point for rendering all documentation to standalone HTML"
+      - ".github/workflows/ci.yml -- CI pipeline: lint, test, validate Cube YAML, validate Terraform"

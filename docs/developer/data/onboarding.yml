@@ -1,0 +1,98 @@
+title: "Getting Started"
+subtitle: "Local environment setup and service verification for new engineers"
+page_type: "guide"
+output_filename: "onboarding.html"
+
+sections:
+  - heading: "Prerequisites"
+    content: "Ensure these tools are installed before proceeding."
+    bullet_items:
+      - "Python 3.11+ (pyenv recommended)"
+      - "Docker Desktop 4.x+ with at least 8 GB memory allocated"
+      - "Docker Compose v2 (bundled with Docker Desktop)"
+      - "Git 2.x+"
+      - "Node.js 18+ (for Mermaid diagram rendering, optional)"
+
+  - heading: "Clone and Setup"
+    content: "Clone the repository and install Python dependencies."
+    code_blocks:
+      - language: "bash"
+        code: |-
+          git clone https://github.com/your-org/lakehouse.git
+          cd lakehouse
+          cd etl
+          pip install -e ".[dev]"
+
+  - heading: "Launch the Platform"
+    content: "Start all 25+ services with Docker Compose. First launch pulls images and may take 5-10 minutes."
+    code_blocks:
+      - language: "bash"
+        code: |-
+          cd /path/to/lakehouse
+          docker compose up -d
+
+    subsections:
+      - heading: "Check All Containers Are Running"
+        code_blocks:
+          - language: "bash"
+            code: |-
+              docker ps --format "table {{.Names}}\t{{.Status}}" | head -30
+              # Expect 25+ containers with status "Up" or "healthy"
+              docker ps | wc -l
+              # Should show 25+
+
+  - heading: "Verify Services"
+    content: "Confirm key services are healthy and responding."
+    code_blocks:
+      - language: "bash"
+        code: |-
+          # Airflow Webserver (port 8081)
+          curl -s http://localhost:8081/health | head -1
+          # Expected: {"metadatabase":{"status":"healthy"},...}
+
+          # Trino query engine (port 8080)
+          docker exec trino trino --execute "SELECT 1"
+          # Expected: "1"
+
+          # Nessie catalog (port 19120)
+          curl -s http://localhost:19120/api/v2/config | head -1
+          # Expected: JSON with defaultBranch: "main"
+
+          # MinIO object storage (port 9000)
+          curl -s http://localhost:9000/minio/health/live
+          # Expected: HTTP 200
+
+          # Marquez lineage (port 5000)
+          curl -s http://localhost:5000/api/v1/namespaces | head -1
+          # Expected: JSON with namespaces array
+
+          # Grafana monitoring (port 3001)
+          curl -s http://localhost:3001/api/health | head -1
+          # Expected: {"commit":"...","database":"ok","version":"..."}
+
+          # Ranger Admin (port 6080)
+          curl -s http://localhost:6080/service/public/v2/api/service | head -1
+          # Expected: JSON array of services
+
+  - heading: "First Commands"
+    content: "Run the test suite and explore the platform."
+    code_blocks:
+      - language: "bash"
+        code: |-
+          # Run the full test suite
+          cd etl
+          python3 -m pytest tests/ -x --tb=short -m unit
+          # Expect 500+ tests passing
+
+          # List Airflow DAGs
+          docker exec airflow-worker airflow dags list
+          # Shows registered pipeline DAGs
+
+          # Query Iceberg tables via Trino
+          docker exec trino trino --execute "SHOW SCHEMAS FROM lakehouse"
+          # Shows: bronze, silver, gold schemas
+
+          # Render documentation
+          cd /path/to/lakehouse
+          python3 docs/render_html.py
+          # Renders all SWOT, architecture, and developer docs

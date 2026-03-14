@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day 1 Checklist - Lakehouse Developer Docs</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+    a { color: #3b82f6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.5rem; }
+
+    /* === CODE BLOCKS === */
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 0.75rem 0 1rem 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    code {
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+    }
+    p code, li code, td code {
+      background: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.88em;
+      color: #1a2332;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === SECTION BLOCKS === */
+    .section-block {
+      margin-bottom: 1.5rem;
+    }
+
+    /* === STEP NUMBERS (Tutorial) === */
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: #1a2332;
+      color: #c8a961;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-right: 0.5rem;
+    }
+
+    /* === CHECKLIST === */
+    .checklist-section {
+      margin-bottom: 1.5rem;
+    }
+    .checklist-item {
+      display: block;
+      padding: 0.4rem 0;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .checklist-item input[type="checkbox"] {
+      margin-right: 0.5rem;
+      transform: scale(1.2);
+    }
+    .checklist-item .verify {
+      color: #64748b;
+      font-size: 0.85em;
+      font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+    }
+
+    /* === FAQ === */
+    .faq-entry {
+      margin-bottom: 0.5rem;
+    }
+    .faq-entry .faq-fix {
+      background: #f0fdf4;
+      border-left: 3px solid #22c55e;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.92rem;
+    }
+    .faq-entry .faq-why {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.88rem;
+      color: #475569;
+    }
+
+    /* === REFERENCE ENTRIES === */
+    .ref-entry {
+      margin-bottom: 0.75rem;
+    }
+    .ref-entry .ref-name {
+      font-weight: 700;
+      color: #1a2332;
+    }
+    .ref-entry .ref-type {
+      display: inline-block;
+      background: #e2e8f0;
+      padding: 0.1rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.8em;
+      color: #475569;
+      margin-left: 0.5rem;
+    }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT (general) === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      pre { background: #f1f5f9; color: #1a2332; border: 1px solid #e2e8f0; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+
+    /* === CHECKLIST PRINT OVERRIDE === */
+    @media print {
+      body { font-size: 8pt; padding: 0; margin: 0; }
+      .doc-header { padding: 0.5rem 1rem; margin: 0 0 0.5rem 0; }
+      .doc-header h1 { font-size: 12pt; margin-bottom: 0; }
+      .doc-header .subtitle { font-size: 9pt; margin-bottom: 0; }
+      h2 { font-size: 10pt; margin-top: 0.5rem; margin-bottom: 0.25rem; padding-bottom: 0.15rem; }
+      .checklist-item { padding: 0.15rem 0; font-size: 8pt; }
+      .checklist-item .verify { font-size: 7pt; }
+      .doc-footer { margin-top: 0.5rem; padding-top: 0.25rem; font-size: 7pt; }
+      .doc-footer .versions { display: none; }
+      @page { margin: 1cm; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>Day 1 Checklist</h1>
+    <p class="subtitle">Setup, first pipeline, and first PR -- one printed page</p>
+  </header>
+
+  <div class="checklist-section">
+    <h2>Environment Setup</h2>
+    <label class="checklist-item"><input type="checkbox"> Clone the lakehouse repository <span class="verify">(ls docker-compose.yml)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Install Python dependencies <span class="verify">(cd etl && pip install -e '.[dev]')</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Docker Compose up (all services) <span class="verify">(docker ps | wc -l shows 25+)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Airflow healthy <span class="verify">(curl -s http://localhost:8081/health)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Trino responding <span class="verify">(docker exec trino trino --execute 'SELECT 1')</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Nessie catalog online <span class="verify">(curl -s http://localhost:19120/api/v2/config)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> MinIO storage ready <span class="verify">(curl -s http://localhost:9000/minio/health/live)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Run full test suite <span class="verify">(cd etl && python3 -m pytest tests/ -x -m unit (500+ passing))</span></label>
+
+  </div>
+  <div class="checklist-section">
+    <h2>First Pipeline</h2>
+    <label class="checklist-item"><input type="checkbox"> Read BasePipeline source code <span class="verify">(cat etl/src/pipelines/base.py)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Create hello_world pipeline <span class="verify">(ls etl/src/pipelines/bronze/hello_world.py)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Write pipeline test <span class="verify">(ls etl/tests/test_hello_world.py)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Run pipeline test <span class="verify">(cd etl && python3 -m pytest tests/test_hello_world.py -x)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Check Bronze output in Trino <span class="verify">(docker exec trino trino --execute 'SHOW TABLES FROM lakehouse.bronze')</span></label>
+
+  </div>
+  <div class="checklist-section">
+    <h2>First PR</h2>
+    <label class="checklist-item"><input type="checkbox"> Create feature branch <span class="verify">(git checkout -b feature/TICKET-hello-world)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Run pre-commit hooks <span class="verify">(pre-commit run --all-files)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Commit and push <span class="verify">(git push -u origin feature/TICKET-hello-world)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> Create PR via GitHub <span class="verify">(gh pr create)</span></label>
+
+    <label class="checklist-item"><input type="checkbox"> CI checks pass <span class="verify">(gh pr checks)</span></label>
+
+  </div>
+  <h2>Detailed Guides</h2>
+  <ul>
+    <li><a href="onboarding.html">Getting Started (detailed setup)</a></li>
+    <li><a href="first-pipeline.html">Write Your First Pipeline (full tutorial)</a></li>
+    <li><a href="contributor.html">Contributor Guidelines (PR process)</a></li>
+  </ul>
+
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Developer Documentation</p>
+  </footer>
+</body>
+</html>

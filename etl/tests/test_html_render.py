@@ -737,3 +737,113 @@ def test_developer_docs_code_block_macro(
     assert "<pre>" in html, "Missing <pre> element from code_block macro"
     assert "<code" in html, "Missing <code> element from code_block macro"
     assert "language-" in html, "Missing language class on code element"
+
+
+# ---------------------------------------------------------------------------
+# Developer Docs: Fixtures for real YAML data files
+# ---------------------------------------------------------------------------
+
+@pytest.fixture
+def real_dev_data_dir() -> Path:
+    """Return path to the real developer docs YAML data directory."""
+    return _project_root / "docs" / "developer" / "data"
+
+
+@pytest.fixture
+def real_dev_output_dir(tmp_path: Path) -> Path:
+    """Create a temporary output directory for real developer docs."""
+    out = tmp_path / "real_dev_output"
+    out.mkdir()
+    return out
+
+
+@pytest.fixture
+def rendered_developer_pages(
+    real_dev_data_dir: Path, template_dir: Path, real_dev_output_dir: Path,
+) -> dict[str, str]:
+    """Render real developer docs and return dict of filename -> HTML content."""
+    results = render_developer_docs(
+        data_dir=real_dev_data_dir,
+        template_dir=template_dir,
+        output_dir=real_dev_output_dir,
+    )
+    return {p.name: p.read_text() for p in results}
+
+
+# ---------------------------------------------------------------------------
+# DEV-01: Onboarding guide
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_onboarding(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-01: Onboarding HTML contains docker-compose, service verification, prerequisites."""
+    html = rendered_developer_pages["onboarding.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    assert "docker compose up -d" in html or "docker-compose up" in html, \
+        "Missing docker-compose launch command"
+    assert "curl" in html, "Missing service verification curl commands"
+    assert "localhost:8081" in html or "8081" in html, "Missing Airflow health check"
+    assert "trino" in html.lower(), "Missing Trino verification"
+    assert "Python" in html or "python" in html, "Missing Python prerequisite"
+    assert "Docker" in html, "Missing Docker prerequisite"
+
+
+# ---------------------------------------------------------------------------
+# DEV-02: Repository structure
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_repo_structure(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-02: Repo structure HTML contains directory names and key file descriptions."""
+    html = rendered_developer_pages["repo-structure.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    # Top-level directories
+    assert "etl/" in html, "Missing etl/ directory"
+    assert "docs/" in html, "Missing docs/ directory"
+    assert "infra/" in html, "Missing infra/ directory"
+    # Key files
+    assert "docker-compose.yml" in html, "Missing docker-compose.yml"
+    assert "pyproject.toml" in html, "Missing pyproject.toml"
+    # ETL subdirectories
+    assert "pipelines/" in html or "pipelines" in html, "Missing pipelines directory"
+    assert "governance/" in html or "governance" in html, "Missing governance directory"
+
+
+# ---------------------------------------------------------------------------
+# DEV-03: First pipeline tutorial
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_first_pipeline(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-03: First pipeline HTML contains BasePipeline, hello world, step-by-step code blocks."""
+    html = rendered_developer_pages["first-pipeline.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    assert "BasePipeline" in html, "Missing BasePipeline reference"
+    assert "hello" in html.lower(), "Missing hello-world synthetic example"
+    assert "<pre>" in html, "Missing code blocks"
+    assert "from src.pipelines.base import" in html, "Missing full import path"
+    assert "MedallionLayer" in html, "Missing MedallionLayer reference"
+    assert "extract" in html, "Missing extract() method reference"
+    assert "transform" in html, "Missing transform() method reference"
+
+
+# ---------------------------------------------------------------------------
+# DEV-09: Day 1 checklist
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_day1_checklist(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-09: Day 1 checklist HTML contains checkboxes, @media print CSS, links to other pages."""
+    html = rendered_developer_pages["day1-checklist.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    assert 'type="checkbox"' in html, "Missing checkbox input elements"
+    assert "@media print" in html, "Missing @media print CSS"
+    # Checklist items
+    assert "Clone" in html, "Missing clone repo item"
+    assert "Docker" in html, "Missing Docker item"
+    assert "test suite" in html or "pytest" in html, "Missing test suite item"
+    # Links to detailed pages
+    assert "onboarding.html" in html, "Missing link to onboarding page"
+    assert "first-pipeline.html" in html, "Missing link to first pipeline page"
+    # Print CSS for compact layout
+    assert "8pt" in html, "Missing compact print font size"

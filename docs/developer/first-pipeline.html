@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Write Your First Pipeline - Lakehouse Developer Docs</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+    a { color: #3b82f6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.5rem; }
+
+    /* === CODE BLOCKS === */
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 0.75rem 0 1rem 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    code {
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+    }
+    p code, li code, td code {
+      background: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.88em;
+      color: #1a2332;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === SECTION BLOCKS === */
+    .section-block {
+      margin-bottom: 1.5rem;
+    }
+
+    /* === STEP NUMBERS (Tutorial) === */
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: #1a2332;
+      color: #c8a961;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-right: 0.5rem;
+    }
+
+    /* === CHECKLIST === */
+    .checklist-section {
+      margin-bottom: 1.5rem;
+    }
+    .checklist-item {
+      display: block;
+      padding: 0.4rem 0;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .checklist-item input[type="checkbox"] {
+      margin-right: 0.5rem;
+      transform: scale(1.2);
+    }
+    .checklist-item .verify {
+      color: #64748b;
+      font-size: 0.85em;
+      font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+    }
+
+    /* === FAQ === */
+    .faq-entry {
+      margin-bottom: 0.5rem;
+    }
+    .faq-entry .faq-fix {
+      background: #f0fdf4;
+      border-left: 3px solid #22c55e;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.92rem;
+    }
+    .faq-entry .faq-why {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.88rem;
+      color: #475569;
+    }
+
+    /* === REFERENCE ENTRIES === */
+    .ref-entry {
+      margin-bottom: 0.75rem;
+    }
+    .ref-entry .ref-name {
+      font-weight: 700;
+      color: #1a2332;
+    }
+    .ref-entry .ref-type {
+      display: inline-block;
+      background: #e2e8f0;
+      padding: 0.1rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.8em;
+      color: #475569;
+      margin-left: 0.5rem;
+    }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT (general) === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      pre { background: #f1f5f9; color: #1a2332; border: 1px solid #e2e8f0; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>Write Your First Pipeline</h1>
+    <p class="subtitle">Build a synthetic hello-world CSV-to-Bronze pipeline step by step</p>
+  </header>
+
+  <div class="section-block">
+    <h2><span class="step-number">1</span>Overview</h2>
+    <p>This tutorial walks you through creating a simple CSV-to-Bronze pipeline using the BasePipeline framework. The pipeline reads a CSV file, validates its schema, and writes it to an Iceberg table in the Bronze layer. After completing this, you will understand the pipeline contract well enough to build production pipelines like TradesBronzePipeline and TradesSilverPipeline.</p>
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">2</span>Create the Pipeline Class</h2>
+    <p>Create a new file at etl/src/pipelines/bronze/hello_world.py. Every pipeline extends BasePipeline and implements extract(), transform(), and defines a target_schema.</p>
+    <pre><code class="language-python">"""Hello World Bronze pipeline -- CSV to Iceberg."""
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pyspark.sql import DataFrame
+
+from pyspark.sql.types import StructType, StructField, StringType, DoubleType, TimestampType
+
+from src.pipelines.base import BasePipeline, PipelineConfig, MedallionLayer
+
+
+class HelloWorldBronzePipeline(BasePipeline):
+    """Ingest a hello-world CSV file into the Bronze layer."""
+
+    def __init__(self, spark, csv_path: str = "/data/hello_world.csv"):
+        config = PipelineConfig(
+            name="hello_world_bronze",
+            target_layer=MedallionLayer.BRONZE,
+            target_table="hello_world",
+            target_schema=StructType([
+                StructField("id", StringType(), nullable=False),
+                StructField("name", StringType(), nullable=True),
+                StructField("value", DoubleType(), nullable=True),
+                StructField("created_at", TimestampType(), nullable=True),
+            ]),
+        )
+        super().__init__(spark=spark, config=config)
+        self.csv_path = csv_path
+
+    def extract(self) -> DataFrame:
+        """Read the source CSV file."""
+        return self.spark.read.option("header", "true").csv(self.csv_path)
+
+    def transform(self, df: DataFrame) -> DataFrame:
+        """Apply basic cleaning: trim whitespace, cast types."""
+        from pyspark.sql.functions import trim, col
+        return (
+            df
+            .withColumn("id", trim(col("id")))
+            .withColumn("name", trim(col("name")))
+            .withColumn("value", col("value").cast("double"))
+            .withColumn("created_at", col("created_at").cast("timestamp"))
+        )</code></pre>
+
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">3</span>Define the Schema</h2>
+    <p>The target_schema in PipelineConfig defines the expected output. BasePipeline.validate_schema() checks the DataFrame against this schema after transform() runs. If columns are missing or types differ, a SchemaValidationError is raised.</p>
+    <pre><code class="language-python">from pyspark.sql.types import StructType, StructField, StringType, DoubleType, TimestampType
+
+schema = StructType([
+    StructField("id", StringType(), nullable=False),
+    StructField("name", StringType(), nullable=True),
+    StructField("value", DoubleType(), nullable=True),
+    StructField("created_at", TimestampType(), nullable=True),
+])</code></pre>
+
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">4</span>Implement extract()</h2>
+    <p>The extract() method reads raw data from the source. For Bronze pipelines, this is typically a file read or API call. The returned DataFrame is the raw, unmodified data.</p>
+    <pre><code class="language-python">def extract(self) -> DataFrame:
+    """Read the source CSV file with header row."""
+    return self.spark.read.option("header", "true").csv(self.csv_path)</code></pre>
+
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">5</span>Implement transform()</h2>
+    <p>The transform() method applies cleaning logic. For Bronze, keep it minimal: trim whitespace, cast types, add metadata columns. Heavy business logic belongs in Silver/Gold.</p>
+    <pre><code class="language-python">def transform(self, df: DataFrame) -> DataFrame:
+    """Trim whitespace and cast columns to target types."""
+    from pyspark.sql.functions import trim, col
+    return (
+        df
+        .withColumn("id", trim(col("id")))
+        .withColumn("name", trim(col("name")))
+        .withColumn("value", col("value").cast("double"))
+        .withColumn("created_at", col("created_at").cast("timestamp"))
+    )</code></pre>
+
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">6</span>Add Quality Checks</h2>
+    <p>BasePipeline supports Soda quality checks via the quality_checks_path config field. Create a Soda YAML file to define data quality rules.</p>
+    <pre><code class="language-yaml"># etl/quality/checks/hello_world_bronze.yml
+checks for hello_world:
+  - row_count > 0
+  - missing_count(id) = 0
+  - duplicate_count(id) = 0</code></pre>
+
+    <h3>Wire Up Quality Checks</h3>
+    <p>Set the quality_checks_path in your PipelineConfig to enable automatic quality gating.</p>
+    <pre><code class="language-python">config = PipelineConfig(
+    name="hello_world_bronze",
+    target_layer=MedallionLayer.BRONZE,
+    target_table="hello_world",
+    target_schema=schema,
+    quality_checks_path="quality/checks/hello_world_bronze.yml",
+    critical_checks=["row_count > 0", "missing_count(id) = 0"],
+)</code></pre>
+
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">7</span>Create an Airflow DAG</h2>
+    <p>Wrap your pipeline in an Airflow DAG for scheduled execution.</p>
+    <pre><code class="language-python"># dags/hello_world_dag.py
+from airflow import DAG
+from airflow.operators.python import PythonOperator
+from datetime import datetime
+
+from src.pipelines.bronze.hello_world import HelloWorldBronzePipeline
+from src.iceberg_utils.catalog import get_spark_session
+
+def run_pipeline():
+    spark = get_spark_session("hello_world_bronze")
+    pipeline = HelloWorldBronzePipeline(spark)
+    result = pipeline.execute()
+    print(f"Pipeline result: {result}")
+    spark.stop()
+
+with DAG(
+    "hello_world_bronze",
+    start_date=datetime(2026, 1, 1),
+    schedule_interval="@daily",
+    catchup=False,
+) as dag:
+    ingest = PythonOperator(
+        task_id="ingest_hello_world",
+        python_callable=run_pipeline,
+    )</code></pre>
+
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">8</span>Run Tests</h2>
+    <p>Write a test for your pipeline and run it.</p>
+    <pre><code class="language-python"># etl/tests/test_hello_world.py
+import pytest
+from unittest.mock import MagicMock
+
+@pytest.mark.unit
+def test_hello_world_pipeline_config():
+    """Pipeline config has correct target table and layer."""
+    from src.pipelines.bronze.hello_world import HelloWorldBronzePipeline
+    from src.pipelines.base import MedallionLayer
+    spark = MagicMock()
+    pipeline = HelloWorldBronzePipeline(spark)
+    assert pipeline.config.target_layer == MedallionLayer.BRONZE
+    assert pipeline.config.target_table == "hello_world"
+    assert pipeline.config.name == "hello_world_bronze"</code></pre>
+
+    <h3>Run Your Test</h3>
+    <pre><code class="language-bash">cd etl
+python3 -m pytest tests/test_hello_world.py -x --tb=short -m unit
+# Expected: 1 passed</code></pre>
+
+    <h3>Check Bronze Output in Trino</h3>
+    <p>After running the pipeline against a real Spark session, verify the data landed in Iceberg.</p>
+    <pre><code class="language-bash">docker exec trino trino --execute "SELECT * FROM lakehouse.bronze.hello_world LIMIT 5"</code></pre>
+
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">9</span>What You Built Toward</h2>
+    <p>Your hello-world pipeline follows the same pattern as production pipelines. Compare your code to these existing implementations for more advanced patterns.</p>
+    <ul>
+      <li>TradesBronzePipeline (etl/src/pipelines/bronze/trades_ingest.py) -- Reads market data files with schema enforcement and incremental watermarks</li>
+      <li>TradesSilverPipeline (etl/src/pipelines/silver/trades_clean.py) -- Reads from Bronze, applies deduplication, null checks, and type normalization</li>
+    </ul>
+  </div>
+
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Developer Documentation</p>
+  </footer>
+</body>
+</html>

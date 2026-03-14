@@ -1,0 +1,197 @@
+title: "Write Your First Pipeline"
+subtitle: "Build a synthetic hello-world CSV-to-Bronze pipeline step by step"
+page_type: "guide"
+output_filename: "first-pipeline.html"
+
+sections:
+  - heading: "Overview"
+    content: "This tutorial walks you through creating a simple CSV-to-Bronze pipeline using the BasePipeline framework. The pipeline reads a CSV file, validates its schema, and writes it to an Iceberg table in the Bronze layer. After completing this, you will understand the pipeline contract well enough to build production pipelines like TradesBronzePipeline and TradesSilverPipeline."
+
+  - heading: "Create the Pipeline Class"
+    content: "Create a new file at etl/src/pipelines/bronze/hello_world.py. Every pipeline extends BasePipeline and implements extract(), transform(), and defines a target_schema."
+    code_blocks:
+      - language: "python"
+        code: |-
+          """Hello World Bronze pipeline -- CSV to Iceberg."""
+          from __future__ import annotations
+
+          from typing import TYPE_CHECKING
+
+          if TYPE_CHECKING:
+              from pyspark.sql import DataFrame
+
+          from pyspark.sql.types import StructType, StructField, StringType, DoubleType, TimestampType
+
+          from src.pipelines.base import BasePipeline, PipelineConfig, MedallionLayer
+
+
+          class HelloWorldBronzePipeline(BasePipeline):
+              """Ingest a hello-world CSV file into the Bronze layer."""
+
+              def __init__(self, spark, csv_path: str = "/data/hello_world.csv"):
+                  config = PipelineConfig(
+                      name="hello_world_bronze",
+                      target_layer=MedallionLayer.BRONZE,
+                      target_table="hello_world",
+                      target_schema=StructType([
+                          StructField("id", StringType(), nullable=False),
+                          StructField("name", StringType(), nullable=True),
+                          StructField("value", DoubleType(), nullable=True),
+                          StructField("created_at", TimestampType(), nullable=True),
+                      ]),
+                  )
+                  super().__init__(spark=spark, config=config)
+                  self.csv_path = csv_path
+
+              def extract(self) -> DataFrame:
+                  """Read the source CSV file."""
+                  return self.spark.read.option("header", "true").csv(self.csv_path)
+
+              def transform(self, df: DataFrame) -> DataFrame:
+                  """Apply basic cleaning: trim whitespace, cast types."""
+                  from pyspark.sql.functions import trim, col
+                  return (
+                      df
+                      .withColumn("id", trim(col("id")))
+                      .withColumn("name", trim(col("name")))
+                      .withColumn("value", col("value").cast("double"))
+                      .withColumn("created_at", col("created_at").cast("timestamp"))
+                  )
+
+  - heading: "Define the Schema"
+    content: "The target_schema in PipelineConfig defines the expected output. BasePipeline.validate_schema() checks the DataFrame against this schema after transform() runs. If columns are missing or types differ, a SchemaValidationError is raised."
+    code_blocks:
+      - language: "python"
+        code: |-
+          from pyspark.sql.types import StructType, StructField, StringType, DoubleType, TimestampType
+
+          schema = StructType([
+              StructField("id", StringType(), nullable=False),
+              StructField("name", StringType(), nullable=True),
+              StructField("value", DoubleType(), nullable=True),
+              StructField("created_at", TimestampType(), nullable=True),
+          ])
+
+  - heading: "Implement extract()"
+    content: "The extract() method reads raw data from the source. For Bronze pipelines, this is typically a file read or API call. The returned DataFrame is the raw, unmodified data."
+    code_blocks:
+      - language: "python"
+        code: |-
+          def extract(self) -> DataFrame:
+              """Read the source CSV file with header row."""
+              return self.spark.read.option("header", "true").csv(self.csv_path)
+
+  - heading: "Implement transform()"
+    content: "The transform() method applies cleaning logic. For Bronze, keep it minimal: trim whitespace, cast types, add metadata columns. Heavy business logic belongs in Silver/Gold."
+    code_blocks:
+      - language: "python"
+        code: |-
+          def transform(self, df: DataFrame) -> DataFrame:
+              """Trim whitespace and cast columns to target types."""
+              from pyspark.sql.functions import trim, col
+              return (
+                  df
+                  .withColumn("id", trim(col("id")))
+                  .withColumn("name", trim(col("name")))
+                  .withColumn("value", col("value").cast("double"))
+                  .withColumn("created_at", col("created_at").cast("timestamp"))
+              )
+
+  - heading: "Add Quality Checks"
+    content: "BasePipeline supports Soda quality checks via the quality_checks_path config field. Create a Soda YAML file to define data quality rules."
+    code_blocks:
+      - language: "yaml"
+        code: |-
+          # etl/quality/checks/hello_world_bronze.yml
+          checks for hello_world:
+            - row_count > 0
+            - missing_count(id) = 0
+            - duplicate_count(id) = 0
+
+    subsections:
+      - heading: "Wire Up Quality Checks"
+        content: "Set the quality_checks_path in your PipelineConfig to enable automatic quality gating."
+        code_blocks:
+          - language: "python"
+            code: |-
+              config = PipelineConfig(
+                  name="hello_world_bronze",
+                  target_layer=MedallionLayer.BRONZE,
+                  target_table="hello_world",
+                  target_schema=schema,
+                  quality_checks_path="quality/checks/hello_world_bronze.yml",
+                  critical_checks=["row_count > 0", "missing_count(id) = 0"],
+              )
+
+  - heading: "Create an Airflow DAG"
+    content: "Wrap your pipeline in an Airflow DAG for scheduled execution."
+    code_blocks:
+      - language: "python"
+        code: |-
+          # dags/hello_world_dag.py
+          from airflow import DAG
+          from airflow.operators.python import PythonOperator
+          from datetime import datetime
+
+          from src.pipelines.bronze.hello_world import HelloWorldBronzePipeline
+          from src.iceberg_utils.catalog import get_spark_session
+
+          def run_pipeline():
+              spark = get_spark_session("hello_world_bronze")
+              pipeline = HelloWorldBronzePipeline(spark)
+              result = pipeline.execute()
+              print(f"Pipeline result: {result}")
+              spark.stop()
+
+          with DAG(
+              "hello_world_bronze",
+              start_date=datetime(2026, 1, 1),
+              schedule_interval="@daily",
+              catchup=False,
+          ) as dag:
+              ingest = PythonOperator(
+                  task_id="ingest_hello_world",
+                  python_callable=run_pipeline,
+              )
+
+  - heading: "Run Tests"
+    content: "Write a test for your pipeline and run it."
+    code_blocks:
+      - language: "python"
+        code: |-
+          # etl/tests/test_hello_world.py
+          import pytest
+          from unittest.mock import MagicMock
+
+          @pytest.mark.unit
+          def test_hello_world_pipeline_config():
+              """Pipeline config has correct target table and layer."""
+              from src.pipelines.bronze.hello_world import HelloWorldBronzePipeline
+              from src.pipelines.base import MedallionLayer
+              spark = MagicMock()
+              pipeline = HelloWorldBronzePipeline(spark)
+              assert pipeline.config.target_layer == MedallionLayer.BRONZE
+              assert pipeline.config.target_table == "hello_world"
+              assert pipeline.config.name == "hello_world_bronze"
+
+    subsections:
+      - heading: "Run Your Test"
+        code_blocks:
+          - language: "bash"
+            code: |-
+              cd etl
+              python3 -m pytest tests/test_hello_world.py -x --tb=short -m unit
+              # Expected: 1 passed
+
+      - heading: "Check Bronze Output in Trino"
+        content: "After running the pipeline against a real Spark session, verify the data landed in Iceberg."
+        code_blocks:
+          - language: "bash"
+            code: |-
+              docker exec trino trino --execute "SELECT * FROM lakehouse.bronze.hello_world LIMIT 5"
+
+  - heading: "What You Built Toward"
+    content: "Your hello-world pipeline follows the same pattern as production pipelines. Compare your code to these existing implementations for more advanced patterns."
+    bullet_items:
+      - "TradesBronzePipeline (etl/src/pipelines/bronze/trades_ingest.py) -- Reads market data files with schema enforcement and incremental watermarks"
+      - "TradesSilverPipeline (etl/src/pipelines/silver/trades_clean.py) -- Reads from Bronze, applies deduplication, null checks, and type normalization"
