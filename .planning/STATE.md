@@ -1,129 +1,61 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: completed
-stopped_at: Completed 04-03-PLAN.md (ALL PLANS COMPLETE)
-last_updated: "2026-03-13T22:38:00.000Z"
-last_activity: 2026-03-13 -- 04-03 complete (480 unit tests passing, cross-tool validation + Phase 4 human sign-off)
+milestone: v1.1
+milestone_name: Documentation
+status: active
+stopped_at: null
+last_updated: "2026-03-14T14:30:00.000Z"
+last_activity: 2026-03-14 -- Milestone v1.1 Documentation started
 progress:
-  total_phases: 4
-  completed_phases: 4
-  total_plans: 16
-  completed_plans: 16
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-13)
+See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
-**Current focus:** All 4 phases complete -- 16 of 16 plans executed
+**Current focus:** v1.1 Documentation -- SWOT analyses, architecture diagrams, developer docs, data catalog
 
 ## Current Position
 
-Phase: 4 of 4 (Semantic Layers and Consumer Migration) -- COMPLETE
-Plan: 3 of 3 complete (04-03 done: cross-tool validation + Phase 4 human sign-off)
-Status: ALL PHASES COMPLETE -- 16 of 16 plans executed
-Last activity: 2026-03-13 -- 04-03 complete (480 unit tests passing, cross-tool validation + Phase 4 human sign-off)
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-14 — Milestone v1.1 Documentation started
 
-Progress: [██████████] 100%
+Progress: [░░░░░░░░░░] 0%
 
-## Performance Metrics
+## v1.0 Milestone Summary
 
-**Velocity:**
-- Total plans completed: 9
-- Average duration: 10 min
-- Total execution time: ~1.5 hours
+16 plans across 4 phases completed (2026-03-13):
+- Phase 1: Foundation and Feasibility Validation (4 plans)
+- Phase 2: ETL Migration and Data Pipeline (5 plans)
+- Phase 3: Governance, Security Hardening, and Platform (4 plans)
+- Phase 4: Semantic Layers and Consumer Migration (3 plans)
 
-**By Phase:**
-
-| Phase | Plans | Total | Avg/Plan |
-|-------|-------|-------|----------|
-| 1 | 4 | 51 min | 13 min |
-| 2 | 5 | 43 min | 9 min |
-
-**Recent Trend:**
-- Last 5 plans: 10min, 5min, 4min, 9min, 15min, 5min
-- Trend: stable
-| Phase 03-governance-security-hardening-and-platform P01 | 8 | 2 tasks | 16 files |
-| Phase 03-governance-security-hardening-and-platform P02 | 8 | 2 tasks | 11 files |
-| Phase 03-governance-security-hardening-and-platform P03 | 13 | 2 tasks | 18 files |
-| Phase 03-governance-security-hardening-and-platform P04 | 5 | 2 tasks | 0 files |
-| Phase 04-semantic-layers-consumer-migration P01 | 5 | 2 tasks | 16 files |
-| Phase 04 P01 | 5 | 2 tasks | 16 files |
-| Phase 04-semantic-layers-consumer-migration P02 | 4 | 2 tasks | 9 files |
-| Phase 04-semantic-layers-consumer-migration P03 | 5 | 2 tasks | 7 files |
-
-## Phases Completed
-
-### Phase 1: Foundation and Feasibility Validation (4 plans)
-- Mono-repo, Docker Compose, Nessie/Trino/Iceberg local dev
-- Synthetic data generators, catalog/maintenance utilities
-- Terraform IaC, GitHub Actions CI/CD, encryption
-- Multi-engine validation, RBAC, LDAP auth stubs, benchmarks
-
-### Phase 2: ETL Migration and Data Pipeline (5 plans)
-- ETL framework: BasePipeline ABC, Bronze/Silver/Gold medallion layers
-- Airflow 3.1.x + Marquez deployment, OpenLineage
-- Pilot pipelines: trades, positions, mainframe COBOL, incremental loading
-- Soda Core quality gates, SodaCL checks, reconciliation framework
-- Production DAGs, job inventory, Grafana observability, ETL patterns docs
-
-### Phase 3: Governance, Security Hardening, and Platform (4 plans)
-- Ranger Docker stack, tag-driven classification, column masking policies
-- OpenMetadata catalog, freshness tracker, BCBS 239 lineage dashboards
-- Cross-engine audit trail, anomaly detection, Grafana compliance reporting
-- Human verification checkpoint (all governance modules confirmed)
-
-### Phase 4: Semantic Layers and Consumer Migration (3 plans -- COMPLETE)
-- Cube semantic layer: YAML metric definitions, Docker services, risk exposure Gold pipeline
-- metric_context.py AISEM-02 bridge, BI benchmark harness
-- NL-to-SQL engine: prompt builder with Cube YAML context, Claude on Bedrock, NLToSQLEngine
-- Golden evaluation datasets (trading + risk exposure, 16 each), accuracy evaluation framework
-- Cross-tool validation (Cube vs Trino), glossary link verification, CI/CD validation pipeline
-- Human-approved Phase 4 sign-off: all 7 requirements (BISEM-01/02/03/04, AISEM-01/02/03) confirmed
+480 unit tests passing. All requirements verified.
 
 ## Accumulated Context
 
 ### Decisions
 
 Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
+Key decisions from v1.0 affecting documentation:
 
-- Roadmap: Governance (OpenLineage) starts Phase 2 with ETL; fine-grained security (Ranger) in Phase 3
-- Roadmap: BCBS 239 lineage visualization deferred to Phase 3 (lineage capture starts Phase 2)
-- 01-04: File-based RBAC (rules.json) for Phase 1 baseline; Ranger deferred to Phase 3
-- 01-04: Teradata OTF ADR recommends direct Nessie REST first, Trino JDBC federation as fallback
-- 02-05: Grafana on port 3001 (avoids Marquez Web UI on port 3000)
-- 02-05: Hybrid DAG pattern: source-specific Bronze/Silver, cross-source Gold
-- 02-05: Job complexity classification: SIMPLE/MEDIUM/COMPLEX
-- 02-05: ETL patterns doc is team onboarding document -- opinionated to enforce consistency
-- [Phase 03-01]: Ranger 2.8.0 plugin targets Trino 433; Trino 479 version mismatch documented -- plugin JAR compatibility must be verified at integration time or plugin built from source
-- [Phase 03-01]: Tag-driven classification (SensitivityLevel regex rules) applied once per column; tag drives masking policy automatically -- scales to 300+ sources without per-column policies
-- [Phase 03-02]: OpenMetadata ingestion port 8086 to avoid conflicts with Trino (8080) and Airflow (8081)
-- [Phase 03-02]: Freshness SLA grace: hours_since <= warning_threshold -> GREEN (allows grace past expected_interval); within critical -> YELLOW; past critical -> RED
-- [Phase 03-02]: OpenMetadata 1.6.0 chosen as known stable release; research-specified 1.12.x tag unverified on docker.getcollate.io
-- [Phase 03-governance-security-hardening-and-platform]: Cross-engine audit normalized to AuditRecord (13 fields); Teradata/Snowflake extractors env-var gated for graceful skip; Snowflake ACCESS_HISTORY->QUERY_HISTORY fallback for non-Enterprise accounts
-- [Phase 03-governance-security-hardening-and-platform]: Audit DB reuses marquez-db PostgreSQL (new audit_records table); grafana-reporter sidecar for PDF export without Grafana Enterprise; anomaly thresholds as function parameters for testability
-- [Phase 03-governance-security-hardening-and-platform]: Phase 3 human verification approved: Ranger security, OpenMetadata catalog, BCBS 239 dashboards, and audit trail all confirmed correct and complete
-- [Phase 04-01]: Cube v0.36.0 selected as semantic layer platform -- YAML metric definitions with SQL API (Postgres wire protocol) on port 15432 for BI tool connections
-- [Phase 04-01]: Risk exposure Gold pipeline joins Silver positions + risk_metrics by account_id, aggregates per account/sector/currency
-- [Phase 04-01]: metric_context.py is the AISEM-02 bridge: same YAML files serve both Cube (BI) and NL-to-SQL (AI)
-- [Phase 04-01]: Benchmark harness uses wall-clock timing with configurable iterations and p50/p95/avg statistical reporting
-- [Phase 04-01]: Cube v0.36.0 selected as semantic layer platform -- YAML metric definitions with SQL API (Postgres wire protocol) on port 15432
-- [Phase 04-02]: SYSTEM_PROMPT enforces DECIMAL types (no floating point), schema-qualified table names (gold.*), and strict metric-only SQL generation
-- [Phase 04-02]: NLToSQLEngine uses Claude Sonnet on Bedrock with configurable region and model ID
-- [Phase 04-02]: Domain-specific few-shot examples (5 per domain) hard-coded for consistent guidance
-- [Phase 04-02]: Golden datasets: 16 entries each (8 simple + 8 complex) with execution accuracy evaluation (result set comparison)
-- [Phase 04-02]: Evaluation uses execution accuracy (result set comparison, order-independent) not string matching
-- [Phase 04-03]: Cross-tool validation uses Decimal(38,4) tolerance for financial metric comparison
-- [Phase 04-03]: Integration tests use TCP probe skip guards for clean CI behavior when services unavailable
-- [Phase 04-03]: CI/CD validates both Cube YAML structure and glossary link integrity on every PR
-- [Phase 04-03]: Phase 4 human-approved: all seven requirements (BISEM-01/02/03/04, AISEM-01/02/03) confirmed complete
+- Nessie selected as Iceberg catalog (SWOT delivered in Phase 1)
+- Cube v0.36.0 selected as BI semantic layer
+- Build-own NL-to-SQL with Claude on Bedrock for AI semantic layer
+- Phased Python ETL replacement of DataStage (BasePipeline framework)
+- Ranger for security, OpenMetadata for catalog, Marquez for lineage
+- Tag-driven classification scaling to 300+ sources
+- Hybrid DAG pattern: source-specific Bronze/Silver, cross-source Gold
 
 ### Pending Todos
 
@@ -131,15 +63,13 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 1: Teradata OTF REST catalog support is unconfirmed -- ADR drafted with fallback strategy (01-04)
-- Phase 1: MinIO replacement decision needed urgently (RustFS vs Ceph vs AIStor commercial)
-- Phase 1: Nessie catalog SWOT delivered (01-04); remaining SWOTs (Snowflake strategy, data model, semantic layer) for future phases
-- Pending: Live Teradata OTF validation needs Teradata instance access
-- Pending: Snowflake integration test needs Snowflake account and network access to Nessie
-- Pending: LDAP auth connection needs LDAP/AD server access
+- Pending: Snowflake Strategy SWOT (undecided)
+- Pending: Data Model Strategy SWOT (undecided)
+- Carried from v1.0: Teradata OTF REST catalog support unconfirmed
+- Carried from v1.0: MinIO replacement decision needed (RustFS vs Ceph vs AIStor)
 
 ## Session Continuity
 
-Last session: 2026-03-13T22:38:00Z
-Stopped at: Completed 04-03-PLAN.md (ALL PLANS COMPLETE)
+Last session: 2026-03-14T14:30:00Z
+Stopped at: Milestone v1.1 started, defining requirements
 Resume file: None

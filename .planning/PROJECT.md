@@ -88,6 +88,19 @@ A single, governed copy of data in Iceberg format that every consumer — Terada
 | Data model evolution strategy | SWOT analysis needed — keep FSDM vs evolve vs hybrid | — Pending |
 | Snowflake long-term role | SWOT analysis needed — retire vs Iceberg external tables | — Pending |
 
+## Current Milestone: v1.1 Documentation
+
+**Goal:** Produce executive-grade and developer-grade documentation for the lakehouse platform — SWOT analyses for leadership, architecture visualizations, developer onboarding, and data catalog documentation.
+
+**Target features:**
+- 6 SWOT analyses as polished standalone HTML with recommendations
+- Marketecture HTML page (executive-friendly platform overview)
+- Detailed architecture HTML page (verbose component/port/flow diagram)
+- Developer onboarding guide (setup, repo structure, pipeline authoring)
+- Full API/module reference documentation
+- Contributor guidelines (PR process, testing standards)
+- Data catalog/glossary documentation for business users
+
 ## SWOT Analyses Required
 
 Leadership needs SWOT documentation for:
@@ -99,4 +112,4 @@ Leadership needs SWOT documentation for:
 6. **AI Semantic Layer** — Build vs buy for NL-to-SQL capability
 
 ---
-*Last updated: 2026-03-13 after initialization*
+*Last updated: 2026-03-14 after milestone v1.1 start*
