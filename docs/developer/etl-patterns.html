@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ETL Patterns Reference - Lakehouse Developer Docs</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+    a { color: #3b82f6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.5rem; }
+
+    /* === CODE BLOCKS === */
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 0.75rem 0 1rem 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    code {
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+    }
+    p code, li code, td code {
+      background: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.88em;
+      color: #1a2332;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === SECTION BLOCKS === */
+    .section-block {
+      margin-bottom: 1.5rem;
+    }
+
+    /* === STEP NUMBERS (Tutorial) === */
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: #1a2332;
+      color: #c8a961;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-right: 0.5rem;
+    }
+
+    /* === CHECKLIST === */
+    .checklist-section {
+      margin-bottom: 1.5rem;
+    }
+    .checklist-item {
+      display: block;
+      padding: 0.4rem 0;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .checklist-item input[type="checkbox"] {
+      margin-right: 0.5rem;
+      transform: scale(1.2);
+    }
+    .checklist-item .verify {
+      color: #64748b;
+      font-size: 0.85em;
+      font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+    }
+
+    /* === FAQ === */
+    .faq-entry {
+      margin-bottom: 0.5rem;
+    }
+    .faq-entry .faq-fix {
+      background: #f0fdf4;
+      border-left: 3px solid #22c55e;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.92rem;
+    }
+    .faq-entry .faq-why {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.88rem;
+      color: #475569;
+    }
+
+    /* === REFERENCE ENTRIES === */
+    .ref-entry {
+      margin-bottom: 0.75rem;
+    }
+    .ref-entry .ref-name {
+      font-weight: 700;
+      color: #1a2332;
+    }
+    .ref-entry .ref-type {
+      display: inline-block;
+      background: #e2e8f0;
+      padding: 0.1rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.8em;
+      color: #475569;
+      margin-left: 0.5rem;
+    }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT (general) === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      pre { background: #f1f5f9; color: #1a2332; border: 1px solid #e2e8f0; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>ETL Patterns Reference</h1>
+    <p class="subtitle">Standardized patterns for the lakehouse Python/PySpark ETL framework</p>
+  </header>
+
+  <div class="section-block">
+    <h2>1. Medallion Architecture Overview</h2>
+    <p>All data flows through three layers in the medallion architecture.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Bronze</code></td>
+            <td><span class="ref-type">layer</span></td>
+            <td>Raw-as-is with metadata. Namespace: <code>lakehouse.bronze.*</code>. Full history retention.</td>
+          </tr>
+          <tr>
+            <td><code>Silver</code></td>
+            <td><span class="ref-type">layer</span></td>
+            <td>Cleaned, deduplicated, entity-centric. Namespace: <code>lakehouse.silver.*</code>. Full history retention.</td>
+          </tr>
+          <tr>
+            <td><code>Gold</code></td>
+            <td><span class="ref-type">layer</span></td>
+            <td>Pre-aggregated metrics and curated views. Namespace: <code>lakehouse.gold.*</code>. Full history retention.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>Data Flow</h2>
+    <p>End-to-end data flow through Bronze, Silver, and Gold layers with quality gates.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Source to Bronze</code></td>
+            <td><span class="ref-type">stage</span></td>
+            <td>Raw ingestion with metadata columns (source_system, ingestion_ts, batch_id). Critical quality gate blocks bad data.</td>
+          </tr>
+          <tr>
+            <td><code>Bronze to Silver</code></td>
+            <td><span class="ref-type">stage</span></td>
+            <td>Deduplication and business rules applied. Critical quality gate validates entity integrity.</td>
+          </tr>
+          <tr>
+            <td><code>Silver to Gold</code></td>
+            <td><span class="ref-type">stage</span></td>
+            <td>Aggregation and curation for analytics consumers.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>Namespace Convention and Metadata</h2>
+    <p>Format: <code>lakehouse.{layer}.{entity}</code>. The <code>lakehouse</code> prefix is the Iceberg catalog name (Nessie REST catalog).</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>source_system</code></td>
+            <td><span class="ref-type">STRING</span></td>
+            <td>Identifier for the data source (e.g., 'trading_platform'). Added to every Bronze table.</td>
+          </tr>
+          <tr>
+            <td><code>ingestion_ts</code></td>
+            <td><span class="ref-type">TIMESTAMP</span></td>
+            <td>Timestamp when the record was ingested. Added to every Bronze table.</td>
+          </tr>
+          <tr>
+            <td><code>batch_id</code></td>
+            <td><span class="ref-type">STRING</span></td>
+            <td>Unique identifier for the ingestion batch. Added to every Bronze table.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>2. Creating a New Pipeline</h2>
+    <p>All pipelines must extend <code>BasePipeline</code> from <code>src.pipelines.base</code>. This enforces the extract -> transform -> validate_schema -> quality_check -> write contract.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Step 1: Extend BasePipeline</code></td>
+            <td><span class="ref-type">step</span></td>
+            <td>Create a class extending BasePipeline with a PipelineConfig specifying name, target_layer, target_table, target_schema, and quality_checks_path.</td>
+          </tr>
+          <tr>
+            <td><code>Step 2: Run the Pipeline</code></td>
+            <td><span class="ref-type">step</span></td>
+            <td>Call <code>pipeline.execute()</code> to run extract -> transform -> validate_schema -> quality_check -> write. Returns dict with rows_written and quality results.</td>
+          </tr>
+          <tr>
+            <td><code>Step 3: Add Quality Checks</code></td>
+            <td><span class="ref-type">step</span></td>
+            <td>Create a SodaCL YAML file (see Section 3) and reference it in <code>PipelineConfig.quality_checks_path</code>.</td>
+          </tr>
+          <tr>
+            <td><code>Step 4: Create Airflow DAG</code></td>
+            <td><span class="ref-type">step</span></td>
+            <td>Create a DAG file in <code>etl/dags/</code> following the patterns in Section 4.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>Pipeline Code Example</h2>
+    <p>Minimal Bronze pipeline extending BasePipeline.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>BasePipeline</code></td>
+            <td><span class="ref-type">class</span></td>
+            <td>Abstract base class at <code>src.pipelines.base</code>. Provides extract/transform/validate_schema/quality_check/write contract.</td>
+          </tr>
+          <tr>
+            <td><code>PipelineConfig</code></td>
+            <td><span class="ref-type">dataclass</span></td>
+            <td>Frozen dataclass for pipeline configuration: name, target_layer, target_table, target_schema, quality_checks_path, critical_checks.</td>
+          </tr>
+          <tr>
+            <td><code>MedallionLayer</code></td>
+            <td><span class="ref-type">enum</span></td>
+            <td>Enum with BRONZE, SILVER, GOLD values. Determines target namespace prefix.</td>
+          </tr>
+          <tr>
+            <td><code>execute()</code></td>
+            <td><span class="ref-type">method</span></td>
+            <td>Entry point. Runs the full pipeline contract and returns <code>{rows_written: int, quality: dict}</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>3. Data Quality Integration</h2>
+    <p>Quality checks use Soda Core with SodaCL YAML definitions. Each layer has its own checks file.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Critical Checks</code></td>
+            <td><span class="ref-type">gate</span></td>
+            <td>Block pipeline progression. Use for: schema validation, PK null/unique, referential integrity. Raises <code>QualityGateError</code> on failure.</td>
+          </tr>
+          <tr>
+            <td><code>Advisory Checks</code></td>
+            <td><span class="ref-type">gate</span></td>
+            <td>Generate warnings, pipeline continues. Use for: completeness rates, range validation, outlier detection.</td>
+          </tr>
+          <tr>
+            <td><code>SodaCL YAML</code></td>
+            <td><span class="ref-type">format</span></td>
+            <td>Define checks in <code>src/quality/checks/{layer}_{entity}.yml</code>. Reference in <code>PipelineConfig.quality_checks_path</code>.</td>
+          </tr>
+          <tr>
+            <td><code>Quality Results</code></td>
+            <td><span class="ref-type">dict</span></td>
+            <td>Returned as <code>{passed: bool, critical_failures: list, warnings: list, all_results: list}</code>. Consumed by Grafana dashboards.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>SodaCL Example</h2>
+    <p>Example SodaCL YAML for Bronze quality checks.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>primary_key_not_null</code></td>
+            <td><span class="ref-type">critical</span></td>
+            <td><code>missing_count(id) = 0</code> -- Primary key must not be null.</td>
+          </tr>
+          <tr>
+            <td><code>primary_key_unique</code></td>
+            <td><span class="ref-type">critical</span></td>
+            <td><code>duplicate_count(id) = 0</code> -- Primary key must be unique.</td>
+          </tr>
+          <tr>
+            <td><code>schema_required_columns</code></td>
+            <td><span class="ref-type">critical</span></td>
+            <td>Schema check: fail when required columns missing (id, name, source_system).</td>
+          </tr>
+          <tr>
+            <td><code>name_completeness</code></td>
+            <td><span class="ref-type">advisory</span></td>
+            <td><code>missing_percent(name) < 5</code> -- Data completeness threshold.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>4. Airflow DAG Patterns</h2>
+    <p>Hybrid DAG design: source-specific Bronze/Silver DAGs, separate cross-source Gold DAGs.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Source-specific DAG</code></td>
+            <td><span class="ref-type">pattern</span></td>
+            <td>One DAG per source, Bronze -> Silver. Example: <code>bronze_silver_trades</code>.</td>
+          </tr>
+          <tr>
+            <td><code>Cross-source Gold DAG</code></td>
+            <td><span class="ref-type">pattern</span></td>
+            <td>Separate DAG for aggregation across sources. Example: <code>gold_trading_metrics</code>.</td>
+          </tr>
+          <tr>
+            <td><code>Maintenance DAG</code></td>
+            <td><span class="ref-type">pattern</span></td>
+            <td>Weekly Iceberg maintenance (compaction, snapshot expiry). Example: <code>iceberg_maintenance</code>.</td>
+          </tr>
+          <tr>
+            <td><code>Quality Report DAG</code></td>
+            <td><span class="ref-type">pattern</span></td>
+            <td>Daily quality monitoring across all layers. Example: <code>quality_monitoring_report</code>.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>DAG Configuration</h2>
+    <p>Standard DAG defaults and schedule conventions.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>default_args</code></td>
+            <td><span class="ref-type">config</span></td>
+            <td>owner: data-engineering, retries: 3, retry_delay: 2min, exponential backoff enabled, max_retry_delay: 30min.</td>
+          </tr>
+          <tr>
+            <td><code>Bronze/Silver Schedule</code></td>
+            <td><span class="ref-type">schedule</span></td>
+            <td>06:00-07:00 UTC. Early morning when source data is available.</td>
+          </tr>
+          <tr>
+            <td><code>Gold Schedule</code></td>
+            <td><span class="ref-type">schedule</span></td>
+            <td>08:00 UTC. After Bronze/Silver pipelines complete.</td>
+          </tr>
+          <tr>
+            <td><code>Quality Report</code></td>
+            <td><span class="ref-type">schedule</span></td>
+            <td>09:00 UTC. After all pipelines complete.</td>
+          </tr>
+          <tr>
+            <td><code>Maintenance</code></td>
+            <td><span class="ref-type">schedule</span></td>
+            <td>Sunday 02:00 UTC. Low-traffic window for Iceberg table optimization.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>5. Incremental Loading</h2>
+    <p>Two approaches for incremental loading: watermark-based for batch sources and CDC for real-time change capture.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Watermark-Based</code></td>
+            <td><span class="ref-type">pattern</span></td>
+            <td>For sources without CDC. Uses <code>IncrementalConfig</code> with watermark_column, merge_keys, target_table. High-water mark read from Iceberg table metadata.</td>
+          </tr>
+          <tr>
+            <td><code>CDC (Debezium)</code></td>
+            <td><span class="ref-type">pattern</span></td>
+            <td>Real-time: Debezium captures DB2 logs, events land in Kafka, Spark Structured Streaming reads and applies MERGE INTO Iceberg tables.</td>
+          </tr>
+          <tr>
+            <td><code>MERGE INTO</code></td>
+            <td><span class="ref-type">SQL</span></td>
+            <td>Upsert pattern: <code>MERGE INTO target USING source ON key WHEN MATCHED THEN UPDATE SET * WHEN NOT MATCHED THEN INSERT *</code>.</td>
+          </tr>
+          <tr>
+            <td><code>merge_incremental()</code></td>
+            <td><span class="ref-type">function</span></td>
+            <td>Utility at <code>src.pipelines.incremental</code>. Handles temporary view creation and Spark SQL MERGE INTO automatically.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>6. Mainframe Source Handling</h2>
+    <p>Mainframe flat files use COBOL copybooks parsed by Cobrix, a Spark data source for EBCDIC encoding.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>MainframeBronzePipeline</code></td>
+            <td><span class="ref-type">class</span></td>
+            <td>At <code>src.pipelines.bronze.mainframe_ingest</code>. Takes data_path, copybook_path, source_system, batch_id. Cobrix derives schema from copybook at runtime.</td>
+          </tr>
+          <tr>
+            <td><code>Cobrix</code></td>
+            <td><span class="ref-type">library</span></td>
+            <td>Spark data source for COBOL copybooks. Handles EBCDIC encoding, packed decimal (COMP-3), and complex record layouts.</td>
+          </tr>
+          <tr>
+            <td><code>DB2 z/OS JDBC</code></td>
+            <td><span class="ref-type">driver</span></td>
+            <td><code>ibm_db</code> Python driver for direct mainframe database access.</td>
+          </tr>
+          <tr>
+            <td><code>Error Handling</code></td>
+            <td><span class="ref-type">pattern</span></td>
+            <td>Graceful skip when Cobrix JAR unavailable (<code>CobrixNotAvailableError</code>). Unit tests use mock data; integration tests need real EBCDIC binary files.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>7. Testing Patterns</h2>
+    <p>Unit tests run without Spark or Docker. Integration tests require the full Docker stack.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>Unit Tests</code></td>
+            <td><span class="ref-type">pattern</span></td>
+            <td>Mock PySpark at module level with <code>unittest.mock</code>. Use <code>@pytest.mark.unit</code>. Test schemas via StructType assertions, classification/filtering logic directly.</td>
+          </tr>
+          <tr>
+            <td><code>Integration Tests</code></td>
+            <td><span class="ref-type">pattern</span></td>
+            <td>Require Docker services (Nessie, MinIO, Spark). Use <code>@pytest.mark.integration</code>. Use <code>spark_session</code> fixture from conftest.py.</td>
+          </tr>
+          <tr>
+            <td><code>Reconciliation</code></td>
+            <td><span class="ref-type">pattern</span></td>
+            <td>Use <code>reconcile_table()</code> from <code>src.quality.reconciliation</code> to validate migration accuracy. Checks row counts, checksums, key columns with configurable tolerance.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="section-block">
+    <h2>8. Quick Reference</h2>
+    <p>Common import paths, naming conventions, and financial precision rules.</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>BasePipeline</code></td>
+            <td><span class="ref-type">import</span></td>
+            <td><code>from src.pipelines.base import BasePipeline, MedallionLayer, PipelineConfig</code></td>
+          </tr>
+          <tr>
+            <td><code>Quality Scanner</code></td>
+            <td><span class="ref-type">import</span></td>
+            <td><code>from src.quality.scanner import run_soda_checks, QualityCheckResult</code></td>
+          </tr>
+          <tr>
+            <td><code>Incremental</code></td>
+            <td><span class="ref-type">import</span></td>
+            <td><code>from src.pipelines.incremental import IncrementalConfig, get_last_watermark, merge_incremental</code></td>
+          </tr>
+          <tr>
+            <td><code>Iceberg Utils</code></td>
+            <td><span class="ref-type">import</span></td>
+            <td><code>from src.iceberg_utils.catalog import get_spark_session, create_namespace</code></td>
+          </tr>
+          <tr>
+            <td><code>Job Inventory</code></td>
+            <td><span class="ref-type">import</span></td>
+            <td><code>from src.inventory.catalog import JobInventory</code></td>
+          </tr>
+          <tr>
+            <td><code>Financial Precision</code></td>
+            <td><span class="ref-type">rule</span></td>
+            <td>All monetary values use <code>DecimalType(38, 4)</code>. Never use FloatType or DoubleType for financial amounts.</td>
+          </tr>
+          <tr>
+            <td><code>Table Naming</code></td>
+            <td><span class="ref-type">convention</span></td>
+            <td>snake_case entity: <code>trades</code>, <code>positions</code>, <code>trading_metrics</code></td>
+          </tr>
+          <tr>
+            <td><code>DAG ID Naming</code></td>
+            <td><span class="ref-type">convention</span></td>
+            <td>snake_case with layer prefix: <code>bronze_silver_trades</code>, <code>gold_trading_metrics</code></td>
+          </tr>
+          <tr>
+            <td><code>Pipeline Class</code></td>
+            <td><span class="ref-type">convention</span></td>
+            <td>PascalCase with Layer suffix: <code>TradesBronzePipeline</code>, <code>TradingMetricsGoldPipeline</code></td>
+          </tr>
+          <tr>
+            <td><code>Quality File</code></td>
+            <td><span class="ref-type">convention</span></td>
+            <td><code>{layer}_{entity}.yml</code>: <code>bronze_trades.yml</code>, <code>silver_trades.yml</code></td>
+          </tr>
+          <tr>
+            <td><code>Test File</code></td>
+            <td><span class="ref-type">convention</span></td>
+            <td><code>test_{module}.py</code>: <code>test_base_pipeline.py</code>, <code>test_job_inventory.py</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Developer Documentation</p>
+  </footer>
+</body>
+</html>

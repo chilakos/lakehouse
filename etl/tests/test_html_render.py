@@ -847,3 +847,128 @@ def test_developer_day1_checklist(rendered_developer_pages: dict[str, str]) -> N
     assert "first-pipeline.html" in html, "Missing link to first pipeline page"
     # Print CSS for compact layout
     assert "8pt" in html, "Missing compact print font size"
+
+
+# ---------------------------------------------------------------------------
+# DEV-04: ETL Patterns Reference
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_etl_patterns(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-04: ETL patterns HTML contains all 8 sections from etl-patterns.md with code block elements."""
+    html = rendered_developer_pages["etl-patterns.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    # Medallion architecture content
+    assert "Medallion" in html or "medallion" in html.lower(), "Missing Medallion architecture reference"
+    # All 8 section headings (numbered in the YAML)
+    section_markers = [
+        "Architecture Overview",    # Section 1
+        "Creating a New Pipeline",  # Section 2
+        "Quality",                  # Section 3 (Data Quality Integration)
+        "DAG Patterns",             # Section 4 (Airflow DAG Patterns)
+        "Incremental Loading",      # Section 5
+        "Mainframe",                # Section 6
+        "Testing Patterns",         # Section 7
+        "Quick Reference",          # Section 8
+    ]
+    for marker in section_markers:
+        assert marker in html, f"Missing section: '{marker}'"
+    # Reference table structure
+    assert "<table" in html, "Missing table elements for reference entries"
+    assert "BasePipeline" in html, "Missing BasePipeline reference"
+
+
+# ---------------------------------------------------------------------------
+# DEV-05: Testing Guide
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_testing_guide(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-05: Testing guide HTML contains pytest markers, CI gate info, and output snippets."""
+    html = rendered_developer_pages["testing.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    assert "pytest" in html, "Missing pytest reference"
+    # All 4 markers
+    assert "unit" in html, "Missing 'unit' marker"
+    assert "integration" in html, "Missing 'integration' marker"
+    assert "slow" in html, "Missing 'slow' marker"
+    assert "snowflake" in html, "Missing 'snowflake' marker"
+    # Formatted output snippet (pre-formatted pytest output)
+    assert "test session starts" in html, "Missing formatted pytest output snippet"
+    assert "passed" in html, "Missing test pass result in output snippet"
+    # CI gate behavior
+    assert "ci.yml" in html or "CI" in html, "Missing CI gate reference"
+    assert "ruff" in html, "Missing ruff linter reference"
+
+
+# ---------------------------------------------------------------------------
+# DEV-06: CI/CD Workflow
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_cicd(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-06: CI/CD HTML contains staging, production, workflow names, and Mermaid SVG or placeholder."""
+    html = rendered_developer_pages["cicd.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    assert "staging" in html.lower(), "Missing 'staging' environment reference"
+    assert "production" in html.lower() or "prod" in html.lower(), \
+        "Missing 'production' environment reference"
+    # Workflow names
+    assert "ci.yml" in html, "Missing ci.yml workflow reference"
+    assert "deploy-dev.yml" in html or "deploy-dev" in html, "Missing deploy-dev workflow"
+    assert "deploy-staging.yml" in html or "deploy-staging" in html, "Missing deploy-staging workflow"
+    assert "deploy-prod.yml" in html or "deploy-prod" in html, "Missing deploy-prod workflow"
+    # Mermaid SVG or placeholder
+    assert "svg" in html.lower() or "diagram" in html.lower() or "Placeholder" in html, \
+        "Missing Mermaid SVG or placeholder for CI/CD flow diagram"
+
+
+# ---------------------------------------------------------------------------
+# DEV-07: Service URL Reference
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_service_urls(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-07: Service URL HTML contains localhost, service names from docker-compose, and port numbers."""
+    html = rendered_developer_pages["service-urls.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    assert "localhost" in html, "Missing localhost URLs"
+    # Key services from docker-compose.yml
+    service_names = ["airflow", "trino", "minio", "nessie", "grafana"]
+    for svc in service_names:
+        assert svc in html.lower(), f"Missing service '{svc}' in service URL reference"
+    # Port numbers should be present (dynamic from extract_services)
+    assert "8080" in html or "8081" in html, "Missing common port numbers"
+    assert "9000" in html or "9001" in html, "Missing MinIO port"
+    assert "19120" in html, "Missing Nessie port"
+    # Dynamic services table from extract_services()
+    assert "<table" in html, "Missing services table"
+    assert "All Platform Services" in html, "Missing dynamic services table heading"
+
+
+# ---------------------------------------------------------------------------
+# DEV-08: Troubleshooting FAQ
+# ---------------------------------------------------------------------------
+
+@pytest.mark.unit
+def test_developer_troubleshooting(rendered_developer_pages: dict[str, str]) -> None:
+    """DEV-08: Troubleshooting FAQ HTML has Symptom-Fix-Why entries with collapsible details elements."""
+    html = rendered_developer_pages["troubleshooting.html"]
+    assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
+    # Symptom-Fix-Why format
+    html_lower = html.lower()
+    assert "symptom" in html_lower or "Spark executor OOM" in html, \
+        "Missing symptom references in FAQ"
+    assert "Fix:" in html, "Missing 'Fix:' label in FAQ entries"
+    assert "Why:" in html, "Missing 'Why:' label in FAQ entries"
+    # Collapsible details/summary elements
+    details_count = html.count("<details")
+    assert details_count >= 8, \
+        f"Expected at least 8 FAQ entries with <details>, got {details_count}"
+    assert "<summary" in html, "Missing <summary> elements for FAQ"
+    # Categories
+    assert "Docker" in html, "Missing 'Docker and Services' category"
+    assert "Testing" in html, "Missing 'Testing' category"
+    # Specific troubleshooting content
+    assert "OOM" in html or "memory" in html.lower(), "Missing OOM/memory troubleshooting entry"
+    assert "Nessie" in html, "Missing Nessie troubleshooting entry"

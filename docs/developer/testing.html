@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Testing Guide - Lakehouse Developer Docs</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+    a { color: #3b82f6; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.5rem; }
+
+    /* === CODE BLOCKS === */
+    pre {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 1rem 1.25rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 0.75rem 0 1rem 0;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    code {
+      font-family: "SF Mono", "Fira Code", "Fira Mono", Menlo, Consolas, monospace;
+    }
+    p code, li code, td code {
+      background: #e2e8f0;
+      padding: 0.15rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.88em;
+      color: #1a2332;
+    }
+    pre code {
+      background: none;
+      padding: 0;
+      border-radius: 0;
+      color: inherit;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === SECTION BLOCKS === */
+    .section-block {
+      margin-bottom: 1.5rem;
+    }
+
+    /* === STEP NUMBERS (Tutorial) === */
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      background: #1a2332;
+      color: #c8a961;
+      border-radius: 50%;
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-right: 0.5rem;
+    }
+
+    /* === CHECKLIST === */
+    .checklist-section {
+      margin-bottom: 1.5rem;
+    }
+    .checklist-item {
+      display: block;
+      padding: 0.4rem 0;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+    .checklist-item input[type="checkbox"] {
+      margin-right: 0.5rem;
+      transform: scale(1.2);
+    }
+    .checklist-item .verify {
+      color: #64748b;
+      font-size: 0.85em;
+      font-family: "SF Mono", "Fira Code", Menlo, Consolas, monospace;
+    }
+
+    /* === FAQ === */
+    .faq-entry {
+      margin-bottom: 0.5rem;
+    }
+    .faq-entry .faq-fix {
+      background: #f0fdf4;
+      border-left: 3px solid #22c55e;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.92rem;
+    }
+    .faq-entry .faq-why {
+      background: #eff6ff;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.88rem;
+      color: #475569;
+    }
+
+    /* === REFERENCE ENTRIES === */
+    .ref-entry {
+      margin-bottom: 0.75rem;
+    }
+    .ref-entry .ref-name {
+      font-weight: 700;
+      color: #1a2332;
+    }
+    .ref-entry .ref-type {
+      display: inline-block;
+      background: #e2e8f0;
+      padding: 0.1rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.8em;
+      color: #475569;
+      margin-left: 0.5rem;
+    }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      table { font-size: 0.8rem; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT (general) === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      pre { background: #f1f5f9; color: #1a2332; border: 1px solid #e2e8f0; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>Testing Guide</h1>
+    <p class="subtitle">Unit tests, integration tests, markers, and CI gate behavior</p>
+  </header>
+
+  <div class="section-block">
+    <h2><span class="step-number">1</span>Test Organization</h2>
+    <p>All tests live under <code>etl/tests/</code>. The <code>conftest.py</code> at the root provides session-scoped fixtures for Spark, Nessie, Trino, MinIO, and S3.</p>
+<h3>Directory Structure</h3>    <ul>
+      <li><code>etl/tests/</code> -- test root with conftest.py</li>
+      <li><code>etl/tests/unit/</code> -- unit tests (no external services)</li>
+      <li><code>etl/tests/integration/</code> -- integration tests (requires Docker services)</li>
+      <li><code>etl/tests/fixtures/</code> -- test data files (COBOL copybooks, sample CSVs)</li>
+    </ul>
+<h3>Key Fixtures (conftest.py)</h3>    <ul>
+      <li><code>spark_session</code> -- Session-scoped SparkSession configured for Iceberg/Nessie REST catalog. Skips if PySpark unavailable or Nessie unreachable.</li>
+      <li><code>nessie_url</code> -- Nessie REST API base URL (default: <code>http://localhost:19120</code>)</li>
+      <li><code>minio_endpoint</code> -- MinIO S3-compatible endpoint (default: <code>http://localhost:9000</code>)</li>
+      <li><code>trino_connection</code> -- Trino DBAPI connection. Skips if Trino unreachable.</li>
+      <li><code>minio_client</code> -- boto3 S3 client configured for MinIO.</li>
+      <li><code>s3_client</code> -- boto3 S3 client for AWS. Skips if credentials unavailable.</li>
+    </ul>
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">2</span>Pytest Markers</h2>
+    <p>Four markers are defined in <code>etl/pyproject.toml</code> under <code>[tool.pytest.ini_options]</code>. The <code>--strict-markers</code> flag is enabled, so unregistered markers cause errors.</p>
+<h3>Marker Reference</h3>    <p>Use these markers to categorize and selectively run tests.</p>
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">3</span>Marker Reference Table</h2>
+    <ul>
+      <li><strong>unit</strong> -- Unit tests with no external services required. Run with <code>pytest -m unit</code>. These are the default CI gate tests.</li>
+      <li><strong>integration</strong> -- Integration tests requiring Docker services (Nessie, MinIO, Spark, Trino). Run with <code>pytest -m integration</code>.</li>
+      <li><strong>slow</strong> -- Slow-running tests (large datasets, full pipeline execution). Excluded from default runs. Run with <code>pytest -m slow</code>.</li>
+      <li><strong>snowflake</strong> -- Snowflake integration tests requiring Snowflake credentials. Run with <code>pytest -m snowflake</code>. Skipped in CI by default.</li>
+    </ul>
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">4</span>Running Tests</h2>
+    <p>Common test invocations from the <code>etl/</code> directory.</p>
+    <pre><code class="language-bash"># Unit tests only (fastest, no Docker needed)
+pytest tests/ -m unit -x --tb=short
+
+# Integration tests only (requires Docker stack)
+pytest tests/ -m integration -x --tb=short
+
+# Full test suite (all markers)
+pytest tests/ -x --tb=short
+
+# Single test file
+pytest tests/test_base_pipeline.py -x --tb=short -v
+
+# Verbose output with coverage
+pytest tests/ -m unit --cov=src --cov-report=term-missing -v</code></pre>
+
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">5</span>CI Gate Behavior</h2>
+    <p>The CI pipeline runs on every pull request to <code>main</code>, <code>staging</code>, and <code>dev</code> branches.</p>
+<h3>On Pull Request (ci.yml)</h3>    <ul>
+      <li><strong>python-lint</strong>: Runs <code>ruff check .</code> and <code>ruff format --check .</code> in <code>etl/</code></li>
+      <li><strong>python-test</strong>: Runs <code>pytest tests/unit/ -x --tb=short</code> -- unit tests only, fast feedback</li>
+      <li><strong>cube-yaml-validate</strong>: Validates Cube YAML structure and glossary links</li>
+      <li><strong>terraform-validate</strong>: Runs <code>terraform init -backend=false && terraform validate</code></li>
+      <li><strong>terraform-fmt</strong>: Checks Terraform formatting with <code>terraform fmt -check -recursive</code></li>
+    </ul>
+<h3>On Merge to Dev/Staging/Prod</h3>    <ul>
+      <li>Full integration test suite runs against deployed environment</li>
+      <li>Staging deployment includes integration tests</li>
+      <li>Production deployment includes smoke tests (Nessie health, Trino health)</li>
+    </ul>
+<h3>Handling CI Failures</h3>    <ul>
+      <li>Lint failure: Run <code>ruff check --fix . && ruff format .</code> locally, commit, push</li>
+      <li>Test failure: Run the failing test locally with <code>-v --tb=long</code> for full traceback</li>
+      <li>Terraform failure: Run <code>terraform validate</code> and <code>terraform fmt -recursive</code> in <code>infra/terraform/</code></li>
+    </ul>
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">6</span>Writing New Tests</h2>
+    <p>Follow these conventions when adding tests.</p>
+<h3>File Naming</h3>    <ul>
+      <li>Test files: <code>test_{module}.py</code> (e.g., <code>test_base_pipeline.py</code>)</li>
+      <li>Place unit tests in <code>tests/</code> or <code>tests/unit/</code></li>
+      <li>Place integration tests in <code>tests/integration/</code></li>
+    </ul>
+<h3>Marker Decoration</h3>    <p>Always apply the appropriate marker. Classes inherit markers from the class decorator.</p>
+    <pre><code class="language-python">import pytest
+
+@pytest.mark.unit
+class TestMyFeature:
+    def test_basic_behavior(self):
+        """Describe what this test validates."""
+        result = my_function("input")
+        assert result == "expected"
+
+    def test_edge_case(self):
+        with pytest.raises(ValueError, match="invalid"):
+            my_function("")</code></pre>
+
+<h3>Fixture Usage</h3>    <p>Use conftest.py fixtures for integration tests. Fixtures skip gracefully when services are unavailable.</p>
+    <pre><code class="language-python">@pytest.mark.integration
+def test_full_pipeline(spark_session):
+    """End-to-end test with real Iceberg tables."""
+    pipeline = MyBronzePipeline(spark_session, data, "test", "batch-001")
+    result = pipeline.execute()
+    assert result["rows_written"] > 0</code></pre>
+
+<h3>Assertion Patterns</h3>    <ul>
+      <li>Use descriptive assertion messages: <code>assert count > 0, f'Expected rows, got {count}'</code></li>
+      <li>For PySpark schemas, compare StructType objects directly</li>
+      <li>For quality results, check <code>result['passed']</code> and <code>result['critical_failures']</code></li>
+      <li>Mock external services in unit tests: <code>@patch('src.pipelines.base.lit')</code></li>
+    </ul>
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">7</span>Example Output</h2>
+    <p>What passing and failing test output looks like.</p>
+<h3>Passing Tests</h3>    <pre><code class="language-text">$ pytest tests/ -m unit -x --tb=short
+========================= test session starts =========================
+platform linux -- Python 3.11.7, pytest-8.3.4
+markers: unit, integration, slow, snowflake
+collected 487 items / 12 deselected / 475 selected
+
+tests/test_base_pipeline.py ............                         [  3%]
+tests/test_bronze_ingest.py ..........                           [  5%]
+tests/test_classification.py ..........                           [  7%]
+tests/test_gold_metrics.py .........                             [  9%]
+tests/test_html_render.py ....................................   [ 17%]
+tests/test_incremental.py .........                              [ 19%]
+tests/test_job_inventory.py ..............                        [ 22%]
+tests/test_quality.py ...............                             [ 25%]
+...
+========================= 475 passed in 12.34s =========================</code></pre>
+
+<h3>Failing Tests</h3>    <pre><code class="language-text">$ pytest tests/test_base_pipeline.py::TestExtract -x --tb=short -v
+========================= test session starts =========================
+collected 3 items
+
+tests/test_base_pipeline.py::TestExtract::test_extract_returns_df PASSED
+tests/test_base_pipeline.py::TestExtract::test_extract_with_empty FAILED
+
+================================ FAILURES ================================
+_______________ TestExtract.test_extract_with_empty ________________
+tests/test_base_pipeline.py:45: in test_extract_with_empty
+    assert result.count() == 0
+E   AssertionError: assert 1 == 0
+========================= 1 failed, 1 passed in 0.42s =========================</code></pre>
+
+  </div>
+
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Developer Documentation</p>
+  </footer>
+</body>
+</html>

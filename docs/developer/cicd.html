@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Write Your First Pipeline - Lakehouse Developer Docs</title>
+  <title>CI/CD Workflow - Lakehouse Developer Docs</title>
   <style>
     /* === RESET & BASE === */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -225,183 +225,106 @@
 </head>
 <body>
   <header class="doc-header">
-    <h1>Write Your First Pipeline</h1>
-    <p class="subtitle">Build a synthetic hello-world CSV-to-Bronze pipeline step by step</p>
+    <h1>CI/CD Workflow</h1>
+    <p class="subtitle">From pull request to production: CI gates, environment promotion, and deploy workflows</p>
   </header>
 
   <div class="section-block">
     <h2><span class="step-number">1</span>Overview</h2>
-    <p>This tutorial walks you through creating a simple CSV-to-Bronze pipeline using the BasePipeline framework. The pipeline reads a CSV file, validates its schema, and writes it to an Iceberg table in the Bronze layer. After completing this, you will understand the pipeline contract well enough to build production pipelines like TradesBronzePipeline and TradesSilverPipeline.</p>
+    <p>Code moves from feature branch to production through a series of CI gates and environment promotions. Every pull request triggers automated checks. Merges to environment branches trigger deployments via Terraform. The full path is: feature branch -> PR to dev -> merge -> PR to staging -> merge -> PR to main -> production deploy + smoke tests.</p>
   </div>
   <div class="section-block">
-    <h2><span class="step-number">2</span>Create the Pipeline Class</h2>
-    <p>Create a new file at etl/src/pipelines/bronze/hello_world.py. Every pipeline extends BasePipeline and implements extract(), transform(), and defines a target_schema.</p>
-    <pre><code class="language-python">"""Hello World Bronze pipeline -- CSV to Iceberg."""
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from pyspark.sql import DataFrame
-
-from pyspark.sql.types import StructType, StructField, StringType, DoubleType, TimestampType
-
-from src.pipelines.base import BasePipeline, PipelineConfig, MedallionLayer
-
-
-class HelloWorldBronzePipeline(BasePipeline):
-    """Ingest a hello-world CSV file into the Bronze layer."""
-
-    def __init__(self, spark, csv_path: str = "/data/hello_world.csv"):
-        config = PipelineConfig(
-            name="hello_world_bronze",
-            target_layer=MedallionLayer.BRONZE,
-            target_table="hello_world",
-            target_schema=StructType([
-                StructField("id", StringType(), nullable=False),
-                StructField("name", StringType(), nullable=True),
-                StructField("value", DoubleType(), nullable=True),
-                StructField("created_at", TimestampType(), nullable=True),
-            ]),
-        )
-        super().__init__(spark=spark, config=config)
-        self.csv_path = csv_path
-
-    def extract(self) -> DataFrame:
-        """Read the source CSV file."""
-        return self.spark.read.option("header", "true").csv(self.csv_path)
-
-    def transform(self, df: DataFrame) -> DataFrame:
-        """Apply basic cleaning: trim whitespace, cast types."""
-        from pyspark.sql.functions import trim, col
-        return (
-            df
-            .withColumn("id", trim(col("id")))
-            .withColumn("name", trim(col("name")))
-            .withColumn("value", col("value").cast("double"))
-            .withColumn("created_at", col("created_at").cast("timestamp"))
-        )</code></pre>
-
-  </div>
-  <div class="section-block">
-    <h2><span class="step-number">3</span>Define the Schema</h2>
-    <p>The target_schema in PipelineConfig defines the expected output. BasePipeline.validate_schema() checks the DataFrame against this schema after transform() runs. If columns are missing or types differ, a SchemaValidationError is raised.</p>
-    <pre><code class="language-python">from pyspark.sql.types import StructType, StructField, StringType, DoubleType, TimestampType
-
-schema = StructType([
-    StructField("id", StringType(), nullable=False),
-    StructField("name", StringType(), nullable=True),
-    StructField("value", DoubleType(), nullable=True),
-    StructField("created_at", TimestampType(), nullable=True),
-])</code></pre>
-
-  </div>
-  <div class="section-block">
-    <h2><span class="step-number">4</span>Implement extract()</h2>
-    <p>The extract() method reads raw data from the source. For Bronze pipelines, this is typically a file read or API call. The returned DataFrame is the raw, unmodified data.</p>
-    <pre><code class="language-python">def extract(self) -> DataFrame:
-    """Read the source CSV file with header row."""
-    return self.spark.read.option("header", "true").csv(self.csv_path)</code></pre>
-
-  </div>
-  <div class="section-block">
-    <h2><span class="step-number">5</span>Implement transform()</h2>
-    <p>The transform() method applies cleaning logic. For Bronze, keep it minimal: trim whitespace, cast types, add metadata columns. Heavy business logic belongs in Silver/Gold.</p>
-    <pre><code class="language-python">def transform(self, df: DataFrame) -> DataFrame:
-    """Trim whitespace and cast columns to target types."""
-    from pyspark.sql.functions import trim, col
-    return (
-        df
-        .withColumn("id", trim(col("id")))
-        .withColumn("name", trim(col("name")))
-        .withColumn("value", col("value").cast("double"))
-        .withColumn("created_at", col("created_at").cast("timestamp"))
-    )</code></pre>
-
-  </div>
-  <div class="section-block">
-    <h2><span class="step-number">6</span>Add Quality Checks</h2>
-    <p>BasePipeline supports Soda quality checks via the quality_checks_path config field. Create a Soda YAML file to define data quality rules.</p>
-    <pre><code class="language-yaml"># etl/quality/checks/hello_world_bronze.yml
-checks for hello_world:
-  - row_count > 0
-  - missing_count(id) = 0
-  - duplicate_count(id) = 0</code></pre>
-
-<h3>Wire Up Quality Checks</h3>    <p>Set the quality_checks_path in your PipelineConfig to enable automatic quality gating.</p>
-    <pre><code class="language-python">config = PipelineConfig(
-    name="hello_world_bronze",
-    target_layer=MedallionLayer.BRONZE,
-    target_table="hello_world",
-    target_schema=schema,
-    quality_checks_path="quality/checks/hello_world_bronze.yml",
-    critical_checks=["row_count > 0", "missing_count(id) = 0"],
-)</code></pre>
-
-  </div>
-  <div class="section-block">
-    <h2><span class="step-number">7</span>Create an Airflow DAG</h2>
-    <p>Wrap your pipeline in an Airflow DAG for scheduled execution.</p>
-    <pre><code class="language-python"># dags/hello_world_dag.py
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from datetime import datetime
-
-from src.pipelines.bronze.hello_world import HelloWorldBronzePipeline
-from src.iceberg_utils.catalog import get_spark_session
-
-def run_pipeline():
-    spark = get_spark_session("hello_world_bronze")
-    pipeline = HelloWorldBronzePipeline(spark)
-    result = pipeline.execute()
-    print(f"Pipeline result: {result}")
-    spark.stop()
-
-with DAG(
-    "hello_world_bronze",
-    start_date=datetime(2026, 1, 1),
-    schedule_interval="@daily",
-    catchup=False,
-) as dag:
-    ingest = PythonOperator(
-        task_id="ingest_hello_world",
-        python_callable=run_pipeline,
-    )</code></pre>
-
-  </div>
-  <div class="section-block">
-    <h2><span class="step-number">8</span>Run Tests</h2>
-    <p>Write a test for your pipeline and run it.</p>
-    <pre><code class="language-python"># etl/tests/test_hello_world.py
-import pytest
-from unittest.mock import MagicMock
-
-@pytest.mark.unit
-def test_hello_world_pipeline_config():
-    """Pipeline config has correct target table and layer."""
-    from src.pipelines.bronze.hello_world import HelloWorldBronzePipeline
-    from src.pipelines.base import MedallionLayer
-    spark = MagicMock()
-    pipeline = HelloWorldBronzePipeline(spark)
-    assert pipeline.config.target_layer == MedallionLayer.BRONZE
-    assert pipeline.config.target_table == "hello_world"
-    assert pipeline.config.name == "hello_world_bronze"</code></pre>
-
-<h3>Run Your Test</h3>    <pre><code class="language-bash">cd etl
-python3 -m pytest tests/test_hello_world.py -x --tb=short -m unit
-# Expected: 1 passed</code></pre>
-
-<h3>Check Bronze Output in Trino</h3>    <p>After running the pipeline against a real Spark session, verify the data landed in Iceberg.</p>
-    <pre><code class="language-bash">docker exec trino trino --execute "SELECT * FROM lakehouse.bronze.hello_world LIMIT 5"</code></pre>
-
-  </div>
-  <div class="section-block">
-    <h2><span class="step-number">9</span>What You Built Toward</h2>
-    <p>Your hello-world pipeline follows the same pattern as production pipelines. Compare your code to these existing implementations for more advanced patterns.</p>
-    <ul>
-      <li>TradesBronzePipeline (etl/src/pipelines/bronze/trades_ingest.py) -- Reads market data files with schema enforcement and incremental watermarks</li>
-      <li>TradesSilverPipeline (etl/src/pipelines/silver/trades_clean.py) -- Reads from Bronze, applies deduplication, null checks, and type normalization</li>
+    <h2><span class="step-number">2</span>CI Pipeline (ci.yml)</h2>
+    <p>Triggered on every pull request to <code>main</code>, <code>staging</code>, or <code>dev</code>. All jobs must pass before merge is allowed.</p>
+<h3>CI Jobs</h3>    <ul>
+      <li><strong>python-lint</strong> (Python Lint & Format): Runs <code>ruff check .</code> and <code>ruff format --check .</code> in <code>etl/</code>. Enforces line-length 120, pycodestyle, pyflakes, isort, pep8-naming, pyupgrade, bugbear, simplify rules.</li>
+      <li><strong>python-test</strong> (Python Unit Tests): Runs <code>pytest tests/unit/ -x --tb=short</code>. Unit tests only -- no Docker services required. Fast feedback loop.</li>
+      <li><strong>cube-yaml-validate</strong> (Cube YAML Validation): Validates Cube semantic model YAML structure and verifies glossary term links against OpenMetadata seed data.</li>
+      <li><strong>terraform-validate</strong> (Terraform Validate): Runs <code>terraform init -backend=false && terraform validate</code> in <code>infra/terraform/</code>.</li>
+      <li><strong>terraform-fmt</strong> (Terraform Format Check): Runs <code>terraform fmt -check -recursive infra/terraform/</code>. Enforces consistent HCL formatting.</li>
     </ul>
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">3</span>Environment Promotion</h2>
+    <p>Three environments with increasing gates at each stage.</p>
+<h3>Dev Environment</h3>    <ul>
+      <li>Trigger: Push to <code>dev</code> branch</li>
+      <li>Workflow: <code>deploy-dev.yml</code></li>
+      <li>Terraform workspace: <code>dev</code></li>
+      <li>Post-deploy: Optional integration tests</li>
+      <li>Purpose: Early integration testing, feature validation</li>
+    </ul>
+<h3>Staging Environment</h3>    <ul>
+      <li>Trigger: Push to <code>staging</code> branch</li>
+      <li>Workflow: <code>deploy-staging.yml</code></li>
+      <li>Terraform workspace: <code>staging</code></li>
+      <li>Post-deploy: Integration tests run against staging environment</li>
+      <li>Purpose: Pre-production validation, performance testing</li>
+    </ul>
+<h3>Production Environment</h3>    <ul>
+      <li>Trigger: Push to <code>main</code> branch</li>
+      <li>Workflow: <code>deploy-prod.yml</code></li>
+      <li>Terraform workspace: <code>prod</code></li>
+      <li>Post-deploy: Smoke tests -- Nessie health (<code>/q/health/ready</code>), Trino health (<code>/v1/info</code>)</li>
+      <li>Purpose: Live production serving 40+ engineers and BI consumers</li>
+    </ul>
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">4</span>Deploy Workflows</h2>
+    <p>All deploy workflows use OIDC authentication with AWS and Terraform workspaces for environment isolation.</p>
+<h3>Common Steps</h3>    <ul>
+      <li>Checkout code</li>
+      <li>Configure AWS credentials via OIDC (<code>aws-actions/configure-aws-credentials@v4</code>)</li>
+      <li>Setup Terraform 1.7 (<code>hashicorp/setup-terraform@v3</code>)</li>
+      <li><code>terraform init</code></li>
+      <li><code>terraform workspace select -or-create {env}</code></li>
+      <li><code>terraform plan -var-file=environments/{env}/terraform.tfvars -out=tfplan</code></li>
+      <li><code>terraform apply tfplan</code></li>
+    </ul>
+<h3>deploy-dev.yml</h3>    <p>Triggered on push to <code>dev</code> branch. Uses <code>dev</code> Terraform workspace and <code>environments/dev/terraform.tfvars</code>. Optional integration tests after deploy.</p>
+<h3>deploy-staging.yml</h3>    <p>Triggered on push to <code>staging</code> branch. Uses <code>staging</code> Terraform workspace. Runs integration tests against the staging environment after successful deploy.</p>
+<h3>deploy-prod.yml</h3>    <p>Triggered on push to <code>main</code> branch. Uses <code>prod</code> Terraform workspace. Runs smoke tests with retries: Nessie health check (<code>curl -sf --retry 3 --retry-delay 10 https://nessie.lakehouse.internal:19120/q/health/ready</code>), Trino health check (<code>curl -sf --retry 3 --retry-delay 10 https://trino.lakehouse.internal:8443/v1/info</code>).</p>
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">5</span>Branch Naming</h2>
+    <p>Use the <code>feature/TICKET-description</code> convention for all feature branches.</p>
+<h3>Convention</h3>    <ul>
+      <li>Format: <code>feature/TICKET-description</code> (e.g., <code>feature/DATA-123-add-positions-pipeline</code>)</li>
+      <li>CI parses the branch prefix for environment routing and PR labeling</li>
+      <li>Bugfix branches: <code>bugfix/TICKET-description</code></li>
+      <li>Hotfix branches: <code>hotfix/TICKET-description</code></li>
+    </ul>
+<h3>Promotion Flow</h3>    <ul>
+      <li>1. Create <code>feature/TICKET-desc</code> branch from <code>dev</code></li>
+      <li>2. Open PR to <code>dev</code> -- CI runs lint + unit tests + Terraform validate</li>
+      <li>3. Merge to <code>dev</code> -- deploy-dev.yml deploys to dev environment</li>
+      <li>4. Open PR from <code>dev</code> to <code>staging</code> -- CI gates re-run</li>
+      <li>5. Merge to <code>staging</code> -- deploy-staging.yml deploys + integration tests</li>
+      <li>6. Open PR from <code>staging</code> to <code>main</code> -- CI gates re-run</li>
+      <li>7. Merge to <code>main</code> -- deploy-prod.yml deploys + smoke tests</li>
+    </ul>
+  </div>
+  <div class="section-block">
+    <h2><span class="step-number">6</span>CI/CD Flow Diagram</h2>
+    <p>Visual representation of the PR-to-production promotion path. See the Mermaid flowchart below showing the complete CI/CD pipeline.</p>
+<h3>Promotion Flowchart</h3>    <div class="diagram-container" style="margin: 1.5rem 0; text-align: center; overflow-x: auto;">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200"><rect width="600" height="200" fill="#f8fafc" stroke="#1a2332" stroke-width="2" rx="8"/><text x="300" y="90" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#64748b">Diagram Placeholder</text><text x="300" y="120" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#94a3b8">mmdc failed: 
+Error: Failed to launch the browser process!
+/home/azureuser/.cache/puppeteer/chrome-headless-shell/linux-131.0.6778.204/chrome-headless-shell-linux64/chrome-headless-shell: error while loading shared libraries: libatk-1.0.so.0: cannot open shared object file: No such file or directory
+
+
+TROUBLESHOOTING: https://pptr.dev/troubleshooting
+
+    at Interface.onClose (file:///home/azureuser/.npm/_npx/668c188756b835f3/node_modules/@puppeteer/browsers/lib/esm/launch.js:303:24)
+    at Interface.emit (node:events:531:35)
+    at Interface.close (node:internal/readline/interface:530:10)
+    at Socket.onend (node:internal/readline/interface:260:10)
+    at Socket.emit (node:events:531:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+
+</text></svg>
+    </div>
   </div>
 
 
