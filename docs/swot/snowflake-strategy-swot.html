@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snowflake Strategy SWOT Analysis - Lakehouse Architecture</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+    .doc-header .meta { color: #94a3b8; font-size: 0.9rem; }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: capitalize;
+    }
+    .status-decided { background: #22c55e; color: white; }
+    .status-undecided { background: #f59e0b; color: #1a2332; }
+
+    /* === SWOT GRID === */
+    .swot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .swot-quadrant {
+      padding: 1.25rem;
+      border-radius: 6px;
+      border: 2px solid;
+    }
+    .swot-quadrant h3 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.05rem; }
+    .swot-quadrant ul { margin-left: 1.25rem; }
+    .swot-quadrant li { font-size: 0.92rem; }
+    .swot-strengths { border-color: #22c55e; background: #f0fdf4; }
+    .swot-weaknesses { border-color: #eab308; background: #fefce8; }
+    .swot-opportunities { border-color: #3b82f6; background: #eff6ff; }
+    .swot-threats { border-color: #ef4444; background: #fef2f2; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === EVIDENCE CALLOUT === */
+    .evidence {
+      background: #f1f5f9;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    /* === MITIGATION CALLOUT === */
+    .mitigation {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      .swot-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+      .table-container { overflow-x: auto; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle, .doc-header .meta { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      .swot-grid { break-inside: avoid; }
+      .swot-quadrant { break-inside: avoid; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>Snowflake Strategy SWOT Analysis</h1>
+    <p class="subtitle">Retire vs Keep as Iceberg Compute vs Maintain Current State</p>
+    <p class="meta">
+      <span class="status-badge status-undecided">Undecided</span>
+      | 2026-03-14
+ | Prepared for: Leadership Review    </p>
+  </header>
+
+  <details open>
+    <summary>Executive Summary</summary>
+    <div class="details-body">
+      Snowflake currently operates as a full analytics platform with data copies from Teradata and Cloudera, generating significant license and compute costs through consumption-based pricing. The lakehouse architecture transformation creates an opportunity to restructure Snowflake's role by leveraging its ICEBERG_REST catalog support to read Iceberg tables directly from Nessie without maintaining separate data copies.</p><p>This analysis evaluates three strategic options: (1) Retire Snowflake entirely and route all analytics through Trino and Teradata, (2) Keep Snowflake as a compute-only engine reading Iceberg tables via Nessie's REST catalog, or (3) Maintain the current state with data copies. Option 2 is recommended as the optimal balance of cost reduction, capability preservation, and migration risk.
+    </div>
+  </details>
+
+  <details open>
+    <summary>Recommendation</summary>
+    <div class="details-body">
+      We recommend Option 2: Keep Snowflake as Iceberg Compute-Only. This preserves existing team skills and BI tool connections while eliminating data copies and reducing costs. The ICEBERG_REST integration with Nessie enables zero-copy access to lakehouse data, removing the duplicate governance overhead of maintaining separate Snowflake copies.</p><p>This approach reduces Snowflake spending to compute-only costs (eliminating storage and ETL costs for data copies), maintains the BI tool ecosystem that teams already use (Tableau and Power BI connections remain unchanged), and provides a reversible path -- if compute-only Snowflake proves insufficient, the fallback is Trino-only analytics, not rebuilding data copies.</p><p>Leadership should verify: (a) current Snowflake contract allows compute-only usage without minimum spend penalties, (b) team BI workloads can tolerate Iceberg table query performance through Snowflake's ICEBERG_REST integration, and (c) Snowflake-specific features in use (Snowpipe, Time Travel for native tables) have Iceberg/Trino equivalents for affected workflows.
+    </div>
+  </details>
+
+  <h2>SWOT Overview</h2>
+  <div class="swot-grid">
+  <div class="swot-quadrant swot-strengths">
+    <h3>Strengths</h3>
+    <ul>
+      <li><strong>S1: ICEBERG_REST Catalog Enables Zero-Copy Access</strong> &mdash; Snowflake supports the ICEBERG_REST catalog type, allowing it to connect directly to Nessie
+and read Iceberg tables without creating data copies. This is the technical enabler for the
+compute-only model, transforming Snowflake from a data store to a pure compute engine over
+lakehouse data.</li>
+      <li><strong>S2: Existing Team Snowflake Skills and Workflows</strong> &mdash; Multiple teams across analytics, data engineering, and business intelligence have invested
+in Snowflake skills, SQL patterns, stored procedures, and operational workflows. Preserving
+access to Snowflake as a compute engine avoids the disruption and retraining cost of a full
+migration away from Snowflake.</li>
+      <li><strong>S3: Strong BI Tooling Ecosystem</strong> &mdash; Tableau, Power BI, and other BI tools have first-class Snowflake connectors with optimized
+pushdown, caching, and authentication integrations. These connectors are mature and
+well-supported by both the BI vendors and Snowflake.</li>
+      <li><strong>S4: Consumption-Based Pricing Flexibility</strong> &mdash; Snowflake's pay-per-query model means compute-only usage can be scaled down to match actual
+demand. Teams that query infrequently incur minimal cost, while heavy workloads can burst
+without pre-provisioned capacity.</li>
+      <li><strong>S5: Mature Query Optimization and Caching</strong> &mdash; Snowflake's automatic clustering, result caching, and query optimization layer provide
+performance advantages for certain workload patterns, particularly large-scale aggregations
+and concurrent multi-user BI workloads.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-weaknesses">
+    <h3>Weaknesses</h3>
+    <ul>
+      <li><strong>W1: Consumption Pricing Expensive at Scale</strong> &mdash; Snowflake's consumption-based pricing becomes expensive for sustained high-compute workloads.
+Compute costs represent approximately 80% of the total Snowflake bill. At scale, Trino on
+existing infrastructure can deliver the same queries at a fraction of the cost.</li>
+      <li><strong>W2: Data Copy Maintenance Overhead in Current State</strong> &mdash; The current Snowflake deployment maintains data copies from Teradata and Cloudera, requiring
+ETL pipelines, synchronization monitoring, and duplicate governance. This overhead is
+eliminated in the compute-only model but persists in the maintain-current-state option.</li>
+      <li><strong>W3: Vendor Lock-In on Proprietary Features</strong> &mdash; Snowflake-specific features (Snowpipe for streaming ingestion, Time Travel for native
+tables, Tasks and Streams for CDC, Snowpark for data engineering) create lock-in that
+increases switching costs over time. The compute-only model limits but does not eliminate
+this risk.</li>
+      <li><strong>W4: Duplicate Governance Layer Required</strong> &mdash; Even in compute-only mode, Snowflake maintains its own access control (RBAC), audit logging,
+and query history separate from the lakehouse governance stack (Ranger, OpenMetadata). This
+creates governance fragmentation that must be managed.</li>
+      <li><strong>W5: ICEBERG_REST Performance Characteristics Unknown at Scale</strong> &mdash; While Snowflake's ICEBERG_REST support is GA, production performance at enterprise scale
+(large table scans, concurrent users, complex joins across Iceberg tables) may differ from
+Snowflake-native table performance. Real-world benchmarking is needed.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-opportunities">
+    <h3>Opportunities</h3>
+    <ul>
+      <li><strong>O1: Trino-Based Lakehouse Achieving Significant TCO Reduction</strong> &mdash; Consolidating analytics on Trino with the lakehouse architecture can achieve up to 55%
+lower total cost of ownership over 3 years compared to maintaining Snowflake as the primary
+analytics engine. The compute-only model captures a portion of these savings while preserving
+Snowflake optionality.</li>
+      <li><strong>O2: Consolidation to Single Governance and Lineage Stack</strong> &mdash; The compute-only model reduces governance complexity by making the lakehouse (Nessie +
+Ranger + OpenMetadata + Marquez) the single source of truth. Snowflake becomes a read-only
+consumer rather than a parallel data store requiring its own governance.</li>
+      <li><strong>O3: ICEBERG_REST as a Bridge During Transition</strong> &mdash; The ICEBERG_REST integration allows a gradual transition. Teams can start reading lakehouse
+data through Snowflake immediately while Trino capabilities mature. If Snowflake proves
+unnecessary for specific workloads, those teams migrate to Trino with no data movement.</li>
+      <li><strong>O4: Contract Renegotiation Leverage</strong> &mdash; Moving to a compute-only model provides leverage for renegotiating Snowflake contract terms.
+Reduced spend baseline and alternative compute options (Trino) create competitive pressure
+for better pricing.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-threats">
+    <h3>Threats</h3>
+    <ul>
+      <li><strong>T1: Snowflake Contract Lock-In and Minimum Spend</strong> &mdash; Existing Snowflake contracts may include minimum annual spend commitments or multi-year
+terms that make cost reduction difficult in the short term. Compute-only usage may not
+satisfy minimum spend requirements.</li>
+      <li><strong>T2: Loss of Snowflake-Specific Features</strong> &mdash; Teams using Snowpipe for streaming ingestion, Time Travel for native Snowflake tables,
+or Snowpark for data engineering will lose these capabilities under the compute-only model.
+Iceberg tables have their own time travel via snapshot history, but the Snowflake-specific
+interface and tooling around it differs.</li>
+      <li><strong>T3: Team Retraining Costs for Trino Migration</strong> &mdash; If the long-term trajectory is full Trino migration beyond compute-only, retraining
+costs for 40+ engineers on Trino SQL dialects, performance tuning, and operational
+patterns are significant.</li>
+      <li><strong>T4: ICEBERG_REST Integration Maturity Risk</strong> &mdash; Snowflake's ICEBERG_REST support, while GA, is still relatively new. Edge cases around
+schema evolution, partition pruning efficiency, and concurrent access patterns may surface
+at enterprise scale.</li>
+    </ul>
+  </div>
+</div>
+
+
+  <details>
+    <summary>Strengths (5 items)</summary>
+    <div class="details-body">
+      <h3>S1: ICEBERG_REST Catalog Enables Zero-Copy Access</h3>
+      <p>Snowflake supports the ICEBERG_REST catalog type, allowing it to connect directly to Nessie
+and read Iceberg tables without creating data copies. This is the technical enabler for the
+compute-only model, transforming Snowflake from a data store to a pure compute engine over
+lakehouse data.</p>
+      <div class="evidence"><strong>Evidence:</strong> Snowflake supports ICEBERG_REST catalog type connecting to Nessie; validated in Snowflake documentation and GA since 2024</div>
+      <h3>S2: Existing Team Snowflake Skills and Workflows</h3>
+      <p>Multiple teams across analytics, data engineering, and business intelligence have invested
+in Snowflake skills, SQL patterns, stored procedures, and operational workflows. Preserving
+access to Snowflake as a compute engine avoids the disruption and retraining cost of a full
+migration away from Snowflake.</p>
+      <div class="evidence"><strong>Evidence:</strong> 40+ engineers with Snowflake proficiency; existing dashboards, reports, and ad-hoc query patterns built on Snowflake SQL</div>
+      <h3>S3: Strong BI Tooling Ecosystem</h3>
+      <p>Tableau, Power BI, and other BI tools have first-class Snowflake connectors with optimized
+pushdown, caching, and authentication integrations. These connectors are mature and
+well-supported by both the BI vendors and Snowflake.</p>
+      <div class="evidence"><strong>Evidence:</strong> Tableau and Power BI Snowflake connectors support OAuth, query pushdown, and connection pooling; established production integrations</div>
+      <h3>S4: Consumption-Based Pricing Flexibility</h3>
+      <p>Snowflake's pay-per-query model means compute-only usage can be scaled down to match actual
+demand. Teams that query infrequently incur minimal cost, while heavy workloads can burst
+without pre-provisioned capacity.</p>
+      <div class="evidence"><strong>Evidence:</strong> Snowflake credits cost $2-4/credit on-demand, $1.50-2.50 with annual commitments; compute-only model eliminates storage charges entirely</div>
+      <h3>S5: Mature Query Optimization and Caching</h3>
+      <p>Snowflake's automatic clustering, result caching, and query optimization layer provide
+performance advantages for certain workload patterns, particularly large-scale aggregations
+and concurrent multi-user BI workloads.</p>
+      <div class="evidence"><strong>Evidence:</strong> Snowflake result cache serves repeated queries at zero compute cost; automatic clustering optimizes scan efficiency</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Weaknesses (5 items)</summary>
+    <div class="details-body">
+      <h3>W1: Consumption Pricing Expensive at Scale</h3>
+      <p>Snowflake's consumption-based pricing becomes expensive for sustained high-compute workloads.
+Compute costs represent approximately 80% of the total Snowflake bill. At scale, Trino on
+existing infrastructure can deliver the same queries at a fraction of the cost.</p>
+      <div class="evidence"><strong>Evidence:</strong> Snowflake credits cost $2-4/credit on-demand, $1.50-2.50 with annual commitments; compute is approximately 80% of total bill for analytics workloads</div>
+      <h3>W2: Data Copy Maintenance Overhead in Current State</h3>
+      <p>The current Snowflake deployment maintains data copies from Teradata and Cloudera, requiring
+ETL pipelines, synchronization monitoring, and duplicate governance. This overhead is
+eliminated in the compute-only model but persists in the maintain-current-state option.</p>
+      <div class="evidence"><strong>Evidence:</strong> Current state requires ETL pipelines to sync data copies from Teradata/Cloudera to Snowflake; duplicate governance and monitoring overhead</div>
+      <h3>W3: Vendor Lock-In on Proprietary Features</h3>
+      <p>Snowflake-specific features (Snowpipe for streaming ingestion, Time Travel for native
+tables, Tasks and Streams for CDC, Snowpark for data engineering) create lock-in that
+increases switching costs over time. The compute-only model limits but does not eliminate
+this risk.</p>
+      <div class="evidence"><strong>Evidence:</strong> Snowpipe, Time Travel, Tasks/Streams, Snowpark are proprietary; no direct Iceberg/Trino equivalents for some features</div>
+      <h3>W4: Duplicate Governance Layer Required</h3>
+      <p>Even in compute-only mode, Snowflake maintains its own access control (RBAC), audit logging,
+and query history separate from the lakehouse governance stack (Ranger, OpenMetadata). This
+creates governance fragmentation that must be managed.</p>
+      <div class="evidence"><strong>Evidence:</strong> Snowflake RBAC, audit logging, and query history are separate from Ranger/OpenMetadata; requires policy synchronization</div>
+      <h3>W5: ICEBERG_REST Performance Characteristics Unknown at Scale</h3>
+      <p>While Snowflake's ICEBERG_REST support is GA, production performance at enterprise scale
+(large table scans, concurrent users, complex joins across Iceberg tables) may differ from
+Snowflake-native table performance. Real-world benchmarking is needed.</p>
+      <div class="evidence"><strong>Evidence:</strong> ICEBERG_REST GA but limited public benchmarks for enterprise-scale workloads; performance delta vs native tables unclear</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Opportunities (4 items)</summary>
+    <div class="details-body">
+      <h3>O1: Trino-Based Lakehouse Achieving Significant TCO Reduction</h3>
+      <p>Consolidating analytics on Trino with the lakehouse architecture can achieve up to 55%
+lower total cost of ownership over 3 years compared to maintaining Snowflake as the primary
+analytics engine. The compute-only model captures a portion of these savings while preserving
+Snowflake optionality.</p>
+      <div class="evidence"><strong>Evidence:</strong> Starburst benchmark data indicates up to 55% TCO reduction with Trino-based lakehouse -- note vendor bias; actual savings depend on workload profile and current Snowflake spend</div>
+      <h3>O2: Consolidation to Single Governance and Lineage Stack</h3>
+      <p>The compute-only model reduces governance complexity by making the lakehouse (Nessie +
+Ranger + OpenMetadata + Marquez) the single source of truth. Snowflake becomes a read-only
+consumer rather than a parallel data store requiring its own governance.</p>
+      <div class="evidence"><strong>Evidence:</strong> Lakehouse stack: Nessie for catalog, Ranger for access control, OpenMetadata for catalog, Marquez for lineage -- single governance plane</div>
+      <h3>O3: ICEBERG_REST as a Bridge During Transition</h3>
+      <p>The ICEBERG_REST integration allows a gradual transition. Teams can start reading lakehouse
+data through Snowflake immediately while Trino capabilities mature. If Snowflake proves
+unnecessary for specific workloads, those teams migrate to Trino with no data movement.</p>
+      <div class="evidence"><strong>Evidence:</strong> ICEBERG_REST enables parallel access; teams can use Snowflake and Trino against same data simultaneously without data copies</div>
+      <h3>O4: Contract Renegotiation Leverage</h3>
+      <p>Moving to a compute-only model provides leverage for renegotiating Snowflake contract terms.
+Reduced spend baseline and alternative compute options (Trino) create competitive pressure
+for better pricing.</p>
+      <div class="evidence"><strong>Evidence:</strong> Compute-only usage represents a smaller contract footprint; Trino alternative creates negotiation leverage for credit pricing</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Threats (4 items)</summary>
+    <div class="details-body">
+      <h3>T1: Snowflake Contract Lock-In and Minimum Spend</h3>
+      <p>Existing Snowflake contracts may include minimum annual spend commitments or multi-year
+terms that make cost reduction difficult in the short term. Compute-only usage may not
+satisfy minimum spend requirements.</p>
+      <div class="evidence"><strong>Evidence:</strong> Enterprise Snowflake contracts typically include 1-3 year commitments with minimum annual credit consumption</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Negotiate compute-only contract terms at renewal. ICEBERG_REST enables gradual migration
+without a cliff -- teams can shift workloads to Trino incrementally while consuming
+committed credits. Time the compute-only transition to align with contract renewal.
+</div>
+      <h3>T2: Loss of Snowflake-Specific Features</h3>
+      <p>Teams using Snowpipe for streaming ingestion, Time Travel for native Snowflake tables,
+or Snowpark for data engineering will lose these capabilities under the compute-only model.
+Iceberg tables have their own time travel via snapshot history, but the Snowflake-specific
+interface and tooling around it differs.</p>
+      <div class="evidence"><strong>Evidence:</strong> Snowpipe, native Time Travel, Snowpark, Tasks/Streams are unavailable for ICEBERG_REST external tables</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Audit current Snowflake feature usage to identify affected workflows before transition.
+Iceberg provides table-level time travel through snapshot history (accessible via Trino
+and Spark). For streaming, Flink Iceberg sink replaces Snowpipe. Migrate affected
+workflows in phased approach, validating equivalence before decommissioning Snowflake features.
+</div>
+      <h3>T3: Team Retraining Costs for Trino Migration</h3>
+      <p>If the long-term trajectory is full Trino migration beyond compute-only, retraining
+costs for 40+ engineers on Trino SQL dialects, performance tuning, and operational
+patterns are significant.</p>
+      <div class="evidence"><strong>Evidence:</strong> 40+ engineers currently proficient in Snowflake SQL; Trino SQL differences (connector syntax, function names, performance tuning) require training</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Compute-only model buys time for gradual training. Teams continue using Snowflake
+while building Trino skills. Establish Trino center of excellence to develop training
+materials and best practices. Trino SQL is ANSI-standard, reducing the learning curve
+for experienced SQL engineers.
+</div>
+      <h3>T4: ICEBERG_REST Integration Maturity Risk</h3>
+      <p>Snowflake's ICEBERG_REST support, while GA, is still relatively new. Edge cases around
+schema evolution, partition pruning efficiency, and concurrent access patterns may surface
+at enterprise scale.</p>
+      <div class="evidence"><strong>Evidence:</strong> ICEBERG_REST GA since 2024; limited enterprise-scale production references for high-concurrency BI workloads</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Pilot with a non-critical BI workload first. Benchmark ICEBERG_REST performance against
+native Snowflake tables for the top 10 most-run queries. Establish performance SLAs and
+fallback criteria before full rollout. Snowflake's rapid release cadence means issues
+are typically addressed within 1-2 release cycles.
+</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Decision Matrix</summary>
+    <div class="details-body">
+      <div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Criteria</th>
+        <th>Retire Snowflake</th>
+        <th>Keep as Iceberg Compute</th>
+        <th>Maintain Current State</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Annual compute cost</strong></td>
+        <td>Lowest (Trino-only)</td>
+        <td>Medium (compute-only credits)</td>
+        <td>Highest (full platform)</td>
+      </tr>
+      <tr>
+        <td><strong>Data duplication</strong></td>
+        <td>None</td>
+        <td>None</td>
+        <td>Full copies maintained</td>
+      </tr>
+      <tr>
+        <td><strong>Governance complexity</strong></td>
+        <td>Lowest (single stack)</td>
+        <td>Medium (dual access control)</td>
+        <td>Highest (dual governance)</td>
+      </tr>
+      <tr>
+        <td><strong>Team disruption</strong></td>
+        <td>High (full retraining)</td>
+        <td>Low (familiar interface)</td>
+        <td>None</td>
+      </tr>
+      <tr>
+        <td><strong>BI tool compatibility</strong></td>
+        <td>Medium (Trino connectors)</td>
+        <td>High (native connectors)</td>
+        <td>High (native connectors)</td>
+      </tr>
+      <tr>
+        <td><strong>Migration risk</strong></td>
+        <td>High (big-bang cutover)</td>
+        <td>Low (gradual transition)</td>
+        <td>None</td>
+      </tr>
+      <tr>
+        <td><strong>Long-term flexibility</strong></td>
+        <td>High (full lakehouse)</td>
+        <td>High (reversible path)</td>
+        <td>Low (status quo lock-in)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+    </div>
+  </details>
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14 | Next review: 2026-Q2</p>
+    <p>Phase: Lakehouse Architecture Transformation</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,235 @@
+title: "Data Model Strategy SWOT Analysis"
+subtitle: "Keep FSDM vs Evolve Incrementally vs New Medallion-Native Model"
+status: undecided
+decision: null
+prepared_for: "Leadership Review"
+date: "2026-03-14"
+phase: "Lakehouse Architecture Transformation"
+next_review: "2026-Q2"
+
+executive_summary: |
+  The lakehouse architecture currently uses a Financial Services Data Model (FSDM) that is
+  partially aligned across Bronze, Silver, and Gold layers. The Gold layer has already evolved
+  organically toward medallion naming conventions (gold.trading_metrics, gold.risk_exposure),
+  while Bronze and Silver layers largely retain FSDM entity naming. This analysis evaluates
+  whether to formalize this evolution, revert to strict FSDM, or redesign from scratch.
+
+  Three options are evaluated: (1) Keep FSDM as-is with strict adherence, (2) Evolve FSDM
+  incrementally by preserving entity names in Bronze/Silver while formalizing medallion
+  conventions in Gold, or (3) Break from FSDM entirely with a new medallion-native model.
+  Option 2 is recommended as it formalizes the organic evolution already happening in the
+  codebase while preserving backward compatibility and minimizing disruption to 40+ engineers.
+
+recommendation: |
+  We recommend Option 2: Evolve FSDM Incrementally. The codebase already shows organic
+  evolution -- Gold tables use medallion naming (gold.trading_metrics, gold.risk_exposure)
+  while Bronze and Silver retain FSDM conventions. Formalizing this pattern preserves the
+  40+ engineer team's existing knowledge, maintains backward compatibility for regulatory
+  reporting, and enables data quality contracts per medallion tier.
+
+  The incremental approach means: Bronze/Silver layers keep FSDM entity names and add medallion
+  quality metadata columns, Gold layer formalizes domain-driven naming with explicit ties to
+  FSDM source entities, and a business glossary bridges FSDM terms to physical layer names.
+  This is additive, not replacing -- no existing queries break.
+
+  Leadership should verify: (a) regulatory reporting queries can use compatibility views during
+  transition so that audit queries continue to work unchanged, (b) business glossary mapping
+  effort is acceptable (estimated 2-3 weeks for core entities), and (c) downstream consumers
+  (BI dashboards, scheduled reports) can be migrated to use Gold layer names on the team's
+  preferred timeline rather than requiring a coordinated cutover.
+
+strengths:
+  - id: S1
+    title: "FSDM Provides Standardized Financial Services Vocabulary"
+    description: |
+      The Financial Services Data Model covers Party, Account, Instrument, Transaction, Risk,
+      and Compliance domains with industry-standard naming conventions. This vocabulary is
+      understood across the organization and maps to regulatory reporting requirements.
+    evidence: "FSDM covers Party, Account, Instrument, Transaction, Risk, Compliance domains -- industry-standard for banking and financial services"
+
+  - id: S2
+    title: "Gold Layer Already Uses Medallion Naming"
+    description: |
+      The Gold layer has organically evolved to use medallion-style naming conventions
+      (gold.trading_metrics, gold.risk_exposure) rather than strict FSDM entity naming.
+      This de facto evolution demonstrates that the team naturally gravitates toward
+      domain-driven names in the consumption layer.
+    evidence: "gold.trading_metrics and gold.risk_exposure follow medallion conventions, not strict FSDM entity naming -- de facto evolution already happening in the codebase"
+
+  - id: S3
+    title: "40+ Engineers Already Know FSDM Conventions"
+    description: |
+      The existing engineering team has years of experience with FSDM naming, entity
+      relationships, and query patterns. This institutional knowledge is a significant
+      asset that would be costly to replace.
+    evidence: "40+ engineers trained on FSDM conventions over multiple years; existing documentation, training materials, and query libraries reference FSDM entities"
+
+  - id: S4
+    title: "Medallion Layers Enable Clear Data Quality Contracts"
+    description: |
+      The Bronze/Silver/Gold medallion architecture naturally supports data quality contracts
+      at each tier: Bronze is raw with metadata, Silver is cleaned and deduplicated, Gold
+      is curated and aggregated. This quality progression is independent of entity naming
+      but enhanced by formalizing it.
+    evidence: "etl-patterns.md defines quality gates between layers: Bronze (raw + metadata), Silver (cleaned, deduplicated), Gold (pre-aggregated metrics)"
+
+  - id: S5
+    title: "Incremental Evolution Already Proven in Practice"
+    description: |
+      The current codebase demonstrates that incremental evolution works without breaking
+      existing systems. Bronze and Silver tables retain FSDM naming while Gold tables use
+      new names, and both patterns coexist in the same catalog and query engine.
+    evidence: "lakehouse.bronze.trades, lakehouse.silver.positions use FSDM naming alongside lakehouse.gold.trading_metrics -- coexistence proven in Nessie catalog"
+
+weaknesses:
+  - id: W1
+    title: "FSDM Is Partially Followed"
+    description: |
+      The current implementation is only partially aligned to FSDM, creating inconsistency.
+      Some entities follow strict FSDM naming while others have drifted. This partial
+      adherence means neither strict FSDM nor pure medallion conventions are fully realized.
+    evidence: "PROJECT.md notes 'partially aligned to FSDM' -- indicates drift from the original model; inconsistent naming across layers"
+
+  - id: W2
+    title: "FSDM Is a Teradata-Proprietary Model"
+    description: |
+      FSDM was designed by Teradata for relational data warehouse architectures. As the
+      architecture shifts toward a lakehouse model and Teradata's role potentially diminishes,
+      continued reliance on a Teradata-specific data model creates an implicit dependency.
+    evidence: "FSDM is a Teradata intellectual property; licensing and evolution are controlled by Teradata; model optimized for relational DW, not lakehouse"
+
+  - id: W3
+    title: "Strict FSDM Does Not Express Medallion Quality Tiers"
+    description: |
+      FSDM entity definitions do not inherently express data quality tiers (raw vs cleaned
+      vs curated). The medallion architecture's key value proposition -- explicit quality
+      contracts per layer -- requires additional metadata that FSDM was not designed to convey.
+    evidence: "FSDM defines entity relationships and attributes but has no concept of Bronze/Silver/Gold quality tiers; quality metadata must be added separately"
+
+  - id: W4
+    title: "Mapping FSDM Entities to Medallion Layers Requires Metadata"
+    description: |
+      To maintain FSDM naming while operating in a medallion architecture, an additional
+      metadata layer is needed to map FSDM entities to their Bronze, Silver, and Gold
+      incarnations. This adds complexity to the data catalog and governance tooling.
+    evidence: "Current implementation uses namespace prefix (lakehouse.bronze.*, lakehouse.silver.*, lakehouse.gold.*) but entity names vary across layers"
+
+opportunities:
+  - id: O1
+    title: "Incremental Evolution Preserves Investment While Modernizing"
+    description: |
+      Formalizing the organic evolution already underway (FSDM in Bronze/Silver, domain-driven
+      in Gold) preserves the team's existing knowledge investment while establishing modern
+      naming conventions in the consumption layer where business users interact most.
+    evidence: "Gold layer already evolved organically -- formalizing this approach has low disruption; no existing queries or pipelines need modification"
+
+  - id: O2
+    title: "Data Quality Contracts Per Medallion Tier"
+    description: |
+      A formalized medallion naming convention enables explicit data quality SLAs per tier:
+      Bronze guarantees completeness, Silver guarantees deduplication and type correctness,
+      Gold guarantees business metric accuracy. These contracts can be monitored and enforced.
+    evidence: "etl-patterns.md defines quality gate checks between layers; formalizing naming makes quality contracts discoverable and enforceable"
+
+  - id: O3
+    title: "Business Glossary Bridges FSDM Terms to Physical Names"
+    description: |
+      A business glossary (already seeded in glossary-seed.json) can map FSDM business terms
+      to physical layer names, enabling both business users and technical teams to find data
+      using their preferred vocabulary. OpenMetadata supports glossary-driven discovery.
+    evidence: "glossary-seed.json contains FSDM and data model terms; OpenMetadata supports glossary term linkage to physical assets"
+
+  - id: O4
+    title: "Vendor Independence Through Layer Abstraction"
+    description: |
+      By using medallion layer naming in Gold (the consumption layer) and abstracting FSDM
+      to Bronze/Silver (the engineering layer), the architecture becomes less dependent on
+      Teradata's FSDM model. If Teradata's role diminishes, Gold layer consumers are unaffected.
+    evidence: "Gold layer naming (trading_metrics, risk_exposure) has no FSDM dependency; Bronze/Silver FSDM naming can be evolved independently"
+
+threats:
+  - id: T1
+    title: "Breaking Change Risk for 40+ Engineer Team"
+    description: |
+      Any data model change risks breaking existing queries, dashboards, and automated reports
+      across a 40+ engineer team. Even well-communicated changes create a period of confusion
+      and increased support burden.
+    evidence: "40+ engineers with queries, pipelines, and dashboards referencing current entity names; any rename requires coordinated migration"
+    mitigation: |
+      Incremental evolution preserves all existing names; new naming is additive, not replacing.
+      Bronze and Silver entity names remain unchanged. Gold layer names are already using the
+      new convention. No existing queries break -- new conventions are opt-in until teams migrate
+      their consumers.
+
+  - id: T2
+    title: "Regulatory Reporting Queries Tied to FSDM Column Names"
+    description: |
+      Regulatory reports (BCBS 239 compliance, risk reporting) may reference specific FSDM
+      entity and column names. Changing these names could break regulatory query pipelines
+      and require re-validation with compliance teams.
+    evidence: "Regulatory reporting queries reference FSDM entity names for BCBS 239 compliance; name changes require compliance re-validation"
+    mitigation: |
+      Create views maintaining FSDM-compatible names for regulatory queries. These views
+      provide a stable interface regardless of underlying physical name evolution. Compliance
+      queries reference views, not tables directly. This pattern is industry-standard for
+      regulatory reporting isolation.
+
+  - id: T3
+    title: "Loss of FSDM Vendor Support"
+    description: |
+      If the organization departs from strict FSDM adherence, Teradata's FSDM support and
+      tooling (data model documentation, entity relationship diagrams, schema validation tools)
+      become less applicable. The team must self-maintain any evolved model documentation.
+    evidence: "Teradata provides FSDM documentation, ERDs, and validation tooling; departing from strict FSDM means self-maintaining model documentation"
+    mitigation: |
+      OpenMetadata and the business glossary replace Teradata's FSDM documentation tooling.
+      Entity relationship documentation moves to the data catalog. Model validation shifts
+      to schema enforcement in the ETL pipeline (already implemented in BasePipeline with
+      validate_schema step).
+
+  - id: T4
+    title: "Scope Creep in Model Evolution"
+    description: |
+      An incremental evolution approach could lose discipline over time, with different teams
+      making inconsistent naming choices in the Gold layer. Without governance, the evolved
+      model could become as inconsistent as the current partial FSDM adherence.
+    evidence: "Current partial FSDM adherence demonstrates naming drift risk; incremental evolution must be governed to avoid repeating the same pattern"
+    mitigation: |
+      Establish a naming convention document with review process for new Gold entities.
+      OpenMetadata tagging can enforce naming standards. CI checks can validate that new
+      Gold tables follow the convention. Assign data stewards per domain to review naming.
+
+decision_matrix:
+  criteria:
+    - "Migration effort"
+    - "Backward compatibility"
+    - "Team disruption"
+    - "Regulatory compliance"
+    - "Long-term flexibility"
+    - "Data quality enablement"
+    - "Vendor independence"
+  options:
+    "Keep FSDM As-Is":
+      - "None"
+      - "Full"
+      - "None"
+      - "Full (existing names)"
+      - "Low (Teradata dependency)"
+      - "Low (no quality tiers)"
+      - "Low (Teradata model)"
+    "Evolve Incrementally":
+      - "Low (additive only)"
+      - "Full (views for regulatory)"
+      - "Low (existing names preserved)"
+      - "High (compatibility views)"
+      - "High (layer abstraction)"
+      - "High (tier contracts)"
+      - "High (Gold is independent)"
+    "New Medallion-Native":
+      - "High (full redesign)"
+      - "None (breaking change)"
+      - "High (full retraining)"
+      - "Medium (rebuild queries)"
+      - "Highest (clean slate)"
+      - "Highest (designed-in)"
+      - "Highest (no legacy)"

@@ -1,0 +1,244 @@
+title: "Snowflake Strategy SWOT Analysis"
+subtitle: "Retire vs Keep as Iceberg Compute vs Maintain Current State"
+status: undecided
+decision: null
+prepared_for: "Leadership Review"
+date: "2026-03-14"
+phase: "Lakehouse Architecture Transformation"
+next_review: "2026-Q2"
+
+executive_summary: |
+  Snowflake currently operates as a full analytics platform with data copies from Teradata and
+  Cloudera, generating significant license and compute costs through consumption-based pricing.
+  The lakehouse architecture transformation creates an opportunity to restructure Snowflake's
+  role by leveraging its ICEBERG_REST catalog support to read Iceberg tables directly from
+  Nessie without maintaining separate data copies.
+
+  This analysis evaluates three strategic options: (1) Retire Snowflake entirely and route all
+  analytics through Trino and Teradata, (2) Keep Snowflake as a compute-only engine reading
+  Iceberg tables via Nessie's REST catalog, or (3) Maintain the current state with data copies.
+  Option 2 is recommended as the optimal balance of cost reduction, capability preservation,
+  and migration risk.
+
+recommendation: |
+  We recommend Option 2: Keep Snowflake as Iceberg Compute-Only. This preserves existing team
+  skills and BI tool connections while eliminating data copies and reducing costs. The
+  ICEBERG_REST integration with Nessie enables zero-copy access to lakehouse data, removing
+  the duplicate governance overhead of maintaining separate Snowflake copies.
+
+  This approach reduces Snowflake spending to compute-only costs (eliminating storage and ETL
+  costs for data copies), maintains the BI tool ecosystem that teams already use (Tableau and
+  Power BI connections remain unchanged), and provides a reversible path -- if compute-only
+  Snowflake proves insufficient, the fallback is Trino-only analytics, not rebuilding data copies.
+
+  Leadership should verify: (a) current Snowflake contract allows compute-only usage without
+  minimum spend penalties, (b) team BI workloads can tolerate Iceberg table query performance
+  through Snowflake's ICEBERG_REST integration, and (c) Snowflake-specific features in use
+  (Snowpipe, Time Travel for native tables) have Iceberg/Trino equivalents for affected workflows.
+
+strengths:
+  - id: S1
+    title: "ICEBERG_REST Catalog Enables Zero-Copy Access"
+    description: |
+      Snowflake supports the ICEBERG_REST catalog type, allowing it to connect directly to Nessie
+      and read Iceberg tables without creating data copies. This is the technical enabler for the
+      compute-only model, transforming Snowflake from a data store to a pure compute engine over
+      lakehouse data.
+    evidence: "Snowflake supports ICEBERG_REST catalog type connecting to Nessie; validated in Snowflake documentation and GA since 2024"
+
+  - id: S2
+    title: "Existing Team Snowflake Skills and Workflows"
+    description: |
+      Multiple teams across analytics, data engineering, and business intelligence have invested
+      in Snowflake skills, SQL patterns, stored procedures, and operational workflows. Preserving
+      access to Snowflake as a compute engine avoids the disruption and retraining cost of a full
+      migration away from Snowflake.
+    evidence: "40+ engineers with Snowflake proficiency; existing dashboards, reports, and ad-hoc query patterns built on Snowflake SQL"
+
+  - id: S3
+    title: "Strong BI Tooling Ecosystem"
+    description: |
+      Tableau, Power BI, and other BI tools have first-class Snowflake connectors with optimized
+      pushdown, caching, and authentication integrations. These connectors are mature and
+      well-supported by both the BI vendors and Snowflake.
+    evidence: "Tableau and Power BI Snowflake connectors support OAuth, query pushdown, and connection pooling; established production integrations"
+
+  - id: S4
+    title: "Consumption-Based Pricing Flexibility"
+    description: |
+      Snowflake's pay-per-query model means compute-only usage can be scaled down to match actual
+      demand. Teams that query infrequently incur minimal cost, while heavy workloads can burst
+      without pre-provisioned capacity.
+    evidence: "Snowflake credits cost $2-4/credit on-demand, $1.50-2.50 with annual commitments; compute-only model eliminates storage charges entirely"
+
+  - id: S5
+    title: "Mature Query Optimization and Caching"
+    description: |
+      Snowflake's automatic clustering, result caching, and query optimization layer provide
+      performance advantages for certain workload patterns, particularly large-scale aggregations
+      and concurrent multi-user BI workloads.
+    evidence: "Snowflake result cache serves repeated queries at zero compute cost; automatic clustering optimizes scan efficiency"
+
+weaknesses:
+  - id: W1
+    title: "Consumption Pricing Expensive at Scale"
+    description: |
+      Snowflake's consumption-based pricing becomes expensive for sustained high-compute workloads.
+      Compute costs represent approximately 80% of the total Snowflake bill. At scale, Trino on
+      existing infrastructure can deliver the same queries at a fraction of the cost.
+    evidence: "Snowflake credits cost $2-4/credit on-demand, $1.50-2.50 with annual commitments; compute is approximately 80% of total bill for analytics workloads"
+
+  - id: W2
+    title: "Data Copy Maintenance Overhead in Current State"
+    description: |
+      The current Snowflake deployment maintains data copies from Teradata and Cloudera, requiring
+      ETL pipelines, synchronization monitoring, and duplicate governance. This overhead is
+      eliminated in the compute-only model but persists in the maintain-current-state option.
+    evidence: "Current state requires ETL pipelines to sync data copies from Teradata/Cloudera to Snowflake; duplicate governance and monitoring overhead"
+
+  - id: W3
+    title: "Vendor Lock-In on Proprietary Features"
+    description: |
+      Snowflake-specific features (Snowpipe for streaming ingestion, Time Travel for native
+      tables, Tasks and Streams for CDC, Snowpark for data engineering) create lock-in that
+      increases switching costs over time. The compute-only model limits but does not eliminate
+      this risk.
+    evidence: "Snowpipe, Time Travel, Tasks/Streams, Snowpark are proprietary; no direct Iceberg/Trino equivalents for some features"
+
+  - id: W4
+    title: "Duplicate Governance Layer Required"
+    description: |
+      Even in compute-only mode, Snowflake maintains its own access control (RBAC), audit logging,
+      and query history separate from the lakehouse governance stack (Ranger, OpenMetadata). This
+      creates governance fragmentation that must be managed.
+    evidence: "Snowflake RBAC, audit logging, and query history are separate from Ranger/OpenMetadata; requires policy synchronization"
+
+  - id: W5
+    title: "ICEBERG_REST Performance Characteristics Unknown at Scale"
+    description: |
+      While Snowflake's ICEBERG_REST support is GA, production performance at enterprise scale
+      (large table scans, concurrent users, complex joins across Iceberg tables) may differ from
+      Snowflake-native table performance. Real-world benchmarking is needed.
+    evidence: "ICEBERG_REST GA but limited public benchmarks for enterprise-scale workloads; performance delta vs native tables unclear"
+
+opportunities:
+  - id: O1
+    title: "Trino-Based Lakehouse Achieving Significant TCO Reduction"
+    description: |
+      Consolidating analytics on Trino with the lakehouse architecture can achieve up to 55%
+      lower total cost of ownership over 3 years compared to maintaining Snowflake as the primary
+      analytics engine. The compute-only model captures a portion of these savings while preserving
+      Snowflake optionality.
+    evidence: "Starburst benchmark data indicates up to 55% TCO reduction with Trino-based lakehouse -- note vendor bias; actual savings depend on workload profile and current Snowflake spend"
+
+  - id: O2
+    title: "Consolidation to Single Governance and Lineage Stack"
+    description: |
+      The compute-only model reduces governance complexity by making the lakehouse (Nessie +
+      Ranger + OpenMetadata + Marquez) the single source of truth. Snowflake becomes a read-only
+      consumer rather than a parallel data store requiring its own governance.
+    evidence: "Lakehouse stack: Nessie for catalog, Ranger for access control, OpenMetadata for catalog, Marquez for lineage -- single governance plane"
+
+  - id: O3
+    title: "ICEBERG_REST as a Bridge During Transition"
+    description: |
+      The ICEBERG_REST integration allows a gradual transition. Teams can start reading lakehouse
+      data through Snowflake immediately while Trino capabilities mature. If Snowflake proves
+      unnecessary for specific workloads, those teams migrate to Trino with no data movement.
+    evidence: "ICEBERG_REST enables parallel access; teams can use Snowflake and Trino against same data simultaneously without data copies"
+
+  - id: O4
+    title: "Contract Renegotiation Leverage"
+    description: |
+      Moving to a compute-only model provides leverage for renegotiating Snowflake contract terms.
+      Reduced spend baseline and alternative compute options (Trino) create competitive pressure
+      for better pricing.
+    evidence: "Compute-only usage represents a smaller contract footprint; Trino alternative creates negotiation leverage for credit pricing"
+
+threats:
+  - id: T1
+    title: "Snowflake Contract Lock-In and Minimum Spend"
+    description: |
+      Existing Snowflake contracts may include minimum annual spend commitments or multi-year
+      terms that make cost reduction difficult in the short term. Compute-only usage may not
+      satisfy minimum spend requirements.
+    evidence: "Enterprise Snowflake contracts typically include 1-3 year commitments with minimum annual credit consumption"
+    mitigation: |
+      Negotiate compute-only contract terms at renewal. ICEBERG_REST enables gradual migration
+      without a cliff -- teams can shift workloads to Trino incrementally while consuming
+      committed credits. Time the compute-only transition to align with contract renewal.
+
+  - id: T2
+    title: "Loss of Snowflake-Specific Features"
+    description: |
+      Teams using Snowpipe for streaming ingestion, Time Travel for native Snowflake tables,
+      or Snowpark for data engineering will lose these capabilities under the compute-only model.
+      Iceberg tables have their own time travel via snapshot history, but the Snowflake-specific
+      interface and tooling around it differs.
+    evidence: "Snowpipe, native Time Travel, Snowpark, Tasks/Streams are unavailable for ICEBERG_REST external tables"
+    mitigation: |
+      Audit current Snowflake feature usage to identify affected workflows before transition.
+      Iceberg provides table-level time travel through snapshot history (accessible via Trino
+      and Spark). For streaming, Flink Iceberg sink replaces Snowpipe. Migrate affected
+      workflows in phased approach, validating equivalence before decommissioning Snowflake features.
+
+  - id: T3
+    title: "Team Retraining Costs for Trino Migration"
+    description: |
+      If the long-term trajectory is full Trino migration beyond compute-only, retraining
+      costs for 40+ engineers on Trino SQL dialects, performance tuning, and operational
+      patterns are significant.
+    evidence: "40+ engineers currently proficient in Snowflake SQL; Trino SQL differences (connector syntax, function names, performance tuning) require training"
+    mitigation: |
+      Compute-only model buys time for gradual training. Teams continue using Snowflake
+      while building Trino skills. Establish Trino center of excellence to develop training
+      materials and best practices. Trino SQL is ANSI-standard, reducing the learning curve
+      for experienced SQL engineers.
+
+  - id: T4
+    title: "ICEBERG_REST Integration Maturity Risk"
+    description: |
+      Snowflake's ICEBERG_REST support, while GA, is still relatively new. Edge cases around
+      schema evolution, partition pruning efficiency, and concurrent access patterns may surface
+      at enterprise scale.
+    evidence: "ICEBERG_REST GA since 2024; limited enterprise-scale production references for high-concurrency BI workloads"
+    mitigation: |
+      Pilot with a non-critical BI workload first. Benchmark ICEBERG_REST performance against
+      native Snowflake tables for the top 10 most-run queries. Establish performance SLAs and
+      fallback criteria before full rollout. Snowflake's rapid release cadence means issues
+      are typically addressed within 1-2 release cycles.
+
+decision_matrix:
+  criteria:
+    - "Annual compute cost"
+    - "Data duplication"
+    - "Governance complexity"
+    - "Team disruption"
+    - "BI tool compatibility"
+    - "Migration risk"
+    - "Long-term flexibility"
+  options:
+    "Retire Snowflake":
+      - "Lowest (Trino-only)"
+      - "None"
+      - "Lowest (single stack)"
+      - "High (full retraining)"
+      - "Medium (Trino connectors)"
+      - "High (big-bang cutover)"
+      - "High (full lakehouse)"
+    "Keep as Iceberg Compute":
+      - "Medium (compute-only credits)"
+      - "None"
+      - "Medium (dual access control)"
+      - "Low (familiar interface)"
+      - "High (native connectors)"
+      - "Low (gradual transition)"
+      - "High (reversible path)"
+    "Maintain Current State":
+      - "Highest (full platform)"
+      - "Full copies maintained"
+      - "Highest (dual governance)"
+      - "None"
+      - "High (native connectors)"
+      - "None"
+      - "Low (status quo lock-in)"

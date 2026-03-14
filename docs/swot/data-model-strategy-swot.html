@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Data Model Strategy SWOT Analysis - Lakehouse Architecture</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+    .doc-header .meta { color: #94a3b8; font-size: 0.9rem; }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: capitalize;
+    }
+    .status-decided { background: #22c55e; color: white; }
+    .status-undecided { background: #f59e0b; color: #1a2332; }
+
+    /* === SWOT GRID === */
+    .swot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .swot-quadrant {
+      padding: 1.25rem;
+      border-radius: 6px;
+      border: 2px solid;
+    }
+    .swot-quadrant h3 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.05rem; }
+    .swot-quadrant ul { margin-left: 1.25rem; }
+    .swot-quadrant li { font-size: 0.92rem; }
+    .swot-strengths { border-color: #22c55e; background: #f0fdf4; }
+    .swot-weaknesses { border-color: #eab308; background: #fefce8; }
+    .swot-opportunities { border-color: #3b82f6; background: #eff6ff; }
+    .swot-threats { border-color: #ef4444; background: #fef2f2; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === EVIDENCE CALLOUT === */
+    .evidence {
+      background: #f1f5f9;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    /* === MITIGATION CALLOUT === */
+    .mitigation {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      .swot-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+      .table-container { overflow-x: auto; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle, .doc-header .meta { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      .swot-grid { break-inside: avoid; }
+      .swot-quadrant { break-inside: avoid; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>Data Model Strategy SWOT Analysis</h1>
+    <p class="subtitle">Keep FSDM vs Evolve Incrementally vs New Medallion-Native Model</p>
+    <p class="meta">
+      <span class="status-badge status-undecided">Undecided</span>
+      | 2026-03-14
+ | Prepared for: Leadership Review    </p>
+  </header>
+
+  <details open>
+    <summary>Executive Summary</summary>
+    <div class="details-body">
+      The lakehouse architecture currently uses a Financial Services Data Model (FSDM) that is partially aligned across Bronze, Silver, and Gold layers. The Gold layer has already evolved organically toward medallion naming conventions (gold.trading_metrics, gold.risk_exposure), while Bronze and Silver layers largely retain FSDM entity naming. This analysis evaluates whether to formalize this evolution, revert to strict FSDM, or redesign from scratch.</p><p>Three options are evaluated: (1) Keep FSDM as-is with strict adherence, (2) Evolve FSDM incrementally by preserving entity names in Bronze/Silver while formalizing medallion conventions in Gold, or (3) Break from FSDM entirely with a new medallion-native model. Option 2 is recommended as it formalizes the organic evolution already happening in the codebase while preserving backward compatibility and minimizing disruption to 40+ engineers.
+    </div>
+  </details>
+
+  <details open>
+    <summary>Recommendation</summary>
+    <div class="details-body">
+      We recommend Option 2: Evolve FSDM Incrementally. The codebase already shows organic evolution -- Gold tables use medallion naming (gold.trading_metrics, gold.risk_exposure) while Bronze and Silver retain FSDM conventions. Formalizing this pattern preserves the 40+ engineer team's existing knowledge, maintains backward compatibility for regulatory reporting, and enables data quality contracts per medallion tier.</p><p>The incremental approach means: Bronze/Silver layers keep FSDM entity names and add medallion quality metadata columns, Gold layer formalizes domain-driven naming with explicit ties to FSDM source entities, and a business glossary bridges FSDM terms to physical layer names. This is additive, not replacing -- no existing queries break.</p><p>Leadership should verify: (a) regulatory reporting queries can use compatibility views during transition so that audit queries continue to work unchanged, (b) business glossary mapping effort is acceptable (estimated 2-3 weeks for core entities), and (c) downstream consumers (BI dashboards, scheduled reports) can be migrated to use Gold layer names on the team's preferred timeline rather than requiring a coordinated cutover.
+    </div>
+  </details>
+
+  <h2>SWOT Overview</h2>
+  <div class="swot-grid">
+  <div class="swot-quadrant swot-strengths">
+    <h3>Strengths</h3>
+    <ul>
+      <li><strong>S1: FSDM Provides Standardized Financial Services Vocabulary</strong> &mdash; The Financial Services Data Model covers Party, Account, Instrument, Transaction, Risk,
+and Compliance domains with industry-standard naming conventions. This vocabulary is
+understood across the organization and maps to regulatory reporting requirements.</li>
+      <li><strong>S2: Gold Layer Already Uses Medallion Naming</strong> &mdash; The Gold layer has organically evolved to use medallion-style naming conventions
+(gold.trading_metrics, gold.risk_exposure) rather than strict FSDM entity naming.
+This de facto evolution demonstrates that the team naturally gravitates toward
+domain-driven names in the consumption layer.</li>
+      <li><strong>S3: 40+ Engineers Already Know FSDM Conventions</strong> &mdash; The existing engineering team has years of experience with FSDM naming, entity
+relationships, and query patterns. This institutional knowledge is a significant
+asset that would be costly to replace.</li>
+      <li><strong>S4: Medallion Layers Enable Clear Data Quality Contracts</strong> &mdash; The Bronze/Silver/Gold medallion architecture naturally supports data quality contracts
+at each tier: Bronze is raw with metadata, Silver is cleaned and deduplicated, Gold
+is curated and aggregated. This quality progression is independent of entity naming
+but enhanced by formalizing it.</li>
+      <li><strong>S5: Incremental Evolution Already Proven in Practice</strong> &mdash; The current codebase demonstrates that incremental evolution works without breaking
+existing systems. Bronze and Silver tables retain FSDM naming while Gold tables use
+new names, and both patterns coexist in the same catalog and query engine.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-weaknesses">
+    <h3>Weaknesses</h3>
+    <ul>
+      <li><strong>W1: FSDM Is Partially Followed</strong> &mdash; The current implementation is only partially aligned to FSDM, creating inconsistency.
+Some entities follow strict FSDM naming while others have drifted. This partial
+adherence means neither strict FSDM nor pure medallion conventions are fully realized.</li>
+      <li><strong>W2: FSDM Is a Teradata-Proprietary Model</strong> &mdash; FSDM was designed by Teradata for relational data warehouse architectures. As the
+architecture shifts toward a lakehouse model and Teradata's role potentially diminishes,
+continued reliance on a Teradata-specific data model creates an implicit dependency.</li>
+      <li><strong>W3: Strict FSDM Does Not Express Medallion Quality Tiers</strong> &mdash; FSDM entity definitions do not inherently express data quality tiers (raw vs cleaned
+vs curated). The medallion architecture's key value proposition -- explicit quality
+contracts per layer -- requires additional metadata that FSDM was not designed to convey.</li>
+      <li><strong>W4: Mapping FSDM Entities to Medallion Layers Requires Metadata</strong> &mdash; To maintain FSDM naming while operating in a medallion architecture, an additional
+metadata layer is needed to map FSDM entities to their Bronze, Silver, and Gold
+incarnations. This adds complexity to the data catalog and governance tooling.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-opportunities">
+    <h3>Opportunities</h3>
+    <ul>
+      <li><strong>O1: Incremental Evolution Preserves Investment While Modernizing</strong> &mdash; Formalizing the organic evolution already underway (FSDM in Bronze/Silver, domain-driven
+in Gold) preserves the team's existing knowledge investment while establishing modern
+naming conventions in the consumption layer where business users interact most.</li>
+      <li><strong>O2: Data Quality Contracts Per Medallion Tier</strong> &mdash; A formalized medallion naming convention enables explicit data quality SLAs per tier:
+Bronze guarantees completeness, Silver guarantees deduplication and type correctness,
+Gold guarantees business metric accuracy. These contracts can be monitored and enforced.</li>
+      <li><strong>O3: Business Glossary Bridges FSDM Terms to Physical Names</strong> &mdash; A business glossary (already seeded in glossary-seed.json) can map FSDM business terms
+to physical layer names, enabling both business users and technical teams to find data
+using their preferred vocabulary. OpenMetadata supports glossary-driven discovery.</li>
+      <li><strong>O4: Vendor Independence Through Layer Abstraction</strong> &mdash; By using medallion layer naming in Gold (the consumption layer) and abstracting FSDM
+to Bronze/Silver (the engineering layer), the architecture becomes less dependent on
+Teradata's FSDM model. If Teradata's role diminishes, Gold layer consumers are unaffected.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-threats">
+    <h3>Threats</h3>
+    <ul>
+      <li><strong>T1: Breaking Change Risk for 40+ Engineer Team</strong> &mdash; Any data model change risks breaking existing queries, dashboards, and automated reports
+across a 40+ engineer team. Even well-communicated changes create a period of confusion
+and increased support burden.</li>
+      <li><strong>T2: Regulatory Reporting Queries Tied to FSDM Column Names</strong> &mdash; Regulatory reports (BCBS 239 compliance, risk reporting) may reference specific FSDM
+entity and column names. Changing these names could break regulatory query pipelines
+and require re-validation with compliance teams.</li>
+      <li><strong>T3: Loss of FSDM Vendor Support</strong> &mdash; If the organization departs from strict FSDM adherence, Teradata's FSDM support and
+tooling (data model documentation, entity relationship diagrams, schema validation tools)
+become less applicable. The team must self-maintain any evolved model documentation.</li>
+      <li><strong>T4: Scope Creep in Model Evolution</strong> &mdash; An incremental evolution approach could lose discipline over time, with different teams
+making inconsistent naming choices in the Gold layer. Without governance, the evolved
+model could become as inconsistent as the current partial FSDM adherence.</li>
+    </ul>
+  </div>
+</div>
+
+
+  <details>
+    <summary>Strengths (5 items)</summary>
+    <div class="details-body">
+      <h3>S1: FSDM Provides Standardized Financial Services Vocabulary</h3>
+      <p>The Financial Services Data Model covers Party, Account, Instrument, Transaction, Risk,
+and Compliance domains with industry-standard naming conventions. This vocabulary is
+understood across the organization and maps to regulatory reporting requirements.</p>
+      <div class="evidence"><strong>Evidence:</strong> FSDM covers Party, Account, Instrument, Transaction, Risk, Compliance domains -- industry-standard for banking and financial services</div>
+      <h3>S2: Gold Layer Already Uses Medallion Naming</h3>
+      <p>The Gold layer has organically evolved to use medallion-style naming conventions
+(gold.trading_metrics, gold.risk_exposure) rather than strict FSDM entity naming.
+This de facto evolution demonstrates that the team naturally gravitates toward
+domain-driven names in the consumption layer.</p>
+      <div class="evidence"><strong>Evidence:</strong> gold.trading_metrics and gold.risk_exposure follow medallion conventions, not strict FSDM entity naming -- de facto evolution already happening in the codebase</div>
+      <h3>S3: 40+ Engineers Already Know FSDM Conventions</h3>
+      <p>The existing engineering team has years of experience with FSDM naming, entity
+relationships, and query patterns. This institutional knowledge is a significant
+asset that would be costly to replace.</p>
+      <div class="evidence"><strong>Evidence:</strong> 40+ engineers trained on FSDM conventions over multiple years; existing documentation, training materials, and query libraries reference FSDM entities</div>
+      <h3>S4: Medallion Layers Enable Clear Data Quality Contracts</h3>
+      <p>The Bronze/Silver/Gold medallion architecture naturally supports data quality contracts
+at each tier: Bronze is raw with metadata, Silver is cleaned and deduplicated, Gold
+is curated and aggregated. This quality progression is independent of entity naming
+but enhanced by formalizing it.</p>
+      <div class="evidence"><strong>Evidence:</strong> etl-patterns.md defines quality gates between layers: Bronze (raw + metadata), Silver (cleaned, deduplicated), Gold (pre-aggregated metrics)</div>
+      <h3>S5: Incremental Evolution Already Proven in Practice</h3>
+      <p>The current codebase demonstrates that incremental evolution works without breaking
+existing systems. Bronze and Silver tables retain FSDM naming while Gold tables use
+new names, and both patterns coexist in the same catalog and query engine.</p>
+      <div class="evidence"><strong>Evidence:</strong> lakehouse.bronze.trades, lakehouse.silver.positions use FSDM naming alongside lakehouse.gold.trading_metrics -- coexistence proven in Nessie catalog</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Weaknesses (4 items)</summary>
+    <div class="details-body">
+      <h3>W1: FSDM Is Partially Followed</h3>
+      <p>The current implementation is only partially aligned to FSDM, creating inconsistency.
+Some entities follow strict FSDM naming while others have drifted. This partial
+adherence means neither strict FSDM nor pure medallion conventions are fully realized.</p>
+      <div class="evidence"><strong>Evidence:</strong> PROJECT.md notes 'partially aligned to FSDM' -- indicates drift from the original model; inconsistent naming across layers</div>
+      <h3>W2: FSDM Is a Teradata-Proprietary Model</h3>
+      <p>FSDM was designed by Teradata for relational data warehouse architectures. As the
+architecture shifts toward a lakehouse model and Teradata's role potentially diminishes,
+continued reliance on a Teradata-specific data model creates an implicit dependency.</p>
+      <div class="evidence"><strong>Evidence:</strong> FSDM is a Teradata intellectual property; licensing and evolution are controlled by Teradata; model optimized for relational DW, not lakehouse</div>
+      <h3>W3: Strict FSDM Does Not Express Medallion Quality Tiers</h3>
+      <p>FSDM entity definitions do not inherently express data quality tiers (raw vs cleaned
+vs curated). The medallion architecture's key value proposition -- explicit quality
+contracts per layer -- requires additional metadata that FSDM was not designed to convey.</p>
+      <div class="evidence"><strong>Evidence:</strong> FSDM defines entity relationships and attributes but has no concept of Bronze/Silver/Gold quality tiers; quality metadata must be added separately</div>
+      <h3>W4: Mapping FSDM Entities to Medallion Layers Requires Metadata</h3>
+      <p>To maintain FSDM naming while operating in a medallion architecture, an additional
+metadata layer is needed to map FSDM entities to their Bronze, Silver, and Gold
+incarnations. This adds complexity to the data catalog and governance tooling.</p>
+      <div class="evidence"><strong>Evidence:</strong> Current implementation uses namespace prefix (lakehouse.bronze.*, lakehouse.silver.*, lakehouse.gold.*) but entity names vary across layers</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Opportunities (4 items)</summary>
+    <div class="details-body">
+      <h3>O1: Incremental Evolution Preserves Investment While Modernizing</h3>
+      <p>Formalizing the organic evolution already underway (FSDM in Bronze/Silver, domain-driven
+in Gold) preserves the team's existing knowledge investment while establishing modern
+naming conventions in the consumption layer where business users interact most.</p>
+      <div class="evidence"><strong>Evidence:</strong> Gold layer already evolved organically -- formalizing this approach has low disruption; no existing queries or pipelines need modification</div>
+      <h3>O2: Data Quality Contracts Per Medallion Tier</h3>
+      <p>A formalized medallion naming convention enables explicit data quality SLAs per tier:
+Bronze guarantees completeness, Silver guarantees deduplication and type correctness,
+Gold guarantees business metric accuracy. These contracts can be monitored and enforced.</p>
+      <div class="evidence"><strong>Evidence:</strong> etl-patterns.md defines quality gate checks between layers; formalizing naming makes quality contracts discoverable and enforceable</div>
+      <h3>O3: Business Glossary Bridges FSDM Terms to Physical Names</h3>
+      <p>A business glossary (already seeded in glossary-seed.json) can map FSDM business terms
+to physical layer names, enabling both business users and technical teams to find data
+using their preferred vocabulary. OpenMetadata supports glossary-driven discovery.</p>
+      <div class="evidence"><strong>Evidence:</strong> glossary-seed.json contains FSDM and data model terms; OpenMetadata supports glossary term linkage to physical assets</div>
+      <h3>O4: Vendor Independence Through Layer Abstraction</h3>
+      <p>By using medallion layer naming in Gold (the consumption layer) and abstracting FSDM
+to Bronze/Silver (the engineering layer), the architecture becomes less dependent on
+Teradata's FSDM model. If Teradata's role diminishes, Gold layer consumers are unaffected.</p>
+      <div class="evidence"><strong>Evidence:</strong> Gold layer naming (trading_metrics, risk_exposure) has no FSDM dependency; Bronze/Silver FSDM naming can be evolved independently</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Threats (4 items)</summary>
+    <div class="details-body">
+      <h3>T1: Breaking Change Risk for 40+ Engineer Team</h3>
+      <p>Any data model change risks breaking existing queries, dashboards, and automated reports
+across a 40+ engineer team. Even well-communicated changes create a period of confusion
+and increased support burden.</p>
+      <div class="evidence"><strong>Evidence:</strong> 40+ engineers with queries, pipelines, and dashboards referencing current entity names; any rename requires coordinated migration</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Incremental evolution preserves all existing names; new naming is additive, not replacing.
+Bronze and Silver entity names remain unchanged. Gold layer names are already using the
+new convention. No existing queries break -- new conventions are opt-in until teams migrate
+their consumers.
+</div>
+      <h3>T2: Regulatory Reporting Queries Tied to FSDM Column Names</h3>
+      <p>Regulatory reports (BCBS 239 compliance, risk reporting) may reference specific FSDM
+entity and column names. Changing these names could break regulatory query pipelines
+and require re-validation with compliance teams.</p>
+      <div class="evidence"><strong>Evidence:</strong> Regulatory reporting queries reference FSDM entity names for BCBS 239 compliance; name changes require compliance re-validation</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Create views maintaining FSDM-compatible names for regulatory queries. These views
+provide a stable interface regardless of underlying physical name evolution. Compliance
+queries reference views, not tables directly. This pattern is industry-standard for
+regulatory reporting isolation.
+</div>
+      <h3>T3: Loss of FSDM Vendor Support</h3>
+      <p>If the organization departs from strict FSDM adherence, Teradata's FSDM support and
+tooling (data model documentation, entity relationship diagrams, schema validation tools)
+become less applicable. The team must self-maintain any evolved model documentation.</p>
+      <div class="evidence"><strong>Evidence:</strong> Teradata provides FSDM documentation, ERDs, and validation tooling; departing from strict FSDM means self-maintaining model documentation</div>
+      <div class="mitigation"><strong>Mitigation:</strong> OpenMetadata and the business glossary replace Teradata's FSDM documentation tooling.
+Entity relationship documentation moves to the data catalog. Model validation shifts
+to schema enforcement in the ETL pipeline (already implemented in BasePipeline with
+validate_schema step).
+</div>
+      <h3>T4: Scope Creep in Model Evolution</h3>
+      <p>An incremental evolution approach could lose discipline over time, with different teams
+making inconsistent naming choices in the Gold layer. Without governance, the evolved
+model could become as inconsistent as the current partial FSDM adherence.</p>
+      <div class="evidence"><strong>Evidence:</strong> Current partial FSDM adherence demonstrates naming drift risk; incremental evolution must be governed to avoid repeating the same pattern</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Establish a naming convention document with review process for new Gold entities.
+OpenMetadata tagging can enforce naming standards. CI checks can validate that new
+Gold tables follow the convention. Assign data stewards per domain to review naming.
+</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Decision Matrix</summary>
+    <div class="details-body">
+      <div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Criteria</th>
+        <th>Keep FSDM As-Is</th>
+        <th>Evolve Incrementally</th>
+        <th>New Medallion-Native</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Migration effort</strong></td>
+        <td>None</td>
+        <td>Low (additive only)</td>
+        <td>High (full redesign)</td>
+      </tr>
+      <tr>
+        <td><strong>Backward compatibility</strong></td>
+        <td>Full</td>
+        <td>Full (views for regulatory)</td>
+        <td>None (breaking change)</td>
+      </tr>
+      <tr>
+        <td><strong>Team disruption</strong></td>
+        <td>None</td>
+        <td>Low (existing names preserved)</td>
+        <td>High (full retraining)</td>
+      </tr>
+      <tr>
+        <td><strong>Regulatory compliance</strong></td>
+        <td>Full (existing names)</td>
+        <td>High (compatibility views)</td>
+        <td>Medium (rebuild queries)</td>
+      </tr>
+      <tr>
+        <td><strong>Long-term flexibility</strong></td>
+        <td>Low (Teradata dependency)</td>
+        <td>High (layer abstraction)</td>
+        <td>Highest (clean slate)</td>
+      </tr>
+      <tr>
+        <td><strong>Data quality enablement</strong></td>
+        <td>Low (no quality tiers)</td>
+        <td>High (tier contracts)</td>
+        <td>Highest (designed-in)</td>
+      </tr>
+      <tr>
+        <td><strong>Vendor independence</strong></td>
+        <td>Low (Teradata model)</td>
+        <td>High (Gold is independent)</td>
+        <td>Highest (no legacy)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+    </div>
+  </details>
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-14 | Next review: 2026-Q2</p>
+    <p>Phase: Lakehouse Architecture Transformation</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
+  </footer>
+</body>
+</html>
