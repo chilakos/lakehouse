@@ -43,9 +43,9 @@ Requirements for v1.1 Documentation milestone. Each maps to roadmap phases.
 - [x] **DEV-07**: Service URL reference table for all 10+ platform services (Trino UI, Airflow, MinIO, Grafana, etc.)
 - [x] **DEV-08**: Common troubleshooting FAQ (Docker memory, Nessie health, Spark JARs, Airflow init, Ranger startup)
 - [x] **DEV-09**: Day 1 checklist — printable single-page onboarding checklist combining setup, first pipeline, and first PR
-- [ ] **DEV-10**: API/module reference with complete module listing, public API signatures, import paths, and usage examples for all 8 packages
-- [ ] **DEV-11**: Class hierarchy visualization showing BasePipeline inheritance tree and all concrete implementations
-- [ ] **DEV-12**: Contributor guidelines covering branch naming, PR process, testing requirements, code style (Ruff), naming conventions, commit format
+- [x] **DEV-10**: API/module reference with complete module listing, public API signatures, import paths, and usage examples for all 8 packages
+- [x] **DEV-11**: Class hierarchy visualization showing BasePipeline inheritance tree and all concrete implementations
+- [x] **DEV-12**: Contributor guidelines covering branch naming, PR process, testing requirements, code style (Ruff), naming conventions, commit format
 
 ### Data Catalog
 
@@ -219,9 +219,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DEV-07 | Phase 7 | Complete |
 | DEV-08 | Phase 7 | Complete |
 | DEV-09 | Phase 7 | Complete |
-| DEV-10 | Phase 7 | Pending |
-| DEV-11 | Phase 7 | Pending |
-| DEV-12 | Phase 7 | Pending |
+| DEV-10 | Phase 7 | Complete |
+| DEV-11 | Phase 7 | Complete |
+| DEV-12 | Phase 7 | Complete |
 | CAT-01 | Phase 8 | Pending |
 | CAT-02 | Phase 8 | Pending |
 | CAT-03 | Phase 8 | Pending |
