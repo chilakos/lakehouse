@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Documentation
 status: executing
-stopped_at: Completed 05-01-PLAN.md
-last_updated: "2026-03-14T15:44:25Z"
-last_activity: 2026-03-14 -- Completed 05-01 HTML Foundation template system and Nessie SWOT
+stopped_at: Completed 05-02-PLAN.md (Phase 5 complete)
+last_updated: "2026-03-14T16:01:18Z"
+last_activity: 2026-03-14 -- Completed 05-02 Remaining SWOT Analyses and Cross-SWOT Index
 progress:
   total_phases: 4
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 9
-  completed_plans: 1
-  percent: 11
+  completed_plans: 2
+  percent: 22
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 ## Current Position
 
 Phase: 5 of 8 (HTML Foundation and SWOT Analyses) -- first phase of v1.1
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-03-14 -- Completed 05-01 HTML Foundation template system and Nessie SWOT
+Plan: 2 of 2 in current phase (COMPLETE)
+Status: Phase 5 Complete
+Last activity: 2026-03-14 -- Completed 05-02 Remaining SWOT Analyses and Cross-SWOT Index
 
-Progress: [█░░░░░░░░░] 11%
+Progress: [██░░░░░░░░] 22%
 
 ## v1.0 Milestone Summary
 
@@ -45,15 +45,15 @@ Progress: [█░░░░░░░░░] 11%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (v1.1) / 16 (v1.0)
-- Average duration: 7 min
-- Total execution time: 7 min (v1.1)
+- Total plans completed: 2 (v1.1) / 16 (v1.0)
+- Average duration: 8.5 min
+- Total execution time: 17 min (v1.1)
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 5. HTML Foundation + SWOTs | 1/2 | 7 min | 7 min |
+| 5. HTML Foundation + SWOTs | 2/2 | 17 min | 8.5 min |
 | 6. Architecture | 0/2 | -- | -- |
 | 7. Developer Docs | 0/3 | -- | -- |
 | 8. Data Catalog | 0/2 | -- | -- |
@@ -79,6 +79,9 @@ Key decisions from v1.0 affecting documentation:
 - Jinja2 template system: YAML data files drive SWOT content, base_swot.html renders standalone HTML
 - Macro import aliasing: `decision_matrix` macro renamed to `render_decision_matrix` to avoid Jinja2 variable collision
 - autoescape=False for Jinja2 env: SWOT content is author-controlled YAML, not user input
+- Snowflake Strategy recommends "Keep as Iceberg Compute-Only" (Option 2 of 3) -- preserves skills/BI, eliminates copies
+- Data Model Strategy recommends "Evolve FSDM Incrementally" (Option 2 of 3) -- formalizes organic Gold layer evolution
+- base_index.html updated with card rendering and status-based grouping (Pending Decision / Completed Analyses)
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T15:44:25Z
-Stopped at: Completed 05-01-PLAN.md (HTML Foundation template system and Nessie SWOT)
-Resume file: .planning/phases/05-html-foundation-and-swot-analyses/05-01-SUMMARY.md
+Last session: 2026-03-14T16:01:18Z
+Stopped at: Completed 05-02-PLAN.md (Phase 5 complete: all SWOTs and index page)
+Resume file: .planning/phases/05-html-foundation-and-swot-analyses/05-02-SUMMARY.md

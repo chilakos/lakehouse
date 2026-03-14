@@ -11,12 +11,12 @@ Requirements for v1.1 Documentation milestone. Each maps to roadmap phases.
 
 - [x] **SWOT-01**: Shared CSS template with embedded styles, print-friendly layout, professional typography, and consistent color palette across all HTML deliverables
 - [x] **SWOT-02**: Iceberg Catalog SWOT (Glue vs Nessie vs HMS vs Polaris) as standalone HTML with 2x2 grid, executive summary, decision matrix, and recommendation (Decided: Nessie)
-- [ ] **SWOT-03**: Snowflake Strategy SWOT (Retire vs Keep vs Maintain) as standalone HTML with full research, competitive analysis, and recommendation (Undecided)
-- [ ] **SWOT-04**: DataStage Migration SWOT (Big-bang vs phased vs parallel-run) as standalone HTML with evidence from existing ETL framework (Decided: Phased Python)
-- [ ] **SWOT-05**: Data Model Strategy SWOT (Keep FSDM vs evolve vs new medallion) as standalone HTML with backward compatibility analysis (Undecided)
-- [ ] **SWOT-06**: BI Semantic Layer SWOT (Direct vs dbt vs AtScale vs Cube) as standalone HTML with comparison analysis (Decided: Cube)
-- [ ] **SWOT-07**: AI Semantic Layer SWOT (Build vs buy) as standalone HTML with commercial alternative analysis (Decided: Build-own)
-- [ ] **SWOT-08**: Cross-SWOT index page linking all 6 SWOTs with decision status summary, badges (Decided/Undecided), and recommendation overview
+- [x] **SWOT-03**: Snowflake Strategy SWOT (Retire vs Keep vs Maintain) as standalone HTML with full research, competitive analysis, and recommendation (Undecided)
+- [x] **SWOT-04**: DataStage Migration SWOT (Big-bang vs phased vs parallel-run) as standalone HTML with evidence from existing ETL framework (Decided: Phased Python)
+- [x] **SWOT-05**: Data Model Strategy SWOT (Keep FSDM vs evolve vs new medallion) as standalone HTML with backward compatibility analysis (Undecided)
+- [x] **SWOT-06**: BI Semantic Layer SWOT (Direct vs dbt vs AtScale vs Cube) as standalone HTML with comparison analysis (Decided: Cube)
+- [x] **SWOT-07**: AI Semantic Layer SWOT (Build vs buy) as standalone HTML with commercial alternative analysis (Decided: Build-own)
+- [x] **SWOT-08**: Cross-SWOT index page linking all 6 SWOTs with decision status summary, badges (Decided/Undecided), and recommendation overview
 - [x] **SWOT-09**: Interactive collapsible sections (CSS-only details/summary) in all SWOT documents
 - [x] **SWOT-10**: Responsive tablet-friendly design across all SWOT HTML deliverables
 
@@ -193,12 +193,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | SWOT-01 | Phase 5 | Complete |
 | SWOT-02 | Phase 5 | Complete |
-| SWOT-03 | Phase 5 | Pending |
-| SWOT-04 | Phase 5 | Pending |
-| SWOT-05 | Phase 5 | Pending |
-| SWOT-06 | Phase 5 | Pending |
-| SWOT-07 | Phase 5 | Pending |
-| SWOT-08 | Phase 5 | Pending |
+| SWOT-03 | Phase 5 | Complete |
+| SWOT-04 | Phase 5 | Complete |
+| SWOT-05 | Phase 5 | Complete |
+| SWOT-06 | Phase 5 | Complete |
+| SWOT-07 | Phase 5 | Complete |
+| SWOT-08 | Phase 5 | Complete |
 | SWOT-09 | Phase 5 | Complete |
 | SWOT-10 | Phase 5 | Complete |
 | ARCH-01 | Phase 6 | Pending |
