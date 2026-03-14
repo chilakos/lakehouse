@@ -45,7 +45,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 2 plans
 
 Plans:
-- [ ] 05-01-PLAN.md -- Shared CSS template, Jinja2 SWOT renderer, version-stamped footer, Nessie SWOT, test scaffold
+- [x] 05-01-PLAN.md -- Shared CSS template, Jinja2 SWOT renderer, version-stamped footer, Nessie SWOT, test scaffold
 - [ ] 05-02-PLAN.md -- 5 remaining SWOT analyses (prioritizing undecided SWOTs), cross-SWOT index page
 
 ### Phase 6: Architecture Visualizations

@@ -9,16 +9,16 @@ Requirements for v1.1 Documentation milestone. Each maps to roadmap phases.
 
 ### SWOT Analyses
 
-- [ ] **SWOT-01**: Shared CSS template with embedded styles, print-friendly layout, professional typography, and consistent color palette across all HTML deliverables
-- [ ] **SWOT-02**: Iceberg Catalog SWOT (Glue vs Nessie vs HMS vs Polaris) as standalone HTML with 2x2 grid, executive summary, decision matrix, and recommendation (Decided: Nessie)
+- [x] **SWOT-01**: Shared CSS template with embedded styles, print-friendly layout, professional typography, and consistent color palette across all HTML deliverables
+- [x] **SWOT-02**: Iceberg Catalog SWOT (Glue vs Nessie vs HMS vs Polaris) as standalone HTML with 2x2 grid, executive summary, decision matrix, and recommendation (Decided: Nessie)
 - [ ] **SWOT-03**: Snowflake Strategy SWOT (Retire vs Keep vs Maintain) as standalone HTML with full research, competitive analysis, and recommendation (Undecided)
 - [ ] **SWOT-04**: DataStage Migration SWOT (Big-bang vs phased vs parallel-run) as standalone HTML with evidence from existing ETL framework (Decided: Phased Python)
 - [ ] **SWOT-05**: Data Model Strategy SWOT (Keep FSDM vs evolve vs new medallion) as standalone HTML with backward compatibility analysis (Undecided)
 - [ ] **SWOT-06**: BI Semantic Layer SWOT (Direct vs dbt vs AtScale vs Cube) as standalone HTML with comparison analysis (Decided: Cube)
 - [ ] **SWOT-07**: AI Semantic Layer SWOT (Build vs buy) as standalone HTML with commercial alternative analysis (Decided: Build-own)
 - [ ] **SWOT-08**: Cross-SWOT index page linking all 6 SWOTs with decision status summary, badges (Decided/Undecided), and recommendation overview
-- [ ] **SWOT-09**: Interactive collapsible sections (CSS-only details/summary) in all SWOT documents
-- [ ] **SWOT-10**: Responsive tablet-friendly design across all SWOT HTML deliverables
+- [x] **SWOT-09**: Interactive collapsible sections (CSS-only details/summary) in all SWOT documents
+- [x] **SWOT-10**: Responsive tablet-friendly design across all SWOT HTML deliverables
 
 ### Architecture Visualizations
 
@@ -30,7 +30,7 @@ Requirements for v1.1 Documentation milestone. Each maps to roadmap phases.
 - [ ] **ARCH-06**: Governance stack detail (OpenLineage-Marquez-Grafana flow for BCBS 239)
 - [ ] **ARCH-07**: Environment differences table (dev/staging/prod) showing Terraform vs Docker Compose deployment
 - [ ] **ARCH-08**: CSS hover tooltips on detailed architecture diagram showing component descriptions
-- [ ] **ARCH-09**: Version-stamped footers on all HTML deliverables with generation date and component versions
+- [x] **ARCH-09**: Version-stamped footers on all HTML deliverables with generation date and component versions
 
 ### Developer Documentation
 
@@ -191,16 +191,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SWOT-01 | Phase 5 | Pending |
-| SWOT-02 | Phase 5 | Pending |
+| SWOT-01 | Phase 5 | Complete |
+| SWOT-02 | Phase 5 | Complete |
 | SWOT-03 | Phase 5 | Pending |
 | SWOT-04 | Phase 5 | Pending |
 | SWOT-05 | Phase 5 | Pending |
 | SWOT-06 | Phase 5 | Pending |
 | SWOT-07 | Phase 5 | Pending |
 | SWOT-08 | Phase 5 | Pending |
-| SWOT-09 | Phase 5 | Pending |
-| SWOT-10 | Phase 5 | Pending |
+| SWOT-09 | Phase 5 | Complete |
+| SWOT-10 | Phase 5 | Complete |
 | ARCH-01 | Phase 6 | Pending |
 | ARCH-02 | Phase 6 | Pending |
 | ARCH-03 | Phase 6 | Pending |
@@ -209,7 +209,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ARCH-06 | Phase 6 | Pending |
 | ARCH-07 | Phase 6 | Pending |
 | ARCH-08 | Phase 6 | Pending |
-| ARCH-09 | Phase 5 | Pending |
+| ARCH-09 | Phase 5 | Complete |
 | DEV-01 | Phase 7 | Pending |
 | DEV-02 | Phase 7 | Pending |
 | DEV-03 | Phase 7 | Pending |

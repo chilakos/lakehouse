@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Documentation
-status: planning
-stopped_at: Phase 5 context gathered
-last_updated: "2026-03-14T15:14:02.929Z"
-last_activity: 2026-03-14 -- Roadmap created for v1.1 Documentation milestone
+status: executing
+stopped_at: Completed 05-01-PLAN.md
+last_updated: "2026-03-14T15:44:25Z"
+last_activity: 2026-03-14 -- Completed 05-01 HTML Foundation template system and Nessie SWOT
 progress:
   total_phases: 4
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 9
+  completed_plans: 1
+  percent: 11
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-14)
 ## Current Position
 
 Phase: 5 of 8 (HTML Foundation and SWOT Analyses) -- first phase of v1.1
-Plan: 0 of 2 in current phase
-Status: Ready to plan
-Last activity: 2026-03-14 -- Roadmap created for v1.1 Documentation milestone
+Plan: 1 of 2 in current phase
+Status: Executing
+Last activity: 2026-03-14 -- Completed 05-01 HTML Foundation template system and Nessie SWOT
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 11%
 
 ## v1.0 Milestone Summary
 
@@ -45,15 +45,15 @@ Progress: [░░░░░░░░░░] 0%
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0 (v1.1) / 16 (v1.0)
-- Average duration: -- (no v1.1 plans yet)
-- Total execution time: 0 hours (v1.1)
+- Total plans completed: 1 (v1.1) / 16 (v1.0)
+- Average duration: 7 min
+- Total execution time: 7 min (v1.1)
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 5. HTML Foundation + SWOTs | 0/2 | -- | -- |
+| 5. HTML Foundation + SWOTs | 1/2 | 7 min | 7 min |
 | 6. Architecture | 0/2 | -- | -- |
 | 7. Developer Docs | 0/3 | -- | -- |
 | 8. Data Catalog | 0/2 | -- | -- |
@@ -75,6 +75,11 @@ Key decisions from v1.0 affecting documentation:
 - Tag-driven classification scaling to 300+ sources
 - Hybrid DAG pattern: source-specific Bronze/Silver, cross-source Gold
 
+**v1.1 decisions (Phase 5+):**
+- Jinja2 template system: YAML data files drive SWOT content, base_swot.html renders standalone HTML
+- Macro import aliasing: `decision_matrix` macro renamed to `render_decision_matrix` to avoid Jinja2 variable collision
+- autoescape=False for Jinja2 env: SWOT content is author-controlled YAML, not user input
+
 ### Pending Todos
 
 None yet.
@@ -90,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T15:14:02.927Z
-Stopped at: Phase 5 context gathered
-Resume file: .planning/phases/05-html-foundation-and-swot-analyses/05-CONTEXT.md
+Last session: 2026-03-14T15:44:25Z
+Stopped at: Completed 05-01-PLAN.md (HTML Foundation template system and Nessie SWOT)
+Resume file: .planning/phases/05-html-foundation-and-swot-analyses/05-01-SUMMARY.md
