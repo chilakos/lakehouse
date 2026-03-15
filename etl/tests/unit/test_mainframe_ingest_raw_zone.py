@@ -70,13 +70,10 @@ class TestMainframePipelineBackwardCompatible:
         """extract() does NOT call list_raw_files when raw_zone_config is None."""
         pipeline = _make_pipeline()
 
-        mock_df = MagicMock()
         with (
             patch("src.pipelines.bronze.mainframe_ingest.is_cobrix_available", return_value=True),
-            patch.object(pipeline.spark.read, "format", return_value=pipeline.spark.read),
             patch.object(pipeline, "_verify_raw_zone_file") as mock_verify,
         ):
-            pipeline.spark.read.format.return_value.option.return_value.option.return_value.option.return_value.option.return_value.load.return_value = mock_df  # noqa: E501
             pipeline.extract()
 
         mock_verify.assert_not_called()
@@ -91,12 +88,10 @@ class TestMainframePipelineRawZoneVerification:
         config = RawZoneConfig(bucket="test-bucket")
         pipeline = _make_pipeline(raw_zone_config=config)
 
-        mock_df = MagicMock()
         with (
             patch("src.pipelines.bronze.mainframe_ingest.is_cobrix_available", return_value=True),
             patch.object(pipeline, "_verify_raw_zone_file") as mock_verify,
         ):
-            pipeline.spark.read.format.return_value.option.return_value.option.return_value.option.return_value.option.return_value.load.return_value = mock_df  # noqa: E501
             pipeline.extract()
 
         mock_verify.assert_called_once()

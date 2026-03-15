@@ -23,12 +23,37 @@ import logging
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    pass
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+
+def _is_no_such_key(exc: Exception) -> bool:
+    """Return True when *exc* represents an S3 ``NoSuchKey`` error.
+
+    Checks the botocore ``ClientError`` response code when available and falls
+    back to a string match for mock environments and S3-compatible stores that
+    may surface the code differently.
+
+    Args:
+        exc: Exception raised by a boto3 ``get_object`` call.
+
+    Returns:
+        ``True`` if the exception indicates the key does not exist.
+    """
+    # Botocore ClientError carries the error code in the response dict
+    response = getattr(exc, "response", None)
+    if response is not None:
+        code = response.get("Error", {}).get("Code", "")
+        if code == "NoSuchKey":
+            return True
+    # Fallback: string match for mocks and S3-compatible stores
+    return "NoSuchKey" in str(exc) or "NoSuchKey" in type(exc).__name__
+
 
 # ---------------------------------------------------------------------------
 # Status constants
@@ -162,8 +187,8 @@ class IngestionManifest:
         try:
             response = s3.get_object(Bucket=self.bucket, Key=key)
             existing = response["Body"].read().decode("utf-8")
-        except Exception as exc:  # noqa: BLE001 – broad except for S3/MinIO compatibility
-            if "NoSuchKey" not in str(exc) and "NoSuchKey" not in type(exc).__name__:
+        except Exception as exc:  # noqa: BLE001
+            if not _is_no_such_key(exc):
                 raise
 
         updated = existing.rstrip("\n") + ("\n" if existing else "") + entry.to_json() + "\n"
@@ -325,7 +350,7 @@ class IngestionManifest:
             response = s3.get_object(Bucket=self.bucket, Key=key)
             content = response["Body"].read().decode("utf-8")
         except Exception as exc:  # noqa: BLE001
-            if "NoSuchKey" in str(exc):
+            if _is_no_such_key(exc):
                 return {}
             raise
 

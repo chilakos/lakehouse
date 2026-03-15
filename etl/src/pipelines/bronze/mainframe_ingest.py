@@ -209,10 +209,12 @@ class MainframeBronzePipeline(BasePipeline):
             source_system = self._manifest_entry.source_system
             business_date = self._manifest_entry.business_date
         else:
+            import re
+
             source_system = self._source_system
-            # Best-effort: extract date from path; fall back to empty string
-            parts = self._data_path.split("/")
-            business_date = next((p for p in parts if len(p) == 10 and p[4] == "-"), "")
+            # Best-effort: extract YYYY-MM-DD date segment from the S3 path
+            match = re.search(r"\d{4}-\d{2}-\d{2}", self._data_path)
+            business_date = match.group(0) if match else ""
 
         manager = RawZoneManager(config=self._raw_zone_config)
         raw_files = manager.list_raw_files(source_system, business_date)
