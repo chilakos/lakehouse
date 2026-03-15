@@ -91,11 +91,11 @@ Plans:
   3. The medallion layer explanation communicates Bronze/Silver/Gold concepts to non-technical readers, and data freshness SLAs with RED/YELLOW/GREEN thresholds are documented for each layer
   4. Regulatory terms (BCBS 239, PII, VaR, Expected Shortfall) have precise compliance definitions, and a compliance officer can trace from any regulated term to its lineage path
   5. Data lineage and glossary term relationship visualizations show end-to-end flows and term connections across data domains
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 08-01: OpenMetadata glossary export, business glossary HTML, term-to-table mapping, medallion layer explanation
-- [ ] 08-02: Metric definitions from Cube YAML, freshness SLAs, regulatory terms, lineage visualization, term relationship graph
+- [ ] 08-01-PLAN.md -- Catalog template infrastructure (base_catalog.html), extraction functions (glossary, freshness SLAs), business glossary HTML, term-to-table mapping, medallion explanation, freshness SLAs, catalog index page
+- [ ] 08-02-PLAN.md -- Metric definitions from Cube YAML, regulatory terms with BCBS 239 compliance tracing, lineage diagrams (trading, risk, overview), term relationship graph
 
 ## Progress
 
@@ -112,4 +112,4 @@ Note: Phases 6 and 7 can execute in parallel after Phase 5 completes (no cross-d
 | 5. HTML Foundation and SWOT Analyses | v1.1 | 0/2 | Planning complete | - |
 | 6. Architecture Visualizations | v1.1 | 0/2 | Planning complete | - |
 | 7. Developer Documentation | v1.1 | 0/3 | Planning complete | - |
-| 8. Data Catalog and Glossary | v1.1 | 0/2 | Not started | - |
+| 8. Data Catalog and Glossary | v1.1 | 0/2 | Planning complete | - |
