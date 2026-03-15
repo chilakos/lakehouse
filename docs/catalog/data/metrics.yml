@@ -1,0 +1,8 @@
+title: "Metric Definitions"
+subtitle: "Calculation logic for key business metrics from the Cube semantic layer"
+page_type: "metrics"
+output_filename: "metrics.html"
+intro: "All metric calculations are defined in the Cube semantic layer and consumed by Tableau, Power BI, and NL-to-SQL. Values shown below are extracted from Cube YAML at render time."
+cubes_intro:
+  trading_metrics: "Trading activity metrics aggregated by symbol and trading side."
+  risk_exposure: "Risk exposure metrics per account, sector, and currency."

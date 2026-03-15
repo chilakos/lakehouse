@@ -1,0 +1,56 @@
+graph TD
+    subgraph Trading["Trading Domain"]
+        style Trading fill:#dbeafe,stroke:#2563eb
+        Trade["Trade"]
+        notional["notional_value"]
+        tcount["trade_count"]
+        avgprice["average_price"]
+    end
+
+    subgraph Risk["Risk Domain"]
+        style Risk fill:#fce7f3,stroke:#db2777
+        Position["Position"]
+        mktval["market_value"]
+        var95["var_95"]
+        var99["var_99"]
+        es["expected_shortfall"]
+        poscount["position_count"]
+    end
+
+    subgraph Governance["Governance Domain"]
+        style Governance fill:#ede9fe,stroke:#7c3aed
+        PII["PII"]
+        BCBS["BCBS 239"]
+        SLA["SLA"]
+        Freshness["Data Freshness"]
+        BU["Business Unit"]
+    end
+
+    subgraph Infra["Infrastructure Domain"]
+        style Infra fill:#d1fae5,stroke:#059669
+        Bronze["Bronze Layer"]
+        Silver["Silver Layer"]
+        Gold["Gold Layer"]
+    end
+
+    %% Cross-domain connections
+    Trade <--> Position
+    Trade <--> notional
+    Trade <--> tcount
+    Trade <--> avgprice
+    Position <--> mktval
+    Position <--> poscount
+    Position <--> BU
+    BCBS <--> var95
+    BCBS <--> var99
+    BCBS <--> es
+    BCBS <--> SLA
+    BCBS <--> Freshness
+    PII <--> BCBS
+    Freshness <--> Bronze
+    Freshness <--> Silver
+    Freshness <--> Gold
+    SLA <--> Freshness
+    var95 <--> var99
+    var95 <--> es
+    var99 <--> es

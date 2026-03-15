@@ -908,6 +908,45 @@ def render_dev_index(
     return output_path
 
 
+def extract_cube_metrics(cube_dir: Path | None = None) -> list[dict]:
+    """Extract metric definitions from Cube YAML files.
+
+    Parses all *.yml files in the cubes directory, iterating each cube's
+    measures to build a list of metric dicts with calculation details.
+
+    Args:
+        cube_dir: Path to Cube YAML directory. Defaults to semantic/model/cubes/.
+
+    Returns:
+        List of metric dicts with keys: cube_name, sql_table, measure_name,
+        measure_type, description, glossary_term, sql.
+    """
+    if cube_dir is None:
+        cube_dir = PROJECT_ROOT / "semantic" / "model" / "cubes"
+    cube_dir = Path(cube_dir)
+
+    metrics: list[dict] = []
+    for yml_file in sorted(cube_dir.glob("*.yml")):
+        data = yaml.safe_load(yml_file.read_text())
+        if data is None:
+            continue
+        for cube in data.get("cubes", []):
+            cube_name = cube.get("name", "")
+            sql_table = cube.get("sql_table", "")
+            for measure in cube.get("measures", []):
+                meta = measure.get("meta", {}) or {}
+                metrics.append({
+                    "cube_name": cube_name,
+                    "sql_table": sql_table,
+                    "measure_name": measure.get("name", ""),
+                    "measure_type": measure.get("type", ""),
+                    "description": (measure.get("description", "") or "").strip(),
+                    "glossary_term": meta.get("glossary_term", ""),
+                    "sql": measure.get("sql", ""),
+                })
+    return metrics
+
+
 def extract_glossary_terms(glossary_path: Path | None = None) -> dict[str, list[dict]]:
     """Load glossary-seed.json and group terms by business domain.
 
@@ -1052,6 +1091,7 @@ def render_catalog_docs(
         output_dir = CATALOG_OUTPUT_DIR
 
     data_dir = Path(data_dir)
+    diagram_dir = Path(diagram_dir) if diagram_dir else CATALOG_DIAGRAM_DIR
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -1062,6 +1102,19 @@ def render_catalog_docs(
     # Extract enrichment data
     glossary_terms = extract_glossary_terms()
     freshness_slas = extract_freshness_slas()
+    cube_metrics = extract_cube_metrics()
+
+    # Render Mermaid diagrams to SVG (with graceful fallback)
+    svg_content: dict[str, str] = {}
+    diagram_dir = Path(diagram_dir)
+    if diagram_dir.exists():
+        for mmd_file in sorted(diagram_dir.glob("*.mmd")):
+            try:
+                svg_content[mmd_file.stem] = render_mermaid_to_svg(mmd_file)
+            except (RuntimeError, FileNotFoundError, subprocess.TimeoutExpired) as exc:
+                svg_content[mmd_file.stem] = _placeholder_svg(
+                    f"Install @mermaid-js/mermaid-cli to render {mmd_file.name}"
+                )
 
     rendered_files: list[Path] = []
     template = env.get_template("base_catalog.html")
@@ -1074,7 +1127,8 @@ def render_catalog_docs(
             **doc_data,
             glossary_terms=glossary_terms,
             freshness_slas=freshness_slas,
-            cube_metrics=[],
+            cube_metrics=cube_metrics,
+            svg_diagrams=svg_content,
             versions=versions,
             generation_date=generation_date,
         )

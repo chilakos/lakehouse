@@ -1,0 +1,35 @@
+flowchart LR
+    subgraph Sources["Legacy Sources"]
+        TD["Teradata DW"]
+        SF["Snowflake Analytics"]
+    end
+
+    subgraph Bronze["Bronze Layer"]
+        BZ["Raw Ingestion<br/><small>Format conversion to Iceberg</small>"]
+    end
+
+    subgraph Silver["Silver Layer"]
+        SV["Validated & Cleansed<br/><small>Schema conformance, quality checks</small>"]
+    end
+
+    subgraph Gold["Gold Layer"]
+        G1["Trading Metrics<br/><small>gold.trading_metrics</small>"]
+        G2["Risk Exposure<br/><small>gold.risk_exposure</small>"]
+    end
+
+    subgraph Cube["Cube Semantic Layer"]
+        CS["Unified Metrics<br/><small>Consistent definitions across consumers</small>"]
+    end
+
+    subgraph Consumers["BI / AI Consumers"]
+        BI["Tableau / Power BI / NL-to-SQL"]
+    end
+
+    TD --> BZ
+    SF --> BZ
+    BZ --> SV
+    SV --> G1
+    SV --> G2
+    G1 --> CS
+    G2 --> CS
+    CS --> BI

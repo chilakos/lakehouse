@@ -322,6 +322,146 @@
 {% endfor %}
 {% endif %}
 
+{% elif page_type == "metrics" %}
+<!-- ===================== METRICS PAGE ===================== -->
+{% if intro %}
+<p style="margin-bottom: 1.5rem; color: #475569;">{{ intro }}</p>
+{% endif %}
+
+{% if cube_metrics %}
+{% set ns = namespace(current_cube='') %}
+{% for metric in cube_metrics %}
+{% if metric.cube_name != ns.current_cube %}
+{% set ns.current_cube = metric.cube_name %}
+<h2>{{ metric.cube_name }}</h2>
+{% if cubes_intro and metric.cube_name in cubes_intro %}
+<p style="color: #64748b; margin-bottom: 1rem;">{{ cubes_intro[metric.cube_name] }}</p>
+{% endif %}
+{% endif %}
+<div class="term-card">
+  <h4>{{ metric.measure_name }}</h4>
+  <p class="definition">{{ metric.description }}</p>
+  <p class="term-meta">
+    <span>Type: <strong>{{ metric.measure_type }}</strong></span>
+    <span>From: <code>{{ metric.sql_table }}</code></span>
+    {% if metric.glossary_term %}
+    <span>Glossary: {{ metric.glossary_term }}</span>
+    {% endif %}
+  </p>
+  <details>
+    <summary>Calculation Detail</summary>
+    <div class="details-body">
+      <p><strong>Cube:</strong> {{ metric.cube_name }}</p>
+      <p><strong>Measure type:</strong> {{ metric.measure_type }}</p>
+      <p><strong>SQL column:</strong> <code>{{ metric.sql }}</code></p>
+      <p><strong>Source table:</strong> <code>{{ metric.sql_table }}</code></p>
+    </div>
+  </details>
+</div>
+{% endfor %}
+{% endif %}
+
+{% elif page_type == "regulatory" %}
+<!-- ===================== REGULATORY PAGE ===================== -->
+{% if intro %}
+<p style="margin-bottom: 1.5rem; color: #475569;">{{ intro }}</p>
+{% endif %}
+
+{% if terms %}
+{% for term in terms %}
+<div class="term-card" style="border-left: 4px solid #7c3aed;">
+  <h4 id="{{ term.slug }}">{{ term.name }}</h4>
+  <p class="definition">{{ term.definition }}</p>
+  {% if term.compliance_context %}
+  <h5 style="margin-top: 0.75rem; font-size: 0.95rem; color: #1a2332;">Compliance Context</h5>
+  <p style="font-size: 0.9rem; color: #475569;">{{ term.compliance_context }}</p>
+  {% endif %}
+  {% if term.audit_trail %}
+  <h5 style="margin-top: 0.75rem; font-size: 0.95rem; color: #1a2332;">Audit Trail</h5>
+  <table class="mapping-table">
+    <thead><tr><th>Stage</th><th>Detail</th></tr></thead>
+    <tbody>
+    {% for step in term.audit_trail %}
+      <tr><td>{{ step.stage }}</td><td>{{ step.detail }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if term.data_classification_levels %}
+  <h5 style="margin-top: 0.75rem; font-size: 0.95rem; color: #1a2332;">Data Classification Levels</h5>
+  <table class="mapping-table">
+    <thead><tr><th>Level</th><th>Description</th></tr></thead>
+    <tbody>
+    {% for cl in term.data_classification_levels %}
+      <tr><td><strong>{{ cl.level }}</strong></td><td>{{ cl.description }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if term.metric_references %}
+  <h5 style="margin-top: 0.75rem; font-size: 0.95rem; color: #1a2332;">Related Metrics</h5>
+  <table class="mapping-table">
+    <thead><tr><th>Measure</th><th>Cube</th><th>Table</th></tr></thead>
+    <tbody>
+    {% for ref in term.metric_references %}
+      <tr><td><code>{{ ref.measure }}</code></td><td>{{ ref.cube }}</td><td><code>{{ ref.table }}</code></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+  {% if term.openmetadata_path %}
+  <p class="openmetadata-link">View in OpenMetadata: <a href="{{ term.openmetadata_path }}">{{ term.openmetadata_path }}</a></p>
+  {% endif %}
+</div>
+{% endfor %}
+{% endif %}
+
+{% elif page_type == "lineage" %}
+<!-- ===================== LINEAGE PAGE ===================== -->
+{% if intro %}
+<p style="margin-bottom: 1.5rem; color: #475569;">{{ intro }}</p>
+{% endif %}
+
+{% if diagrams %}
+{% for diagram in diagrams %}
+<section class="domain-section">
+  <h2>{{ diagram.name }}</h2>
+  <p style="color: #64748b; margin-bottom: 1rem;">{{ diagram.description }}</p>
+  <div class="diagram-container" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: #f8fafc; margin-bottom: 1.5rem;">
+    {% if svg_diagrams and diagram.mermaid_file.replace('.mmd','') in svg_diagrams %}
+    {{ svg_diagrams[diagram.mermaid_file.replace('.mmd','')] }}
+    {% else %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 200">
+      <rect width="600" height="200" fill="#f8fafc" stroke="#1a2332" stroke-width="2" rx="8"/>
+      <text x="300" y="90" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#64748b">{{ diagram.name }} Diagram</text>
+      <text x="300" y="120" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#94a3b8">Install @mermaid-js/mermaid-cli to render {{ diagram.mermaid_file }}</text>
+    </svg>
+    {% endif %}
+  </div>
+</section>
+{% endfor %}
+{% endif %}
+
+{% if term_relationships %}
+<section class="domain-section">
+  <h2>{{ term_relationships.title }}</h2>
+  <p style="color: #64748b; margin-bottom: 1rem;">{{ term_relationships.description }}</p>
+  <p style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.75rem;">Domain clusters: Trading, Risk, Governance, Infrastructure</p>
+  <div class="diagram-container" style="border: 1px solid #e2e8f0; border-radius: 8px; padding: 1rem; background: #f8fafc;">
+    {% if svg_diagrams and term_relationships.mermaid_file.replace('.mmd','') in svg_diagrams %}
+    {{ svg_diagrams[term_relationships.mermaid_file.replace('.mmd','')] }}
+    {% else %}
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 300">
+      <rect width="600" height="300" fill="#f8fafc" stroke="#1a2332" stroke-width="2" rx="8"/>
+      <text x="300" y="100" text-anchor="middle" font-family="sans-serif" font-size="16" fill="#64748b">Term Relationship Graph</text>
+      <text x="300" y="140" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#94a3b8">Domain clusters: Trading, Risk, Governance, Infrastructure</text>
+      <text x="300" y="170" text-anchor="middle" font-family="sans-serif" font-size="13" fill="#94a3b8">Install @mermaid-js/mermaid-cli to render {{ term_relationships.mermaid_file }}</text>
+    </svg>
+    {% endif %}
+  </div>
+</section>
+{% endif %}
+
 {% elif page_type == "catalog-index" %}
 <!-- ===================== CATALOG INDEX PAGE ===================== -->
 {% if audience_groups %}

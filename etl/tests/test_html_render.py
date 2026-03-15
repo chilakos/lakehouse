@@ -1233,9 +1233,24 @@ def catalog_output(tmp_path):
     (data_dir / "medallion.yml").write_text(SAMPLE_MEDALLION_YAML)
     (data_dir / "catalog-index.yml").write_text(SAMPLE_CATALOG_INDEX_YAML)
 
+    # Copy Plan 02 YAML data files (metrics, regulatory, lineage)
+    catalog_data_dir = _project_root / "docs" / "catalog" / "data"
+    for extra in ["metrics.yml", "regulatory.yml", "lineage.yml"]:
+        src = catalog_data_dir / extra
+        if src.exists():
+            (data_dir / extra).write_text(src.read_text())
+
+    # Set up diagram dir with .mmd files for lineage rendering
+    diagram_dir = tmp_path / "diagrams"
+    diagram_dir.mkdir()
+    catalog_diagram_dir = _project_root / "docs" / "catalog" / "diagrams"
+    if catalog_diagram_dir.exists():
+        for mmd in catalog_diagram_dir.glob("*.mmd"):
+            (diagram_dir / mmd.name).write_text(mmd.read_text())
+
     rendered = render_catalog_docs(
         data_dir=data_dir,
-        diagram_dir=tmp_path,
+        diagram_dir=diagram_dir,
         template_dir=_project_root / "docs" / "templates",
         output_dir=output_dir,
         compose_path=_project_root / "docker-compose.yml",

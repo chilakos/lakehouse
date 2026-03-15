@@ -1,0 +1,38 @@
+flowchart LR
+    subgraph Sources["Legacy Sources"]
+        TD1["Trades History<br/><small>teradata.dw.trades_history</small>"]
+        TD2["Counterparty Master<br/><small>teradata.dw.counterparty_master</small>"]
+    end
+
+    subgraph Bronze["Bronze Layer"]
+        B1["Raw Trades<br/><small>bronze.raw_trades_history</small>"]
+        B2["Raw Counterparty<br/><small>bronze.raw_counterparty</small>"]
+    end
+
+    subgraph Silver["Silver Layer"]
+        S1["Trades Validated<br/><small>silver.trades_validated</small>"]
+    end
+
+    subgraph Gold["Gold Layer"]
+        G1["Trading Metrics<br/><small>gold.trading_metrics</small>"]
+    end
+
+    subgraph Cube["Cube Semantic Layer"]
+        C1["trading_metrics<br/><small>total_notional, trade_count, avg_price</small>"]
+    end
+
+    subgraph Consumers["BI / AI Consumers"]
+        BI1["Tableau"]
+        BI2["Power BI"]
+        BI3["NL-to-SQL"]
+    end
+
+    TD1 --> B1
+    TD2 --> B2
+    B1 --> S1
+    B2 --> S1
+    S1 --> G1
+    G1 --> C1
+    C1 --> BI1
+    C1 --> BI2
+    C1 --> BI3

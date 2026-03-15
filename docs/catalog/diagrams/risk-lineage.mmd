@@ -1,0 +1,33 @@
+flowchart LR
+    subgraph Sources["Legacy Sources"]
+        TD["Positions Daily<br/><small>teradata.dw.positions_daily</small>"]
+        SF["Risk Metrics<br/><small>snowflake.analytics.risk_metrics</small>"]
+    end
+
+    subgraph Bronze["Bronze Layer"]
+        B1["Raw Positions<br/><small>bronze.raw_positions_daily</small>"]
+        B2["Raw Risk Metrics<br/><small>bronze.raw_risk_metrics</small>"]
+    end
+
+    subgraph Gold["Gold Layer"]
+        G1["Risk Exposure<br/><small>gold.risk_exposure</small>"]
+    end
+
+    subgraph Cube["Cube Semantic Layer"]
+        C1["risk_exposure<br/><small>market_value, VaR 95/99, ES, positions</small>"]
+    end
+
+    subgraph Consumers["BI / AI Consumers"]
+        BI1["Tableau"]
+        BI2["Power BI"]
+        BI3["NL-to-SQL"]
+    end
+
+    TD --> B1
+    SF --> B2
+    B1 --> G1
+    B2 --> G1
+    G1 --> C1
+    C1 --> BI1
+    C1 --> BI2
+    C1 --> BI3
