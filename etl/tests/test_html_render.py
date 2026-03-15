@@ -32,6 +32,8 @@ from docs.render_html import extract_versions, render_swots  # noqa: E402
 from docs.render_html import extract_services, render_architecture  # noqa: E402
 from docs.render_html import render_developer_docs, render_dev_index  # noqa: E402
 from docs.render_html import extract_package_api, extract_all_apis  # noqa: E402
+from docs.render_html import extract_glossary_terms, extract_freshness_slas  # noqa: E402
+from docs.render_html import render_catalog_docs  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -1093,3 +1095,268 @@ def test_extract_package_api() -> None:
         for cls in mod["classes"]
     ]
     assert "Settings" in all_classes, f"Expected 'Settings' in classes, got {all_classes}"
+
+
+# ---------------------------------------------------------------------------
+# Catalog rendering tests (Phase 08)
+# ---------------------------------------------------------------------------
+
+SAMPLE_GLOSSARY_YAML = textwrap.dedent("""\
+    title: "Business Glossary"
+    subtitle: "Plain-language definitions for lakehouse data terms"
+    page_type: "glossary"
+    output_filename: "glossary.html"
+    domains:
+      - name: "Trading"
+        color: "#059669"
+        terms:
+          - name: "Trade"
+            slug: "trade"
+            definition: "A financial transaction involving buying or selling."
+            technical_detail: "Raw trade data arrives in <code>bronze.raw_trades_history</code>."
+            synonyms: ["transaction", "deal"]
+            related_terms: ["Position"]
+            table_mapping: "gold.trading_metrics"
+            openmetadata_path: "/glossary/trade"
+      - name: "Risk"
+        color: "#dc2626"
+        terms:
+          - name: "Position"
+            slug: "position"
+            definition: "The amount of a security held by an entity."
+            technical_detail: "Tracked daily in <code>gold.risk_exposure</code>."
+            synonyms: ["holding"]
+            related_terms: ["Trade"]
+            table_mapping: "gold.risk_exposure"
+            openmetadata_path: "/glossary/position"
+    term_table_mapping:
+      - term: "Trade"
+        tables: ["bronze.raw_trades_history", "silver.trades_validated", "gold.trading_metrics"]
+        cube_measure: "total_notional"
+      - term: "Position"
+        tables: ["bronze.raw_positions_daily", "silver.positions_validated", "gold.risk_exposure"]
+        cube_measure: "market_value"
+""")
+
+SAMPLE_FRESHNESS_YAML = textwrap.dedent("""\
+    title: "Data Freshness SLAs"
+    subtitle: "Update intervals and status thresholds by data layer"
+    page_type: "freshness"
+    output_filename: "freshness-slas.html"
+    intro: "Data freshness is monitored using traffic-light SLA status."
+    status_definitions:
+      - status: "GREEN"
+        label: "On time"
+        description: "Data is current"
+        css_class: "badge-green"
+      - status: "YELLOW"
+        label: "Warning"
+        description: "Data is stale"
+        css_class: "badge-yellow"
+      - status: "RED"
+        label: "Stale"
+        description: "Data is critically stale"
+        css_class: "badge-red"
+    monitoring_note: "Freshness is tracked in Grafana."
+""")
+
+SAMPLE_MEDALLION_YAML = textwrap.dedent("""\
+    title: "Data Layers Explained"
+    subtitle: "How data flows through Bronze, Silver, and Gold layers"
+    page_type: "medallion"
+    output_filename: "medallion.html"
+    layers:
+      - name: "Bronze Layer"
+        subtitle: "Raw Data Ingestion"
+        color: "#cd7f32"
+        description: "Raw data as received from source systems."
+        example_tables: ["bronze.raw_trades_history", "bronze.raw_positions_daily"]
+        freshness_sla: "6 hours"
+        what_happens: "Format conversion to Iceberg Parquet."
+      - name: "Silver Layer"
+        subtitle: "Cleansed & Validated"
+        color: "#C0C0C0"
+        description: "Cleansed, validated, standardized data."
+        example_tables: ["silver.trades_validated", "silver.positions_validated"]
+        freshness_sla: "12 hours"
+        what_happens: "Schema conformance and quality checks."
+      - name: "Gold Layer"
+        subtitle: "Business-Ready Analytics"
+        color: "#c8a961"
+        description: "Aggregated data for BI and analytics."
+        example_tables: ["gold.trading_metrics", "gold.risk_exposure"]
+        freshness_sla: "24 hours"
+        what_happens: "Business logic, denormalization, metrics."
+""")
+
+SAMPLE_CATALOG_INDEX_YAML = textwrap.dedent("""\
+    title: "Data Catalog"
+    subtitle: "Business glossary, metrics, compliance, and data lineage"
+    page_type: "catalog-index"
+    output_filename: "index.html"
+    audience_groups:
+      - name: "Business Users"
+        audience_class: "business-users"
+        pages:
+          - title: "Business Glossary"
+            filename: "glossary.html"
+            description: "Plain-language definitions for all data terms"
+          - title: "Data Layers Explained"
+            filename: "medallion.html"
+            description: "How data flows through Bronze, Silver, and Gold layers"
+      - name: "Compliance"
+        audience_class: "compliance"
+        pages:
+          - title: "Regulatory Terms"
+            filename: "regulatory.html"
+            description: "BCBS 239, PII, VaR definitions"
+      - name: "Data Engineers"
+        audience_class: "data-engineers"
+        pages:
+          - title: "Data Freshness SLAs"
+            filename: "freshness-slas.html"
+            description: "Update intervals and traffic-light status"
+""")
+
+
+@pytest.fixture
+def catalog_output(tmp_path):
+    """Set up catalog YAML data files and render via render_catalog_docs."""
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    output_dir = tmp_path / "output"
+    output_dir.mkdir()
+
+    (data_dir / "glossary.yml").write_text(SAMPLE_GLOSSARY_YAML)
+    (data_dir / "freshness.yml").write_text(SAMPLE_FRESHNESS_YAML)
+    (data_dir / "medallion.yml").write_text(SAMPLE_MEDALLION_YAML)
+    (data_dir / "catalog-index.yml").write_text(SAMPLE_CATALOG_INDEX_YAML)
+
+    rendered = render_catalog_docs(
+        data_dir=data_dir,
+        diagram_dir=tmp_path,
+        template_dir=_project_root / "docs" / "templates",
+        output_dir=output_dir,
+        compose_path=_project_root / "docker-compose.yml",
+    )
+    return output_dir, rendered
+
+
+@pytest.mark.unit
+def test_extract_glossary_terms() -> None:
+    """extract_glossary_terms() loads glossary-seed.json and groups by domain."""
+    terms = extract_glossary_terms()
+    assert isinstance(terms, dict)
+    assert "Trading" in terms
+    assert "Risk" in terms
+    assert "Governance" in terms
+    assert "Infrastructure" in terms
+    total = sum(len(v) for v in terms.values())
+    assert total >= 17, f"Expected >= 17 terms, got {total}"
+    # Check slug field
+    for domain, term_list in terms.items():
+        for t in term_list:
+            assert "slug" in t, f"Term {t['name']} missing slug"
+            assert t["slug"] == t["name"].lower().replace(" ", "-").replace("_", "-")
+
+
+@pytest.mark.unit
+def test_extract_freshness_slas() -> None:
+    """extract_freshness_slas() AST-parses freshness_tracker.py for SLA thresholds."""
+    slas = extract_freshness_slas()
+    assert isinstance(slas, dict)
+    assert "gold.*" in slas
+    assert "silver.*" in slas
+    assert "bronze.*" in slas
+    gold = slas["gold.*"]
+    assert gold["expected_hours"] == 24.0
+    assert gold["warning_hours"] == 26.0
+    assert gold["critical_hours"] == 48.0
+    bronze = slas["bronze.*"]
+    assert bronze["expected_hours"] == 6.0
+    assert bronze["warning_hours"] == 8.0
+    assert bronze["critical_hours"] == 12.0
+
+
+@pytest.mark.unit
+def test_catalog_glossary(catalog_output) -> None:
+    """Glossary page has domain sections, term cards, mapping table."""
+    output_dir, rendered = catalog_output
+    glossary_path = output_dir / "glossary.html"
+    assert glossary_path.exists(), "glossary.html not rendered"
+    html = glossary_path.read_text()
+    # Domain sections
+    assert "domain-section" in html
+    assert "Trading" in html
+    assert "Risk" in html
+    # Term definitions
+    assert "Trade" in html
+    assert "Position" in html
+    # Collapsible technical detail
+    assert "<details" in html
+    assert "Technical Detail" in html
+    # Inline table mapping
+    assert "gold.trading_metrics" in html
+    # Consolidated mapping table
+    assert "mapping-table" in html
+    # OpenMetadata
+    assert "OpenMetadata" in html or "openmetadata" in html.lower()
+    # Embedded CSS and header
+    assert "<style>" in html
+    assert "#1a2332" in html  # navy header
+    # Version footer
+    assert "generation_date" in html.lower() or "Generated" in html
+
+
+@pytest.mark.unit
+def test_catalog_medallion(catalog_output) -> None:
+    """Medallion page has Bronze/Silver/Gold with real table examples."""
+    output_dir, rendered = catalog_output
+    medallion_path = output_dir / "medallion.html"
+    assert medallion_path.exists(), "medallion.html not rendered"
+    html = medallion_path.read_text()
+    assert "Bronze Layer" in html
+    assert "Silver Layer" in html
+    assert "Gold Layer" in html
+    assert "bronze.raw_trades_history" in html
+    assert "gold.trading_metrics" in html
+    assert "<style>" in html
+
+
+@pytest.mark.unit
+def test_catalog_freshness_slas(catalog_output) -> None:
+    """Freshness SLA page has traffic-light badges with threshold values."""
+    output_dir, rendered = catalog_output
+    freshness_path = output_dir / "freshness-slas.html"
+    assert freshness_path.exists(), "freshness-slas.html not rendered"
+    html = freshness_path.read_text()
+    # Traffic-light badge CSS classes
+    assert "badge-green" in html
+    assert "badge-yellow" in html
+    assert "badge-red" in html
+    # Threshold values from freshness_tracker.py (injected at render time)
+    assert "24.0" in html or "24" in html  # gold expected
+    assert "48.0" in html or "48" in html  # gold critical
+    assert "<style>" in html
+
+
+@pytest.mark.unit
+def test_catalog_index(catalog_output) -> None:
+    """Catalog index has audience-tagged cards with links."""
+    output_dir, rendered = catalog_output
+    index_path = output_dir / "index.html"
+    assert index_path.exists(), "index.html not rendered"
+    html = index_path.read_text()
+    # Audience groups
+    assert "Business Users" in html
+    assert "Compliance" in html
+    assert "Data Engineers" in html
+    # Links to pages
+    assert "glossary.html" in html
+    assert "medallion.html" in html
+    assert "freshness-slas.html" in html
+    # Audience CSS classes
+    assert "business-users" in html
+    assert "compliance" in html
+    assert "data-engineers" in html
+    assert "<style>" in html
