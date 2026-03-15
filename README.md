@@ -77,6 +77,9 @@ lakehouse/
 │   │   │   ├── bronze/         # Raw ingestion (trades, positions, mainframe)
 │   │   │   ├── silver/         # Cleaned & validated
 │   │   │   └── gold/           # Business-level aggregates (trading metrics, risk)
+│   │   ├── ingestion/          # Raw zone file management & ingestion manifest
+│   │   │   ├── raw_zone.py     # RawZoneManager -- SFTP drop → S3/MinIO raw zone
+│   │   │   └── manifest.py     # IngestionManifest -- LANDED/PROCESSING/PROCESSED/FAILED
 │   │   ├── governance/         # Ranger policies, classification, audit, freshness
 │   │   ├── quality/            # Soda Core scanner, reconciliation, SodaCL checks
 │   │   ├── semantic/           # Cube metric context, NL-to-SQL, evaluation
@@ -178,6 +181,36 @@ The ETL framework follows a **medallion architecture** with three layers:
 
 All pipelines extend `BasePipeline` (see [`etl/src/pipelines/base.py`](etl/src/pipelines/base.py)) and follow the patterns documented in [`docs/etl-patterns.md`](docs/etl-patterns.md).
 
+### Raw Zone & Ingestion
+
+Before mainframe data reaches the Bronze Iceberg tables, original binary files are preserved in a
+**raw zone** on S3/MinIO for 7-year regulatory retention:
+
+```
+SFTP / Connect:Direct drop zone  (local staging)
+         │
+         │  RawZoneManager.upload_to_raw_zone()
+         ▼
+s3://lakehouse-raw/raw/mainframe/{source_system}/{YYYY-MM-DD}/{filename}
+         │
+         │  IngestionManifest.register_file()  →  status: LANDED
+         │
+         │  MainframeBronzePipeline.execute()  →  status: PROCESSED
+         ▼
+lakehouse.bronze.{table}  (Apache Iceberg via Cobrix)
+```
+
+Key components in `etl/src/ingestion/`:
+
+| Module | Class | Purpose |
+|--------|-------|---------|
+| `raw_zone.py` | `RawZoneManager` | Upload files to S3/MinIO, compute MD5, list raw files |
+| `raw_zone.py` | `RawZoneConfig` | Bucket, prefix, region, MinIO endpoint override |
+| `manifest.py` | `IngestionManifest` | JSON Lines lifecycle tracking per source/date |
+| `manifest.py` | `ManifestEntry` | Single file record: LANDED → PROCESSING → PROCESSED/FAILED |
+
+See [`docs/mainframe-ingestion.md`](docs/mainframe-ingestion.md) for the full guide.
+
 ## Governance & Security
 
 - **Apache Ranger** -- Column-level masking, row-level filtering, tag-driven classification
@@ -198,6 +231,7 @@ All pipelines extend `BasePipeline` (see [`etl/src/pipelines/base.py`](etl/src/p
 | [`docs/adr/001-teradata-otf-nessie-feasibility.md`](docs/adr/001-teradata-otf-nessie-feasibility.md) | Teradata OTF + Nessie integration decision |
 | [`docs/swot/nessie-catalog-swot.md`](docs/swot/nessie-catalog-swot.md) | Nessie catalog SWOT analysis for leadership |
 | [`docs/etl-patterns.md`](docs/etl-patterns.md) | ETL standards & team onboarding guide |
+| [`docs/mainframe-ingestion.md`](docs/mainframe-ingestion.md) | Mainframe ingestion: raw zone, manifest, SFTP transfer |
 | [`docs/benchmarks/benchmark_template.md`](docs/benchmarks/benchmark_template.md) | Query performance benchmark template |
 | [`ci/README.md`](ci/README.md) | CI/CD workflow conventions |
 
