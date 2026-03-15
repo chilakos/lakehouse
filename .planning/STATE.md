@@ -10,8 +10,8 @@ progress:
   total_phases: 4
   completed_phases: 3
   total_plans: 7
-  completed_plans: 7
-  percent: 96
+  completed_plans: 8
+  percent: 98
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-14)
 
 **Core value:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
-**Current focus:** v1.1 Documentation -- Phase 7: Developer Docs
+**Current focus:** v1.1 Documentation -- Phase 8: Data Catalog & Glossary
 
 ## Current Position
 
-Phase: 7 of 8 (Developer Docs)
-Plan: 3 of 3 in current phase
-Status: Phase Complete
-Last activity: 2026-03-14 -- Completed 07-03 Contributors Batch and Developer Index
+Phase: 8 of 8 (Data Catalog & Glossary)
+Plan: 1 of 2 in current phase
+Status: In Progress
+Last activity: 2026-03-15 -- Completed 08-01 Catalog Infrastructure and First 4 Pages
 
-Progress: [██████████] 96%
+Progress: [█████████░] 98%
 
 ## v1.0 Milestone Summary
 
@@ -56,10 +56,11 @@ Progress: [██████████] 96%
 | 5. HTML Foundation + SWOTs | 2/2 | 17 min | 8.5 min |
 | 6. Architecture | 2/2 | 15 min | 7.5 min |
 | 7. Developer Docs | 3/3 | 23 min | 7.7 min |
-| 8. Data Catalog | 0/2 | -- | -- |
+| 8. Data Catalog | 1/2 | 8 min | 8 min |
 
 *Updated after each plan completion*
 | Phase 07 P03 | 8min | 2 tasks | 12 files |
+| Phase 08 P01 | 8min | 2 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Key decisions from v1.0 affecting documentation:
 - Service-urls annotations dict for developer metadata (credentials, actions) while ports from extract_services()
 - [Phase 07]: AST-based API extraction using ast.parse() avoids PySpark runtime dependency for API reference docs
 - [Phase 07]: Developer docs index uses audience-tagged cards (New Engineers/green, All Engineers/blue, Contributors/purple)
+- [Phase 08]: AST extraction handles both ast.Assign and ast.AnnAssign for type-annotated Python assignments
+- [Phase 08]: Domain grouping priority: Infrastructure > Governance > Risk > Trading prevents finance+risk overlap
 
 ### Pending Todos
 
@@ -112,6 +115,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-15T00:10:49.686Z
-Stopped at: Phase 8 context gathered
-Resume file: .planning/phases/08-data-catalog-and-glossary/08-CONTEXT.md
+Last session: 2026-03-15T00:46:04Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: .planning/phases/08-data-catalog-and-glossary/08-02-PLAN.md
