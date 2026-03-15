@@ -1,0 +1,38 @@
+title: "Data Catalog"
+subtitle: "Business glossary, metrics, compliance, and data lineage documentation"
+page_type: "catalog-index"
+output_filename: "index.html"
+
+audience_groups:
+  - name: "Business Users"
+    audience_class: "business-users"
+    pages:
+      - title: "Business Glossary"
+        filename: "glossary.html"
+        description: "Plain-language definitions for all data terms, grouped by business domain"
+      - title: "Data Layers Explained"
+        filename: "medallion.html"
+        description: "How data flows through Bronze, Silver, and Gold layers"
+      - title: "Metric Definitions"
+        filename: "metrics.html"
+        description: "Calculation logic for key business metrics from the semantic layer"
+
+  - name: "Compliance"
+    audience_class: "compliance"
+    pages:
+      - title: "Regulatory Terms"
+        filename: "regulatory.html"
+        description: "BCBS 239, PII, VaR, Expected Shortfall definitions with compliance tracing"
+      - title: "Data Lineage"
+        filename: "lineage.html"
+        description: "End-to-end data flow visualizations from source to consumer"
+
+  - name: "Data Engineers"
+    audience_class: "data-engineers"
+    pages:
+      - title: "Data Freshness SLAs"
+        filename: "freshness-slas.html"
+        description: "Update intervals and traffic-light status thresholds by data layer"
+      - title: "Business Glossary"
+        filename: "glossary.html"
+        description: "Term-to-table mapping reference for all data terms"

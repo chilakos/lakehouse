@@ -1,0 +1,29 @@
+title: "Data Layers Explained"
+subtitle: "How data flows through Bronze, Silver, and Gold layers"
+page_type: "medallion"
+output_filename: "medallion.html"
+
+layers:
+  - name: "Bronze Layer"
+    subtitle: "Raw Data Ingestion"
+    color: "#cd7f32"
+    description: "Raw data as received from source systems, stored with minimal transformation. The bronze layer preserves the original source schema and values, including any source-system quirks. Think of it as a high-fidelity copy of what arrived."
+    example_tables: ["bronze.raw_trades_history", "bronze.raw_positions_daily", "bronze.raw_counterparty"]
+    freshness_sla: "6 hours"
+    what_happens: "Format conversion (CSV/JSON to Iceberg Parquet), metadata columns added (source_system, ingestion_ts, batch_id). Data retained for 7 years for regulatory compliance."
+
+  - name: "Silver Layer"
+    subtitle: "Cleansed & Validated"
+    color: "#C0C0C0"
+    description: "Cleansed, validated, and standardized data. Source-system quirks are resolved -- date formats normalized, NULL handling applied, duplicates removed. Data conforms to the Financial Services Data Model (FSDM) schema."
+    example_tables: ["silver.trades_validated", "silver.positions_validated"]
+    freshness_sla: "12 hours"
+    what_happens: "Schema conformance (FSDM), type casting, deduplication, quality checks (Great Expectations). Cross-source joins become possible at this layer."
+
+  - name: "Gold Layer"
+    subtitle: "Business-Ready Analytics"
+    color: "#c8a961"
+    description: "Business-ready aggregated data, denormalized for analytical consumption. Gold tables are the single, governed copy of truth for business metrics. Optimized for BI tools (Cube semantic layer), AI/ML features, and API consumption."
+    example_tables: ["gold.trading_metrics", "gold.risk_exposure", "gold.positions_daily"]
+    freshness_sla: "24 hours"
+    what_happens: "Business logic application, cross-source aggregation, denormalization, metric computation (notional value, VaR, expected shortfall). Served through Trino SQL engine and Cube semantic layer."

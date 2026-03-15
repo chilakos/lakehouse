@@ -1,0 +1,22 @@
+title: "Data Freshness SLAs"
+subtitle: "Update intervals and status thresholds by data layer"
+page_type: "freshness"
+output_filename: "freshness-slas.html"
+
+intro: "Data freshness is monitored using traffic-light SLA status. Each dataset in the lakehouse has a defined Service Level Agreement specifying the expected update interval and thresholds for warning and critical status. SLA breaches trigger automated alerts via Grafana."
+
+status_definitions:
+  - status: "GREEN"
+    label: "On time"
+    description: "Data is current -- within expected update interval"
+    css_class: "badge-green"
+  - status: "YELLOW"
+    label: "Warning"
+    description: "Data is stale -- past warning threshold but within critical threshold"
+    css_class: "badge-yellow"
+  - status: "RED"
+    label: "Stale"
+    description: "Data is critically stale -- past critical threshold, or never updated"
+    css_class: "badge-red"
+
+monitoring_note: "Freshness is tracked in Grafana dashboards and the OpenMetadata catalog. SLA breaches trigger automated alerts to the data engineering team. Thresholds shown below are extracted from freshness_tracker.py at documentation build time."

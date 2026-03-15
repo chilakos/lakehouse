@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Glossary - Lakehouse Data Catalog</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.5rem; margin-bottom: 0.5rem; font-size: 1.2rem; }
+
+    a { color: #2563eb; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+    .doc-header .meta { color: #94a3b8; font-size: 0.9rem; }
+
+    /* === TERM CARD === */
+    .term-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.25rem 1.25rem 1.25rem 1.5rem;
+      margin-bottom: 1rem;
+      background: #ffffff;
+      transition: box-shadow 0.2s;
+    }
+    .term-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .term-card h4 { font-size: 1.1rem; color: #1a2332; margin-bottom: 0.35rem; }
+    .term-card .definition { color: #475569; margin-bottom: 0.5rem; }
+    .term-card .term-meta { font-size: 0.85rem; color: #94a3b8; margin-bottom: 0.25rem; }
+    .term-card .term-meta span { margin-right: 1rem; }
+    .term-card .table-mapping-inline { font-size: 0.9rem; color: #2563eb; margin-top: 0.35rem; }
+    .term-card .openmetadata-link { font-size: 0.85rem; color: #94a3b8; margin-top: 0.25rem; }
+    .term-card .openmetadata-link a { color: #64748b; }
+
+    /* === DOMAIN SECTION === */
+    .domain-section { margin-bottom: 2rem; }
+    .domain-section h3 { padding-left: 0.75rem; }
+
+    /* === DETAILS/SUMMARY (collapsible) === */
+    details { margin-top: 0.5rem; }
+    details summary {
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #64748b;
+      font-weight: 500;
+    }
+    details summary:hover { color: #1a2332; }
+    .details-body { padding: 0.75rem 0 0.25rem 0; font-size: 0.9rem; color: #475569; }
+
+    /* === FRESHNESS BADGES === */
+    .freshness-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      gap: 0.35rem;
+    }
+    .badge-green { background: #dcfce7; color: #166534; }
+    .badge-yellow { background: #fef9c3; color: #854d0e; }
+    .badge-red { background: #fecaca; color: #991b1b; }
+
+    /* === SLA CARD === */
+    .sla-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      background: #f8fafc;
+    }
+    .sla-card h4 { font-size: 1.1rem; color: #1a2332; margin-bottom: 0.5rem; }
+    .sla-thresholds {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.5rem;
+    }
+    .sla-thresholds .threshold-item { font-size: 0.9rem; color: #475569; }
+    .sla-thresholds .threshold-item strong { color: #1a2332; }
+
+    /* === MAPPING TABLE === */
+    .mapping-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+    .mapping-table th, .mapping-table td {
+      border: 1px solid #e2e8f0;
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+    .mapping-table th { background: #f1f5f9; color: #1a2332; font-weight: 600; }
+    .mapping-table td { color: #475569; }
+    .mapping-table code { background: #f1f5f9; padding: 0.1rem 0.3rem; border-radius: 3px; font-size: 0.85rem; }
+
+    /* === MEDALLION LAYER CARDS === */
+    .medallion-layer {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      background: #ffffff;
+    }
+    .medallion-layer h3 { margin-top: 0; }
+    .medallion-layer .layer-subtitle { font-size: 0.95rem; color: #64748b; margin-bottom: 0.5rem; }
+    .medallion-layer .example-tables { font-size: 0.9rem; margin-top: 0.5rem; }
+    .medallion-layer .example-tables code { background: #f1f5f9; padding: 0.1rem 0.3rem; border-radius: 3px; }
+
+    /* === CARD GRID (catalog-index) === */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin: 1.5rem 0;
+    }
+    .card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      transition: box-shadow 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-color: #c8a961; }
+    .card a { color: inherit; text-decoration: none; }
+    .card a:hover { text-decoration: none; }
+    .card h4 { color: #1a2332; margin-bottom: 0.5rem; font-size: 1rem; }
+    .card p { color: #64748b; font-size: 0.9rem; flex: 1; }
+    .card-audience {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    .audience-business-users { background: #d1fae5; color: #059669; }
+    .audience-compliance { background: #ede9fe; color: #7c3aed; }
+    .audience-data-engineers { background: #dbeafe; color: #2563eb; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid #e2e8f0;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .sla-thresholds { flex-direction: column; gap: 0.5rem; }
+      .card-grid { grid-template-columns: 1fr; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 1cm; font-size: 9pt; }
+      .doc-header { background: #1a2332 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0 0 1cm 0; }
+      .term-card, .sla-card, .medallion-layer, .card { break-inside: avoid; }
+      .freshness-badge { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="doc-header">
+  <h1>Business Glossary</h1>
+<p class="subtitle">Plain-language definitions for lakehouse data terms</p>  <p class="meta">Generated: 2026-03-15</p>
+</header>
+
+<!-- ===================== GLOSSARY PAGE ===================== -->
+<section class="domain-section" style="border-left: 4px solid #059669;">
+  <h3>Trading</h3>
+  <div class="term-card" style="border-left: 4px solid #059669;">
+    <h4>Trade</h4>
+    <p class="definition">A financial transaction involving buying or selling a security, derivative, or other financial instrument. Trades have a trade date, settlement date, price, quantity, and counterparty.</p>
+    <p class="term-meta"><span>Synonyms: transaction, deal, execution</span></p>
+    <p class="table-mapping-inline">Table: <code>gold.trading_metrics</code></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Raw trade data arrives in <code>bronze.raw_trades_history</code>, is validated and standardized in <code>silver.trades_validated</code>, and aggregated in <code>gold.trading_metrics</code>.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/trade">/glossary/trade</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #059669;">
+    <h4>notional_value</h4>
+    <p class="definition">The total dollar value of a trade or position, calculated as price multiplied by quantity. Represents the gross market exposure for a given instrument.</p>
+    <p class="term-meta"><span>Synonyms: gross value, face value, nominal value</span></p>
+    <p class="table-mapping-inline">Table: <code>gold.trading_metrics</code></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Computed in <code>gold.trading_metrics</code> as <code>price * quantity</code>. Used in Cube semantic layer as the <code>total_notional</code> measure.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/notional-value">/glossary/notional-value</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #059669;">
+    <h4>trade_count</h4>
+    <p class="definition">The total number of individual trade executions in a given grouping (by symbol, side, time period). A core activity metric used for volume analysis.</p>
+    <p class="term-meta"><span>Synonyms: execution count, transaction count</span></p>
+    <p class="table-mapping-inline">Table: <code>gold.trading_metrics</code></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Aggregated in <code>gold.trading_metrics</code> as <code>COUNT(*)</code> grouped by symbol and trade_side. Exposed via Cube as <code>trade_count</code> measure.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/trade-count">/glossary/trade-count</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #059669;">
+    <h4>average_price</h4>
+    <p class="definition">The mean execution price across all trades for a given instrument and side. Used for cost basis analysis and execution quality monitoring.</p>
+    <p class="term-meta"><span>Synonyms: avg price, mean price, VWAP</span></p>
+    <p class="table-mapping-inline">Table: <code>gold.trading_metrics</code></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Calculated in <code>gold.trading_metrics</code> as <code>AVG(price)</code>. Exposed via Cube as <code>avg_price</code> measure.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/average-price">/glossary/average-price</a></p>
+  </div>
+</section>
+<section class="domain-section" style="border-left: 4px solid #dc2626;">
+  <h3>Risk</h3>
+  <div class="term-card" style="border-left: 4px solid #dc2626;">
+    <h4>Position</h4>
+    <p class="definition">The amount of a security or financial instrument held by an entity at a specific point in time. A position is the net result of all trades in a given security. Can be long (owned) or short (borrowed and sold).</p>
+    <p class="term-meta"><span>Synonyms: holding, exposure</span></p>
+    <p class="table-mapping-inline">Table: <code>gold.risk_exposure</code></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Tracked daily in <code>gold.risk_exposure</code>. Source data flows from <code>bronze.raw_positions_daily</code> through <code>silver.positions_validated</code>.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/position">/glossary/position</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #dc2626;">
+    <h4>market_value</h4>
+    <p class="definition">The current market value of a position, calculated as quantity multiplied by the current market price per unit. Used for portfolio valuation and risk reporting.</p>
+    <p class="term-meta"><span>Synonyms: mark-to-market, fair value, current value</span></p>
+    <p class="table-mapping-inline">Table: <code>gold.risk_exposure</code></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Computed in <code>gold.risk_exposure</code> as <code>quantity * current_price</code>. Mark-to-market exposure for daily risk snapshots.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/market-value">/glossary/market-value</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #dc2626;">
+    <h4>var_95</h4>
+    <p class="definition">Value at Risk at 95% confidence level. The maximum expected loss over a specified time horizon such that there is a 95% probability the actual loss will not exceed this amount.</p>
+    <p class="term-meta"><span>Synonyms: VaR 95, value-at-risk 95</span></p>
+    <p class="table-mapping-inline">Table: <code>gold.risk_exposure</code></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Computed in <code>gold.risk_exposure</code>. A core risk metric required by BCBS 239 for risk reporting.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/var-95">/glossary/var-95</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #dc2626;">
+    <h4>var_99</h4>
+    <p class="definition">Value at Risk at 99% confidence level. The maximum expected loss over a specified time horizon such that there is a 99% probability the actual loss will not exceed this amount.</p>
+    <p class="term-meta"><span>Synonyms: VaR 99, value-at-risk 99</span></p>
+    <p class="table-mapping-inline">Table: <code>gold.risk_exposure</code></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Computed in <code>gold.risk_exposure</code>. More conservative than VaR 95, used for stress testing and regulatory capital calculations.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/var-99">/glossary/var-99</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #dc2626;">
+    <h4>expected_shortfall</h4>
+    <p class="definition">Expected Shortfall (Conditional VaR) measures the average loss in the tail beyond the VaR threshold. Captures the severity of tail risk events.</p>
+    <p class="term-meta"><span>Synonyms: CVaR, conditional VaR, tail VaR</span></p>
+    <p class="table-mapping-inline">Table: <code>gold.risk_exposure</code></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Computed in <code>gold.risk_exposure</code>. Considered a more coherent risk measure than VaR and increasingly required by regulators.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/expected-shortfall">/glossary/expected-shortfall</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #dc2626;">
+    <h4>position_count</h4>
+    <p class="definition">The total number of open positions in a given grouping (by account, sector, currency). Used for portfolio concentration analysis and diversification monitoring.</p>
+    <p class="term-meta"><span>Synonyms: holding count, open positions</span></p>
+    <p class="table-mapping-inline">Table: <code>gold.risk_exposure</code></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Aggregated in <code>gold.risk_exposure</code> as <code>COUNT(*)</code>. Used for capacity planning and concentration limits.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/position-count">/glossary/position-count</a></p>
+  </div>
+</section>
+<section class="domain-section" style="border-left: 4px solid #7c3aed;">
+  <h3>Governance</h3>
+  <div class="term-card" style="border-left: 4px solid #7c3aed;">
+    <h4>PII</h4>
+    <p class="definition">Personally Identifiable Information -- any data that could be used to identify a specific individual. Subject to data protection regulations including GDPR, CCPA, and industry-specific rules.</p>
+    <p class="term-meta"><span>Synonyms: personal data, sensitive personal information</span></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">PII columns are automatically classified via regex rules in Apache Ranger tag policies. Non-privileged users see masked values through column-level masking.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/pii">/glossary/pii</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #7c3aed;">
+    <h4>BCBS 239</h4>
+    <p class="definition">Basel Committee on Banking Supervision Principles for Effective Risk Data Aggregation and Risk Reporting. Requires strong risk data aggregation capabilities and internal risk reporting practices.</p>
+    <p class="term-meta"><span>Synonyms: Basel 239, RDARR principles</span></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">The lakehouse supports BCBS 239 compliance through end-to-end data lineage tracking via OpenLineage/Marquez. Lineage is captured at the pipeline level.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/bcbs-239">/glossary/bcbs-239</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #7c3aed;">
+    <h4>SLA</h4>
+    <p class="definition">Service Level Agreement for data delivery timeliness. Each dataset has a defined SLA specifying the expected update interval and thresholds for warning and critical status.</p>
+    <p class="term-meta"><span>Synonyms: service level, timeliness requirement, data contract</span></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Default SLAs: Gold 24h expected / 48h critical, Silver 12h / 24h, Bronze 6h / 12h. SLA breaches trigger alerts via Grafana. Defined in <code>freshness_tracker.py</code>.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/sla">/glossary/sla</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #7c3aed;">
+    <h4>Data Freshness</h4>
+    <p class="definition">The time elapsed since the last successful data update for a given dataset. Tracked per table using traffic-light SLA status: GREEN, YELLOW, RED.</p>
+    <p class="term-meta"><span>Synonyms: data recency, data currency, data latency</span></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Freshness dashboards are visible in Grafana and the OpenMetadata catalog. Status is calculated by <code>freshness_tracker.py</code>.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/data-freshness">/glossary/data-freshness</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #7c3aed;">
+    <h4>Business Unit</h4>
+    <p class="definition">An organizational division or segment of the firm that operates with its own profit and loss responsibility. Used to partition data access and ownership.</p>
+    <p class="term-meta"><span>Synonyms: division, department, desk</span></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Business units are used in Apache Ranger row-level security policies to restrict data access by organizational division.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/business-unit">/glossary/business-unit</a></p>
+  </div>
+</section>
+<section class="domain-section" style="border-left: 4px solid #2563eb;">
+  <h3>Infrastructure</h3>
+  <div class="term-card" style="border-left: 4px solid #2563eb;">
+    <h4>Bronze Layer</h4>
+    <p class="definition">The first layer of the medallion architecture. Contains raw ingested data with minimal transformation -- primarily format conversion. Data preserves the original source schema.</p>
+    <p class="term-meta"><span>Synonyms: raw layer, landing zone, staging layer</span></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Format conversion (CSV/JSON to Iceberg Parquet). Metadata columns added: <code>source_system</code>, <code>ingestion_ts</code>, <code>batch_id</code>. 7-year retention for regulatory compliance.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/bronze-layer">/glossary/bronze-layer</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #2563eb;">
+    <h4>Silver Layer</h4>
+    <p class="definition">The second layer of the medallion architecture. Contains cleansed, validated, and standardized data. Source-system quirks are resolved and FSDM schema conformance is enforced.</p>
+    <p class="term-meta"><span>Synonyms: cleansed layer, conformed layer, standardized layer</span></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Validation includes date format normalization, NULL handling, type casting, and deduplication. Used for cross-source joins.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/silver-layer">/glossary/silver-layer</a></p>
+  </div>
+  <div class="term-card" style="border-left: 4px solid #2563eb;">
+    <h4>Gold Layer</h4>
+    <p class="definition">The third layer of the medallion architecture. Contains business-ready aggregated data, denormalized for analytical consumption. Optimized for BI tools, AI/ML, and API consumption.</p>
+    <p class="term-meta"><span>Synonyms: business layer, serving layer, analytical layer</span></p>
+    <details>
+      <summary>Technical Detail</summary>
+      <div class="details-body">Gold tables represent the single, governed copy of truth for business metrics. Served through Cube semantic layer and Trino SQL engine.</div>
+    </details>
+    <p class="openmetadata-link">View in OpenMetadata: <a href="/glossary/gold-layer">/glossary/gold-layer</a></p>
+  </div>
+</section>
+
+<h2>Term-to-Table Mapping</h2>
+<table class="mapping-table">
+  <thead>
+    <tr>
+      <th>Term</th>
+      <th>Tables (Bronze / Silver / Gold)</th>
+      <th>Cube Measure</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Trade</td>
+      <td><code>bronze.raw_trades_history</code> &rarr; <code>silver.trades_validated</code> &rarr; <code>gold.trading_metrics</code></td>
+      <td>total_notional, trade_count, avg_price</td>
+    </tr>
+    <tr>
+      <td>notional_value</td>
+      <td><code>gold.trading_metrics</code></td>
+      <td>total_notional</td>
+    </tr>
+    <tr>
+      <td>trade_count</td>
+      <td><code>gold.trading_metrics</code></td>
+      <td>trade_count</td>
+    </tr>
+    <tr>
+      <td>average_price</td>
+      <td><code>gold.trading_metrics</code></td>
+      <td>avg_price</td>
+    </tr>
+    <tr>
+      <td>Position</td>
+      <td><code>bronze.raw_positions_daily</code> &rarr; <code>silver.positions_validated</code> &rarr; <code>gold.risk_exposure</code></td>
+      <td>market_value, position_count</td>
+    </tr>
+    <tr>
+      <td>market_value</td>
+      <td><code>gold.risk_exposure</code></td>
+      <td>market_value</td>
+    </tr>
+    <tr>
+      <td>var_95</td>
+      <td><code>gold.risk_exposure</code></td>
+      <td>var_95</td>
+    </tr>
+    <tr>
+      <td>var_99</td>
+      <td><code>gold.risk_exposure</code></td>
+      <td>var_99</td>
+    </tr>
+    <tr>
+      <td>expected_shortfall</td>
+      <td><code>gold.risk_exposure</code></td>
+      <td>expected_shortfall</td>
+    </tr>
+    <tr>
+      <td>position_count</td>
+      <td><code>gold.risk_exposure</code></td>
+      <td>position_count</td>
+    </tr>
+    <tr>
+      <td>PII</td>
+      <td></td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>BCBS 239</td>
+      <td></td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>SLA</td>
+      <td></td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>Data Freshness</td>
+      <td></td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>Business Unit</td>
+      <td></td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>Bronze Layer</td>
+      <td><code>bronze.raw_trades_history</code> &rarr; <code>bronze.raw_positions_daily</code> &rarr; <code>bronze.raw_counterparty</code></td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>Silver Layer</td>
+      <td><code>silver.trades_validated</code> &rarr; <code>silver.positions_validated</code></td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td>Gold Layer</td>
+      <td><code>gold.trading_metrics</code> &rarr; <code>gold.risk_exposure</code></td>
+      <td>N/A</td>
+    </tr>
+  </tbody>
+</table>
+
+
+<!-- FOOTER -->
+<footer class="doc-footer">
+  <p>Generated on 2026-03-15 | Lakehouse Data Catalog
+| postgres 15, minio latest, minio-init latest</p>
+</footer>
+
+</body>
+</html>

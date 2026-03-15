@@ -1,0 +1,221 @@
+title: "Business Glossary"
+subtitle: "Plain-language definitions for lakehouse data terms"
+page_type: "glossary"
+output_filename: "glossary.html"
+
+domains:
+  - name: "Trading"
+    color: "#059669"
+    terms:
+      - name: "Trade"
+        slug: "trade"
+        definition: "A financial transaction involving buying or selling a security, derivative, or other financial instrument. Trades have a trade date, settlement date, price, quantity, and counterparty."
+        technical_detail: "Raw trade data arrives in <code>bronze.raw_trades_history</code>, is validated and standardized in <code>silver.trades_validated</code>, and aggregated in <code>gold.trading_metrics</code>."
+        synonyms: ["transaction", "deal", "execution"]
+        related_terms: ["Position", "Counterparty", "Settlement"]
+        table_mapping: "gold.trading_metrics"
+        openmetadata_path: "/glossary/trade"
+      - name: "notional_value"
+        slug: "notional-value"
+        definition: "The total dollar value of a trade or position, calculated as price multiplied by quantity. Represents the gross market exposure for a given instrument."
+        technical_detail: "Computed in <code>gold.trading_metrics</code> as <code>price * quantity</code>. Used in Cube semantic layer as the <code>total_notional</code> measure."
+        synonyms: ["gross value", "face value", "nominal value"]
+        related_terms: ["Trade", "Position"]
+        table_mapping: "gold.trading_metrics"
+        openmetadata_path: "/glossary/notional-value"
+      - name: "trade_count"
+        slug: "trade-count"
+        definition: "The total number of individual trade executions in a given grouping (by symbol, side, time period). A core activity metric used for volume analysis."
+        technical_detail: "Aggregated in <code>gold.trading_metrics</code> as <code>COUNT(*)</code> grouped by symbol and trade_side. Exposed via Cube as <code>trade_count</code> measure."
+        synonyms: ["execution count", "transaction count"]
+        related_terms: ["Trade"]
+        table_mapping: "gold.trading_metrics"
+        openmetadata_path: "/glossary/trade-count"
+      - name: "average_price"
+        slug: "average-price"
+        definition: "The mean execution price across all trades for a given instrument and side. Used for cost basis analysis and execution quality monitoring."
+        technical_detail: "Calculated in <code>gold.trading_metrics</code> as <code>AVG(price)</code>. Exposed via Cube as <code>avg_price</code> measure."
+        synonyms: ["avg price", "mean price", "VWAP"]
+        related_terms: ["Trade", "notional_value"]
+        table_mapping: "gold.trading_metrics"
+        openmetadata_path: "/glossary/average-price"
+
+  - name: "Risk"
+    color: "#dc2626"
+    terms:
+      - name: "Position"
+        slug: "position"
+        definition: "The amount of a security or financial instrument held by an entity at a specific point in time. A position is the net result of all trades in a given security. Can be long (owned) or short (borrowed and sold)."
+        technical_detail: "Tracked daily in <code>gold.risk_exposure</code>. Source data flows from <code>bronze.raw_positions_daily</code> through <code>silver.positions_validated</code>."
+        synonyms: ["holding", "exposure"]
+        related_terms: ["Trade", "Business Unit", "Risk Metrics"]
+        table_mapping: "gold.risk_exposure"
+        openmetadata_path: "/glossary/position"
+      - name: "market_value"
+        slug: "market-value"
+        definition: "The current market value of a position, calculated as quantity multiplied by the current market price per unit. Used for portfolio valuation and risk reporting."
+        technical_detail: "Computed in <code>gold.risk_exposure</code> as <code>quantity * current_price</code>. Mark-to-market exposure for daily risk snapshots."
+        synonyms: ["mark-to-market", "fair value", "current value"]
+        related_terms: ["Position", "notional_value"]
+        table_mapping: "gold.risk_exposure"
+        openmetadata_path: "/glossary/market-value"
+      - name: "var_95"
+        slug: "var-95"
+        definition: "Value at Risk at 95% confidence level. The maximum expected loss over a specified time horizon such that there is a 95% probability the actual loss will not exceed this amount."
+        technical_detail: "Computed in <code>gold.risk_exposure</code>. A core risk metric required by BCBS 239 for risk reporting."
+        synonyms: ["VaR 95", "value-at-risk 95"]
+        related_terms: ["var_99", "expected_shortfall", "BCBS 239"]
+        table_mapping: "gold.risk_exposure"
+        openmetadata_path: "/glossary/var-95"
+      - name: "var_99"
+        slug: "var-99"
+        definition: "Value at Risk at 99% confidence level. The maximum expected loss over a specified time horizon such that there is a 99% probability the actual loss will not exceed this amount."
+        technical_detail: "Computed in <code>gold.risk_exposure</code>. More conservative than VaR 95, used for stress testing and regulatory capital calculations."
+        synonyms: ["VaR 99", "value-at-risk 99"]
+        related_terms: ["var_95", "expected_shortfall", "BCBS 239"]
+        table_mapping: "gold.risk_exposure"
+        openmetadata_path: "/glossary/var-99"
+      - name: "expected_shortfall"
+        slug: "expected-shortfall"
+        definition: "Expected Shortfall (Conditional VaR) measures the average loss in the tail beyond the VaR threshold. Captures the severity of tail risk events."
+        technical_detail: "Computed in <code>gold.risk_exposure</code>. Considered a more coherent risk measure than VaR and increasingly required by regulators."
+        synonyms: ["CVaR", "conditional VaR", "tail VaR"]
+        related_terms: ["var_95", "var_99", "BCBS 239"]
+        table_mapping: "gold.risk_exposure"
+        openmetadata_path: "/glossary/expected-shortfall"
+      - name: "position_count"
+        slug: "position-count"
+        definition: "The total number of open positions in a given grouping (by account, sector, currency). Used for portfolio concentration analysis and diversification monitoring."
+        technical_detail: "Aggregated in <code>gold.risk_exposure</code> as <code>COUNT(*)</code>. Used for capacity planning and concentration limits."
+        synonyms: ["holding count", "open positions"]
+        related_terms: ["Position", "market_value"]
+        table_mapping: "gold.risk_exposure"
+        openmetadata_path: "/glossary/position-count"
+
+  - name: "Governance"
+    color: "#7c3aed"
+    terms:
+      - name: "PII"
+        slug: "pii"
+        definition: "Personally Identifiable Information -- any data that could be used to identify a specific individual. Subject to data protection regulations including GDPR, CCPA, and industry-specific rules."
+        technical_detail: "PII columns are automatically classified via regex rules in Apache Ranger tag policies. Non-privileged users see masked values through column-level masking."
+        synonyms: ["personal data", "sensitive personal information"]
+        related_terms: ["BCBS 239", "Data Freshness"]
+        table_mapping:
+        openmetadata_path: "/glossary/pii"
+      - name: "BCBS 239"
+        slug: "bcbs-239"
+        definition: "Basel Committee on Banking Supervision Principles for Effective Risk Data Aggregation and Risk Reporting. Requires strong risk data aggregation capabilities and internal risk reporting practices."
+        technical_detail: "The lakehouse supports BCBS 239 compliance through end-to-end data lineage tracking via OpenLineage/Marquez. Lineage is captured at the pipeline level."
+        synonyms: ["Basel 239", "RDARR principles"]
+        related_terms: ["SLA", "Data Freshness", "Bronze Layer"]
+        table_mapping:
+        openmetadata_path: "/glossary/bcbs-239"
+      - name: "SLA"
+        slug: "sla"
+        definition: "Service Level Agreement for data delivery timeliness. Each dataset has a defined SLA specifying the expected update interval and thresholds for warning and critical status."
+        technical_detail: "Default SLAs: Gold 24h expected / 48h critical, Silver 12h / 24h, Bronze 6h / 12h. SLA breaches trigger alerts via Grafana. Defined in <code>freshness_tracker.py</code>."
+        synonyms: ["service level", "timeliness requirement", "data contract"]
+        related_terms: ["Data Freshness", "BCBS 239"]
+        table_mapping:
+        openmetadata_path: "/glossary/sla"
+      - name: "Data Freshness"
+        slug: "data-freshness"
+        definition: "The time elapsed since the last successful data update for a given dataset. Tracked per table using traffic-light SLA status: GREEN, YELLOW, RED."
+        technical_detail: "Freshness dashboards are visible in Grafana and the OpenMetadata catalog. Status is calculated by <code>freshness_tracker.py</code>."
+        synonyms: ["data recency", "data currency", "data latency"]
+        related_terms: ["SLA", "Bronze Layer", "Silver Layer", "Gold Layer"]
+        table_mapping:
+        openmetadata_path: "/glossary/data-freshness"
+      - name: "Business Unit"
+        slug: "business-unit"
+        definition: "An organizational division or segment of the firm that operates with its own profit and loss responsibility. Used to partition data access and ownership."
+        technical_detail: "Business units are used in Apache Ranger row-level security policies to restrict data access by organizational division."
+        synonyms: ["division", "department", "desk"]
+        related_terms: ["Trade", "Position"]
+        table_mapping:
+        openmetadata_path: "/glossary/business-unit"
+
+  - name: "Infrastructure"
+    color: "#2563eb"
+    terms:
+      - name: "Bronze Layer"
+        slug: "bronze-layer"
+        definition: "The first layer of the medallion architecture. Contains raw ingested data with minimal transformation -- primarily format conversion. Data preserves the original source schema."
+        technical_detail: "Format conversion (CSV/JSON to Iceberg Parquet). Metadata columns added: <code>source_system</code>, <code>ingestion_ts</code>, <code>batch_id</code>. 7-year retention for regulatory compliance."
+        synonyms: ["raw layer", "landing zone", "staging layer"]
+        related_terms: ["Silver Layer", "Gold Layer", "Data Freshness"]
+        table_mapping:
+        openmetadata_path: "/glossary/bronze-layer"
+      - name: "Silver Layer"
+        slug: "silver-layer"
+        definition: "The second layer of the medallion architecture. Contains cleansed, validated, and standardized data. Source-system quirks are resolved and FSDM schema conformance is enforced."
+        technical_detail: "Validation includes date format normalization, NULL handling, type casting, and deduplication. Used for cross-source joins."
+        synonyms: ["cleansed layer", "conformed layer", "standardized layer"]
+        related_terms: ["Bronze Layer", "Gold Layer", "SLA"]
+        table_mapping:
+        openmetadata_path: "/glossary/silver-layer"
+      - name: "Gold Layer"
+        slug: "gold-layer"
+        definition: "The third layer of the medallion architecture. Contains business-ready aggregated data, denormalized for analytical consumption. Optimized for BI tools, AI/ML, and API consumption."
+        technical_detail: "Gold tables represent the single, governed copy of truth for business metrics. Served through Cube semantic layer and Trino SQL engine."
+        synonyms: ["business layer", "serving layer", "analytical layer"]
+        related_terms: ["Silver Layer", "SLA", "Data Freshness"]
+        table_mapping:
+        openmetadata_path: "/glossary/gold-layer"
+
+term_table_mapping:
+  - term: "Trade"
+    tables: ["bronze.raw_trades_history", "silver.trades_validated", "gold.trading_metrics"]
+    cube_measure: "total_notional, trade_count, avg_price"
+  - term: "notional_value"
+    tables: ["gold.trading_metrics"]
+    cube_measure: "total_notional"
+  - term: "trade_count"
+    tables: ["gold.trading_metrics"]
+    cube_measure: "trade_count"
+  - term: "average_price"
+    tables: ["gold.trading_metrics"]
+    cube_measure: "avg_price"
+  - term: "Position"
+    tables: ["bronze.raw_positions_daily", "silver.positions_validated", "gold.risk_exposure"]
+    cube_measure: "market_value, position_count"
+  - term: "market_value"
+    tables: ["gold.risk_exposure"]
+    cube_measure: "market_value"
+  - term: "var_95"
+    tables: ["gold.risk_exposure"]
+    cube_measure: "var_95"
+  - term: "var_99"
+    tables: ["gold.risk_exposure"]
+    cube_measure: "var_99"
+  - term: "expected_shortfall"
+    tables: ["gold.risk_exposure"]
+    cube_measure: "expected_shortfall"
+  - term: "position_count"
+    tables: ["gold.risk_exposure"]
+    cube_measure: "position_count"
+  - term: "PII"
+    tables: []
+    cube_measure:
+  - term: "BCBS 239"
+    tables: []
+    cube_measure:
+  - term: "SLA"
+    tables: []
+    cube_measure:
+  - term: "Data Freshness"
+    tables: []
+    cube_measure:
+  - term: "Business Unit"
+    tables: []
+    cube_measure:
+  - term: "Bronze Layer"
+    tables: ["bronze.raw_trades_history", "bronze.raw_positions_daily", "bronze.raw_counterparty"]
+    cube_measure:
+  - term: "Silver Layer"
+    tables: ["silver.trades_validated", "silver.positions_validated"]
+    cube_measure:
+  - term: "Gold Layer"
+    tables: ["gold.trading_metrics", "gold.risk_exposure"]
+    cube_measure:
