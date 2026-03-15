@@ -16,6 +16,7 @@ Usage:
 from __future__ import annotations
 
 import ast
+import json
 import subprocess
 import tempfile
 import warnings
@@ -36,6 +37,11 @@ ARCH_OUTPUT_DIR = PROJECT_ROOT / "docs" / "architecture"
 DEV_DATA_DIR = PROJECT_ROOT / "docs" / "developer" / "data"
 DEV_DIAGRAM_DIR = PROJECT_ROOT / "docs" / "developer" / "diagrams"
 DEV_OUTPUT_DIR = PROJECT_ROOT / "docs" / "developer"
+CATALOG_DATA_DIR = PROJECT_ROOT / "docs" / "catalog" / "data"
+CATALOG_DIAGRAM_DIR = PROJECT_ROOT / "docs" / "catalog" / "diagrams"
+CATALOG_OUTPUT_DIR = PROJECT_ROOT / "docs" / "catalog"
+GLOSSARY_SEED_PATH = PROJECT_ROOT / "infra" / "docker" / "openmetadata" / "glossary-seed.json"
+FRESHNESS_TRACKER_PATH = PROJECT_ROOT / "etl" / "src" / "governance" / "freshness_tracker.py"
 
 
 def extract_versions(compose_path: Path | str | None = None) -> dict[str, dict[str, str]]:
@@ -902,6 +908,185 @@ def render_dev_index(
     return output_path
 
 
+def extract_glossary_terms(glossary_path: Path | None = None) -> dict[str, list[dict]]:
+    """Load glossary-seed.json and group terms by business domain.
+
+    Domain mapping uses each term's tags:
+      - Trading: tags containing "trading" or ("finance" without "risk")
+      - Risk: tags containing "risk"
+      - Governance: tags containing "governance", "compliance", "privacy", "sla", "quality", "monitoring"
+      - Infrastructure: tags containing "architecture", "medallion", "data-lake"
+
+    Args:
+        glossary_path: Path to glossary-seed.json. Defaults to GLOSSARY_SEED_PATH.
+
+    Returns:
+        Dict mapping domain name to list of term dicts. Each term has a slug field.
+    """
+    if glossary_path is None:
+        glossary_path = GLOSSARY_SEED_PATH
+    glossary_path = Path(glossary_path)
+
+    data = json.loads(glossary_path.read_text())
+    terms = data.get("terms", [])
+
+    domain_rules: list[tuple[str, set[str]]] = [
+        ("Infrastructure", {"architecture", "medallion", "data-lake"}),
+        ("Governance", {"governance", "compliance", "privacy", "sla", "quality", "monitoring"}),
+        ("Risk", {"risk"}),
+        ("Trading", {"trading", "finance"}),
+    ]
+
+    grouped: dict[str, list[dict]] = {
+        "Trading": [], "Risk": [], "Governance": [], "Infrastructure": [],
+    }
+
+    for term in terms:
+        tags = {t.lower() for t in term.get("tags", [])}
+        slug = term["name"].lower().replace(" ", "-").replace("_", "-")
+        entry = {
+            "name": term["name"],
+            "slug": slug,
+            "description": term.get("description", ""),
+            "synonyms": term.get("synonyms", []),
+            "relatedTerms": term.get("relatedTerms", []),
+            "tags": list(tags),
+        }
+
+        assigned = False
+        for domain_name, domain_tags in domain_rules:
+            if tags & domain_tags:
+                # Special case: "finance" + "risk" -> Risk, not Trading
+                if domain_name == "Trading" and "risk" in tags:
+                    continue
+                grouped[domain_name].append(entry)
+                assigned = True
+                break
+        if not assigned:
+            grouped["Governance"].append(entry)
+
+    return grouped
+
+
+def extract_freshness_slas(tracker_path: Path | None = None) -> dict[str, dict]:
+    """AST-parse freshness_tracker.py to extract DEFAULT_SLAS threshold values.
+
+    Walks the AST to find the DEFAULT_SLAS dict assignment. For each entry,
+    extracts FreshnessSLA() keyword arguments from ast.Constant nodes.
+
+    Args:
+        tracker_path: Path to freshness_tracker.py. Defaults to FRESHNESS_TRACKER_PATH.
+
+    Returns:
+        Dict mapping layer pattern (e.g. "gold.*") to
+        {expected_hours, warning_hours, critical_hours}.
+    """
+    if tracker_path is None:
+        tracker_path = FRESHNESS_TRACKER_PATH
+    tracker_path = Path(tracker_path)
+
+    source = tracker_path.read_text()
+    tree = ast.parse(source, filename=str(tracker_path))
+
+    slas: dict[str, dict] = {}
+
+    for node in ast.walk(tree):
+        # Handle both ast.Assign and ast.AnnAssign (type-annotated assignment)
+        target_name = None
+        value_node = None
+        if isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "DEFAULT_SLAS":
+                    target_name = target.id
+                    value_node = node.value
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and node.target.id == "DEFAULT_SLAS":
+                target_name = node.target.id
+                value_node = node.value
+
+        if target_name and value_node and isinstance(value_node, ast.Dict):
+            for key_node, val_node in zip(value_node.keys, value_node.values):
+                if isinstance(key_node, ast.Constant) and isinstance(val_node, ast.Call):
+                    layer_key = key_node.value
+                    kw_map: dict[str, float] = {}
+                    for kw in val_node.keywords:
+                        if isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, (int, float)):
+                            kw_map[kw.arg] = float(kw.value.value)
+                    slas[layer_key] = {
+                        "expected_hours": kw_map.get("expected_update_interval_hours", 0),
+                        "warning_hours": kw_map.get("warning_threshold_hours", 0),
+                        "critical_hours": kw_map.get("critical_threshold_hours", 0),
+                    }
+    return slas
+
+
+def render_catalog_docs(
+    data_dir: Path | None = None,
+    diagram_dir: Path | None = None,
+    template_dir: Path | None = None,
+    output_dir: Path | None = None,
+    compose_path: Path | str | None = None,
+) -> list[Path]:
+    """Render catalog HTML pages from YAML data + Jinja2 templates.
+
+    Loads YAML data files from data_dir, renders each through base_catalog.html.
+    Injects glossary_terms, freshness_slas, and versions at render time.
+
+    Args:
+        data_dir: Directory containing catalog YAML data files.
+        diagram_dir: Directory containing .mmd Mermaid source files.
+        template_dir: Directory containing Jinja2 templates.
+        output_dir: Directory for rendered HTML output.
+        compose_path: Path to docker-compose.yml for version extraction.
+
+    Returns:
+        List of Paths to rendered HTML files.
+    """
+    if data_dir is None:
+        data_dir = CATALOG_DATA_DIR
+    if diagram_dir is None:
+        diagram_dir = CATALOG_DIAGRAM_DIR
+    if template_dir is None:
+        template_dir = TEMPLATE_DIR
+    if output_dir is None:
+        output_dir = CATALOG_OUTPUT_DIR
+
+    data_dir = Path(data_dir)
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    env = _create_jinja_env(template_dir)
+    versions = extract_versions(compose_path)
+    generation_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+    # Extract enrichment data
+    glossary_terms = extract_glossary_terms()
+    freshness_slas = extract_freshness_slas()
+
+    rendered_files: list[Path] = []
+    template = env.get_template("base_catalog.html")
+
+    for data_file in sorted(data_dir.glob("*.yml")):
+        doc_data = yaml.safe_load(data_file.read_text())
+        if doc_data is None:
+            continue
+        html = template.render(
+            **doc_data,
+            glossary_terms=glossary_terms,
+            freshness_slas=freshness_slas,
+            cube_metrics=[],
+            versions=versions,
+            generation_date=generation_date,
+        )
+        output_name = doc_data.get("output_filename", f"{data_file.stem}.html")
+        output_path = output_dir / output_name
+        output_path.write_text(html)
+        rendered_files.append(output_path)
+        print(f"  Rendered: catalog/{output_name}")
+
+    return rendered_files
+
+
 if __name__ == "__main__":
     print("Rendering SWOT analyses...")
     rendered = render_swots()
@@ -923,5 +1108,9 @@ if __name__ == "__main__":
     print("\nRendering developer index...")
     dev_index = render_dev_index()
     print(f"\n  Index: {dev_index}")
+
+    print("\nRendering catalog docs...")
+    catalog_rendered = render_catalog_docs()
+    print(f"\n  {len(catalog_rendered)} catalog page(s) rendered.")
 
     print("\nDone.")
