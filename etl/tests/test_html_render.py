@@ -34,6 +34,7 @@ from docs.render_html import render_developer_docs, render_dev_index  # noqa: E4
 from docs.render_html import extract_package_api, extract_all_apis  # noqa: E402
 from docs.render_html import extract_glossary_terms, extract_freshness_slas  # noqa: E402
 from docs.render_html import render_catalog_docs  # noqa: E402
+from docs.render_html import extract_cube_metrics  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -1360,3 +1361,104 @@ def test_catalog_index(catalog_output) -> None:
     assert "compliance" in html
     assert "data-engineers" in html
     assert "<style>" in html
+
+
+# ---------------------------------------------------------------------------
+# Phase 08 Plan 02 -- Metrics, Regulatory, Lineage, Term Relationships
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_extract_cube_metrics() -> None:
+    """extract_cube_metrics() parses both Cube YAML files and returns 8 metric dicts."""
+    metrics = extract_cube_metrics()
+    assert len(metrics) == 8, f"Expected 8 metrics, got {len(metrics)}"
+    required_keys = {"cube_name", "sql_table", "measure_name", "measure_type", "description", "glossary_term", "sql"}
+    for m in metrics:
+        assert required_keys.issubset(m.keys()), f"Missing keys in metric: {set(m.keys())}"
+        assert m["glossary_term"], f"Metric {m['measure_name']} missing glossary_term"
+    # Check specific measures exist
+    names = {m["measure_name"] for m in metrics}
+    assert "total_notional" in names
+    assert "trade_count" in names
+    assert "avg_price" in names
+    assert "total_market_value" in names
+    assert "total_var_95" in names
+    assert "total_var_99" in names
+    assert "total_expected_shortfall" in names
+    assert "position_count" in names
+
+
+@pytest.mark.unit
+def test_catalog_metrics(catalog_output) -> None:
+    """Metrics page shows all 8 measures with collapsible SQL and cube references."""
+    output_dir, rendered = catalog_output
+    metrics_path = output_dir / "metrics.html"
+    assert metrics_path.exists(), "metrics.html not rendered"
+    html = metrics_path.read_text()
+    assert len(html.splitlines()) >= 80, "metrics.html too short"
+    # All 8 measures present
+    for name in ["total_notional", "trade_count", "avg_price", "total_market_value",
+                  "total_var_95", "total_var_99", "total_expected_shortfall", "position_count"]:
+        assert name in html, f"Measure {name} not in metrics.html"
+    # Collapsible SQL sections
+    assert "Calculation Detail" in html
+    # Cube source references
+    assert "gold.trading_metrics" in html
+    assert "gold.risk_exposure" in html
+    assert "<style>" in html
+
+
+@pytest.mark.unit
+def test_catalog_regulatory(catalog_output) -> None:
+    """Regulatory page has BCBS 239, PII, VaR, ES with compliance tracing."""
+    output_dir, rendered = catalog_output
+    reg_path = output_dir / "regulatory.html"
+    assert reg_path.exists(), "regulatory.html not rendered"
+    html = reg_path.read_text()
+    assert len(html.splitlines()) >= 80, "regulatory.html too short"
+    # All 4 regulatory terms
+    assert "BCBS 239" in html
+    assert "PII" in html
+    assert "Value at Risk" in html or "VaR" in html
+    assert "Expected Shortfall" in html
+    # BCBS 239 audit trail
+    assert "gold.trading_metrics" in html
+    assert "silver.trades_validated" in html
+    assert "bronze.raw_trades_history" in html
+    # PII classification levels
+    assert "PUBLIC" in html
+    assert "RESTRICTED" in html
+    assert "<style>" in html
+
+
+@pytest.mark.unit
+def test_catalog_lineage(catalog_output) -> None:
+    """Lineage page has 3 domain diagrams as SVG/placeholder and term relationship graph."""
+    output_dir, rendered = catalog_output
+    lineage_path = output_dir / "lineage.html"
+    assert lineage_path.exists(), "lineage.html not rendered"
+    html = lineage_path.read_text()
+    assert len(html.splitlines()) >= 80, "lineage.html too short"
+    # 3 diagram sections
+    assert "Trading Domain" in html
+    assert "Risk Domain" in html
+    assert "Cross-Domain Overview" in html
+    # SVG content or placeholder
+    assert "svg" in html.lower()
+    assert "<style>" in html
+
+
+@pytest.mark.unit
+def test_catalog_term_relationships(catalog_output) -> None:
+    """Term relationship graph shows domain clusters and cross-domain connections."""
+    output_dir, rendered = catalog_output
+    lineage_path = output_dir / "lineage.html"
+    assert lineage_path.exists(), "lineage.html not rendered"
+    html = lineage_path.read_text()
+    # Term relationship section
+    assert "Term Relationship" in html
+    # Domain clusters should be referenced
+    assert "Trading" in html
+    assert "Risk" in html
+    assert "Governance" in html
