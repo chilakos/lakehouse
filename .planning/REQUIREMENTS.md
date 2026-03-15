@@ -53,10 +53,10 @@ Requirements for v1.1 Documentation milestone. Each maps to roadmap phases.
 - [x] **CAT-02**: Term-to-table mapping linking glossary terms to physical table locations in lakehouse.gold.*
 - [x] **CAT-03**: Medallion layer explanation for non-technical users (Bronze/Silver/Gold narrative)
 - [x] **CAT-04**: Data freshness SLA documentation with thresholds and RED/YELLOW/GREEN status definitions
-- [ ] **CAT-05**: Metric definitions with calculation logic pulled from Cube YAML measure definitions
-- [ ] **CAT-06**: Regulatory term definitions section (BCBS 239, PII, VaR, Expected Shortfall) with precise compliance definitions
-- [ ] **CAT-07**: Data lineage visualization showing end-to-end flow from source through Bronze-Silver-Gold to Cube to BI/AI per data domain
-- [ ] **CAT-08**: Glossary term relationship graph visualizing connections between related terms
+- [x] **CAT-05**: Metric definitions with calculation logic pulled from Cube YAML measure definitions
+- [x] **CAT-06**: Regulatory term definitions section (BCBS 239, PII, VaR, Expected Shortfall) with precise compliance definitions
+- [x] **CAT-07**: Data lineage visualization showing end-to-end flow from source through Bronze-Silver-Gold to Cube to BI/AI per data domain
+- [x] **CAT-08**: Glossary term relationship graph visualizing connections between related terms
 
 ## v1.0 Requirements (Validated)
 
@@ -226,10 +226,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CAT-02 | Phase 8 | Complete |
 | CAT-03 | Phase 8 | Complete |
 | CAT-04 | Phase 8 | Complete |
-| CAT-05 | Phase 8 | Pending |
-| CAT-06 | Phase 8 | Pending |
-| CAT-07 | Phase 8 | Pending |
-| CAT-08 | Phase 8 | Pending |
+| CAT-05 | Phase 8 | Complete |
+| CAT-06 | Phase 8 | Complete |
+| CAT-07 | Phase 8 | Complete |
+| CAT-08 | Phase 8 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 39 total
