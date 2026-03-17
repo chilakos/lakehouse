@@ -170,7 +170,7 @@
 <body>
   <header class="doc-header">
     <h1>Iceberg Catalog SWOT Analysis</h1>
-    <p class="subtitle">Glue vs Nessie vs HMS vs Polaris</p>
+    <p class="subtitle">Glue vs Nessie vs HMS vs Polaris vs Gravitino</p>
     <p class="meta">
       <span class="status-badge status-decided">Decided</span>
  | Decision: <strong>Nessie</strong>      | 2026-03-13
@@ -273,9 +273,11 @@ reporting, and change management documentation for audits.</li>
   <div class="swot-quadrant swot-threats">
     <h3>Threats</h3>
     <ul>
-      <li><strong>T1: Apache Polaris Gaining Momentum</strong> &mdash; Apache Polaris (incubating) is a competing REST catalog implementation
-backed by Snowflake. If Polaris gains broader adoption, Nessie may
-face community fragmentation.</li>
+      <li><strong>T1: Competing REST Catalog Implementations Gaining Momentum</strong> &mdash; Apache Polaris (incubating) is a competing REST catalog implementation
+backed by Snowflake. Apache Gravitino (incubating) is a broader unified
+metadata platform that also implements the Iceberg REST catalog spec.
+If either gains broader adoption, Nessie may face community fragmentation
+and reduced ecosystem investment.</li>
       <li><strong>T2: Vendor Lock-In Risk if Migrating to Managed Catalog</strong> &mdash; If we later decide to move to a managed catalog (AWS Glue, Polaris SaaS),
 migration effort includes metadata export/import, connection string changes
 across all engines, and testing and validation.</li>
@@ -406,12 +408,14 @@ reporting, and change management documentation for audits.</p>
   <details>
     <summary>Threats (5 items)</summary>
     <div class="details-body">
-      <h3>T1: Apache Polaris Gaining Momentum</h3>
+      <h3>T1: Competing REST Catalog Implementations Gaining Momentum</h3>
       <p>Apache Polaris (incubating) is a competing REST catalog implementation
-backed by Snowflake. If Polaris gains broader adoption, Nessie may
-face community fragmentation.</p>
-      <div class="evidence"><strong>Evidence:</strong> Polaris rebranded as Snowflake Open Catalog; backed by Snowflake's resources and market position</div>
-      <div class="mitigation"><strong>Mitigation:</strong> Both Nessie and Polaris implement the same REST catalog spec. Migration between
+backed by Snowflake. Apache Gravitino (incubating) is a broader unified
+metadata platform that also implements the Iceberg REST catalog spec.
+If either gains broader adoption, Nessie may face community fragmentation
+and reduced ecosystem investment.</p>
+      <div class="evidence"><strong>Evidence:</strong> Polaris rebranded as Snowflake Open Catalog; Gravitino donated to Apache ASF; both backed by significant resources</div>
+      <div class="mitigation"><strong>Mitigation:</strong> All three projects implement the same REST catalog spec. Migration between
 them is possible because the REST API is standardized. Our code uses
 catalog.type=rest (not Nessie-specific), enabling catalog switching without
 application changes.
@@ -440,7 +444,7 @@ version (currently 0.107.4).
       <div class="mitigation"><strong>Mitigation:</strong> Nessie is Apache 2.0 licensed and the code can be forked if necessary.
 Multiple organizations contribute beyond Dremio. The REST catalog spec
 ensures our architecture is not Nessie-specific. We maintain the ability
-to switch to Polaris with less than 1 week of engineering effort.
+to switch to Polaris or Gravitino with less than 1 week of engineering effort.
 </div>
       <h3>T5: Scale Limitations Under Extreme Load</h3>
       <p>Nessie's performance characteristics at extreme scale (millions of tables,
@@ -467,6 +471,7 @@ can be added.
         <th>Polaris</th>
         <th>AWS Glue</th>
         <th>Hive Metastore</th>
+        <th>Gravitino</th>
       </tr>
     </thead>
     <tbody>
@@ -476,6 +481,7 @@ can be added.
         <td>Free (OSS) / Paid (SaaS)</td>
         <td>Per-request pricing</td>
         <td>Free</td>
+        <td>Free</td>
       </tr>
       <tr>
         <td><strong>REST catalog spec</strong></td>
@@ -483,6 +489,7 @@ can be added.
         <td>Yes</td>
         <td>Partial</td>
         <td>No</td>
+        <td>Yes</td>
       </tr>
       <tr>
         <td><strong>Multi-engine support</strong></td>
@@ -490,10 +497,12 @@ can be added.
         <td>Trino, Spark</td>
         <td>Spark, Athena</td>
         <td>Trino, Spark, Hive</td>
+        <td>Trino, Spark, Flink, Hive</td>
       </tr>
       <tr>
         <td><strong>Branching</strong></td>
         <td>Yes (unique)</td>
+        <td>No</td>
         <td>No</td>
         <td>No</td>
         <td>No</td>
@@ -504,6 +513,7 @@ can be added.
         <td>Unknown</td>
         <td>Yes (Glue)</td>
         <td>Yes</td>
+        <td>Unknown</td>
       </tr>
       <tr>
         <td><strong>Snowflake integration</strong></td>
@@ -511,12 +521,14 @@ can be added.
         <td>Yes (ICEBERG_REST)</td>
         <td>No</td>
         <td>No</td>
+        <td>Unknown</td>
       </tr>
       <tr>
         <td><strong>Cloud-agnostic</strong></td>
         <td>Yes</td>
         <td>Yes</td>
         <td>AWS only</td>
+        <td>Yes</td>
         <td>Yes</td>
       </tr>
       <tr>
@@ -525,6 +537,7 @@ can be added.
         <td>Medium (K8s)</td>
         <td>Low (managed)</td>
         <td>High (HMS HA)</td>
+        <td>Medium (K8s)</td>
       </tr>
       <tr>
         <td><strong>Community size</strong></td>
@@ -532,6 +545,7 @@ can be added.
         <td>Emerging</td>
         <td>Large (AWS)</td>
         <td>Largest</td>
+        <td>Emerging</td>
       </tr>
     </tbody>
   </table>
@@ -541,7 +555,7 @@ can be added.
   </details>
 
   <footer class="doc-footer">
-    <p>Generated: 2026-03-14 | Next review: 2026-Q2</p>
+    <p>Generated: 2026-03-17 | Next review: 2026-Q2</p>
     <p>Phase: Phase 1 - Foundation and Feasibility Validation</p>
     <div class="versions">
       <span class="version-item">postgres: 15</span>

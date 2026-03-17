@@ -1,5 +1,5 @@
 title: "Iceberg Catalog SWOT Analysis"
-subtitle: "Glue vs Nessie vs HMS vs Polaris"
+subtitle: "Glue vs Nessie vs HMS vs Polaris vs Gravitino"
 status: decided
 decision: "Nessie"
 prepared_for: "Leadership Review"
@@ -178,14 +178,16 @@ opportunities:
 
 threats:
   - id: T1
-    title: "Apache Polaris Gaining Momentum"
+    title: "Competing REST Catalog Implementations Gaining Momentum"
     description: |
       Apache Polaris (incubating) is a competing REST catalog implementation
-      backed by Snowflake. If Polaris gains broader adoption, Nessie may
-      face community fragmentation.
-    evidence: "Polaris rebranded as Snowflake Open Catalog; backed by Snowflake's resources and market position"
+      backed by Snowflake. Apache Gravitino (incubating) is a broader unified
+      metadata platform that also implements the Iceberg REST catalog spec.
+      If either gains broader adoption, Nessie may face community fragmentation
+      and reduced ecosystem investment.
+    evidence: "Polaris rebranded as Snowflake Open Catalog; Gravitino donated to Apache ASF; both backed by significant resources"
     mitigation: |
-      Both Nessie and Polaris implement the same REST catalog spec. Migration between
+      All three projects implement the same REST catalog spec. Migration between
       them is possible because the REST API is standardized. Our code uses
       catalog.type=rest (not Nessie-specific), enabling catalog switching without
       application changes.
@@ -223,7 +225,7 @@ threats:
       Nessie is Apache 2.0 licensed and the code can be forked if necessary.
       Multiple organizations contribute beyond Dremio. The REST catalog spec
       ensures our architecture is not Nessie-specific. We maintain the ability
-      to switch to Polaris with less than 1 week of engineering effort.
+      to switch to Polaris or Gravitino with less than 1 week of engineering effort.
 
   - id: T5
     title: "Scale Limitations Under Extreme Load"
@@ -290,3 +292,13 @@ decision_matrix:
       - "Yes"
       - "High (HMS HA)"
       - "Largest"
+    Gravitino:
+      - "Free"
+      - "Yes"
+      - "Trino, Spark, Flink, Hive"
+      - "No"
+      - "Unknown"
+      - "Unknown"
+      - "Yes"
+      - "Medium (K8s)"
+      - "Emerging"
