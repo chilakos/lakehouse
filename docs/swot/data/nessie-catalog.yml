@@ -1,5 +1,5 @@
 title: "Iceberg Catalog SWOT Analysis"
-subtitle: "Glue vs Nessie vs HMS vs Polaris"
+subtitle: "Glue vs Nessie vs HMS vs Polaris vs Gravitino"
 status: decided
 decision: "Nessie"
 prepared_for: "Leadership Review"
@@ -191,6 +191,23 @@ threats:
       application changes.
 
   - id: T2
+    title: "Apache Gravitino as Unified Metadata Alternative"
+    description: |
+      Apache Gravitino (incubating) is a unified metadata lake that provides a single
+      point of access to multiple data catalogs (Hive, Iceberg, JDBC, and more). It
+      implements the Iceberg REST catalog specification and adds multi-catalog federation,
+      centralized access control, and a tag-based governance model. If Gravitino matures
+      and gains enterprise adoption, it could position itself as a superset of Nessie's
+      capabilities by managing Iceberg catalogs alongside non-Iceberg metadata sources.
+    evidence: "Apache Gravitino (incubating); REST catalog support; multi-catalog federation; backed by Datastrato"
+    mitigation: |
+      Gravitino is still in Apache incubation and has a smaller production footprint than
+      Nessie. Our architecture uses the standard REST catalog API, so a future migration
+      to Gravitino (or using Gravitino as a federation layer on top of Nessie) is feasible
+      without application changes. Monitor Gravitino's graduation status and evaluate as
+      a federation layer when the project reaches 1.0.
+
+  - id: T3
     title: "Vendor Lock-In Risk if Migrating to Managed Catalog"
     description: |
       If we later decide to move to a managed catalog (AWS Glue, Polaris SaaS),
@@ -202,7 +219,7 @@ threats:
       operational, not architectural. Our infrastructure-as-code approach means
       connection configuration changes are automated through Terraform.
 
-  - id: T3
+  - id: T4
     title: "REST Catalog Specification Still Evolving"
     description: |
       The Iceberg REST catalog spec is not yet fully finalized. Breaking changes,
@@ -213,7 +230,7 @@ threats:
       before promotion. Docker Compose and Helm chart configurations lock the
       version (currently 0.107.4).
 
-  - id: T4
+  - id: T5
     title: "Nessie Project Governance Changes"
     description: |
       Nessie is primarily maintained by Dremio. A change in Dremio's strategy
@@ -223,9 +240,9 @@ threats:
       Nessie is Apache 2.0 licensed and the code can be forked if necessary.
       Multiple organizations contribute beyond Dremio. The REST catalog spec
       ensures our architecture is not Nessie-specific. We maintain the ability
-      to switch to Polaris with less than 1 week of engineering effort.
+      to switch to Polaris or Gravitino with less than 1 week of engineering effort.
 
-  - id: T5
+  - id: T6
     title: "Scale Limitations Under Extreme Load"
     description: |
       Nessie's performance characteristics at extreme scale (millions of tables,
@@ -290,3 +307,13 @@ decision_matrix:
       - "Yes"
       - "High (HMS HA)"
       - "Largest"
+    Gravitino:
+      - "Free"
+      - "Yes"
+      - "Trino, Spark, Flink"
+      - "No"
+      - "Unknown"
+      - "Yes (ICEBERG_REST)"
+      - "Yes"
+      - "Medium (K8s)"
+      - "Emerging (incubating)"
