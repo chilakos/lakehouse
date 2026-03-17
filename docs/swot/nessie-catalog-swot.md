@@ -7,7 +7,7 @@
 
 ## Executive Summary
 
-Nessie is an open-source transactional catalog for Apache Iceberg that implements the Iceberg REST catalog specification. It provides Git-like branching for schema management, supports multiple query engines (Trino, Spark, Flink), and uses PostgreSQL as its backing store. This SWOT analysis evaluates Nessie's suitability as the unified Iceberg catalog for our lakehouse architecture.
+Nessie is an open-source transactional catalog for Apache Iceberg that implements the Iceberg REST catalog specification. It provides Git-like branching for schema management, supports multiple query engines (Trino, Spark, Flink), and uses PostgreSQL as its backing store. This SWOT analysis evaluates Nessie's suitability as the unified Iceberg catalog for our lakehouse architecture, alongside the alternatives: AWS Glue, Hive Metastore, Apache Polaris, and Apache Gravitino (incubating).
 
 **Recommendation:** Nessie is the recommended catalog choice for this project. Its REST catalog compliance, multi-engine support, and branching capabilities align with our architecture requirements. The identified threats are manageable with the mitigations outlined below.
 
@@ -140,21 +140,26 @@ Nessie's performance characteristics at extreme scale (millions of tables, thous
 
 **Mitigation:** Our lakehouse has hundreds of tables, not millions. Benchmark harness established in Phase 1 will track catalog response times. PostgreSQL backing store scales well for our volume. If needed, caching layer can be added.
 
+### T6: Apache Gravitino Emerging as Multi-Catalog Alternative
+Apache Gravitino (incubating) is a unified metadata lake that provides multi-catalog federation and supports Iceberg, Hive, and other table formats. If Gravitino gains traction as a metadata management layer, it could position itself as a higher-level abstraction above individual catalogs like Nessie, potentially drawing adoption away from single-catalog solutions.
+
+**Mitigation:** Gravitino's multi-catalog approach is complementary rather than directly competitive — it could potentially sit above Nessie as a federation layer rather than replacing it. Our REST catalog abstraction means we are not locked into any single catalog implementation, so adopting Gravitino as an orchestration layer in the future remains an option without requiring a catalog replacement.
+
 ---
 
 ## Decision Matrix
 
-| Criteria | Nessie | Polaris | AWS Glue | Hive Metastore |
-|----------|--------|---------|----------|----------------|
-| License cost | Free | Free (OSS) / Paid (SaaS) | Per-request pricing | Free |
-| REST catalog spec | Yes | Yes | Partial | No |
-| Multi-engine support | Trino, Spark, Flink | Trino, Spark | Spark, Athena | Trino, Spark, Hive |
-| Branching | Yes (unique) | No | No | No |
-| Teradata OTF | Via Trino federation | Unknown | Yes (Glue) | Yes |
-| Snowflake integration | Yes (ICEBERG_REST) | Yes (ICEBERG_REST) | No | No |
-| Cloud-agnostic | Yes | Yes | AWS only | Yes |
-| HA complexity | Medium (K8s) | Medium (K8s) | Low (managed) | High (HMS HA) |
-| Community size | Growing | Emerging | Large (AWS) | Largest |
+| Criteria | Nessie | Polaris | AWS Glue | Hive Metastore | Gravitino |
+|----------|--------|---------|----------|----------------|-----------|
+| License cost | Free | Free (OSS) / Paid (SaaS) | Per-request pricing | Free | Free (Apache 2.0) |
+| REST catalog spec | Yes | Yes | Partial | No | Yes (via Iceberg REST) |
+| Multi-engine support | Trino, Spark, Flink | Trino, Spark | Spark, Athena | Trino, Spark, Hive | Trino, Spark, Flink |
+| Branching | Yes (unique) | No | No | No | No |
+| Teradata OTF | Via Trino federation | Unknown | Yes (Glue) | Yes | Unknown |
+| Snowflake integration | Yes (ICEBERG_REST) | Yes (ICEBERG_REST) | No | No | Possible (via REST) |
+| Cloud-agnostic | Yes | Yes | AWS only | Yes | Yes |
+| HA complexity | Medium (K8s) | Medium (K8s) | Low (managed) | High (HMS HA) | Medium (K8s) |
+| Community size | Growing | Emerging | Large (AWS) | Largest | Emerging (Apache incubating) |
 
 ## Recommendation
 

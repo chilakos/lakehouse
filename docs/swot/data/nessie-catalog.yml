@@ -1,5 +1,5 @@
 title: "Iceberg Catalog SWOT Analysis"
-subtitle: "Glue vs Nessie vs HMS vs Polaris"
+subtitle: "Glue vs Nessie vs HMS vs Polaris vs Gravitino"
 status: decided
 decision: "Nessie"
 prepared_for: "Leadership Review"
@@ -12,7 +12,8 @@ executive_summary: |
   Iceberg REST catalog specification. It provides Git-like branching for schema management,
   supports multiple query engines (Trino, Spark, Flink), and uses PostgreSQL as its backing
   store. This SWOT analysis evaluates Nessie's suitability as the unified Iceberg catalog
-  for our lakehouse architecture.
+  for our lakehouse architecture, alongside the alternatives: AWS Glue, Hive Metastore,
+  Apache Polaris, and Apache Gravitino (incubating).
 
   Nessie is the recommended catalog choice for this project. Its REST catalog compliance,
   multi-engine support, and branching capabilities align with our architecture requirements.
@@ -238,6 +239,24 @@ threats:
       backing store scales well for our volume. If needed, a caching layer
       can be added.
 
+  - id: T6
+    title: "Apache Gravitino Emerging as Multi-Catalog Alternative"
+    description: |
+      Apache Gravitino (incubating) is a unified metadata lake that provides
+      multi-catalog federation and supports Iceberg, Hive, and other table
+      formats. If Gravitino gains traction as a metadata management layer,
+      it could position itself as a higher-level abstraction above individual
+      catalogs like Nessie, potentially drawing adoption away from single-catalog
+      solutions.
+    evidence: "Apache Gravitino accepted into ASF incubator; supports Iceberg REST, Hive, and multi-engine federation across heterogeneous catalogs"
+    mitigation: |
+      Gravitino's multi-catalog approach is complementary rather than directly
+      competitive — it could potentially sit above Nessie as a federation layer
+      rather than replacing it. Our REST catalog abstraction means we are not
+      locked into any single catalog implementation, so adopting Gravitino as
+      an orchestration layer in the future remains an option without requiring
+      a catalog replacement.
+
 decision_matrix:
   criteria:
     - "License cost"
@@ -290,3 +309,13 @@ decision_matrix:
       - "Yes"
       - "High (HMS HA)"
       - "Largest"
+    Gravitino:
+      - "Free (Apache 2.0)"
+      - "Yes (via Iceberg REST)"
+      - "Trino, Spark, Flink"
+      - "No"
+      - "Unknown"
+      - "Possible (via REST)"
+      - "Yes"
+      - "Medium (K8s)"
+      - "Emerging (Apache incubating)"
