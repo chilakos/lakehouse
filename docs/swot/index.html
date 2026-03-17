@@ -102,13 +102,13 @@
   <header class="doc-header">
     <h1>SWOT Analyses Index</h1>
     <p class="subtitle">Strategic Technology Decision Documentation</p>
-    <p class="meta">2026-03-14</p>
+    <p class="meta">2026-03-17</p>
   </header>
 
 
   <p style="margin-bottom: 1.5rem; color: #475569;">
-    6 strategic analyses covering the lakehouse architecture transformation.
-    4 decisions confirmed, 2 pending leadership review.
+    7 strategic analyses covering the lakehouse architecture transformation.
+    5 decisions confirmed, 2 pending leadership review.
   </p>
 
   <h2>Pending Decision</h2>
@@ -164,17 +164,26 @@ parallel-run with DataStage mainta</p>
     </div>
     <div class="card">
       <h3><a href="nessie-catalog-swot.html">Iceberg Catalog SWOT Analysis</a></h3>
-      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">Glue vs Nessie vs HMS vs Polaris</p>
+      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">Glue vs Nessie vs HMS vs Polaris vs Gravitino</p>
       <p><span class="status-badge status-decided">Decided</span> | Decision: <strong>Nessie</strong></p>
       <p>Nessie is an open-source transactional catalog for Apache Iceberg that implements the
 Iceberg REST catalog specification. It provides Git-like branching for schema management,
 supports multiple query </p>
-      <p style="font-size: 0.8rem; color: #94a3b8;">S6 / W5 / O5 / T5</p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">S6 / W5 / O6 / T5</p>
+    </div>
+    <div class="card">
+      <h3><a href="open-metadata-swot.html">Open Metadata Tool SWOT Analysis</a></h3>
+      <p style="margin-bottom: 0.25rem; color: #2d3748; font-size: 0.85rem;">OpenMetadata vs Gravitino vs DataHub vs Amundsen</p>
+      <p><span class="status-badge status-decided">Decided</span> | Decision: <strong>OpenMetadata</strong></p>
+      <p>The metadata governance and data catalog layer requires a tool that can provide business
+glossary management, data lineage visualisation, column-level metadata, data quality
+profiling, and a self-serv</p>
+      <p style="font-size: 0.8rem; color: #94a3b8;">S5 / W4 / O4 / T4</p>
     </div>
   </div>
 
   <footer class="doc-footer">
-    <p>Generated: 2026-03-14 | Next review: 2026-Q2</p>
+    <p>Generated: 2026-03-17 | Next review: 2026-Q2</p>
     <div class="versions">
       <span class="version-item">postgres: 15</span>
       <span class="version-item">minio: latest</span>

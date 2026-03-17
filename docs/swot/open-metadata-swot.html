@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Metadata Tool SWOT Analysis - Lakehouse Architecture</title>
+  <style>
+    /* === RESET & BASE === */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.95rem, 1.5vw, 1.1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2rem; margin-bottom: 0.75rem; font-size: 1.4rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.5rem; }
+    h3 { color: #1a2332; margin-top: 1.25rem; margin-bottom: 0.5rem; font-size: 1.15rem; }
+    p { margin-bottom: 0.75rem; }
+    ul, ol { margin: 0.5rem 0 0.75rem 1.5rem; }
+    li { margin-bottom: 0.35rem; }
+
+    /* === HEADER === */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.8rem; margin-bottom: 0.25rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 0.75rem; }
+    .doc-header .meta { color: #94a3b8; font-size: 0.9rem; }
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      text-transform: capitalize;
+    }
+    .status-decided { background: #22c55e; color: white; }
+    .status-undecided { background: #f59e0b; color: #1a2332; }
+
+    /* === SWOT GRID === */
+    .swot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .swot-quadrant {
+      padding: 1.25rem;
+      border-radius: 6px;
+      border: 2px solid;
+    }
+    .swot-quadrant h3 { margin-top: 0; margin-bottom: 0.5rem; font-size: 1.05rem; }
+    .swot-quadrant ul { margin-left: 1.25rem; }
+    .swot-quadrant li { font-size: 0.92rem; }
+    .swot-strengths { border-color: #22c55e; background: #f0fdf4; }
+    .swot-weaknesses { border-color: #eab308; background: #fefce8; }
+    .swot-opportunities { border-color: #3b82f6; background: #eff6ff; }
+    .swot-threats { border-color: #ef4444; background: #fef2f2; }
+
+    /* === DETAILS/SUMMARY (CSS-only collapsible) === */
+    details {
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    summary {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      cursor: pointer;
+      font-weight: 600;
+      color: #1a2332;
+      list-style: none;
+      user-select: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::marker { display: none; }
+    summary::before {
+      content: "\25B6";
+      display: inline-block;
+      margin-right: 0.5rem;
+      font-size: 0.75em;
+      transition: transform 0.2s ease;
+    }
+    details[open] > summary::before {
+      transform: rotate(90deg);
+    }
+    .details-body { padding: 1rem; }
+
+    /* === EVIDENCE CALLOUT === */
+    .evidence {
+      background: #f1f5f9;
+      border-left: 3px solid #3b82f6;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+      color: #475569;
+    }
+
+    /* === MITIGATION CALLOUT === */
+    .mitigation {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 0.5rem 0.75rem;
+      margin: 0.5rem 0;
+      font-size: 0.9rem;
+    }
+
+    /* === TABLES === */
+    .table-container { overflow-x: auto; margin: 1rem 0; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: #1a2332; color: white; font-weight: 600; font-size: 0.9rem; }
+    tr:nth-child(even) { background: #f8fafc; }
+    td { font-size: 0.9rem; }
+
+    /* === FOOTER === */
+    .doc-footer {
+      margin-top: 3rem;
+      padding-top: 1.5rem;
+      border-top: 2px solid #1a2332;
+      font-size: 0.85rem;
+      color: #64748b;
+    }
+    .doc-footer p { margin-bottom: 0.5rem; }
+    .doc-footer .versions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem 1.5rem;
+      margin-top: 0.5rem;
+    }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* === RESPONSIVE (tablet breakpoint) === */
+    @media (max-width: 768px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.5rem; }
+      .doc-header h1 { font-size: 1.4rem; }
+      .swot-grid { grid-template-columns: 1fr; }
+      table { font-size: 0.8rem; }
+      .table-container { overflow-x: auto; }
+      th, td { padding: 0.4rem 0.5rem; }
+    }
+
+    /* === PRINT === */
+    @media print {
+      body { max-width: none; padding: 0; font-size: 10pt; color: black; background: white; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .doc-header .subtitle, .doc-header .meta { color: #475569; }
+      details::details-content { display: block !important; }
+      summary::before { display: none; }
+      .swot-grid { break-inside: avoid; }
+      .swot-quadrant { break-inside: avoid; }
+      a { text-decoration: none; color: inherit; }
+      @page { margin: 2cm; }
+    }
+  </style>
+</head>
+<body>
+  <header class="doc-header">
+    <h1>Open Metadata Tool SWOT Analysis</h1>
+    <p class="subtitle">OpenMetadata vs Gravitino vs DataHub vs Amundsen</p>
+    <p class="meta">
+      <span class="status-badge status-decided">Decided</span>
+ | Decision: <strong>OpenMetadata</strong>      | 2026-03-17
+ | Prepared for: Leadership Review    </p>
+  </header>
+
+  <details open>
+    <summary>Executive Summary</summary>
+    <div class="details-body">
+      The metadata governance and data catalog layer requires a tool that can provide business glossary management, data lineage visualisation, column-level metadata, data quality profiling, and a self-service discovery interface for analysts and regulators. This SWOT analysis evaluates four candidates: OpenMetadata, Apache Gravitino, DataHub (LinkedIn), and Amundsen (Lyft).</p><p>Apache Gravitino has been included as a late entrant following a request to assess its fit within the technology stack. Gravitino occupies a different niche from OpenMetadata: it acts as a unified multi-catalog REST gateway (aggregating Iceberg, Hive, and JDBC catalogs behind one API) rather than a business-facing data catalog portal. This makes Gravitino complementary to -- not a replacement for -- OpenMetadata.</p><p>OpenMetadata v1.6.0 is the recommended and operational choice. It provides the richest business metadata experience, deep integration with Trino and Airflow, and the most complete governance feature set of the evaluated options. Gravitino warrants a follow-on evaluation as a unified multi-catalog discovery layer that could simplify OpenMetadata ingestion pipelines in a future phase.
+    </div>
+  </details>
+
+  <details open>
+    <summary>Recommendation</summary>
+    <div class="details-body">
+      OpenMetadata v1.6.0 is recommended and already operational for the following reasons:</p><p>1. Richest governance feature set: business glossary, column-level lineage, data quality    profiling, and role-based access control in a single platform 2. Trino and Airflow connectors are mature and validated against the lakehouse stack 3. BCBS 239 compliance: deep-link integration from Grafana dashboards to OpenMetadata    catalog pages provides auditable data lineage evidence 4. Self-service portal for analysts with full-text search and domain tagging 5. Apache 2.0 licensed with no vendor lock-in</p><p>Gravitino should be tracked as a potential future addition in a complementary role. Its multi-catalog REST API (wrapping Nessie, Hive, and JDBC behind a single endpoint) could consolidate the OpenMetadata ingestion pipeline from three separate connectors to one Gravitino connector. This is a Phase 4+ investigation item, not a replacement of OpenMetadata.
+    </div>
+  </details>
+
+  <h2>SWOT Overview</h2>
+  <div class="swot-grid">
+  <div class="swot-quadrant swot-strengths">
+    <h3>Strengths</h3>
+    <ul>
+      <li><strong>S1: Richest Business Metadata and Governance Feature Set</strong> &mdash; OpenMetadata provides the most complete governance platform among the evaluated
+options: business glossary with term ownership, column-level data lineage, data
+quality profiling with SLA tracking, role-based access control, and a self-service
+discovery portal. No other candidate matches this breadth in a single platform.</li>
+      <li><strong>S2: Trino and Airflow Connectors Validated</strong> &mdash; OpenMetadata ships first-class connectors for Trino and Apache Airflow. The Trino
+connector auto-discovers tables, column types, and row counts. The Airflow connector
+captures pipeline lineage from DAG metadata. Both are operational in the lakehouse
+environment at version 1.6.0.</li>
+      <li><strong>S3: BCBS 239 Compliance Evidence via Deep-Links</strong> &mdash; Grafana dashboards link dataset names directly to OpenMetadata catalog pages
+(http://localhost:8585/table/lakehouse-trino.iceberg.{schema}.{table}). This
+provides regulators with a single click from operational dashboards to full
+column-level metadata, ownership, and lineage evidence -- a key BCBS 239
+requirement.</li>
+      <li><strong>S4: Self-Service Discovery Portal for Analysts</strong> &mdash; OpenMetadata provides full-text search across all catalog assets, domain tagging
+for ownership demarcation, and a web UI accessible to non-technical analysts without
+SQL knowledge. This reduces the dependency on the engineering team for data discovery.</li>
+      <li><strong>S5: Apache 2.0 Licensed with No Per-Seat Pricing</strong> &mdash; OpenMetadata is Apache 2.0 licensed. There is no per-user or per-query pricing.
+Total cost of ownership is compute (two Docker containers) plus engineering time.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-weaknesses">
+    <h3>Weaknesses</h3>
+    <ul>
+      <li><strong>W1: Heavy Infrastructure Footprint</strong> &mdash; OpenMetadata requires two containers (server and ingestion), an Elasticsearch
+instance for search indexing, and a PostgreSQL database. The ingestion container
+runs Airflow internally, adding to the operational overhead in the local development
+environment.</li>
+      <li><strong>W2: Ingestion Pipeline Requires Per-Source Connector Configuration</strong> &mdash; Each data source (Trino, Airflow, Snowflake, Teradata) requires a separate
+connector YAML file and ingestion schedule. As the number of sources grows,
+managing ingestion pipelines becomes operationally complex. A unified catalog
+API layer (e.g., Gravitino) could reduce this to a single connector.</li>
+      <li><strong>W3: Elasticsearch Dependency Adds Complexity</strong> &mdash; OpenMetadata requires Elasticsearch for full-text search indexing. This adds
+a stateful service that must be maintained, backed up, and kept in sync with
+the PostgreSQL metadata store. In cloud deployments, this maps to a managed
+Elasticsearch or OpenSearch instance.</li>
+      <li><strong>W4: No Native Multi-Catalog Gateway</strong> &mdash; OpenMetadata connects to each source system individually. It does not act as
+a query-routing or multi-catalog gateway. Cross-catalog joins or unified catalog
+discovery must be handled by query engines (Trino) or an intermediate layer
+(Gravitino) rather than OpenMetadata itself.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-opportunities">
+    <h3>Opportunities</h3>
+    <ul>
+      <li><strong>O1: Gravitino as a Unified Ingestion Simplification Layer</strong> &mdash; Apache Gravitino exposes a single REST API aggregating multiple catalog backends
+(Nessie/Iceberg, Hive, JDBC). If OpenMetadata adds a Gravitino connector, the
+ingestion pipeline simplifies from N per-source connectors to one Gravitino
+connector. This reduces operational overhead as the number of source systems grows.</li>
+      <li><strong>O2: Lineage Enrichment from Marquez Integration</strong> &mdash; OpenMetadata can ingest lineage events from Marquez (OpenLineage API) to enrich
+dataset metadata with pipeline-level lineage. This provides a complete picture
+of data flow from source to gold layer in a single catalog view.</li>
+      <li><strong>O3: Data Quality Profiling Integration with dbt</strong> &mdash; OpenMetadata supports dbt metadata ingestion, enabling test results and data
+quality metrics defined in dbt to appear in the catalog. This closes the loop
+between dbt quality tests and the governance catalog without duplication.</li>
+      <li><strong>O4: Regulatory Reporting Enhancement</strong> &mdash; Deeper integration between OpenMetadata business glossary terms and BCBS 239
+data lineage requirements can produce automated compliance evidence: each
+glossary term linked to its source tables, transformations, and quality checks
+provides a complete audit trail for regulators.</li>
+    </ul>
+  </div>
+  <div class="swot-quadrant swot-threats">
+    <h3>Threats</h3>
+    <ul>
+      <li><strong>T1: Gravitino Could Replace Per-Source Connectors if Ecosystem Matures</strong> &mdash; Gravitino's roadmap includes a metadata governance layer that overlaps with
+OpenMetadata's core feature set. If Gravitino ships a business glossary, data
+quality profiling, and a self-service portal, it could become a single-tool
+replacement rather than a complementary layer.</li>
+      <li><strong>T2: DataHub Gaining Enterprise Adoption</strong> &mdash; DataHub (LinkedIn) has strong enterprise adoption in financial services firms.
+Its lineage and governance features are comparable to OpenMetadata, with a larger
+community and more ISV integrations. If internal stakeholders push for DataHub,
+migration effort is significant given the existing OpenMetadata investment.</li>
+      <li><strong>T3: Elasticsearch Version Compatibility</strong> &mdash; OpenMetadata is pinned to Elasticsearch 8.15.0. Future OpenMetadata upgrades
+may require Elasticsearch upgrades that introduce breaking changes or require
+index re-mapping, causing catalog downtime.</li>
+      <li><strong>T4: Ingestion Pipeline Drift as Sources Grow</strong> &mdash; Each new data source requires a new connector configuration. Without automation,
+connector configurations drift from the actual source schema, leading to stale
+catalog entries that mislead analysts.</li>
+    </ul>
+  </div>
+</div>
+
+
+  <details>
+    <summary>Strengths (5 items)</summary>
+    <div class="details-body">
+      <h3>S1: Richest Business Metadata and Governance Feature Set</h3>
+      <p>OpenMetadata provides the most complete governance platform among the evaluated
+options: business glossary with term ownership, column-level data lineage, data
+quality profiling with SLA tracking, role-based access control, and a self-service
+discovery portal. No other candidate matches this breadth in a single platform.</p>
+      <div class="evidence"><strong>Evidence:</strong> Business glossary seeded with FSDM terms; Trino ingestion pipeline operational; deep-link URLs used in BCBS 239 Grafana dashboards</div>
+      <h3>S2: Trino and Airflow Connectors Validated</h3>
+      <p>OpenMetadata ships first-class connectors for Trino and Apache Airflow. The Trino
+connector auto-discovers tables, column types, and row counts. The Airflow connector
+captures pipeline lineage from DAG metadata. Both are operational in the lakehouse
+environment at version 1.6.0.</p>
+      <div class="evidence"><strong>Evidence:</strong> Trino connector ingesting lakehouse tables; Airflow lineage captured from DAGs; operational at OpenMetadata 1.6.0</div>
+      <h3>S3: BCBS 239 Compliance Evidence via Deep-Links</h3>
+      <p>Grafana dashboards link dataset names directly to OpenMetadata catalog pages
+(http://localhost:8585/table/lakehouse-trino.iceberg.{schema}.{table}). This
+provides regulators with a single click from operational dashboards to full
+column-level metadata, ownership, and lineage evidence -- a key BCBS 239
+requirement.</p>
+      <div class="evidence"><strong>Evidence:</strong> Deep-link pattern implemented in BCBS 239 Grafana dashboard; dataset names clickable to OpenMetadata catalog pages</div>
+      <h3>S4: Self-Service Discovery Portal for Analysts</h3>
+      <p>OpenMetadata provides full-text search across all catalog assets, domain tagging
+for ownership demarcation, and a web UI accessible to non-technical analysts without
+SQL knowledge. This reduces the dependency on the engineering team for data discovery.</p>
+      <div class="evidence"><strong>Evidence:</strong> Full-text search across tables, columns, dashboards, and glossary terms; web UI at port 8585</div>
+      <h3>S5: Apache 2.0 Licensed with No Per-Seat Pricing</h3>
+      <p>OpenMetadata is Apache 2.0 licensed. There is no per-user or per-query pricing.
+Total cost of ownership is compute (two Docker containers) plus engineering time.</p>
+      <div class="evidence"><strong>Evidence:</strong> Apache 2.0 license; $0 license cost; two containers (server + ingestion) in docker-compose.yml</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Weaknesses (4 items)</summary>
+    <div class="details-body">
+      <h3>W1: Heavy Infrastructure Footprint</h3>
+      <p>OpenMetadata requires two containers (server and ingestion), an Elasticsearch
+instance for search indexing, and a PostgreSQL database. The ingestion container
+runs Airflow internally, adding to the operational overhead in the local development
+environment.</p>
+      <div class="evidence"><strong>Evidence:</strong> 4 services in docker-compose.yml: om-db, elasticsearch, openmetadata-server, openmetadata-ingestion; non-trivial startup time</div>
+      <h3>W2: Ingestion Pipeline Requires Per-Source Connector Configuration</h3>
+      <p>Each data source (Trino, Airflow, Snowflake, Teradata) requires a separate
+connector YAML file and ingestion schedule. As the number of sources grows,
+managing ingestion pipelines becomes operationally complex. A unified catalog
+API layer (e.g., Gravitino) could reduce this to a single connector.</p>
+      <div class="evidence"><strong>Evidence:</strong> Connector YAMLs per source in infra/docker/openmetadata/connectors/; manual schedule management</div>
+      <h3>W3: Elasticsearch Dependency Adds Complexity</h3>
+      <p>OpenMetadata requires Elasticsearch for full-text search indexing. This adds
+a stateful service that must be maintained, backed up, and kept in sync with
+the PostgreSQL metadata store. In cloud deployments, this maps to a managed
+Elasticsearch or OpenSearch instance.</p>
+      <div class="evidence"><strong>Evidence:</strong> Elasticsearch 8.15.0 required for OpenMetadata search; additional backup and sync complexity</div>
+      <h3>W4: No Native Multi-Catalog Gateway</h3>
+      <p>OpenMetadata connects to each source system individually. It does not act as
+a query-routing or multi-catalog gateway. Cross-catalog joins or unified catalog
+discovery must be handled by query engines (Trino) or an intermediate layer
+(Gravitino) rather than OpenMetadata itself.</p>
+      <div class="evidence"><strong>Evidence:</strong> OpenMetadata is a catalog portal, not a query gateway; Trino is the query federation layer</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Opportunities (4 items)</summary>
+    <div class="details-body">
+      <h3>O1: Gravitino as a Unified Ingestion Simplification Layer</h3>
+      <p>Apache Gravitino exposes a single REST API aggregating multiple catalog backends
+(Nessie/Iceberg, Hive, JDBC). If OpenMetadata adds a Gravitino connector, the
+ingestion pipeline simplifies from N per-source connectors to one Gravitino
+connector. This reduces operational overhead as the number of source systems grows.</p>
+      <div class="evidence"><strong>Evidence:</strong> Gravitino multi-catalog REST API; OpenMetadata connector ecosystem expanding; potential single-source ingestion pipeline</div>
+      <h3>O2: Lineage Enrichment from Marquez Integration</h3>
+      <p>OpenMetadata can ingest lineage events from Marquez (OpenLineage API) to enrich
+dataset metadata with pipeline-level lineage. This provides a complete picture
+of data flow from source to gold layer in a single catalog view.</p>
+      <div class="evidence"><strong>Evidence:</strong> Marquez 0.50.0 operational; OpenLineage events emitted by Airflow DAGs; OpenMetadata OpenLineage ingestion available</div>
+      <h3>O3: Data Quality Profiling Integration with dbt</h3>
+      <p>OpenMetadata supports dbt metadata ingestion, enabling test results and data
+quality metrics defined in dbt to appear in the catalog. This closes the loop
+between dbt quality tests and the governance catalog without duplication.</p>
+      <div class="evidence"><strong>Evidence:</strong> dbt metadata connector available in OpenMetadata; dbt test results can populate catalog quality scores</div>
+      <h3>O4: Regulatory Reporting Enhancement</h3>
+      <p>Deeper integration between OpenMetadata business glossary terms and BCBS 239
+data lineage requirements can produce automated compliance evidence: each
+glossary term linked to its source tables, transformations, and quality checks
+provides a complete audit trail for regulators.</p>
+      <div class="evidence"><strong>Evidence:</strong> FSDM business glossary seeded; BCBS 239 Grafana dashboard deep-links to OM; potential full-term-to-table compliance mapping</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Threats (4 items)</summary>
+    <div class="details-body">
+      <h3>T1: Gravitino Could Replace Per-Source Connectors if Ecosystem Matures</h3>
+      <p>Gravitino's roadmap includes a metadata governance layer that overlaps with
+OpenMetadata's core feature set. If Gravitino ships a business glossary, data
+quality profiling, and a self-service portal, it could become a single-tool
+replacement rather than a complementary layer.</p>
+      <div class="evidence"><strong>Evidence:</strong> Gravitino 0.9.0 adds multi-type catalog support; governance features on roadmap; risk of feature convergence</div>
+      <div class="mitigation"><strong>Mitigation:</strong> OpenMetadata is Apache 2.0 licensed with no switching costs. The BCBS 239
+deep-link pattern is based on URL conventions, not proprietary APIs. If Gravitino's
+governance layer matures, a parallel evaluation can be run without lock-in. The
+investment in OpenMetadata connectors and glossary seeding is reusable content,
+not sunk infrastructure cost.
+</div>
+      <h3>T2: DataHub Gaining Enterprise Adoption</h3>
+      <p>DataHub (LinkedIn) has strong enterprise adoption in financial services firms.
+Its lineage and governance features are comparable to OpenMetadata, with a larger
+community and more ISV integrations. If internal stakeholders push for DataHub,
+migration effort is significant given the existing OpenMetadata investment.</p>
+      <div class="evidence"><strong>Evidence:</strong> DataHub: 9,000+ GitHub stars, financial services case studies; OpenMetadata: 5,000+ stars; migration effort estimated at 2-4 weeks</div>
+      <div class="mitigation"><strong>Mitigation:</strong> OpenMetadata's API is documented and data can be exported. Business glossary
+terms are seeded from a JSON file (glossary-seed.json) that is tool-agnostic.
+A migration plan exists in principle. The current OpenMetadata investment is
+operational, so the switching cost is real but manageable if requirements change.
+</div>
+      <h3>T3: Elasticsearch Version Compatibility</h3>
+      <p>OpenMetadata is pinned to Elasticsearch 8.15.0. Future OpenMetadata upgrades
+may require Elasticsearch upgrades that introduce breaking changes or require
+index re-mapping, causing catalog downtime.</p>
+      <div class="evidence"><strong>Evidence:</strong> Elasticsearch 8.15.0 pinned in docker-compose.yml; version upgrades historically require index migration</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Pin both OpenMetadata and Elasticsearch versions in docker-compose.yml. Test
+upgrades in staging before promoting. Consider migrating to OpenSearch (AWS
+managed) for cloud deployments to reduce the operational burden of self-managed
+Elasticsearch.
+</div>
+      <h3>T4: Ingestion Pipeline Drift as Sources Grow</h3>
+      <p>Each new data source requires a new connector configuration. Without automation,
+connector configurations drift from the actual source schema, leading to stale
+catalog entries that mislead analysts.</p>
+      <div class="evidence"><strong>Evidence:</strong> Manual connector YAML management; no automated drift detection; risk increases with each new source added</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Automate connector configuration generation from docker-compose.yml service
+definitions. Add a CI check that validates connector YAMLs against running
+services. Evaluate Gravitino as a single-connector simplification once its
+OpenMetadata integration matures.
+</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>Decision Matrix</summary>
+    <div class="details-body">
+      <div class="table-container">
+  <table>
+    <thead>
+      <tr>
+        <th>Criteria</th>
+        <th>OpenMetadata</th>
+        <th>Gravitino</th>
+        <th>DataHub</th>
+        <th>Amundsen</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>License cost</strong></td>
+        <td>Free</td>
+        <td>Free</td>
+        <td>Free (OSS) / Paid (SaaS)</td>
+        <td>Free</td>
+      </tr>
+      <tr>
+        <td><strong>Business glossary</strong></td>
+        <td>Yes (full)</td>
+        <td>Roadmap</td>
+        <td>Yes (full)</td>
+        <td>Partial</td>
+      </tr>
+      <tr>
+        <td><strong>Data lineage</strong></td>
+        <td>Yes (column-level)</td>
+        <td>Partial</td>
+        <td>Yes (column-level)</td>
+        <td>Yes (basic)</td>
+      </tr>
+      <tr>
+        <td><strong>Data quality profiling</strong></td>
+        <td>Yes (profiling + SLA)</td>
+        <td>No</td>
+        <td>Yes</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td><strong>Self-service portal</strong></td>
+        <td>Yes (port 8585)</td>
+        <td>Basic (API only)</td>
+        <td>Yes</td>
+        <td>Yes</td>
+      </tr>
+      <tr>
+        <td><strong>Trino connector</strong></td>
+        <td>Yes (validated)</td>
+        <td>Yes (via REST)</td>
+        <td>Yes</td>
+        <td>Partial</td>
+      </tr>
+      <tr>
+        <td><strong>Airflow connector</strong></td>
+        <td>Yes (validated)</td>
+        <td>No</td>
+        <td>Yes</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td><strong>Multi-catalog gateway</strong></td>
+        <td>No</td>
+        <td>Yes (unique)</td>
+        <td>No</td>
+        <td>No</td>
+      </tr>
+      <tr>
+        <td><strong>Infrastructure footprint</strong></td>
+        <td>High (4 services)</td>
+        <td>Medium (2 services)</td>
+        <td>High (5+ services)</td>
+        <td>Medium</td>
+      </tr>
+      <tr>
+        <td><strong>Community size</strong></td>
+        <td>Large (5k+ stars)</td>
+        <td>Emerging (1k+ stars)</td>
+        <td>Largest (9k+ stars)</td>
+        <td>Medium (3k+ stars)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+    </div>
+  </details>
+
+  <footer class="doc-footer">
+    <p>Generated: 2026-03-17 | Next review: 2026-Q3</p>
+    <p>Phase: Phase 3 - Governance, Security Hardening and Platform</p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">minio-init: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow-db: 15</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez-db: 15</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">marquez-web: 0.50.0</span>
+      <span class="version-item">statsd-exporter: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">grafana-reporter: latest</span>
+      <span class="version-item">ranger-zk: 2.8.0</span>
+      <span class="version-item">ranger-solr: 2.8.0</span>
+      <span class="version-item">ranger-db: 15</span>
+      <span class="version-item">ranger-admin: 2.8.0</span>
+      <span class="version-item">audit-receiver: 3.11-slim</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">om-db: 15</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">openmetadata-server: 1.6.0</span>
+      <span class="version-item">openmetadata-ingestion: 1.6.0</span>
+    </div>
+    <p style="margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8;">Lakehouse Architecture Documentation</p>
+  </footer>
+</body>
+</html>

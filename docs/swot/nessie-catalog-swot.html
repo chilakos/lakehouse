@@ -170,24 +170,24 @@
 <body>
   <header class="doc-header">
     <h1>Iceberg Catalog SWOT Analysis</h1>
-    <p class="subtitle">Glue vs Nessie vs HMS vs Polaris</p>
+    <p class="subtitle">Glue vs Nessie vs HMS vs Polaris vs Gravitino</p>
     <p class="meta">
       <span class="status-badge status-decided">Decided</span>
- | Decision: <strong>Nessie</strong>      | 2026-03-13
+ | Decision: <strong>Nessie</strong>      | 2026-03-17
  | Prepared for: Leadership Review    </p>
   </header>
 
   <details open>
     <summary>Executive Summary</summary>
     <div class="details-body">
-      Nessie is an open-source transactional catalog for Apache Iceberg that implements the Iceberg REST catalog specification. It provides Git-like branching for schema management, supports multiple query engines (Trino, Spark, Flink), and uses PostgreSQL as its backing store. This SWOT analysis evaluates Nessie's suitability as the unified Iceberg catalog for our lakehouse architecture.</p><p>Nessie is the recommended catalog choice for this project. Its REST catalog compliance, multi-engine support, and branching capabilities align with our architecture requirements. The identified threats are manageable with the mitigations outlined below.
+      Nessie is an open-source transactional catalog for Apache Iceberg that implements the Iceberg REST catalog specification. It provides Git-like branching for schema management, supports multiple query engines (Trino, Spark, Flink), and uses PostgreSQL as its backing store. This SWOT analysis evaluates Nessie's suitability as the unified Iceberg catalog for our lakehouse architecture.</p><p>Apache Gravitino has been added to this evaluation as a late entrant. Gravitino is an open-source metadata lakehouse platform that provides a unified multi-catalog REST interface supporting Iceberg, Hive, and JDBC sources. While Gravitino's dual role as both Iceberg catalog and metadata governance layer is architecturally compelling, Nessie remains the recommended catalog choice. Its battle-tested REST catalog compliance, Git-like branching (unique among all candidates), and Phase 1 validated multi-engine support provide a stronger fit than Gravitino's broader but less mature catalog feature set.
     </div>
   </details>
 
   <details open>
     <summary>Recommendation</summary>
     <div class="details-body">
-      Nessie is recommended as the Iceberg catalog for the lakehouse architecture based on:</p><p>1. REST catalog compliance for multi-engine interoperability 2. Git-like branching for safe schema evolution (unique differentiator) 3. Successful Phase 1 feasibility validation (Spark + Trino confirmed working) 4. Cloud-agnostic design supporting our hybrid S3/MinIO architecture 5. No license cost and open-source governance 6. Manageable risk profile with documented mitigations for each threat</p><p>The primary risk (Teradata OTF REST catalog gap) has a validated fallback (Trino query federation) that meets performance requirements.
+      Nessie is recommended as the Iceberg catalog for the lakehouse architecture based on:</p><p>1. REST catalog compliance for multi-engine interoperability 2. Git-like branching for safe schema evolution (unique differentiator vs all alternatives including Gravitino) 3. Successful Phase 1 feasibility validation (Spark + Trino confirmed working) 4. Cloud-agnostic design supporting our hybrid S3/MinIO architecture 5. No license cost and open-source governance 6. Manageable risk profile with documented mitigations for each threat</p><p>The primary risk (Teradata OTF REST catalog gap) has a validated fallback (Trino query federation) that meets performance requirements.</p><p>Gravitino was evaluated as a late entrant. Its multi-catalog governance capability makes it a strong fit as the metadata governance layer (see Open Metadata Tool SWOT) but it does not offer Nessie's branching semantics for catalog-level schema management. The two tools are complementary: Nessie as the Iceberg catalog, Gravitino potentially augmenting OpenMetadata for unified catalog discovery.
     </div>
   </details>
 
@@ -268,6 +268,13 @@ Iceberg ecosystem grows.</li>
       <li><strong>O5: Regulatory Compliance via Catalog Versioning</strong> &mdash; Nessie's full audit trail of metadata changes supports BCBS 239 data
 lineage requirements, point-in-time query reproducibility for regulatory
 reporting, and change management documentation for audits.</li>
+      <li><strong>O6: Complementary to Gravitino for Unified Metadata Governance</strong> &mdash; Nessie and Gravitino are not mutually exclusive. Nessie manages Iceberg
+catalog metadata with branching semantics, while Gravitino can sit above
+it as a unified multi-catalog discovery layer. This pairing means the
+team benefits from Nessie's unique branching capabilities at the storage
+layer while Gravitino provides a single API surface for OpenMetadata
+ingestion and cross-catalog discovery across Iceberg, Hive, and JDBC
+sources.</li>
     </ul>
   </div>
   <div class="swot-quadrant swot-threats">
@@ -370,7 +377,7 @@ metadata divergence or confusion.</p>
   </details>
 
   <details>
-    <summary>Opportunities (5 items)</summary>
+    <summary>Opportunities (6 items)</summary>
     <div class="details-body">
       <h3>O1: REST Catalog Spec Becoming Industry Standard</h3>
       <p>The Apache Iceberg REST catalog specification is gaining rapid adoption.
@@ -400,6 +407,15 @@ Iceberg ecosystem grows.</p>
 lineage requirements, point-in-time query reproducibility for regulatory
 reporting, and change management documentation for audits.</p>
       <div class="evidence"><strong>Evidence:</strong> BCBS 239 compliance: point-in-time queries, full metadata audit trail, change documentation</div>
+      <h3>O6: Complementary to Gravitino for Unified Metadata Governance</h3>
+      <p>Nessie and Gravitino are not mutually exclusive. Nessie manages Iceberg
+catalog metadata with branching semantics, while Gravitino can sit above
+it as a unified multi-catalog discovery layer. This pairing means the
+team benefits from Nessie's unique branching capabilities at the storage
+layer while Gravitino provides a single API surface for OpenMetadata
+ingestion and cross-catalog discovery across Iceberg, Hive, and JDBC
+sources.</p>
+      <div class="evidence"><strong>Evidence:</strong> Gravitino multi-catalog REST API wraps Nessie, Hive, and JDBC; OpenMetadata Gravitino connector enables single-source ingestion pipeline</div>
     </div>
   </details>
 
@@ -464,6 +480,7 @@ can be added.
       <tr>
         <th>Criteria</th>
         <th>Nessie</th>
+        <th>Gravitino</th>
         <th>Polaris</th>
         <th>AWS Glue</th>
         <th>Hive Metastore</th>
@@ -473,6 +490,7 @@ can be added.
       <tr>
         <td><strong>License cost</strong></td>
         <td>Free</td>
+        <td>Free</td>
         <td>Free (OSS) / Paid (SaaS)</td>
         <td>Per-request pricing</td>
         <td>Free</td>
@@ -480,12 +498,14 @@ can be added.
       <tr>
         <td><strong>REST catalog spec</strong></td>
         <td>Yes</td>
+        <td>Yes (multi-catalog)</td>
         <td>Yes</td>
         <td>Partial</td>
         <td>No</td>
       </tr>
       <tr>
         <td><strong>Multi-engine support</strong></td>
+        <td>Trino, Spark, Flink</td>
         <td>Trino, Spark, Flink</td>
         <td>Trino, Spark</td>
         <td>Spark, Athena</td>
@@ -497,9 +517,11 @@ can be added.
         <td>No</td>
         <td>No</td>
         <td>No</td>
+        <td>No</td>
       </tr>
       <tr>
         <td><strong>Teradata OTF</strong></td>
+        <td>Via Trino federation</td>
         <td>Via Trino federation</td>
         <td>Unknown</td>
         <td>Yes (Glue)</td>
@@ -508,12 +530,14 @@ can be added.
       <tr>
         <td><strong>Snowflake integration</strong></td>
         <td>Yes (ICEBERG_REST)</td>
+        <td>Partial</td>
         <td>Yes (ICEBERG_REST)</td>
         <td>No</td>
         <td>No</td>
       </tr>
       <tr>
         <td><strong>Cloud-agnostic</strong></td>
+        <td>Yes</td>
         <td>Yes</td>
         <td>Yes</td>
         <td>AWS only</td>
@@ -523,6 +547,7 @@ can be added.
         <td><strong>HA complexity</strong></td>
         <td>Medium (K8s)</td>
         <td>Medium (K8s)</td>
+        <td>Medium (K8s)</td>
         <td>Low (managed)</td>
         <td>High (HMS HA)</td>
       </tr>
@@ -530,8 +555,17 @@ can be added.
         <td><strong>Community size</strong></td>
         <td>Growing</td>
         <td>Emerging</td>
+        <td>Emerging</td>
         <td>Large (AWS)</td>
         <td>Largest</td>
+      </tr>
+      <tr>
+        <td><strong>Metadata governance</strong></td>
+        <td>Catalog only</td>
+        <td>Yes (unified layer)</td>
+        <td>Catalog only</td>
+        <td>No</td>
+        <td>No</td>
       </tr>
     </tbody>
   </table>
@@ -541,7 +575,7 @@ can be added.
   </details>
 
   <footer class="doc-footer">
-    <p>Generated: 2026-03-14 | Next review: 2026-Q2</p>
+    <p>Generated: 2026-03-17 | Next review: 2026-Q2</p>
     <p>Phase: Phase 1 - Foundation and Feasibility Validation</p>
     <div class="versions">
       <span class="version-item">postgres: 15</span>

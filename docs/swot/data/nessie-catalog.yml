@@ -1,9 +1,9 @@
 title: "Iceberg Catalog SWOT Analysis"
-subtitle: "Glue vs Nessie vs HMS vs Polaris"
+subtitle: "Glue vs Nessie vs HMS vs Polaris vs Gravitino"
 status: decided
 decision: "Nessie"
 prepared_for: "Leadership Review"
-date: "2026-03-13"
+date: "2026-03-17"
 phase: "Phase 1 - Foundation and Feasibility Validation"
 next_review: "2026-Q2"
 
@@ -14,15 +14,19 @@ executive_summary: |
   store. This SWOT analysis evaluates Nessie's suitability as the unified Iceberg catalog
   for our lakehouse architecture.
 
-  Nessie is the recommended catalog choice for this project. Its REST catalog compliance,
-  multi-engine support, and branching capabilities align with our architecture requirements.
-  The identified threats are manageable with the mitigations outlined below.
+  Apache Gravitino has been added to this evaluation as a late entrant. Gravitino is an
+  open-source metadata lakehouse platform that provides a unified multi-catalog REST
+  interface supporting Iceberg, Hive, and JDBC sources. While Gravitino's dual role as
+  both Iceberg catalog and metadata governance layer is architecturally compelling, Nessie
+  remains the recommended catalog choice. Its battle-tested REST catalog compliance, Git-like
+  branching (unique among all candidates), and Phase 1 validated multi-engine support provide
+  a stronger fit than Gravitino's broader but less mature catalog feature set.
 
 recommendation: |
   Nessie is recommended as the Iceberg catalog for the lakehouse architecture based on:
 
   1. REST catalog compliance for multi-engine interoperability
-  2. Git-like branching for safe schema evolution (unique differentiator)
+  2. Git-like branching for safe schema evolution (unique differentiator vs all alternatives including Gravitino)
   3. Successful Phase 1 feasibility validation (Spark + Trino confirmed working)
   4. Cloud-agnostic design supporting our hybrid S3/MinIO architecture
   5. No license cost and open-source governance
@@ -30,6 +34,12 @@ recommendation: |
 
   The primary risk (Teradata OTF REST catalog gap) has a validated fallback
   (Trino query federation) that meets performance requirements.
+
+  Gravitino was evaluated as a late entrant. Its multi-catalog governance capability makes
+  it a strong fit as the metadata governance layer (see Open Metadata Tool SWOT) but it does
+  not offer Nessie's branching semantics for catalog-level schema management. The two tools
+  are complementary: Nessie as the Iceberg catalog, Gravitino potentially augmenting
+  OpenMetadata for unified catalog discovery.
 
 strengths:
   - id: S1
@@ -176,6 +186,18 @@ opportunities:
       reporting, and change management documentation for audits.
     evidence: "BCBS 239 compliance: point-in-time queries, full metadata audit trail, change documentation"
 
+  - id: O6
+    title: "Complementary to Gravitino for Unified Metadata Governance"
+    description: |
+      Nessie and Gravitino are not mutually exclusive. Nessie manages Iceberg
+      catalog metadata with branching semantics, while Gravitino can sit above
+      it as a unified multi-catalog discovery layer. This pairing means the
+      team benefits from Nessie's unique branching capabilities at the storage
+      layer while Gravitino provides a single API surface for OpenMetadata
+      ingestion and cross-catalog discovery across Iceberg, Hive, and JDBC
+      sources.
+    evidence: "Gravitino multi-catalog REST API wraps Nessie, Hive, and JDBC; OpenMetadata Gravitino connector enables single-source ingestion pipeline"
+
 threats:
   - id: T1
     title: "Apache Polaris Gaining Momentum"
@@ -249,6 +271,7 @@ decision_matrix:
     - "Cloud-agnostic"
     - "HA complexity"
     - "Community size"
+    - "Metadata governance"
   options:
     Nessie:
       - "Free"
@@ -260,6 +283,18 @@ decision_matrix:
       - "Yes"
       - "Medium (K8s)"
       - "Growing"
+      - "Catalog only"
+    Gravitino:
+      - "Free"
+      - "Yes (multi-catalog)"
+      - "Trino, Spark, Flink"
+      - "No"
+      - "Via Trino federation"
+      - "Partial"
+      - "Yes"
+      - "Medium (K8s)"
+      - "Emerging"
+      - "Yes (unified layer)"
     Polaris:
       - "Free (OSS) / Paid (SaaS)"
       - "Yes"
@@ -270,6 +305,7 @@ decision_matrix:
       - "Yes"
       - "Medium (K8s)"
       - "Emerging"
+      - "Catalog only"
     AWS Glue:
       - "Per-request pricing"
       - "Partial"
@@ -280,6 +316,7 @@ decision_matrix:
       - "AWS only"
       - "Low (managed)"
       - "Large (AWS)"
+      - "No"
     Hive Metastore:
       - "Free"
       - "No"
@@ -290,3 +327,4 @@ decision_matrix:
       - "Yes"
       - "High (HMS HA)"
       - "Largest"
+      - "No"

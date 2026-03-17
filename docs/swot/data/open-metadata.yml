@@ -1,0 +1,274 @@
+title: "Open Metadata Tool SWOT Analysis"
+subtitle: "OpenMetadata vs Gravitino vs DataHub vs Amundsen"
+status: decided
+decision: "OpenMetadata"
+prepared_for: "Leadership Review"
+date: "2026-03-17"
+phase: "Phase 3 - Governance, Security Hardening and Platform"
+next_review: "2026-Q3"
+
+executive_summary: |
+  The metadata governance and data catalog layer requires a tool that can provide business
+  glossary management, data lineage visualisation, column-level metadata, data quality
+  profiling, and a self-service discovery interface for analysts and regulators. This SWOT
+  analysis evaluates four candidates: OpenMetadata, Apache Gravitino, DataHub (LinkedIn),
+  and Amundsen (Lyft).
+
+  Apache Gravitino has been included as a late entrant following a request to assess its
+  fit within the technology stack. Gravitino occupies a different niche from OpenMetadata:
+  it acts as a unified multi-catalog REST gateway (aggregating Iceberg, Hive, and JDBC
+  catalogs behind one API) rather than a business-facing data catalog portal. This makes
+  Gravitino complementary to -- not a replacement for -- OpenMetadata.
+
+  OpenMetadata v1.6.0 is the recommended and operational choice. It provides the richest
+  business metadata experience, deep integration with Trino and Airflow, and the most
+  complete governance feature set of the evaluated options. Gravitino warrants a follow-on
+  evaluation as a unified multi-catalog discovery layer that could simplify OpenMetadata
+  ingestion pipelines in a future phase.
+
+recommendation: |
+  OpenMetadata v1.6.0 is recommended and already operational for the following reasons:
+
+  1. Richest governance feature set: business glossary, column-level lineage, data quality
+     profiling, and role-based access control in a single platform
+  2. Trino and Airflow connectors are mature and validated against the lakehouse stack
+  3. BCBS 239 compliance: deep-link integration from Grafana dashboards to OpenMetadata
+     catalog pages provides auditable data lineage evidence
+  4. Self-service portal for analysts with full-text search and domain tagging
+  5. Apache 2.0 licensed with no vendor lock-in
+
+  Gravitino should be tracked as a potential future addition in a complementary role.
+  Its multi-catalog REST API (wrapping Nessie, Hive, and JDBC behind a single endpoint)
+  could consolidate the OpenMetadata ingestion pipeline from three separate connectors
+  to one Gravitino connector. This is a Phase 4+ investigation item, not a replacement
+  of OpenMetadata.
+
+strengths:
+  - id: S1
+    title: "Richest Business Metadata and Governance Feature Set"
+    description: |
+      OpenMetadata provides the most complete governance platform among the evaluated
+      options: business glossary with term ownership, column-level data lineage, data
+      quality profiling with SLA tracking, role-based access control, and a self-service
+      discovery portal. No other candidate matches this breadth in a single platform.
+    evidence: "Business glossary seeded with FSDM terms; Trino ingestion pipeline operational; deep-link URLs used in BCBS 239 Grafana dashboards"
+
+  - id: S2
+    title: "Trino and Airflow Connectors Validated"
+    description: |
+      OpenMetadata ships first-class connectors for Trino and Apache Airflow. The Trino
+      connector auto-discovers tables, column types, and row counts. The Airflow connector
+      captures pipeline lineage from DAG metadata. Both are operational in the lakehouse
+      environment at version 1.6.0.
+    evidence: "Trino connector ingesting lakehouse tables; Airflow lineage captured from DAGs; operational at OpenMetadata 1.6.0"
+
+  - id: S3
+    title: "BCBS 239 Compliance Evidence via Deep-Links"
+    description: |
+      Grafana dashboards link dataset names directly to OpenMetadata catalog pages
+      (http://localhost:8585/table/lakehouse-trino.iceberg.{schema}.{table}). This
+      provides regulators with a single click from operational dashboards to full
+      column-level metadata, ownership, and lineage evidence -- a key BCBS 239
+      requirement.
+    evidence: "Deep-link pattern implemented in BCBS 239 Grafana dashboard; dataset names clickable to OpenMetadata catalog pages"
+
+  - id: S4
+    title: "Self-Service Discovery Portal for Analysts"
+    description: |
+      OpenMetadata provides full-text search across all catalog assets, domain tagging
+      for ownership demarcation, and a web UI accessible to non-technical analysts without
+      SQL knowledge. This reduces the dependency on the engineering team for data discovery.
+    evidence: "Full-text search across tables, columns, dashboards, and glossary terms; web UI at port 8585"
+
+  - id: S5
+    title: "Apache 2.0 Licensed with No Per-Seat Pricing"
+    description: |
+      OpenMetadata is Apache 2.0 licensed. There is no per-user or per-query pricing.
+      Total cost of ownership is compute (two Docker containers) plus engineering time.
+    evidence: "Apache 2.0 license; $0 license cost; two containers (server + ingestion) in docker-compose.yml"
+
+weaknesses:
+  - id: W1
+    title: "Heavy Infrastructure Footprint"
+    description: |
+      OpenMetadata requires two containers (server and ingestion), an Elasticsearch
+      instance for search indexing, and a PostgreSQL database. The ingestion container
+      runs Airflow internally, adding to the operational overhead in the local development
+      environment.
+    evidence: "4 services in docker-compose.yml: om-db, elasticsearch, openmetadata-server, openmetadata-ingestion; non-trivial startup time"
+
+  - id: W2
+    title: "Ingestion Pipeline Requires Per-Source Connector Configuration"
+    description: |
+      Each data source (Trino, Airflow, Snowflake, Teradata) requires a separate
+      connector YAML file and ingestion schedule. As the number of sources grows,
+      managing ingestion pipelines becomes operationally complex. A unified catalog
+      API layer (e.g., Gravitino) could reduce this to a single connector.
+    evidence: "Connector YAMLs per source in infra/docker/openmetadata/connectors/; manual schedule management"
+
+  - id: W3
+    title: "Elasticsearch Dependency Adds Complexity"
+    description: |
+      OpenMetadata requires Elasticsearch for full-text search indexing. This adds
+      a stateful service that must be maintained, backed up, and kept in sync with
+      the PostgreSQL metadata store. In cloud deployments, this maps to a managed
+      Elasticsearch or OpenSearch instance.
+    evidence: "Elasticsearch 8.15.0 required for OpenMetadata search; additional backup and sync complexity"
+
+  - id: W4
+    title: "No Native Multi-Catalog Gateway"
+    description: |
+      OpenMetadata connects to each source system individually. It does not act as
+      a query-routing or multi-catalog gateway. Cross-catalog joins or unified catalog
+      discovery must be handled by query engines (Trino) or an intermediate layer
+      (Gravitino) rather than OpenMetadata itself.
+    evidence: "OpenMetadata is a catalog portal, not a query gateway; Trino is the query federation layer"
+
+opportunities:
+  - id: O1
+    title: "Gravitino as a Unified Ingestion Simplification Layer"
+    description: |
+      Apache Gravitino exposes a single REST API aggregating multiple catalog backends
+      (Nessie/Iceberg, Hive, JDBC). If OpenMetadata adds a Gravitino connector, the
+      ingestion pipeline simplifies from N per-source connectors to one Gravitino
+      connector. This reduces operational overhead as the number of source systems grows.
+    evidence: "Gravitino multi-catalog REST API; OpenMetadata connector ecosystem expanding; potential single-source ingestion pipeline"
+
+  - id: O2
+    title: "Lineage Enrichment from Marquez Integration"
+    description: |
+      OpenMetadata can ingest lineage events from Marquez (OpenLineage API) to enrich
+      dataset metadata with pipeline-level lineage. This provides a complete picture
+      of data flow from source to gold layer in a single catalog view.
+    evidence: "Marquez 0.50.0 operational; OpenLineage events emitted by Airflow DAGs; OpenMetadata OpenLineage ingestion available"
+
+  - id: O3
+    title: "Data Quality Profiling Integration with dbt"
+    description: |
+      OpenMetadata supports dbt metadata ingestion, enabling test results and data
+      quality metrics defined in dbt to appear in the catalog. This closes the loop
+      between dbt quality tests and the governance catalog without duplication.
+    evidence: "dbt metadata connector available in OpenMetadata; dbt test results can populate catalog quality scores"
+
+  - id: O4
+    title: "Regulatory Reporting Enhancement"
+    description: |
+      Deeper integration between OpenMetadata business glossary terms and BCBS 239
+      data lineage requirements can produce automated compliance evidence: each
+      glossary term linked to its source tables, transformations, and quality checks
+      provides a complete audit trail for regulators.
+    evidence: "FSDM business glossary seeded; BCBS 239 Grafana dashboard deep-links to OM; potential full-term-to-table compliance mapping"
+
+threats:
+  - id: T1
+    title: "Gravitino Could Replace Per-Source Connectors if Ecosystem Matures"
+    description: |
+      Gravitino's roadmap includes a metadata governance layer that overlaps with
+      OpenMetadata's core feature set. If Gravitino ships a business glossary, data
+      quality profiling, and a self-service portal, it could become a single-tool
+      replacement rather than a complementary layer.
+    evidence: "Gravitino 0.9.0 adds multi-type catalog support; governance features on roadmap; risk of feature convergence"
+    mitigation: |
+      OpenMetadata is Apache 2.0 licensed with no switching costs. The BCBS 239
+      deep-link pattern is based on URL conventions, not proprietary APIs. If Gravitino's
+      governance layer matures, a parallel evaluation can be run without lock-in. The
+      investment in OpenMetadata connectors and glossary seeding is reusable content,
+      not sunk infrastructure cost.
+
+  - id: T2
+    title: "DataHub Gaining Enterprise Adoption"
+    description: |
+      DataHub (LinkedIn) has strong enterprise adoption in financial services firms.
+      Its lineage and governance features are comparable to OpenMetadata, with a larger
+      community and more ISV integrations. If internal stakeholders push for DataHub,
+      migration effort is significant given the existing OpenMetadata investment.
+    evidence: "DataHub: 9,000+ GitHub stars, financial services case studies; OpenMetadata: 5,000+ stars; migration effort estimated at 2-4 weeks"
+    mitigation: |
+      OpenMetadata's API is documented and data can be exported. Business glossary
+      terms are seeded from a JSON file (glossary-seed.json) that is tool-agnostic.
+      A migration plan exists in principle. The current OpenMetadata investment is
+      operational, so the switching cost is real but manageable if requirements change.
+
+  - id: T3
+    title: "Elasticsearch Version Compatibility"
+    description: |
+      OpenMetadata is pinned to Elasticsearch 8.15.0. Future OpenMetadata upgrades
+      may require Elasticsearch upgrades that introduce breaking changes or require
+      index re-mapping, causing catalog downtime.
+    evidence: "Elasticsearch 8.15.0 pinned in docker-compose.yml; version upgrades historically require index migration"
+    mitigation: |
+      Pin both OpenMetadata and Elasticsearch versions in docker-compose.yml. Test
+      upgrades in staging before promoting. Consider migrating to OpenSearch (AWS
+      managed) for cloud deployments to reduce the operational burden of self-managed
+      Elasticsearch.
+
+  - id: T4
+    title: "Ingestion Pipeline Drift as Sources Grow"
+    description: |
+      Each new data source requires a new connector configuration. Without automation,
+      connector configurations drift from the actual source schema, leading to stale
+      catalog entries that mislead analysts.
+    evidence: "Manual connector YAML management; no automated drift detection; risk increases with each new source added"
+    mitigation: |
+      Automate connector configuration generation from docker-compose.yml service
+      definitions. Add a CI check that validates connector YAMLs against running
+      services. Evaluate Gravitino as a single-connector simplification once its
+      OpenMetadata integration matures.
+
+decision_matrix:
+  criteria:
+    - "License cost"
+    - "Business glossary"
+    - "Data lineage"
+    - "Data quality profiling"
+    - "Self-service portal"
+    - "Trino connector"
+    - "Airflow connector"
+    - "Multi-catalog gateway"
+    - "Infrastructure footprint"
+    - "Community size"
+  options:
+    OpenMetadata:
+      - "Free"
+      - "Yes (full)"
+      - "Yes (column-level)"
+      - "Yes (profiling + SLA)"
+      - "Yes (port 8585)"
+      - "Yes (validated)"
+      - "Yes (validated)"
+      - "No"
+      - "High (4 services)"
+      - "Large (5k+ stars)"
+    Gravitino:
+      - "Free"
+      - "Roadmap"
+      - "Partial"
+      - "No"
+      - "Basic (API only)"
+      - "Yes (via REST)"
+      - "No"
+      - "Yes (unique)"
+      - "Medium (2 services)"
+      - "Emerging (1k+ stars)"
+    DataHub:
+      - "Free (OSS) / Paid (SaaS)"
+      - "Yes (full)"
+      - "Yes (column-level)"
+      - "Yes"
+      - "Yes"
+      - "Yes"
+      - "Yes"
+      - "No"
+      - "High (5+ services)"
+      - "Largest (9k+ stars)"
+    Amundsen:
+      - "Free"
+      - "Partial"
+      - "Yes (basic)"
+      - "No"
+      - "Yes"
+      - "Partial"
+      - "No"
+      - "No"
+      - "Medium"
+      - "Medium (3k+ stars)"
