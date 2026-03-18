@@ -109,9 +109,7 @@ class TestCubeSqlApiTradingMetrics:
                 "side",
             }
             actual_columns = {c.lower() for c in columns}
-            assert expected_columns.issubset(actual_columns), (
-                f"Missing columns: {expected_columns - actual_columns}"
-            )
+            assert expected_columns.issubset(actual_columns), f"Missing columns: {expected_columns - actual_columns}"
 
         cursor.close()
         conn.close()
@@ -141,9 +139,7 @@ class TestCubeSqlApiRiskExposure:
                 "currency",
             }
             actual_columns = {c.lower() for c in columns}
-            assert expected_columns.issubset(actual_columns), (
-                f"Missing columns: {expected_columns - actual_columns}"
-            )
+            assert expected_columns.issubset(actual_columns), f"Missing columns: {expected_columns - actual_columns}"
 
         cursor.close()
         conn.close()
@@ -159,16 +155,12 @@ class TestCubeSqlApiDecimalPrecision:
         cursor = conn.cursor()
 
         # Query a known Decimal measure
-        cursor.execute(
-            "SELECT total_notional FROM trading_dashboard LIMIT 1"
-        )
+        cursor.execute("SELECT total_notional FROM trading_dashboard LIMIT 1")
         rows = cursor.fetchall()
         if rows:
             value = rows[0][0]
             # Value should be numeric (Decimal or float), not a string
-            assert isinstance(value, (Decimal, float, int)), (
-                f"Expected numeric type, got {type(value)}: {value}"
-            )
+            assert isinstance(value, (Decimal, float, int)), f"Expected numeric type, got {type(value)}: {value}"
 
         cursor.close()
         conn.close()

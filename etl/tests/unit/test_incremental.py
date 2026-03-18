@@ -8,7 +8,7 @@ Tests watermark-based delta extraction:
 - incremental_extract with None watermark does full extract
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -96,9 +96,7 @@ class TestGetLastWatermark:
         mock_spark.sql.return_value = mock_df
 
         get_last_watermark(mock_spark, "bronze.trades", "trade_date")
-        mock_spark.sql.assert_called_once_with(
-            "SELECT MAX(trade_date) AS max_watermark FROM lakehouse.bronze.trades"
-        )
+        mock_spark.sql.assert_called_once_with("SELECT MAX(trade_date) AS max_watermark FROM lakehouse.bronze.trades")
 
 
 @pytest.mark.unit
@@ -115,7 +113,7 @@ class TestIncrementalExtract:
         mock_df = MagicMock()
         mock_spark.sql.return_value = mock_df
 
-        result = incremental_extract(
+        incremental_extract(
             mock_spark,
             source_query_template="SELECT * FROM source_db.trades",
             watermark_column="trade_date",
@@ -136,7 +134,7 @@ class TestIncrementalExtract:
         mock_df = MagicMock()
         mock_spark.sql.return_value = mock_df
 
-        result = incremental_extract(
+        incremental_extract(
             mock_spark,
             source_query_template="SELECT * FROM source_db.trades",
             watermark_column="trade_date",
@@ -145,7 +143,7 @@ class TestIncrementalExtract:
 
         call_args = mock_spark.sql.call_args[0][0]
         assert "WHERE" not in call_args
-        assert "SELECT * FROM source_db.trades" == call_args
+        assert call_args == "SELECT * FROM source_db.trades"
 
     def test_returns_spark_dataframe(self):
         """incremental_extract returns the DataFrame from spark.sql()."""

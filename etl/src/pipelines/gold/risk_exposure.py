@@ -59,16 +59,18 @@ class RiskExposureGoldPipeline(BasePipeline):
             StructType,
         )
 
-        return StructType([
-            StructField("account_id", StringType(), nullable=False),
-            StructField("sector", StringType(), nullable=False),
-            StructField("currency", StringType(), nullable=False),
-            StructField("total_market_value", DecimalType(38, 4), nullable=True),
-            StructField("total_var_95", DecimalType(18, 2), nullable=True),
-            StructField("total_var_99", DecimalType(18, 2), nullable=True),
-            StructField("total_expected_shortfall", DecimalType(18, 2), nullable=True),
-            StructField("position_count", LongType(), nullable=False),
-        ])
+        return StructType(
+            [
+                StructField("account_id", StringType(), nullable=False),
+                StructField("sector", StringType(), nullable=False),
+                StructField("currency", StringType(), nullable=False),
+                StructField("total_market_value", DecimalType(38, 4), nullable=True),
+                StructField("total_var_95", DecimalType(18, 2), nullable=True),
+                StructField("total_var_99", DecimalType(18, 2), nullable=True),
+                StructField("total_expected_shortfall", DecimalType(18, 2), nullable=True),
+                StructField("position_count", LongType(), nullable=False),
+            ]
+        )
 
     def extract(self) -> DataFrame:
         """Read positions and risk_metrics from Silver layer.
@@ -104,18 +106,16 @@ class RiskExposureGoldPipeline(BasePipeline):
             Aggregated risk exposure DataFrame.
         """
         from pyspark.sql.functions import (
-            col,
             count,
+        )
+        from pyspark.sql.functions import (
             sum as spark_sum,
         )
 
-        return (
-            df.groupBy("account_id", "sector", "currency")
-            .agg(
-                spark_sum("market_value").alias("total_market_value"),
-                spark_sum("var_95").alias("total_var_95"),
-                spark_sum("var_99").alias("total_var_99"),
-                spark_sum("expected_shortfall").alias("total_expected_shortfall"),
-                count("*").alias("position_count"),
-            )
+        return df.groupBy("account_id", "sector", "currency").agg(
+            spark_sum("market_value").alias("total_market_value"),
+            spark_sum("var_95").alias("total_var_95"),
+            spark_sum("var_99").alias("total_var_99"),
+            spark_sum("expected_shortfall").alias("total_expected_shortfall"),
+            count("*").alias("position_count"),
         )

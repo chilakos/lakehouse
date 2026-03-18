@@ -78,9 +78,7 @@ class PositionsSilverPipeline(BasePipeline):
         from pyspark.sql.functions import col, row_number
 
         # 1. Deduplicate by position_id + as_of_date, keep most recent ingestion_ts
-        window = Window.partitionBy("position_id", "as_of_date").orderBy(
-            col("ingestion_ts").desc()
-        )
+        window = Window.partitionBy("position_id", "as_of_date").orderBy(col("ingestion_ts").desc())
         deduped = df.withColumn("_row_num", row_number().over(window))
         deduped = deduped.filter(col("_row_num") == 1).drop("_row_num")
 

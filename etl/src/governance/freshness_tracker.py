@@ -24,9 +24,8 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -118,7 +117,7 @@ _BADGE_MAP: dict[FreshnessStatus, dict] = {
 
 
 def check_table_freshness(
-    last_updated: Optional[datetime],
+    last_updated: datetime | None,
     sla: FreshnessSLA,
 ) -> FreshnessStatus:
     """Check data freshness status for a single table against its SLA.
@@ -145,11 +144,11 @@ def check_table_freshness(
         )
         return FreshnessStatus.RED
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Normalise naive datetimes to UTC
     if last_updated.tzinfo is None:
-        last_updated = last_updated.replace(tzinfo=timezone.utc)
+        last_updated = last_updated.replace(tzinfo=UTC)
 
     hours_since = (now - last_updated).total_seconds() / 3600.0
 
@@ -178,7 +177,7 @@ def get_freshness_badge(status: FreshnessStatus) -> dict:
 
 def get_all_freshness(
     table_slas: dict[str, FreshnessSLA],
-    last_updated_map: dict[str, Optional[datetime]],
+    last_updated_map: dict[str, datetime | None],
 ) -> list[dict]:
     """Batch freshness check for multiple tables.
 
@@ -196,17 +195,17 @@ def get_all_freshness(
             - ``badge``: Result of get_freshness_badge() for this status
     """
     results = []
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     for table_name, sla in table_slas.items():
         last_updated = last_updated_map.get(table_name)
         status = check_table_freshness(last_updated, sla)
 
-        hours_since: Optional[float] = None
+        hours_since: float | None = None
         if last_updated is not None:
             ts = last_updated
             if ts.tzinfo is None:
-                ts = ts.replace(tzinfo=timezone.utc)
+                ts = ts.replace(tzinfo=UTC)
             hours_since = (now - ts).total_seconds() / 3600.0
 
         results.append(

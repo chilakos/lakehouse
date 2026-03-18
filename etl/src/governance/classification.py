@@ -10,10 +10,10 @@ Classification tags drive Ranger tag-based masking policies (see ranger_policies
 from __future__ import annotations
 
 import re
-from enum import Enum
+from enum import StrEnum
 
 
-class SensitivityLevel(str, Enum):
+class SensitivityLevel(StrEnum):
     """Sensitivity classification levels for data columns.
 
     Ordered from lowest to highest sensitivity:
@@ -71,8 +71,7 @@ CLASSIFICATION_RULES: list[tuple[str, SensitivityLevel]] = [
 
 # Compiled rules for performance (case-insensitive matching)
 _COMPILED_RULES: list[tuple[re.Pattern[str], SensitivityLevel]] = [
-    (re.compile(pattern, re.IGNORECASE), level)
-    for pattern, level in CLASSIFICATION_RULES
+    (re.compile(pattern, re.IGNORECASE), level) for pattern, level in CLASSIFICATION_RULES
 ]
 
 

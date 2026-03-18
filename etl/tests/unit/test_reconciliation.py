@@ -224,16 +224,16 @@ class TestReconcileTable:
         assert result.row_count_match is False
         assert result.passed is False
 
-    @patch("src.quality.reconciliation.F")
-    def test_reconcile_checksum_within_tolerance(self, mock_F):
+    @patch("src.quality.reconciliation.f")
+    def test_reconcile_checksum_within_tolerance(self, mock_f):
         """reconcile_table passes when checksum difference is within tolerance."""
         from src.quality.reconciliation import reconcile_table
 
         # Mock PySpark functions to avoid SparkContext requirement
         mock_sum_result = MagicMock()
         mock_sum_result.alias.return_value = mock_sum_result
-        mock_F.sum.return_value = mock_sum_result
-        mock_F.col.return_value = MagicMock()
+        mock_f.sum.return_value = mock_sum_result
+        mock_f.col.return_value = MagicMock()
 
         mock_spark = MagicMock()
         mock_source_df = MagicMock()
@@ -275,15 +275,15 @@ class TestReconcileTable:
         assert result.row_count_match is True
         assert result.passed is True
 
-    @patch("src.quality.reconciliation.F")
-    def test_reconcile_checksum_exceeds_tolerance(self, mock_F):
+    @patch("src.quality.reconciliation.f")
+    def test_reconcile_checksum_exceeds_tolerance(self, mock_f):
         """reconcile_table fails when checksum difference exceeds tolerance."""
         from src.quality.reconciliation import reconcile_table
 
         mock_sum_result = MagicMock()
         mock_sum_result.alias.return_value = mock_sum_result
-        mock_F.sum.return_value = mock_sum_result
-        mock_F.col.return_value = MagicMock()
+        mock_f.sum.return_value = mock_sum_result
+        mock_f.col.return_value = MagicMock()
 
         mock_spark = MagicMock()
         mock_source_df = MagicMock()
@@ -323,20 +323,20 @@ class TestReconcileTable:
         assert result.checksum_match is False
         assert result.passed is False
 
-    @patch("src.quality.reconciliation.F")
-    def test_reconcile_aggregate_comparison(self, mock_F):
+    @patch("src.quality.reconciliation.f")
+    def test_reconcile_aggregate_comparison(self, mock_f):
         """reconcile_table computes and compares aggregate columns."""
         from src.quality.reconciliation import reconcile_table
 
         # Mock PySpark functions
         mock_agg_result = MagicMock()
         mock_agg_result.alias.return_value = mock_agg_result
-        mock_F.sum.return_value = mock_agg_result
-        mock_F.avg.return_value = mock_agg_result
-        mock_F.min.return_value = mock_agg_result
-        mock_F.max.return_value = mock_agg_result
-        mock_F.count.return_value = mock_agg_result
-        mock_F.col.return_value = MagicMock()
+        mock_f.sum.return_value = mock_agg_result
+        mock_f.avg.return_value = mock_agg_result
+        mock_f.min.return_value = mock_agg_result
+        mock_f.max.return_value = mock_agg_result
+        mock_f.count.return_value = mock_agg_result
+        mock_f.col.return_value = MagicMock()
 
         mock_spark = MagicMock()
         mock_source_df = MagicMock()

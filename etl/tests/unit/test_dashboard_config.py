@@ -34,9 +34,7 @@ class TestDashboardConfig:
 
     def test_dashboard_file_exists(self):
         """pipeline_observability.json must exist."""
-        assert DASHBOARD_PATH.exists(), (
-            f"Dashboard file not found at {DASHBOARD_PATH}"
-        )
+        assert DASHBOARD_PATH.exists(), f"Dashboard file not found at {DASHBOARD_PATH}"
 
     def test_dashboard_is_valid_json(self):
         """Dashboard file must parse as valid JSON."""
@@ -61,25 +59,19 @@ class TestDashboardConfig:
         """Dashboard must include stat panel type for summary metrics."""
         dashboard = self._load_dashboard()
         panel_types = [p.get("type") for p in dashboard["panels"]]
-        assert "stat" in panel_types, (
-            f"Expected 'stat' panel type for summary metrics, found: {set(panel_types)}"
-        )
+        assert "stat" in panel_types, f"Expected 'stat' panel type for summary metrics, found: {set(panel_types)}"
 
     def test_dashboard_has_timeseries_panels(self):
         """Dashboard must include timeseries panel type for graphs."""
         dashboard = self._load_dashboard()
         panel_types = [p.get("type") for p in dashboard["panels"]]
-        assert "timeseries" in panel_types, (
-            f"Expected 'timeseries' panel type for graphs, found: {set(panel_types)}"
-        )
+        assert "timeseries" in panel_types, f"Expected 'timeseries' panel type for graphs, found: {set(panel_types)}"
 
     def test_dashboard_has_table_panels(self):
         """Dashboard must include table panel type for status overview."""
         dashboard = self._load_dashboard()
         panel_types = [p.get("type") for p in dashboard["panels"]]
-        assert "table" in panel_types, (
-            f"Expected 'table' panel type for status overview, found: {set(panel_types)}"
-        )
+        assert "table" in panel_types, f"Expected 'table' panel type for status overview, found: {set(panel_types)}"
 
     def test_datasource_references_prometheus(self):
         """All data panels must reference Prometheus datasource."""
@@ -88,8 +80,7 @@ class TestDashboardConfig:
             ds = panel.get("datasource", {})
             if ds and isinstance(ds, dict) and ds.get("type"):
                 assert ds["type"] == "prometheus", (
-                    f"Panel '{panel.get('title', 'unknown')}' uses datasource "
-                    f"'{ds['type']}', expected 'prometheus'"
+                    f"Panel '{panel.get('title', 'unknown')}' uses datasource '{ds['type']}', expected 'prometheus'"
                 )
 
     def test_queries_reference_airflow_metrics(self):
@@ -107,9 +98,7 @@ class TestDashboardConfig:
         queries_str = " ".join(all_queries)
 
         # Verify key Airflow metric patterns are referenced
-        assert "airflow_dag_run" in queries_str, (
-            "Dashboard must query airflow_dag_run metrics"
-        )
+        assert "airflow_dag_run" in queries_str, "Dashboard must query airflow_dag_run metrics"
         assert "airflow_executor" in queries_str or "airflow_dag_run" in queries_str, (
             "Dashboard must query Airflow operational metrics"
         )
@@ -119,25 +108,17 @@ class TestDashboardConfig:
         dashboard = self._load_dashboard()
         # Exclude row-type panels from count
         data_panels = [p for p in dashboard["panels"] if p.get("type") != "row"]
-        assert len(data_panels) >= 10, (
-            f"Expected at least 10 data panels, found {len(data_panels)}"
-        )
+        assert len(data_panels) >= 10, f"Expected at least 10 data panels, found {len(data_panels)}"
 
     def test_provisioning_datasources_exists(self):
         """Grafana datasources provisioning file must exist."""
-        assert DATASOURCES_PATH.exists(), (
-            f"Datasources provisioning file not found at {DATASOURCES_PATH}"
-        )
+        assert DATASOURCES_PATH.exists(), f"Datasources provisioning file not found at {DATASOURCES_PATH}"
 
     def test_provisioning_dashboards_exists(self):
         """Grafana dashboards provisioning file must exist."""
-        assert DASHBOARDS_PROV_PATH.exists(), (
-            f"Dashboards provisioning file not found at {DASHBOARDS_PROV_PATH}"
-        )
+        assert DASHBOARDS_PROV_PATH.exists(), f"Dashboards provisioning file not found at {DASHBOARDS_PROV_PATH}"
 
     def test_datasources_references_prometheus(self):
         """Datasources config must reference Prometheus."""
         content = DATASOURCES_PATH.read_text()
-        assert "prometheus" in content.lower(), (
-            "Datasources config must reference Prometheus"
-        )
+        assert "prometheus" in content.lower(), "Datasources config must reference Prometheus"

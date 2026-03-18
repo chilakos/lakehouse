@@ -31,7 +31,10 @@ class TestGetLastWatermarkIntegration:
         table = f"trades_{uuid.uuid4().hex[:6]}"
         create_namespace(spark_session, ns)
         create_iceberg_table(
-            spark_session, ns, table, trades_schema(),
+            spark_session,
+            ns,
+            table,
+            trades_schema(),
             f"s3://lakehouse-data/test/{ns}/{table}",
         )
 
@@ -53,7 +56,10 @@ class TestGetLastWatermarkIntegration:
         create_namespace(spark_session, ns)
         schema = trades_schema()
         create_iceberg_table(
-            spark_session, ns, table, schema,
+            spark_session,
+            ns,
+            table,
+            schema,
             f"s3://lakehouse-data/test/{ns}/{table}",
         )
 
@@ -87,7 +93,10 @@ class TestIncrementalExtractIntegration:
         create_namespace(spark_session, ns)
         schema = trades_schema()
         create_iceberg_table(
-            spark_session, ns, table, schema,
+            spark_session,
+            ns,
+            table,
+            schema,
             f"s3://lakehouse-data/test/{ns}/{table}",
         )
 
@@ -102,20 +111,22 @@ class TestIncrementalExtractIntegration:
         # Generate 20 new trades with dates AFTER the watermark
         new_trades = []
         for i in range(20):
-            new_trades.append({
-                "trade_id": 1000 + i,
-                "trade_date": watermark + timedelta(days=i + 1),
-                "symbol": "NEW",
-                "side": "BUY",
-                "trade_type": "MARKET",
-                "quantity": 100,
-                "price": Decimal("150.0000"),
-                "notional": Decimal("15000.0000"),
-                "account_id": f"ACCT-NEW-{i}",
-                "trader_id": f"TRD-NEW-{i}",
-                "exchange": "NYSE",
-                "settlement_date": watermark + timedelta(days=i + 3),
-            })
+            new_trades.append(
+                {
+                    "trade_id": 1000 + i,
+                    "trade_date": watermark + timedelta(days=i + 1),
+                    "symbol": "NEW",
+                    "side": "BUY",
+                    "trade_type": "MARKET",
+                    "quantity": 100,
+                    "price": Decimal("150.0000"),
+                    "notional": Decimal("15000.0000"),
+                    "account_id": f"ACCT-NEW-{i}",
+                    "trader_id": f"TRD-NEW-{i}",
+                    "exchange": "NYSE",
+                    "settlement_date": watermark + timedelta(days=i + 3),
+                }
+            )
         write_data(spark_session, ns, table, new_trades, schema)
 
         # Verify total is 70
@@ -130,9 +141,7 @@ class TestIncrementalExtractIntegration:
             last_watermark=watermark,
         )
         incremental_count = incremental_df.count()
-        assert incremental_count == 20, (
-            f"Expected 20 incremental records, got {incremental_count}"
-        )
+        assert incremental_count == 20, f"Expected 20 incremental records, got {incremental_count}"
 
 
 @pytest.mark.integration
@@ -155,34 +164,55 @@ class TestMergeIncrementalIntegration:
         create_namespace(spark_session, ns)
         schema = trades_schema()
         create_iceberg_table(
-            spark_session, ns, table, schema,
+            spark_session,
+            ns,
+            table,
+            schema,
             f"s3://lakehouse-data/test/{ns}/{table}",
         )
 
         # Write 3 initial records
         initial = [
             {
-                "trade_id": 1, "trade_date": date(2026, 1, 1),
-                "symbol": "AAPL", "side": "BUY", "trade_type": "MARKET",
-                "quantity": 100, "price": Decimal("150.0000"),
-                "notional": Decimal("15000.0000"), "account_id": "ACCT-1",
-                "trader_id": "TRD-1", "exchange": "NYSE",
+                "trade_id": 1,
+                "trade_date": date(2026, 1, 1),
+                "symbol": "AAPL",
+                "side": "BUY",
+                "trade_type": "MARKET",
+                "quantity": 100,
+                "price": Decimal("150.0000"),
+                "notional": Decimal("15000.0000"),
+                "account_id": "ACCT-1",
+                "trader_id": "TRD-1",
+                "exchange": "NYSE",
                 "settlement_date": date(2026, 1, 3),
             },
             {
-                "trade_id": 2, "trade_date": date(2026, 1, 2),
-                "symbol": "GOOGL", "side": "SELL", "trade_type": "LIMIT",
-                "quantity": 50, "price": Decimal("200.0000"),
-                "notional": Decimal("10000.0000"), "account_id": "ACCT-2",
-                "trader_id": "TRD-2", "exchange": "NASDAQ",
+                "trade_id": 2,
+                "trade_date": date(2026, 1, 2),
+                "symbol": "GOOGL",
+                "side": "SELL",
+                "trade_type": "LIMIT",
+                "quantity": 50,
+                "price": Decimal("200.0000"),
+                "notional": Decimal("10000.0000"),
+                "account_id": "ACCT-2",
+                "trader_id": "TRD-2",
+                "exchange": "NASDAQ",
                 "settlement_date": date(2026, 1, 4),
             },
             {
-                "trade_id": 3, "trade_date": date(2026, 1, 3),
-                "symbol": "MSFT", "side": "BUY", "trade_type": "MARKET",
-                "quantity": 75, "price": Decimal("300.0000"),
-                "notional": Decimal("22500.0000"), "account_id": "ACCT-3",
-                "trader_id": "TRD-3", "exchange": "NYSE",
+                "trade_id": 3,
+                "trade_date": date(2026, 1, 3),
+                "symbol": "MSFT",
+                "side": "BUY",
+                "trade_type": "MARKET",
+                "quantity": 75,
+                "price": Decimal("300.0000"),
+                "notional": Decimal("22500.0000"),
+                "account_id": "ACCT-3",
+                "trader_id": "TRD-3",
+                "exchange": "NYSE",
                 "settlement_date": date(2026, 1, 5),
             },
         ]
@@ -191,19 +221,31 @@ class TestMergeIncrementalIntegration:
         # Prepare merge data: update trade_id=1 (new price), insert trade_id=4 (new)
         merge_data = [
             {
-                "trade_id": 1, "trade_date": date(2026, 1, 1),
-                "symbol": "AAPL", "side": "BUY", "trade_type": "MARKET",
-                "quantity": 100, "price": Decimal("155.0000"),  # Updated price
-                "notional": Decimal("15500.0000"), "account_id": "ACCT-1",
-                "trader_id": "TRD-1", "exchange": "NYSE",
+                "trade_id": 1,
+                "trade_date": date(2026, 1, 1),
+                "symbol": "AAPL",
+                "side": "BUY",
+                "trade_type": "MARKET",
+                "quantity": 100,
+                "price": Decimal("155.0000"),  # Updated price
+                "notional": Decimal("15500.0000"),
+                "account_id": "ACCT-1",
+                "trader_id": "TRD-1",
+                "exchange": "NYSE",
                 "settlement_date": date(2026, 1, 3),
             },
             {
-                "trade_id": 4, "trade_date": date(2026, 1, 4),
-                "symbol": "JPM", "side": "BUY", "trade_type": "MARKET",
-                "quantity": 200, "price": Decimal("180.0000"),
-                "notional": Decimal("36000.0000"), "account_id": "ACCT-4",
-                "trader_id": "TRD-4", "exchange": "NYSE",
+                "trade_id": 4,
+                "trade_date": date(2026, 1, 4),
+                "symbol": "JPM",
+                "side": "BUY",
+                "trade_type": "MARKET",
+                "quantity": 200,
+                "price": Decimal("180.0000"),
+                "notional": Decimal("36000.0000"),
+                "account_id": "ACCT-4",
+                "trader_id": "TRD-4",
+                "exchange": "NYSE",
                 "settlement_date": date(2026, 1, 6),
             },
         ]

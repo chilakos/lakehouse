@@ -12,7 +12,7 @@ Uses PySpark CALL procedures per Apache Iceberg Spark Procedures documentation.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -77,7 +77,7 @@ def expire_snapshots(
         Dictionary with expiration results.
     """
     full_table_name = f"{namespace}.{table_name}"
-    cutoff = datetime.now(tz=timezone.utc) - timedelta(days=older_than_days)
+    cutoff = datetime.now(tz=UTC) - timedelta(days=older_than_days)
     cutoff_str = cutoff.strftime("%Y-%m-%d %H:%M:%S")
 
     result_df = spark.sql(f"""
@@ -119,7 +119,7 @@ def remove_orphan_files(
         Dictionary with cleanup results.
     """
     full_table_name = f"{namespace}.{table_name}"
-    cutoff = datetime.now(tz=timezone.utc) - timedelta(days=older_than_days)
+    cutoff = datetime.now(tz=UTC) - timedelta(days=older_than_days)
     cutoff_str = cutoff.strftime("%Y-%m-%d %H:%M:%S")
 
     result_df = spark.sql(f"""

@@ -3,11 +3,12 @@
 Tests audit record writing to PostgreSQL and DAG structure validation.
 All tests auto-skip if PostgreSQL audit table is not available.
 """
+
 from __future__ import annotations
 
 import socket
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pytest
 
@@ -35,9 +36,10 @@ def skip_if_no_audit_db():
 def _make_audit_record(user_name="test_user", rows_returned=100):
     """Create a test AuditRecord."""
     from src.governance.audit_schema import AuditRecord
+
     return AuditRecord(
         audit_id=str(uuid.uuid4()),
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         engine="trino",
         user_name=user_name,
         query_id=str(uuid.uuid4()),
@@ -61,6 +63,7 @@ class TestAuditAggregationWritesToPostgres:
 
     def test_aggregate_audit_writes_records(self):
         from src.governance.audit_aggregator import aggregate_audit_records
+
         records = [_make_audit_record(), _make_audit_record(user_name="alice")]
         # Should not raise; returns count (may be 0 if audit table setup differs)
         count = aggregate_audit_records(records, _AUDIT_DB_CONN)
@@ -69,6 +72,7 @@ class TestAuditAggregationWritesToPostgres:
 
     def test_aggregate_empty_returns_zero(self):
         from src.governance.audit_aggregator import aggregate_audit_records
+
         count = aggregate_audit_records([], _AUDIT_DB_CONN)
         assert count == 0
 
@@ -111,17 +115,21 @@ class TestAuditRecordsQueryable:
 
     def test_records_queryable_by_date_range(self):
         """Can filter audit records by timestamp range."""
-        import psycopg2
         from datetime import timedelta
+
+        import psycopg2
 
         try:
             conn = psycopg2.connect(_AUDIT_DB_CONN)
             cursor = conn.cursor()
-            now = datetime.now(timezone.utc)
-            cursor.execute("""
+            now = datetime.now(UTC)
+            cursor.execute(
+                """
                 SELECT COUNT(*) FROM audit_records
                 WHERE timestamp >= %s AND timestamp <= %s
-            """, [now - timedelta(days=7), now])
+            """,
+                [now - timedelta(days=7), now],
+            )
             count = cursor.fetchone()[0]
             conn.close()
             assert isinstance(count, int)
@@ -137,7 +145,7 @@ class TestDAGStructureValidation:
         """DAG module imports without errors."""
         try:
             import importlib.util
-            import sys
+
             spec = importlib.util.spec_from_file_location(
                 "dag_audit_aggregation",
                 "/home/azureuser/lakehouse/etl/dags/governance/dag_audit_aggregation.py",
@@ -150,6 +158,7 @@ class TestDAGStructureValidation:
     def test_anomaly_report_dag_importable(self):
         """Anomaly report DAG module parses without errors."""
         import ast
+
         with open("/home/azureuser/lakehouse/etl/dags/governance/dag_anomaly_report.py") as f:
             source = f.read()
         # Should parse as valid Python
@@ -159,6 +168,7 @@ class TestDAGStructureValidation:
     def test_freshness_check_dag_importable(self):
         """Freshness check DAG module parses without errors."""
         import ast
+
         with open("/home/azureuser/lakehouse/etl/dags/governance/dag_freshness_check.py") as f:
             source = f.read()
         tree = ast.parse(source)

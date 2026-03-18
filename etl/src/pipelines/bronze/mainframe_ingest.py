@@ -93,9 +93,11 @@ class MainframeBronzePipeline(BasePipeline):
         """
         from pyspark.sql.types import StringType, StructField, StructType
 
-        return StructType([
-            StructField("_placeholder", StringType(), nullable=True),
-        ])
+        return StructType(
+            [
+                StructField("_placeholder", StringType(), nullable=True),
+            ]
+        )
 
     def validate_schema(self, df: DataFrame) -> bool:
         """Override schema validation for mainframe data.
@@ -111,8 +113,7 @@ class MainframeBronzePipeline(BasePipeline):
             True always -- schema is determined by the copybook.
         """
         self.logger.info(
-            "Schema validation skipped for mainframe data (Cobrix-derived schema). "
-            "Columns: %s",
+            "Schema validation skipped for mainframe data (Cobrix-derived schema). Columns: %s",
             [f.name for f in df.schema.fields],
         )
         return True

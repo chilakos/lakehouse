@@ -35,12 +35,12 @@ Usage::
     )
     print(f"Archived {count} records to S3")
 """
+
 from __future__ import annotations
 
 import io
 import logging
-from datetime import datetime, timezone, timedelta
-from typing import Optional
+from datetime import UTC, datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
@@ -77,21 +77,21 @@ def archive_old_records(
     try:
         import psycopg2  # type: ignore
         import psycopg2.extras  # type: ignore
-    except ImportError:
-        raise RuntimeError("psycopg2-binary required for archive_old_records")
+    except ImportError as err:
+        raise RuntimeError("psycopg2-binary required for archive_old_records") from err
 
     try:
         import boto3  # type: ignore
-    except ImportError:
-        raise RuntimeError("boto3 required for archive_old_records")
+    except ImportError as err:
+        raise RuntimeError("boto3 required for archive_old_records") from err
 
     try:
         import pyarrow as pa  # type: ignore
         import pyarrow.parquet as pq  # type: ignore
-    except ImportError:
-        raise RuntimeError("pyarrow required for archive_old_records")
+    except ImportError as err:
+        raise RuntimeError("pyarrow required for archive_old_records") from err
 
-    cutoff_date = datetime.now(timezone.utc) - timedelta(days=archive_after_days)
+    cutoff_date = datetime.now(UTC) - timedelta(days=archive_after_days)
     logger.info(
         "Archiving audit records older than %s (%d days) from %s to s3://%s/%s",
         cutoff_date.strftime("%Y-%m-%d"),
@@ -105,7 +105,8 @@ def archive_old_records(
     cursor = conn.cursor(cursor_factory=psycopg2.extras.RealDictCursor)
 
     # Query records to archive
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT
             audit_id, timestamp, engine, user_name, query_id, query_text,
             tables_accessed, columns_accessed, rows_returned, bytes_scanned,
@@ -113,7 +114,9 @@ def archive_old_records(
         FROM audit_records
         WHERE timestamp < %s
         ORDER BY timestamp
-    """, [cutoff_date])
+    """,
+        [cutoff_date],
+    )
 
     rows = cursor.fetchall()
 
@@ -134,7 +137,7 @@ def archive_old_records(
     for row in rows:
         ts = row["timestamp"]
         if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+            ts = ts.replace(tzinfo=UTC)
         key = (ts.year, ts.month)
         by_month.setdefault(key, []).append(dict(row))
 
@@ -148,26 +151,29 @@ def archive_old_records(
             for field in ["tables_accessed", "columns_accessed", "masked_columns"]:
                 if isinstance(row[field], (list, dict)):
                     import json
+
                     row[field] = json.dumps(row[field])
             # Convert datetime to ISO string for Parquet compatibility
             if isinstance(row["timestamp"], datetime):
                 row["timestamp"] = row["timestamp"].isoformat()
 
-        schema = pa.schema([
-            pa.field("audit_id", pa.string()),
-            pa.field("timestamp", pa.string()),
-            pa.field("engine", pa.string()),
-            pa.field("user_name", pa.string()),
-            pa.field("query_id", pa.string()),
-            pa.field("query_text", pa.string()),
-            pa.field("tables_accessed", pa.string()),
-            pa.field("columns_accessed", pa.string()),
-            pa.field("rows_returned", pa.int64()),
-            pa.field("bytes_scanned", pa.int64()),
-            pa.field("masked_columns", pa.string()),
-            pa.field("access_granted", pa.bool_()),
-            pa.field("source_engine_audit_id", pa.string()),
-        ])
+        schema = pa.schema(
+            [
+                pa.field("audit_id", pa.string()),
+                pa.field("timestamp", pa.string()),
+                pa.field("engine", pa.string()),
+                pa.field("user_name", pa.string()),
+                pa.field("query_id", pa.string()),
+                pa.field("query_text", pa.string()),
+                pa.field("tables_accessed", pa.string()),
+                pa.field("columns_accessed", pa.string()),
+                pa.field("rows_returned", pa.int64()),
+                pa.field("bytes_scanned", pa.int64()),
+                pa.field("masked_columns", pa.string()),
+                pa.field("access_granted", pa.bool_()),
+                pa.field("source_engine_audit_id", pa.string()),
+            ]
+        )
 
         arrays = {col: [row.get(col) for row in month_rows] for col in schema.names}
         table = pa.table(arrays, schema=schema)
@@ -187,7 +193,9 @@ def archive_old_records(
         )
         logger.info(
             "Archived %d records to s3://%s/%s",
-            len(month_rows), s3_bucket, s3_key,
+            len(month_rows),
+            s3_bucket,
+            s3_key,
         )
         total_archived += len(month_rows)
 
@@ -203,6 +211,7 @@ def archive_old_records(
 
     logger.info(
         "Archive complete: %d records written to S3, %d deleted from PostgreSQL",
-        total_archived, deleted,
+        total_archived,
+        deleted,
     )
     return total_archived

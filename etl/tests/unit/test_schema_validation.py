@@ -40,19 +40,23 @@ class TestSchemaValidation:
         """validate_schema returns True when DataFrame schema matches target."""
         from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 
-        target = StructType([
-            StructField("id", IntegerType(), nullable=False),
-            StructField("name", StringType(), nullable=True),
-        ])
+        target = StructType(
+            [
+                StructField("id", IntegerType(), nullable=False),
+                StructField("name", StringType(), nullable=True),
+            ]
+        )
 
         pipeline = _make_pipeline_with_schema(target)
 
         # Mock df with matching schema
         mock_df = MagicMock()
-        mock_df.schema = StructType([
-            StructField("id", IntegerType(), nullable=True),  # nullable difference OK
-            StructField("name", StringType(), nullable=True),
-        ])
+        mock_df.schema = StructType(
+            [
+                StructField("id", IntegerType(), nullable=True),  # nullable difference OK
+                StructField("name", StringType(), nullable=True),
+            ]
+        )
 
         assert pipeline.validate_schema(mock_df) is True
 
@@ -60,18 +64,22 @@ class TestSchemaValidation:
         """validate_schema returns False when DataFrame has missing columns."""
         from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 
-        target = StructType([
-            StructField("id", IntegerType(), nullable=False),
-            StructField("name", StringType(), nullable=True),
-        ])
+        target = StructType(
+            [
+                StructField("id", IntegerType(), nullable=False),
+                StructField("name", StringType(), nullable=True),
+            ]
+        )
 
         pipeline = _make_pipeline_with_schema(target)
 
         # Mock df missing "name" column
         mock_df = MagicMock()
-        mock_df.schema = StructType([
-            StructField("id", IntegerType(), nullable=False),
-        ])
+        mock_df.schema = StructType(
+            [
+                StructField("id", IntegerType(), nullable=False),
+            ]
+        )
 
         assert pipeline.validate_schema(mock_df) is False
 
@@ -79,19 +87,23 @@ class TestSchemaValidation:
         """validate_schema returns False when DataFrame has wrong column types."""
         from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 
-        target = StructType([
-            StructField("id", IntegerType(), nullable=False),
-            StructField("name", StringType(), nullable=True),
-        ])
+        target = StructType(
+            [
+                StructField("id", IntegerType(), nullable=False),
+                StructField("name", StringType(), nullable=True),
+            ]
+        )
 
         pipeline = _make_pipeline_with_schema(target)
 
         # Mock df with "name" as IntegerType instead of StringType
         mock_df = MagicMock()
-        mock_df.schema = StructType([
-            StructField("id", IntegerType(), nullable=False),
-            StructField("name", IntegerType(), nullable=True),  # wrong type
-        ])
+        mock_df.schema = StructType(
+            [
+                StructField("id", IntegerType(), nullable=False),
+                StructField("name", IntegerType(), nullable=True),  # wrong type
+            ]
+        )
 
         assert pipeline.validate_schema(mock_df) is False
 
@@ -99,17 +111,21 @@ class TestSchemaValidation:
         """validate_schema returns True when DataFrame has extra columns (additive OK)."""
         from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 
-        target = StructType([
-            StructField("id", IntegerType(), nullable=False),
-        ])
+        target = StructType(
+            [
+                StructField("id", IntegerType(), nullable=False),
+            ]
+        )
 
         pipeline = _make_pipeline_with_schema(target)
 
         # Mock df with extra "name" column
         mock_df = MagicMock()
-        mock_df.schema = StructType([
-            StructField("id", IntegerType(), nullable=False),
-            StructField("name", StringType(), nullable=True),  # extra column
-        ])
+        mock_df.schema = StructType(
+            [
+                StructField("id", IntegerType(), nullable=False),
+                StructField("name", StringType(), nullable=True),  # extra column
+            ]
+        )
 
         assert pipeline.validate_schema(mock_df) is True

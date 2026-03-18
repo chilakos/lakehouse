@@ -13,8 +13,8 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 
-from airflow.sdk import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.sdk import DAG
 
 logger = logging.getLogger(__name__)
 
@@ -22,10 +22,14 @@ logger = logging.getLogger(__name__)
 def _on_failure_callback(context):
     """Failure callback for alerting (PagerDuty/Slack in production)."""
     dag_id = context.get("dag", {}).dag_id if hasattr(context.get("dag", {}), "dag_id") else "unknown"
-    task_id = context.get("task_instance", {}).task_id if hasattr(context.get("task_instance", {}), "task_id") else "unknown"
+    task_id = (
+        context.get("task_instance", {}).task_id if hasattr(context.get("task_instance", {}), "task_id") else "unknown"
+    )
     logger.error(
         "Task failed: dag_id=%s, task_id=%s, execution_date=%s",
-        dag_id, task_id, context.get("execution_date", "unknown"),
+        dag_id,
+        task_id,
+        context.get("execution_date", "unknown"),
     )
 
 
@@ -63,10 +67,7 @@ _spark_iceberg_conf = {
 _spark_conf = {**_spark_iceberg_conf, **_spark_openlineage_conf}
 
 # Spark packages (Iceberg runtime + OpenLineage agent)
-_spark_packages = (
-    "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.7.1,"
-    "io.openlineage:openlineage-spark_2.12:1.25.0"
-)
+_spark_packages = "org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.7.1,io.openlineage:openlineage-spark_2.12:1.25.0"
 
 
 with DAG(
@@ -88,7 +89,6 @@ with DAG(
     **Quality:** Soda Core gates at Bronze and Silver boundaries
     """,
 ) as dag:
-
     ingest_trades_bronze = SparkSubmitOperator(
         task_id="ingest_trades_bronze",
         application="/opt/airflow/etl_src/pipelines/bronze/trades_ingest.py",

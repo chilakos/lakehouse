@@ -93,9 +93,7 @@ class TestDagIntegrity:
             with _mock_airflow_variables():
                 module = _load_dag_module(dag_file)
                 dags = _get_dags_from_module(module)
-                assert len(dags) > 0, (
-                    f"DAG file {dag_file.name} does not define any DAG objects"
-                )
+                assert len(dags) > 0, f"DAG file {dag_file.name} does not define any DAG objects"
 
     def test_dag_ids_are_unique(self):
         """All DAG IDs across all files must be unique."""
@@ -130,10 +128,7 @@ class TestDagIntegrity:
                 for dag in dags:
                     default_args = dag.default_args or {}
                     retries = default_args.get("retries", 0)
-                    assert retries >= 3, (
-                        f"DAG '{dag.dag_id}' has retries={retries}, "
-                        f"expected >= 3 (locked decision)"
-                    )
+                    assert retries >= 3, f"DAG '{dag.dag_id}' has retries={retries}, expected >= 3 (locked decision)"
 
     def test_default_args_exponential_backoff(self):
         """All DAGs must have retry_exponential_backoff=True per locked decision."""
@@ -147,6 +142,5 @@ class TestDagIntegrity:
                 for dag in dags:
                     default_args = dag.default_args or {}
                     assert default_args.get("retry_exponential_backoff") is True, (
-                        f"DAG '{dag.dag_id}' missing retry_exponential_backoff=True "
-                        f"(locked decision)"
+                        f"DAG '{dag.dag_id}' missing retry_exponential_backoff=True (locked decision)"
                     )

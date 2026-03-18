@@ -17,8 +17,9 @@ from pathlib import Path
 
 import pytest
 
-
-RULES_PATH = Path(__file__).resolve().parents[4] / "infra" / "docker" / "trino" / "etc" / "access-control" / "rules.json"
+RULES_PATH = (
+    Path(__file__).resolve().parents[4] / "infra" / "docker" / "trino" / "etc" / "access-control" / "rules.json"
+)
 
 
 @pytest.mark.integration
@@ -48,50 +49,35 @@ class TestRBAC:
         """data_readers group has SELECT-only privilege on tables."""
         rules = json.loads(RULES_PATH.read_text())
 
-        reader_table_rules = [
-            r for r in rules["tables"]
-            if r.get("group") == "data_readers"
-        ]
+        reader_table_rules = [r for r in rules["tables"] if r.get("group") == "data_readers"]
         assert len(reader_table_rules) >= 1, "No table rules for data_readers"
 
         for rule in reader_table_rules:
             privileges = rule.get("privileges", [])
-            assert privileges == ["SELECT"], (
-                f"data_readers should have SELECT-only, got: {privileges}"
-            )
+            assert privileges == ["SELECT"], f"data_readers should have SELECT-only, got: {privileges}"
 
     def test_engineer_role_has_dml(self):
         """data_engineers group has SELECT, INSERT, UPDATE, DELETE privileges."""
         rules = json.loads(RULES_PATH.read_text())
 
-        engineer_rules = [
-            r for r in rules["tables"]
-            if r.get("group") == "data_engineers"
-        ]
+        engineer_rules = [r for r in rules["tables"] if r.get("group") == "data_engineers"]
         assert len(engineer_rules) >= 1, "No table rules for data_engineers"
 
         for rule in engineer_rules:
             privileges = set(rule.get("privileges", []))
             required = {"SELECT", "INSERT", "DELETE", "UPDATE"}
-            assert required.issubset(privileges), (
-                f"data_engineers missing privileges: {required - privileges}"
-            )
+            assert required.issubset(privileges), f"data_engineers missing privileges: {required - privileges}"
 
     def test_admin_role_has_full_access(self):
         """data_admin group has full access including ownership."""
         rules = json.loads(RULES_PATH.read_text())
 
-        admin_rules = [
-            r for r in rules["tables"]
-            if r.get("group") == "data_admin"
-        ]
+        admin_rules = [r for r in rules["tables"] if r.get("group") == "data_admin"]
         assert len(admin_rules) >= 1, "No table rules for data_admin"
 
         for rule in admin_rules:
             privileges = set(rule.get("privileges", []))
-            assert "OWNERSHIP" in privileges, (
-                f"data_admin should have OWNERSHIP privilege, got: {privileges}"
-            )
+            assert "OWNERSHIP" in privileges, f"data_admin should have OWNERSHIP privilege, got: {privileges}"
 
     def test_sensitive_ns_restricted(self):
         """sensitive_ns schema is restricted to data_admin only."""
@@ -128,8 +114,11 @@ class TestRBAC:
             "s3://lakehouse-data/warehouse/rbac_test/trades",
         )
         write_data(
-            spark_session, "rbac_test", "trades",
-            generate_trades(5, seed=8001), schema,
+            spark_session,
+            "rbac_test",
+            "trades",
+            generate_trades(5, seed=8001),
+            schema,
         )
 
         # Basic SELECT should work for any user
@@ -150,15 +139,10 @@ class TestRBAC:
         rules = json.loads(RULES_PATH.read_text())
 
         # Validate at the rules level: data_readers should NOT have INSERT
-        reader_table_rules = [
-            r for r in rules["tables"]
-            if r.get("group") == "data_readers"
-        ]
+        reader_table_rules = [r for r in rules["tables"] if r.get("group") == "data_readers"]
         for rule in reader_table_rules:
             privileges = rule.get("privileges", [])
-            assert "INSERT" not in privileges, (
-                "data_readers should not have INSERT privilege in rules.json"
-            )
+            assert "INSERT" not in privileges, "data_readers should not have INSERT privilege in rules.json"
 
     def test_engineer_can_write(self, trino_connection, spark_session, clean_nessie):
         """Verify engineers have write privileges in rules.json.
@@ -168,14 +152,9 @@ class TestRBAC:
         """
         rules = json.loads(RULES_PATH.read_text())
 
-        engineer_rules = [
-            r for r in rules["tables"]
-            if r.get("group") == "data_engineers"
-        ]
+        engineer_rules = [r for r in rules["tables"] if r.get("group") == "data_engineers"]
         assert len(engineer_rules) >= 1
 
         for rule in engineer_rules:
             privileges = rule.get("privileges", [])
-            assert "INSERT" in privileges, (
-                "data_engineers should have INSERT privilege in rules.json"
-            )
+            assert "INSERT" in privileges, "data_engineers should have INSERT privilege in rules.json"

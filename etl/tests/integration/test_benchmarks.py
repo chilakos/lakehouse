@@ -18,7 +18,6 @@ from src.iceberg_utils.benchmark import (
     generate_benchmark_queries,
     run_benchmark,
 )
-from src.iceberg_utils.trino import execute_ddl
 
 
 @pytest.mark.slow
@@ -71,8 +70,11 @@ class TestBenchmarks:
             "s3://lakehouse-data/warehouse/benchmark_ns/positions",
         )
         write_data(
-            spark_session, "benchmark_ns", "positions",
-            generate_positions(1000, seed=7100), p_schema,
+            spark_session,
+            "benchmark_ns",
+            "positions",
+            generate_positions(1000, seed=7100),
+            p_schema,
         )
 
         self.spark = spark_session
@@ -103,10 +105,10 @@ class TestBenchmarks:
 
     def test_benchmark_spark(self):
         """Run equivalent queries via PySpark, collect results."""
-        from src.iceberg_utils.catalog import read_table
-
         # Spark benchmarks use DataFrame API
         import time
+
+        from src.iceberg_utils.catalog import read_table
 
         results = []
 
@@ -127,9 +129,7 @@ class TestBenchmarks:
 
         # Aggregation
         start = time.perf_counter_ns()
-        agg_df = self.spark.sql(
-            "SELECT symbol, SUM(notional) FROM lakehouse.benchmark_ns.trades GROUP BY symbol"
-        )
+        agg_df = self.spark.sql("SELECT symbol, SUM(notional) FROM lakehouse.benchmark_ns.trades GROUP BY symbol")
         agg_rows = agg_df.collect()
         elapsed = (time.perf_counter_ns() - start) / 1_000_000
         results.append(

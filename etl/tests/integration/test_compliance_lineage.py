@@ -3,6 +3,7 @@
 Tests lineage graph queries via Marquez API.
 All tests auto-skip if Marquez is not running.
 """
+
 from __future__ import annotations
 
 import socket
@@ -40,6 +41,7 @@ class TestMarquezLineageAPI:
     def test_marquez_api_namespaces_endpoint(self):
         """Marquez /api/v1/namespaces endpoint is accessible."""
         import requests
+
         resp = requests.get(f"{_MARQUEZ_URL}/api/v1/namespaces", timeout=10)
         assert resp.status_code == 200
         data = resp.json()
@@ -48,6 +50,7 @@ class TestMarquezLineageAPI:
     def test_marquez_api_datasets_endpoint(self):
         """Marquez /api/v1/namespaces/{namespace}/datasets endpoint returns datasets."""
         import requests
+
         resp = requests.get(
             f"{_MARQUEZ_URL}/api/v1/namespaces/{_NAMESPACE}/datasets",
             timeout=10,
@@ -76,6 +79,7 @@ class TestMarquezLineageAPI:
     def test_legacy_lineage_stubs_appear_in_graph(self):
         """After registering stubs, they appear in the lineage graph."""
         import requests
+
         from src.governance.lineage_stubs import register_teradata_sources
 
         try:

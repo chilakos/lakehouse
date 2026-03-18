@@ -6,7 +6,7 @@ bronze, silver, and gold layer tables.
 No external services required -- pure Python unit tests.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -65,25 +65,30 @@ class TestFreshnessSLADataclass:
 
     def test_sla_is_dataclass(self):
         import dataclasses
+
         assert dataclasses.is_dataclass(FreshnessSLA)
 
     def test_sla_table_name_is_str(self):
         import dataclasses
+
         fields = {f.name: f for f in dataclasses.fields(FreshnessSLA)}
         assert "table_name" in fields
 
     def test_sla_expected_interval_field_exists(self):
         import dataclasses
+
         fields = {f.name: f for f in dataclasses.fields(FreshnessSLA)}
         assert "expected_update_interval_hours" in fields
 
     def test_sla_warning_threshold_field_exists(self):
         import dataclasses
+
         fields = {f.name: f for f in dataclasses.fields(FreshnessSLA)}
         assert "warning_threshold_hours" in fields
 
     def test_sla_critical_threshold_field_exists(self):
         import dataclasses
+
         fields = {f.name: f for f in dataclasses.fields(FreshnessSLA)}
         assert "critical_threshold_hours" in fields
 
@@ -103,37 +108,37 @@ class TestCheckTableFreshness:
 
     def test_within_expected_interval_returns_green(self, gold_sla):
         # 12 hours ago -- well within 24h expected interval
-        last_updated = datetime.now(timezone.utc) - timedelta(hours=12)
+        last_updated = datetime.now(UTC) - timedelta(hours=12)
         status = check_table_freshness(last_updated, gold_sla)
         assert status == FreshnessStatus.GREEN
 
     def test_exactly_at_expected_interval_returns_green(self, gold_sla):
         # Exactly 24 hours ago -- at the boundary
-        last_updated = datetime.now(timezone.utc) - timedelta(hours=24)
+        last_updated = datetime.now(UTC) - timedelta(hours=24)
         status = check_table_freshness(last_updated, gold_sla)
         assert status == FreshnessStatus.GREEN
 
     def test_past_expected_but_within_warning_returns_green(self, gold_sla):
         # 25 hours ago -- past expected (24h) but within warning threshold (26h)
-        last_updated = datetime.now(timezone.utc) - timedelta(hours=25)
+        last_updated = datetime.now(UTC) - timedelta(hours=25)
         status = check_table_freshness(last_updated, gold_sla)
         assert status == FreshnessStatus.GREEN
 
     def test_past_warning_threshold_returns_yellow(self, gold_sla):
         # 30 hours ago -- past warning (26h) but within critical (48h)
-        last_updated = datetime.now(timezone.utc) - timedelta(hours=30)
+        last_updated = datetime.now(UTC) - timedelta(hours=30)
         status = check_table_freshness(last_updated, gold_sla)
         assert status == FreshnessStatus.YELLOW
 
     def test_at_critical_threshold_returns_red(self, gold_sla):
         # Exactly 48 hours ago -- at critical threshold
-        last_updated = datetime.now(timezone.utc) - timedelta(hours=48)
+        last_updated = datetime.now(UTC) - timedelta(hours=48)
         status = check_table_freshness(last_updated, gold_sla)
         assert status == FreshnessStatus.RED
 
     def test_past_critical_threshold_returns_red(self, gold_sla):
         # 72 hours ago -- well past critical threshold
-        last_updated = datetime.now(timezone.utc) - timedelta(hours=72)
+        last_updated = datetime.now(UTC) - timedelta(hours=72)
         status = check_table_freshness(last_updated, gold_sla)
         assert status == FreshnessStatus.RED
 
@@ -149,7 +154,7 @@ class TestCheckTableFreshness:
             warning_threshold_hours=14.0,
             critical_threshold_hours=24.0,
         )
-        last_updated = datetime.now(timezone.utc) - timedelta(hours=6)
+        last_updated = datetime.now(UTC) - timedelta(hours=6)
         status = check_table_freshness(last_updated, silver_sla)
         assert status == FreshnessStatus.GREEN
 
@@ -160,7 +165,7 @@ class TestCheckTableFreshness:
             warning_threshold_hours=8.0,
             critical_threshold_hours=12.0,
         )
-        last_updated = datetime.now(timezone.utc) - timedelta(hours=15)
+        last_updated = datetime.now(UTC) - timedelta(hours=15)
         status = check_table_freshness(last_updated, bronze_sla)
         assert status == FreshnessStatus.RED
 
@@ -231,61 +236,43 @@ class TestDefaultSLAs:
         assert isinstance(DEFAULT_SLAS, dict)
 
     def test_gold_pattern_in_default_slas(self):
-        assert any("gold" in key for key in DEFAULT_SLAS.keys()), (
-            "DEFAULT_SLAS should have a key matching gold tables"
-        )
+        assert any("gold" in key for key in DEFAULT_SLAS), "DEFAULT_SLAS should have a key matching gold tables"
 
     def test_silver_pattern_in_default_slas(self):
-        assert any("silver" in key for key in DEFAULT_SLAS.keys()), (
-            "DEFAULT_SLAS should have a key matching silver tables"
-        )
+        assert any("silver" in key for key in DEFAULT_SLAS), "DEFAULT_SLAS should have a key matching silver tables"
 
     def test_bronze_pattern_in_default_slas(self):
-        assert any("bronze" in key for key in DEFAULT_SLAS.keys()), (
-            "DEFAULT_SLAS should have a key matching bronze tables"
-        )
+        assert any("bronze" in key for key in DEFAULT_SLAS), "DEFAULT_SLAS should have a key matching bronze tables"
 
     def test_gold_sla_has_24h_expected(self):
         gold_key = next(k for k in DEFAULT_SLAS if "gold" in k)
         sla = DEFAULT_SLAS[gold_key]
-        assert sla.expected_update_interval_hours == 24.0, (
-            "Gold SLA should have 24h expected update interval"
-        )
+        assert sla.expected_update_interval_hours == 24.0, "Gold SLA should have 24h expected update interval"
 
     def test_silver_sla_has_12h_expected(self):
         silver_key = next(k for k in DEFAULT_SLAS if "silver" in k)
         sla = DEFAULT_SLAS[silver_key]
-        assert sla.expected_update_interval_hours == 12.0, (
-            "Silver SLA should have 12h expected update interval"
-        )
+        assert sla.expected_update_interval_hours == 12.0, "Silver SLA should have 12h expected update interval"
 
     def test_bronze_sla_has_6h_expected(self):
         bronze_key = next(k for k in DEFAULT_SLAS if "bronze" in k)
         sla = DEFAULT_SLAS[bronze_key]
-        assert sla.expected_update_interval_hours == 6.0, (
-            "Bronze SLA should have 6h expected update interval"
-        )
+        assert sla.expected_update_interval_hours == 6.0, "Bronze SLA should have 6h expected update interval"
 
     def test_gold_critical_is_48h(self):
         gold_key = next(k for k in DEFAULT_SLAS if "gold" in k)
         sla = DEFAULT_SLAS[gold_key]
-        assert sla.critical_threshold_hours == 48.0, (
-            "Gold SLA critical threshold should be 48h"
-        )
+        assert sla.critical_threshold_hours == 48.0, "Gold SLA critical threshold should be 48h"
 
     def test_silver_critical_is_24h(self):
         silver_key = next(k for k in DEFAULT_SLAS if "silver" in k)
         sla = DEFAULT_SLAS[silver_key]
-        assert sla.critical_threshold_hours == 24.0, (
-            "Silver SLA critical threshold should be 24h"
-        )
+        assert sla.critical_threshold_hours == 24.0, "Silver SLA critical threshold should be 24h"
 
     def test_bronze_critical_is_12h(self):
         bronze_key = next(k for k in DEFAULT_SLAS if "bronze" in k)
         sla = DEFAULT_SLAS[bronze_key]
-        assert sla.critical_threshold_hours == 12.0, (
-            "Bronze SLA critical threshold should be 12h"
-        )
+        assert sla.critical_threshold_hours == 12.0, "Bronze SLA critical threshold should be 12h"
 
 
 @pytest.mark.unit
@@ -299,7 +286,7 @@ class TestGetAllFreshness:
             warning_threshold_hours=26.0,
             critical_threshold_hours=48.0,
         )
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = get_all_freshness(
             table_slas={"gold.test": sla},
             last_updated_map={"gold.test": now - timedelta(hours=1)},
@@ -311,7 +298,7 @@ class TestGetAllFreshness:
             "gold.trades": FreshnessSLA("gold.trades", 24.0, 26.0, 48.0),
             "silver.positions": FreshnessSLA("silver.positions", 12.0, 14.0, 24.0),
         }
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         last_updated = {
             "gold.trades": now - timedelta(hours=1),
             "silver.positions": now - timedelta(hours=2),
@@ -321,7 +308,7 @@ class TestGetAllFreshness:
 
     def test_each_entry_has_table_field(self):
         sla = FreshnessSLA("gold.test", 24.0, 26.0, 48.0)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = get_all_freshness(
             table_slas={"gold.test": sla},
             last_updated_map={"gold.test": now - timedelta(hours=1)},
@@ -330,7 +317,7 @@ class TestGetAllFreshness:
 
     def test_each_entry_has_status_field(self):
         sla = FreshnessSLA("gold.test", 24.0, 26.0, 48.0)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = get_all_freshness(
             table_slas={"gold.test": sla},
             last_updated_map={"gold.test": now - timedelta(hours=1)},
@@ -339,7 +326,7 @@ class TestGetAllFreshness:
 
     def test_each_entry_has_hours_since_update_field(self):
         sla = FreshnessSLA("gold.test", 24.0, 26.0, 48.0)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = get_all_freshness(
             table_slas={"gold.test": sla},
             last_updated_map={"gold.test": now - timedelta(hours=5)},
@@ -348,7 +335,7 @@ class TestGetAllFreshness:
 
     def test_each_entry_has_sla_hours_field(self):
         sla = FreshnessSLA("gold.test", 24.0, 26.0, 48.0)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         result = get_all_freshness(
             table_slas={"gold.test": sla},
             last_updated_map={"gold.test": now - timedelta(hours=5)},

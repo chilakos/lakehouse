@@ -17,7 +17,6 @@ from src.iceberg_utils.catalog import (
 )
 from src.synthetic.generators import generate_positions, positions_schema
 
-
 pytestmark = pytest.mark.integration
 
 

@@ -17,14 +17,14 @@ Usage::
     with open(f"/tmp/anomaly_report_{date.today()}.md", "w") as f:
         f.write(report_md)
 """
+
 from __future__ import annotations
 
 import logging
 from collections import defaultdict
-from dataclasses import dataclass, field
-from datetime import datetime, timezone, timedelta
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from enum import Enum
-from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ def detect_anomalies(
     business_hours: tuple[int, int] = (6, 22),
     bulk_download_threshold: int = _BULK_DOWNLOAD_THRESHOLD,
     high_freq_threshold: int = _HIGH_FREQ_THRESHOLD,
-    restricted_schemas: Optional[set[str]] = None,
+    restricted_schemas: set[str] | None = None,
 ) -> list[AnomalyReport]:
     """Run all anomaly detection heuristics against audit records.
 
@@ -102,7 +102,7 @@ def detect_anomalies(
     if restricted_schemas is None:
         restricted_schemas = _RESTRICTED_SCHEMAS
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     anomalies: list[AnomalyReport] = []
 
     anomalies.extend(_detect_bulk_downloads(records, bulk_download_threshold, now))
@@ -122,17 +122,19 @@ def _detect_bulk_downloads(
     anomalies = []
     for record in records:
         if record.rows_returned > threshold:
-            anomalies.append(AnomalyReport(
-                anomaly_type=AnomalyType.BULK_DOWNLOAD,
-                severity="medium",
-                description=(
-                    f"User '{record.user_name}' returned {record.rows_returned:,} rows "
-                    f"in query {record.query_id} on engine {record.engine} "
-                    f"(threshold: {threshold:,})"
-                ),
-                audit_records=[record],
-                detected_at=detected_at,
-            ))
+            anomalies.append(
+                AnomalyReport(
+                    anomaly_type=AnomalyType.BULK_DOWNLOAD,
+                    severity="medium",
+                    description=(
+                        f"User '{record.user_name}' returned {record.rows_returned:,} rows "
+                        f"in query {record.query_id} on engine {record.engine} "
+                        f"(threshold: {threshold:,})"
+                    ),
+                    audit_records=[record],
+                    detected_at=detected_at,
+                )
+            )
     return anomalies
 
 
@@ -146,10 +148,7 @@ def _is_after_hours(timestamp: datetime, business_hours: tuple[int, int]) -> boo
 
 def _touches_restricted_schema(record, restricted_schemas: set[str]) -> bool:
     """Return True if any accessed table is in a restricted schema."""
-    return any(
-        t.get("schema", "") in restricted_schemas
-        for t in record.tables_accessed
-    )
+    return any(t.get("schema", "") in restricted_schemas for t in record.tables_accessed)
 
 
 def _detect_after_hours(
@@ -163,22 +162,24 @@ def _detect_after_hours(
     for record in records:
         ts = record.timestamp
         if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+            ts = ts.replace(tzinfo=UTC)
 
         if _is_after_hours(ts, business_hours):
             touches_restricted = _touches_restricted_schema(record, restricted_schemas)
             severity = "high" if touches_restricted else "low"
-            anomalies.append(AnomalyReport(
-                anomaly_type=AnomalyType.AFTER_HOURS_ACCESS,
-                severity=severity,
-                description=(
-                    f"User '{record.user_name}' ran query at {ts.strftime('%H:%M UTC')} "
-                    f"(outside business hours {business_hours[0]:02d}:00-{business_hours[1]:02d}:00 UTC)"
-                    + (" on RESTRICTED schema" if touches_restricted else "")
-                ),
-                audit_records=[record],
-                detected_at=detected_at,
-            ))
+            anomalies.append(
+                AnomalyReport(
+                    anomaly_type=AnomalyType.AFTER_HOURS_ACCESS,
+                    severity=severity,
+                    description=(
+                        f"User '{record.user_name}' ran query at {ts.strftime('%H:%M UTC')} "
+                        f"(outside business hours {business_hours[0]:02d}:00-{business_hours[1]:02d}:00 UTC)"
+                        + (" on RESTRICTED schema" if touches_restricted else "")
+                    ),
+                    audit_records=[record],
+                    detected_at=detected_at,
+                )
+            )
     return anomalies
 
 
@@ -193,24 +194,26 @@ def _detect_restricted_access(
     for record in records:
         ts = record.timestamp
         if ts.tzinfo is None:
-            ts = ts.replace(tzinfo=timezone.utc)
+            ts = ts.replace(tzinfo=UTC)
 
         # Only flag during business hours (after-hours restricted access is caught above)
         if _is_after_hours(ts, business_hours):
             continue
 
         if _touches_restricted_schema(record, restricted_schemas):
-            anomalies.append(AnomalyReport(
-                anomaly_type=AnomalyType.UNUSUAL_RESTRICTED_ACCESS,
-                severity="high",
-                description=(
-                    f"User '{record.user_name}' accessed restricted schema(s) "
-                    f"{[t['schema'] for t in record.tables_accessed if t.get('schema') in restricted_schemas]} "
-                    f"in query {record.query_id} on {record.engine}"
-                ),
-                audit_records=[record],
-                detected_at=detected_at,
-            ))
+            anomalies.append(
+                AnomalyReport(
+                    anomaly_type=AnomalyType.UNUSUAL_RESTRICTED_ACCESS,
+                    severity="high",
+                    description=(
+                        f"User '{record.user_name}' accessed restricted schema(s) "
+                        f"{[t['schema'] for t in record.tables_accessed if t.get('schema') in restricted_schemas]} "
+                        f"in query {record.query_id} on {record.engine}"
+                    ),
+                    audit_records=[record],
+                    detected_at=detected_at,
+                )
+            )
     return anomalies
 
 
@@ -238,24 +241,23 @@ def _detect_high_frequency(
         for i, rec in enumerate(sorted_recs):
             window_start = rec.timestamp - timedelta(hours=1)
             # Keep only records within the 1-hour window
-            window_records = [
-                r for r in sorted_recs[:i + 1]
-                if r.timestamp >= window_start
-            ]
+            window_records = [r for r in sorted_recs[: i + 1] if r.timestamp >= window_start]
             if len(window_records) > max_count:
                 max_count = len(window_records)
 
         if max_count > threshold:
-            anomalies.append(AnomalyReport(
-                anomaly_type=AnomalyType.HIGH_FREQUENCY_QUERY,
-                severity="medium",
-                description=(
-                    f"User '{user_name}' submitted {max_count:,} queries in a 1-hour window "
-                    f"(threshold: {threshold:,})"
-                ),
-                audit_records=sorted_recs[:10],  # Include first 10 as evidence
-                detected_at=detected_at,
-            ))
+            anomalies.append(
+                AnomalyReport(
+                    anomaly_type=AnomalyType.HIGH_FREQUENCY_QUERY,
+                    severity="medium",
+                    description=(
+                        f"User '{user_name}' submitted {max_count:,} queries in a 1-hour window "
+                        f"(threshold: {threshold:,})"
+                    ),
+                    audit_records=sorted_recs[:10],  # Include first 10 as evidence
+                    detected_at=detected_at,
+                )
+            )
 
     return anomalies
 
@@ -271,21 +273,23 @@ def format_anomaly_report(anomalies: list[AnomalyReport]) -> str:
         Markdown string suitable for saving as .md file or sending via email.
         Includes summary counts, severity breakdown, and individual anomaly details.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     lines = [
-        f"# Daily Audit Anomaly Report",
-        f"",
+        "# Daily Audit Anomaly Report",
+        "",
         f"**Generated:** {now.strftime('%Y-%m-%d %H:%M UTC')}",
         f"**Total Anomalies Detected:** {len(anomalies)}",
-        f"",
+        "",
     ]
 
     if not anomalies:
-        lines.extend([
-            "## Status: CLEAN",
-            "",
-            "No suspicious access patterns detected in the audit data.",
-        ])
+        lines.extend(
+            [
+                "## Status: CLEAN",
+                "",
+                "No suspicious access patterns detected in the audit data.",
+            ]
+        )
         return "\n".join(lines)
 
     # Summary by severity
@@ -295,22 +299,26 @@ def format_anomaly_report(anomalies: list[AnomalyReport]) -> str:
         severity_counts[a.severity] += 1
         type_counts[a.anomaly_type.value] += 1
 
-    lines.extend([
-        "## Summary",
-        "",
-        "| Severity | Count |",
-        "|----------|-------|",
-    ])
+    lines.extend(
+        [
+            "## Summary",
+            "",
+            "| Severity | Count |",
+            "|----------|-------|",
+        ]
+    )
     for sev in ["high", "medium", "low"]:
         count = severity_counts.get(sev, 0)
         if count:
             lines.append(f"| {sev.upper()} | {count} |")
 
-    lines.extend([
-        "",
-        "| Anomaly Type | Count |",
-        "|-------------|-------|",
-    ])
+    lines.extend(
+        [
+            "",
+            "| Anomaly Type | Count |",
+            "|-------------|-------|",
+        ]
+    )
     for atype, count in sorted(type_counts.items()):
         lines.append(f"| {atype} | {count} |")
 
@@ -322,24 +330,30 @@ def format_anomaly_report(anomalies: list[AnomalyReport]) -> str:
         by_type[a.anomaly_type].append(a)
 
     for atype, type_anomalies in sorted(by_type.items(), key=lambda x: x[0].value):
-        lines.extend([
-            f"## {atype.value.replace('_', ' ').title()} ({len(type_anomalies)} events)",
-            "",
-        ])
-        for idx, anomaly in enumerate(type_anomalies, 1):
-            lines.extend([
-                f"### Event {idx} - Severity: {anomaly.severity.upper()}",
-                f"",
-                f"**Description:** {anomaly.description}",
-                f"**Detected at:** {anomaly.detected_at.strftime('%Y-%m-%d %H:%M UTC')}",
-                f"**Evidence records:** {len(anomaly.audit_records)}",
+        lines.extend(
+            [
+                f"## {atype.value.replace('_', ' ').title()} ({len(type_anomalies)} events)",
                 "",
-            ])
+            ]
+        )
+        for idx, anomaly in enumerate(type_anomalies, 1):
+            lines.extend(
+                [
+                    f"### Event {idx} - Severity: {anomaly.severity.upper()}",
+                    "",
+                    f"**Description:** {anomaly.description}",
+                    f"**Detected at:** {anomaly.detected_at.strftime('%Y-%m-%d %H:%M UTC')}",
+                    f"**Evidence records:** {len(anomaly.audit_records)}",
+                    "",
+                ]
+            )
             if anomaly.audit_records:
-                lines.extend([
-                    "| Timestamp | User | Engine | Query ID |",
-                    "|-----------|------|--------|----------|",
-                ])
+                lines.extend(
+                    [
+                        "| Timestamp | User | Engine | Query ID |",
+                        "|-----------|------|--------|----------|",
+                    ]
+                )
                 for rec in anomaly.audit_records[:5]:  # Show first 5 records
                     ts = rec.timestamp.strftime("%Y-%m-%d %H:%M")
                     lines.append(f"| {ts} | {rec.user_name} | {rec.engine} | {rec.query_id[:20]}... |")

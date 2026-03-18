@@ -30,12 +30,13 @@ Usage::
 from __future__ import annotations
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 try:
     import requests
+
     _REQUESTS_AVAILABLE = True
 except ImportError:
     _REQUESTS_AVAILABLE = False
@@ -48,8 +49,8 @@ def register_legacy_lineage_stub(
     source_name: str,
     dataset_name: str,
     description: str,
-    fields: Optional[list[dict]] = None,
-    tags: Optional[list[str]] = None,
+    fields: list[dict] | None = None,
+    tags: list[str] | None = None,
 ) -> dict:
     """Register a legacy dataset stub in Marquez via REST API.
 
@@ -112,19 +113,13 @@ def register_legacy_lineage_stub(
         )
         return response.json()
     except requests.exceptions.ConnectionError as exc:
-        logger.warning(
-            "Cannot connect to Marquez at %s: %s", marquez_url, exc
-        )
+        logger.warning("Cannot connect to Marquez at %s: %s", marquez_url, exc)
         return {"error": True, "message": f"Connection error: {exc}"}
     except requests.exceptions.HTTPError as exc:
-        logger.warning(
-            "HTTP error registering stub %s.%s: %s", source_name, dataset_name, exc
-        )
+        logger.warning("HTTP error registering stub %s.%s: %s", source_name, dataset_name, exc)
         return {"error": True, "message": f"HTTP error: {exc}"}
     except Exception as exc:
-        logger.warning(
-            "Unexpected error registering stub %s.%s: %s", source_name, dataset_name, exc
-        )
+        logger.warning("Unexpected error registering stub %s.%s: %s", source_name, dataset_name, exc)
         return {"error": True, "message": f"Unexpected error: {exc}"}
 
 
@@ -149,7 +144,11 @@ def register_teradata_sources(
         {
             "source_name": "teradata.dw",
             "dataset_name": "trades_history",
-            "description": "Legacy Teradata trade history table. Contains all historical trade executions pre-migration. Source of truth for bronze.raw_trades_history in the lakehouse.",
+            "description": (
+                "Legacy Teradata trade history table. Contains all historical trade"
+                " executions pre-migration. Source of truth for"
+                " bronze.raw_trades_history in the lakehouse."
+            ),
             "fields": [
                 {"name": "trade_id", "type": "INTEGER"},
                 {"name": "trade_date", "type": "DATE"},
@@ -165,7 +164,11 @@ def register_teradata_sources(
         {
             "source_name": "teradata.dw",
             "dataset_name": "positions_daily",
-            "description": "Legacy Teradata daily positions snapshot. End-of-day net positions per security per business unit. Source of truth for bronze.raw_positions_daily in the lakehouse.",
+            "description": (
+                "Legacy Teradata daily positions snapshot. End-of-day net positions"
+                " per security per business unit. Source of truth for"
+                " bronze.raw_positions_daily in the lakehouse."
+            ),
             "fields": [
                 {"name": "position_date", "type": "DATE"},
                 {"name": "security_id", "type": "VARCHAR"},
@@ -178,7 +181,11 @@ def register_teradata_sources(
         {
             "source_name": "teradata.dw",
             "dataset_name": "counterparty_master",
-            "description": "Legacy Teradata counterparty reference data. Master data for all trading counterparties including legal entity details and credit ratings. Source for silver.counterparty_master in the lakehouse.",
+            "description": (
+                "Legacy Teradata counterparty reference data. Master data for all"
+                " trading counterparties including legal entity details and credit"
+                " ratings. Source for silver.counterparty_master in the lakehouse."
+            ),
             "fields": [
                 {"name": "counterparty_id", "type": "INTEGER"},
                 {"name": "legal_name", "type": "VARCHAR"},
@@ -233,7 +240,11 @@ def register_snowflake_sources(
         {
             "source_name": "snowflake.analytics",
             "dataset_name": "risk_metrics",
-            "description": "Snowflake risk analytics export. Aggregated VaR, Greeks, and stress-test results exported nightly from Snowflake risk platform. Source for gold.risk_metrics_daily in the lakehouse.",
+            "description": (
+                "Snowflake risk analytics export. Aggregated VaR, Greeks, and"
+                " stress-test results exported nightly from Snowflake risk platform."
+                " Source for gold.risk_metrics_daily in the lakehouse."
+            ),
             "fields": [
                 {"name": "metric_date", "type": "DATE"},
                 {"name": "business_unit", "type": "VARCHAR"},
@@ -247,7 +258,11 @@ def register_snowflake_sources(
         {
             "source_name": "snowflake.analytics",
             "dataset_name": "trading_summary",
-            "description": "Snowflake trading summary export. Daily P&L, volume, and commission summaries by business unit and security type. Source for gold.trading_summary_daily in the lakehouse.",
+            "description": (
+                "Snowflake trading summary export. Daily P&L, volume, and commission"
+                " summaries by business unit and security type. Source for"
+                " gold.trading_summary_daily in the lakehouse."
+            ),
             "fields": [
                 {"name": "summary_date", "type": "DATE"},
                 {"name": "business_unit", "type": "VARCHAR"},

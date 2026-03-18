@@ -227,12 +227,12 @@ class TestClassificationRules:
 
         for rule in CLASSIFICATION_RULES:
             assert isinstance(rule, tuple), f"Each rule should be a tuple, got {type(rule)}"
-            assert len(rule) == 2, f"Each rule should have 2 elements (pattern, level)"
+            assert len(rule) == 2, "Each rule should have 2 elements (pattern, level)"
 
     def test_classification_rules_have_sensitive_patterns(self):
         from src.governance.classification import CLASSIFICATION_RULES, SensitivityLevel
 
-        patterns = [rule[0] for rule in CLASSIFICATION_RULES]
+        [rule[0] for rule in CLASSIFICATION_RULES]
         levels = [rule[1] for rule in CLASSIFICATION_RULES]
 
         # Should have RESTRICTED patterns

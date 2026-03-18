@@ -53,9 +53,7 @@ def _bedrock_available() -> bool:
         return True
     # Check for AWS credentials
     return bool(
-        os.environ.get("AWS_ACCESS_KEY_ID")
-        or os.environ.get("AWS_SESSION_TOKEN")
-        or os.environ.get("AWS_PROFILE")
+        os.environ.get("AWS_ACCESS_KEY_ID") or os.environ.get("AWS_SESSION_TOKEN") or os.environ.get("AWS_PROFILE")
     )
 
 
@@ -110,9 +108,7 @@ class TestNLAccuracyTrading:
         results = run_evaluation(engine, conn, simple_dataset)
         accuracy = evaluate_accuracy(results)
 
-        assert accuracy["accuracy_pct"] >= 90.0, (
-            f"Trading simple accuracy {accuracy['accuracy_pct']}% < 90% threshold"
-        )
+        assert accuracy["accuracy_pct"] >= 90.0, f"Trading simple accuracy {accuracy['accuracy_pct']}% < 90% threshold"
 
     def test_nl_accuracy_trading_complex(self):
         """Run evaluation on trading golden dataset, complex only, assert >= 70%."""
@@ -131,9 +127,7 @@ class TestNLAccuracyTrading:
         results = run_evaluation(engine, conn, complex_dataset)
         accuracy = evaluate_accuracy(results)
 
-        assert accuracy["accuracy_pct"] >= 70.0, (
-            f"Trading complex accuracy {accuracy['accuracy_pct']}% < 70% threshold"
-        )
+        assert accuracy["accuracy_pct"] >= 70.0, f"Trading complex accuracy {accuracy['accuracy_pct']}% < 70% threshold"
 
 
 @pytest.mark.integration
@@ -156,9 +150,7 @@ class TestNLAccuracyRisk:
         results = run_evaluation(engine, conn, simple_dataset)
         accuracy = evaluate_accuracy(results)
 
-        assert accuracy["accuracy_pct"] >= 90.0, (
-            f"Risk simple accuracy {accuracy['accuracy_pct']}% < 90% threshold"
-        )
+        assert accuracy["accuracy_pct"] >= 90.0, f"Risk simple accuracy {accuracy['accuracy_pct']}% < 90% threshold"
 
     def test_nl_accuracy_risk_complex(self):
         """Run evaluation on risk golden dataset, complex only, assert >= 70%."""
@@ -176,6 +168,4 @@ class TestNLAccuracyRisk:
         results = run_evaluation(engine, conn, complex_dataset)
         accuracy = evaluate_accuracy(results)
 
-        assert accuracy["accuracy_pct"] >= 70.0, (
-            f"Risk complex accuracy {accuracy['accuracy_pct']}% < 70% threshold"
-        )
+        assert accuracy["accuracy_pct"] >= 70.0, f"Risk complex accuracy {accuracy['accuracy_pct']}% < 70% threshold"

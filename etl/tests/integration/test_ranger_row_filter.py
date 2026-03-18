@@ -83,12 +83,8 @@ class TestRangerRowFiltering:
         rows = cursor.fetchall()
 
         business_units = {row[0] for row in rows}
-        assert "investment_banking" not in business_units, (
-            "wealth_mgmt user should not see investment_banking rows"
-        )
-        assert "risk_management" not in business_units, (
-            "wealth_mgmt user should not see risk_management rows"
-        )
+        assert "investment_banking" not in business_units, "wealth_mgmt user should not see investment_banking rows"
+        assert "risk_management" not in business_units, "wealth_mgmt user should not see risk_management rows"
 
     def test_data_admin_sees_all_rows(self, trino_conn_data_admin):
         """data_admin should see all rows (no row filter applied)."""
@@ -98,9 +94,7 @@ class TestRangerRowFiltering:
 
         business_units = {row[0] for row in rows}
         # Admin should see at least multiple business units
-        assert len(business_units) > 1, (
-            f"data_admin should see all business units, got: {business_units}"
-        )
+        assert len(business_units) > 1, f"data_admin should see all business units, got: {business_units}"
 
     def test_row_filter_applies_on_select_star(self, trino_conn_wealth_mgmt):
         """Row filter should apply on SELECT * queries."""
@@ -116,9 +110,7 @@ class TestRangerRowFiltering:
         if "business_unit" in columns:
             bu_idx = columns.index("business_unit")
             for row in rows:
-                assert row[bu_idx] == "wealth_mgmt", (
-                    f"SELECT * should only return wealth_mgmt rows, got: {row[bu_idx]}"
-                )
+                assert row[bu_idx] == "wealth_mgmt", f"SELECT * should only return wealth_mgmt rows, got: {row[bu_idx]}"
 
     def test_row_filter_applies_on_count(self, trino_conn_wealth_mgmt, trino_conn_data_admin):
         """Row filter should apply on SELECT count(*) -- wealth_mgmt < total count."""

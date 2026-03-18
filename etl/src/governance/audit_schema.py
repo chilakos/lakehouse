@@ -21,14 +21,15 @@ Usage::
     record = normalize_trino_audit(trino_event_payload)
     row = record.to_insert_values()
 """
+
 from __future__ import annotations
 
 import json
 import logging
 import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Optional
+from dataclasses import dataclass
+from datetime import UTC, datetime
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -164,10 +165,12 @@ def normalize_trino_audit(event_payload: dict) -> AuditRecord:
     tables_accessed = []
     raw_tables = metadata.get("tables", [])
     for t in raw_tables:
-        tables_accessed.append({
-            "schema": t.get("schema", ""),
-            "table": t.get("table", ""),
-        })
+        tables_accessed.append(
+            {
+                "schema": t.get("schema", ""),
+                "table": t.get("table", ""),
+            }
+        )
 
     # Parse column-level access (columns are per-table in Trino event)
     columns_accessed = []
@@ -175,11 +178,13 @@ def normalize_trino_audit(event_payload: dict) -> AuditRecord:
         schema = t.get("schema", "")
         table = t.get("table", "")
         for col in t.get("columns", []):
-            columns_accessed.append({
-                "schema": schema,
-                "table": table,
-                "column": col if isinstance(col, str) else col.get("name", ""),
-            })
+            columns_accessed.append(
+                {
+                    "schema": schema,
+                    "table": table,
+                    "column": col if isinstance(col, str) else col.get("name", ""),
+                }
+            )
 
     rows_returned = int(statistics.get("outputRows", 0))
     bytes_scanned = int(statistics.get("outputBytes", 0))
@@ -193,9 +198,9 @@ def normalize_trino_audit(event_payload: dict) -> AuditRecord:
         try:
             timestamp = datetime.fromisoformat(str(ts_str).replace("Z", "+00:00"))
         except (ValueError, AttributeError):
-            timestamp = datetime.now(timezone.utc)
+            timestamp = datetime.now(UTC)
     else:
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
 
     return AuditRecord(
         audit_id=str(uuid.uuid4()),
@@ -242,9 +247,9 @@ def normalize_teradata_audit(dbql_row: dict) -> AuditRecord:
     # Parse timestamp
     ts_str = dbql_row.get("StartTime", "")
     try:
-        timestamp = datetime.strptime(str(ts_str), "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+        timestamp = datetime.strptime(str(ts_str), "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC)
     except (ValueError, TypeError):
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
 
     rows_returned = int(dbql_row.get("NumResultRows", 0) or 0)
     req_io_kb = float(dbql_row.get("ReqIOKB", 0) or 0)
@@ -252,7 +257,7 @@ def normalize_teradata_audit(dbql_row: dict) -> AuditRecord:
 
     # Access is granted if no error; common denial codes: 3523 (no SELECT access),
     # 5012 (no access to database), etc.
-    access_granted = (error_code == 0)
+    access_granted = error_code == 0
 
     # Extract tables from primary database + table in row
     # Note: full table list requires joining DBC.DBQLObjTbl
@@ -265,11 +270,13 @@ def normalize_teradata_audit(dbql_row: dict) -> AuditRecord:
     columns_accessed = []
     raw_columns = dbql_row.get("columns", [])
     for col in raw_columns:
-        columns_accessed.append({
-            "schema": col.get("DatabaseName", ""),
-            "table": col.get("TableName", ""),
-            "column": col.get("ColumnName", ""),
-        })
+        columns_accessed.append(
+            {
+                "schema": col.get("DatabaseName", ""),
+                "table": col.get("TableName", ""),
+                "column": col.get("ColumnName", ""),
+            }
+        )
         # Add table to tables_accessed if not already present
         tbl_entry = {"schema": col.get("DatabaseName", ""), "table": col.get("TableName", "")}
         if tbl_entry not in tables_accessed:
@@ -333,9 +340,9 @@ def normalize_snowflake_audit(access_history_row: dict) -> AuditRecord:
         timestamp = datetime.fromisoformat(ts_clean.replace(".000+00:00", "+00:00").replace("+00:00+00:00", "+00:00"))
     except (ValueError, TypeError):
         try:
-            timestamp = datetime.strptime(str(ts_str)[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+            timestamp = datetime.strptime(str(ts_str)[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC)
         except (ValueError, TypeError):
-            timestamp = datetime.now(timezone.utc)
+            timestamp = datetime.now(UTC)
 
     rows_returned = int(access_history_row.get("ROWS_PRODUCED", 0) or 0)
     bytes_scanned = int(access_history_row.get("BYTES_SCANNED", 0) or 0)
@@ -374,11 +381,13 @@ def normalize_snowflake_audit(access_history_row: dict) -> AuditRecord:
         for col in obj.get("columns", []):
             col_name = col.get("columnName", "")
             if col_name:
-                columns_accessed.append({
-                    "schema": schema,
-                    "table": table,
-                    "column": col_name,
-                })
+                columns_accessed.append(
+                    {
+                        "schema": schema,
+                        "table": table,
+                        "column": col_name,
+                    }
+                )
 
     return AuditRecord(
         audit_id=str(uuid.uuid4()),

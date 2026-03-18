@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import time
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -40,7 +40,7 @@ class BenchmarkResult:
     latency_ms: float
     rows_returned: int
     bytes_scanned: int | None = None
-    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(UTC).isoformat())
     iteration: int = 0
 
 
@@ -117,10 +117,7 @@ def generate_benchmark_queries(namespace: str) -> list[dict]:
         },
         {
             "name": "aggregation",
-            "sql": (
-                f"SELECT symbol, SUM(notional) as total_notional "
-                f"FROM {namespace}.trades GROUP BY symbol"
-            ),
+            "sql": (f"SELECT symbol, SUM(notional) as total_notional FROM {namespace}.trades GROUP BY symbol"),
         },
         {
             "name": "join_trades_positions",
@@ -175,8 +172,7 @@ def format_results(results: list[BenchmarkResult]) -> str:
         rows = group[0].rows_returned
 
         lines.append(
-            f"| {query_name} | {engine} | {min_ms:.1f} | {avg_ms:.1f} | "
-            f"{max_ms:.1f} | {p50_ms:.1f} | {rows} |"
+            f"| {query_name} | {engine} | {min_ms:.1f} | {avg_ms:.1f} | {max_ms:.1f} | {p50_ms:.1f} | {rows} |"
         )
 
     return "\n".join(lines)

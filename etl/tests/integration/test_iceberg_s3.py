@@ -16,7 +16,6 @@ from src.iceberg_utils.catalog import (
 )
 from src.synthetic.generators import generate_trades, trades_schema
 
-
 pytestmark = pytest.mark.integration
 
 

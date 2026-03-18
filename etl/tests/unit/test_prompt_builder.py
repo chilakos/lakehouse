@@ -6,8 +6,6 @@ with Cube YAML metric context and domain-specific few-shot examples.
 
 from __future__ import annotations
 
-import pytest
-
 from src.semantic.prompt_builder import (
     SYSTEM_PROMPT,
     build_few_shot_examples,

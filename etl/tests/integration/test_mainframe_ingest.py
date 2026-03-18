@@ -141,6 +141,8 @@ class TestMainframeBronzePipeline:
             batch_id="test-batch-004",
         )
 
-        with patch("src.pipelines.bronze.mainframe_ingest.is_cobrix_available", return_value=False):
-            with pytest.raises(CobrixNotAvailableError):
-                pipeline.extract()
+        with (
+            patch("src.pipelines.bronze.mainframe_ingest.is_cobrix_available", return_value=False),
+            pytest.raises(CobrixNotAvailableError),
+        ):
+            pipeline.extract()

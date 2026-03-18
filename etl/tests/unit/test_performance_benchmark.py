@@ -6,8 +6,7 @@ with mocked Trino connections, and generate_benchmark_report statistics.
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
-import time
+from unittest.mock import MagicMock
 
 import pytest
 

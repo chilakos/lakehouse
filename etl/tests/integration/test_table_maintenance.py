@@ -28,7 +28,6 @@ from src.iceberg_utils.maintenance import (
 )
 from src.synthetic.generators import generate_trades, trades_schema
 
-
 pytestmark = pytest.mark.integration
 
 
@@ -59,9 +58,7 @@ class TestTableCompaction:
             write_data(spark_session, ns, "trades", batch, schema)
 
         # Count files before compaction
-        files_before = spark_session.sql(
-            f"SELECT * FROM lakehouse.{ns}.trades.files"
-        ).count()
+        files_before = spark_session.sql(f"SELECT * FROM lakehouse.{ns}.trades.files").count()
         assert files_before >= 10, f"Should have at least 10 data files, got {files_before}"
 
         # Run compaction
@@ -69,9 +66,7 @@ class TestTableCompaction:
         assert result["operation"] == "compact_table"
 
         # Count files after compaction
-        files_after = spark_session.sql(
-            f"SELECT * FROM lakehouse.{ns}.trades.files"
-        ).count()
+        files_after = spark_session.sql(f"SELECT * FROM lakehouse.{ns}.trades.files").count()
         assert files_after < files_before, (
             f"File count should decrease after compaction: before={files_before}, after={files_after}"
         )
@@ -108,15 +103,11 @@ class TestSnapshotExpiration:
             write_data(spark_session, ns, "trades", batch, schema)
 
         # Count snapshots before expiration
-        snapshots_before = spark_session.sql(
-            f"SELECT * FROM lakehouse.{ns}.trades.snapshots"
-        ).count()
+        snapshots_before = spark_session.sql(f"SELECT * FROM lakehouse.{ns}.trades.snapshots").count()
         assert snapshots_before >= 5, f"Should have at least 5 snapshots, got {snapshots_before}"
 
         # Expire old snapshots (retain last 2)
-        result = expire_snapshots(
-            spark_session, ns, "trades", older_than_days=0, retain_last=2
-        )
+        result = expire_snapshots(spark_session, ns, "trades", older_than_days=0, retain_last=2)
         assert result["operation"] == "expire_snapshots"
 
         # Verify current data is intact

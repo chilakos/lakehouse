@@ -98,7 +98,8 @@ Q: Which sector has the highest expected shortfall?
 A: SELECT sector, SUM(total_expected_shortfall) AS es FROM gold.risk_exposure GROUP BY sector ORDER BY es DESC LIMIT 1
 
 Q: Compare VaR 95 vs VaR 99 by currency.
-A: SELECT currency, SUM(total_var_95) AS var_95, SUM(total_var_99) AS var_99 FROM gold.risk_exposure GROUP BY currency"""
+A: SELECT currency, SUM(total_var_95) AS var_95, SUM(total_var_99) AS var_99 \
+FROM gold.risk_exposure GROUP BY currency"""
 
 
 def build_few_shot_examples(domain: str | None) -> str:

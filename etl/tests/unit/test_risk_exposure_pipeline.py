@@ -45,7 +45,11 @@ class TestRiskExposurePipelineSchema:
     """Test the Gold schema for risk exposure."""
 
     def test_risk_exposure_pipeline_schema(self):
-        """Gold schema has account_id, sector, currency, total_market_value, total_var_95, total_var_99, total_expected_shortfall, position_count."""
+        """Gold schema has expected risk exposure fields.
+
+        Checks account_id, sector, currency, total_market_value,
+        total_var_95, total_var_99, total_expected_shortfall, position_count.
+        """
         from src.pipelines.gold.risk_exposure import RiskExposureGoldPipeline
 
         pipeline = RiskExposureGoldPipeline(spark=MagicMock())
@@ -92,6 +96,7 @@ class TestPyprojectDependencies:
 
     def _load_pyproject(self):
         from pathlib import Path
+
         return (Path(__file__).resolve().parents[2] / "pyproject.toml").read_text()
 
     def test_pyproject_has_pyyaml(self):

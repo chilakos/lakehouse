@@ -3,13 +3,11 @@
 Tests AuditRecord dataclass, AUDIT_SCHEMA constant, and cross-engine
 normalization functions (Trino, Teradata, Snowflake).
 """
+
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from unittest.mock import patch
-
-import pytest
+from datetime import UTC, datetime
 
 
 class TestAuditRecordFields:
@@ -17,9 +15,10 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_audit_id(self):
         from src.governance.audit_schema import AuditRecord
+
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="alice",
             query_id="q-001",
@@ -37,7 +36,8 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_timestamp(self):
         from src.governance.audit_schema import AuditRecord
-        ts = datetime(2024, 1, 15, 10, 30, 0, tzinfo=timezone.utc)
+
+        ts = datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC)
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
             timestamp=ts,
@@ -57,9 +57,10 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_engine(self):
         from src.governance.audit_schema import AuditRecord
+
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="snowflake",
             user_name="alice",
             query_id="q-001",
@@ -76,9 +77,10 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_user_name(self):
         from src.governance.audit_schema import AuditRecord
+
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="bob_analyst",
             query_id="q-001",
@@ -95,9 +97,10 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_query_id(self):
         from src.governance.audit_schema import AuditRecord
+
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="alice",
             query_id="20240115_103000_12345_xyz",
@@ -114,9 +117,10 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_query_text(self):
         from src.governance.audit_schema import AuditRecord
+
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="alice",
             query_id="q-001",
@@ -133,10 +137,11 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_tables_accessed(self):
         from src.governance.audit_schema import AuditRecord
+
         tables = [{"schema": "gold", "table": "trades_daily"}]
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="alice",
             query_id="q-001",
@@ -155,10 +160,11 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_columns_accessed(self):
         from src.governance.audit_schema import AuditRecord
+
         columns = [{"schema": "gold", "table": "accounts", "column": "account_id"}]
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="alice",
             query_id="q-001",
@@ -175,9 +181,10 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_rows_returned(self):
         from src.governance.audit_schema import AuditRecord
+
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="alice",
             query_id="q-001",
@@ -194,9 +201,10 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_bytes_scanned(self):
         from src.governance.audit_schema import AuditRecord
+
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="alice",
             query_id="q-001",
@@ -213,10 +221,11 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_masked_columns(self):
         from src.governance.audit_schema import AuditRecord
+
         masked = [{"schema": "sensitive_ns", "table": "customers", "column": "ssn"}]
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="alice",
             query_id="q-001",
@@ -233,9 +242,10 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_access_granted(self):
         from src.governance.audit_schema import AuditRecord
+
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="alice",
             query_id="q-001",
@@ -252,9 +262,10 @@ class TestAuditRecordFields:
 
     def test_audit_record_has_source_engine_audit_id(self):
         from src.governance.audit_schema import AuditRecord
+
         r = AuditRecord(
             audit_id=str(uuid.uuid4()),
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             engine="trino",
             user_name="alice",
             query_id="q-001",
@@ -275,9 +286,10 @@ class TestAuditRecordMethods:
 
     def _make_record(self):
         from src.governance.audit_schema import AuditRecord
+
         return AuditRecord(
             audit_id="test-uuid-1234",
-            timestamp=datetime(2024, 1, 15, 10, 30, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2024, 1, 15, 10, 30, 0, tzinfo=UTC),
             engine="trino",
             user_name="alice",
             query_id="q-001",
@@ -296,10 +308,19 @@ class TestAuditRecordMethods:
         d = r.to_dict()
         assert isinstance(d, dict)
         expected_keys = [
-            "audit_id", "timestamp", "engine", "user_name", "query_id",
-            "query_text", "tables_accessed", "columns_accessed",
-            "rows_returned", "bytes_scanned", "masked_columns",
-            "access_granted", "source_engine_audit_id",
+            "audit_id",
+            "timestamp",
+            "engine",
+            "user_name",
+            "query_id",
+            "query_text",
+            "tables_accessed",
+            "columns_accessed",
+            "rows_returned",
+            "bytes_scanned",
+            "masked_columns",
+            "access_granted",
+            "source_engine_audit_id",
         ]
         for key in expected_keys:
             assert key in d, f"Missing key: {key}"
@@ -319,7 +340,8 @@ class TestAuditRecordMethods:
         assert isinstance(vals, (tuple, list))
 
     def test_to_insert_values_length_matches_schema(self):
-        from src.governance.audit_schema import AUDIT_SCHEMA, AuditRecord
+        from src.governance.audit_schema import AUDIT_SCHEMA
+
         r = self._make_record()
         vals = r.to_insert_values()
         assert len(vals) == len(AUDIT_SCHEMA)
@@ -330,21 +352,33 @@ class TestAuditSchema:
 
     def test_audit_schema_is_dict(self):
         from src.governance.audit_schema import AUDIT_SCHEMA
+
         assert isinstance(AUDIT_SCHEMA, dict)
 
     def test_audit_schema_has_all_field_definitions(self):
         from src.governance.audit_schema import AUDIT_SCHEMA
+
         expected_fields = [
-            "audit_id", "timestamp", "engine", "user_name", "query_id",
-            "query_text", "tables_accessed", "columns_accessed",
-            "rows_returned", "bytes_scanned", "masked_columns",
-            "access_granted", "source_engine_audit_id",
+            "audit_id",
+            "timestamp",
+            "engine",
+            "user_name",
+            "query_id",
+            "query_text",
+            "tables_accessed",
+            "columns_accessed",
+            "rows_returned",
+            "bytes_scanned",
+            "masked_columns",
+            "access_granted",
+            "source_engine_audit_id",
         ]
         for field in expected_fields:
             assert field in AUDIT_SCHEMA, f"AUDIT_SCHEMA missing field: {field}"
 
     def test_audit_schema_values_are_strings(self):
         from src.governance.audit_schema import AUDIT_SCHEMA
+
         for field, sql_type in AUDIT_SCHEMA.items():
             assert isinstance(sql_type, str), f"AUDIT_SCHEMA[{field}] should be string SQL type"
 
@@ -385,32 +419,38 @@ class TestNormalizeTrinoAudit:
 
     def test_normalize_trino_audit_returns_audit_record(self):
         from src.governance.audit_schema import AuditRecord, normalize_trino_audit
+
         payload = self._sample_trino_payload()
         result = normalize_trino_audit(payload)
         assert isinstance(result, AuditRecord)
 
     def test_normalize_trino_audit_sets_engine(self):
         from src.governance.audit_schema import normalize_trino_audit
+
         result = normalize_trino_audit(self._sample_trino_payload())
         assert result.engine == "trino"
 
     def test_normalize_trino_audit_sets_user(self):
         from src.governance.audit_schema import normalize_trino_audit
+
         result = normalize_trino_audit(self._sample_trino_payload())
         assert result.user_name == "alice"
 
     def test_normalize_trino_audit_sets_query_id(self):
         from src.governance.audit_schema import normalize_trino_audit
+
         result = normalize_trino_audit(self._sample_trino_payload())
         assert result.query_id == "20240115_103000_12345_xyz"
 
     def test_normalize_trino_audit_sets_query_text(self):
         from src.governance.audit_schema import normalize_trino_audit
+
         result = normalize_trino_audit(self._sample_trino_payload())
         assert "gold.trades" in result.query_text
 
     def test_normalize_trino_audit_extracts_tables(self):
         from src.governance.audit_schema import normalize_trino_audit
+
         result = normalize_trino_audit(self._sample_trino_payload())
         assert len(result.tables_accessed) >= 1
         table_names = [t["table"] for t in result.tables_accessed]
@@ -418,27 +458,32 @@ class TestNormalizeTrinoAudit:
 
     def test_normalize_trino_audit_sets_rows_returned(self):
         from src.governance.audit_schema import normalize_trino_audit
+
         result = normalize_trino_audit(self._sample_trino_payload())
         assert result.rows_returned == 100
 
     def test_normalize_trino_audit_sets_bytes_scanned(self):
         from src.governance.audit_schema import normalize_trino_audit
+
         result = normalize_trino_audit(self._sample_trino_payload())
         assert result.bytes_scanned == 8192
 
     def test_normalize_trino_audit_generates_uuid(self):
         from src.governance.audit_schema import normalize_trino_audit
+
         result = normalize_trino_audit(self._sample_trino_payload())
         assert result.audit_id is not None
         assert len(result.audit_id) > 0
 
     def test_normalize_trino_audit_sets_access_granted_finished(self):
         from src.governance.audit_schema import normalize_trino_audit
+
         result = normalize_trino_audit(self._sample_trino_payload())
         assert result.access_granted is True
 
     def test_normalize_trino_audit_sets_access_denied_for_failed(self):
         from src.governance.audit_schema import normalize_trino_audit
+
         payload = self._sample_trino_payload()
         payload["queryState"] = "FAILED"
         payload["queryCompletedEvent"]["metadata"]["queryState"] = "FAILED"
@@ -470,36 +515,43 @@ class TestNormalizeTeradataAudit:
 
     def test_normalize_teradata_audit_returns_audit_record(self):
         from src.governance.audit_schema import AuditRecord, normalize_teradata_audit
+
         result = normalize_teradata_audit(self._sample_dbql_row())
         assert isinstance(result, AuditRecord)
 
     def test_normalize_teradata_audit_sets_engine(self):
         from src.governance.audit_schema import normalize_teradata_audit
+
         result = normalize_teradata_audit(self._sample_dbql_row())
         assert result.engine == "teradata"
 
     def test_normalize_teradata_audit_sets_user(self):
         from src.governance.audit_schema import normalize_teradata_audit
+
         result = normalize_teradata_audit(self._sample_dbql_row())
         assert result.user_name == "tduser01"
 
     def test_normalize_teradata_audit_sets_query_id(self):
         from src.governance.audit_schema import normalize_teradata_audit
+
         result = normalize_teradata_audit(self._sample_dbql_row())
         assert result.query_id == "12345678901234567"
 
     def test_normalize_teradata_audit_sets_rows_returned(self):
         from src.governance.audit_schema import normalize_teradata_audit
+
         result = normalize_teradata_audit(self._sample_dbql_row())
         assert result.rows_returned == 5000
 
     def test_normalize_teradata_audit_access_granted_no_error(self):
         from src.governance.audit_schema import normalize_teradata_audit
+
         result = normalize_teradata_audit(self._sample_dbql_row())
         assert result.access_granted is True
 
     def test_normalize_teradata_audit_access_denied_with_error(self):
         from src.governance.audit_schema import normalize_teradata_audit
+
         row = self._sample_dbql_row()
         row["ErrorCode"] = 3523  # Teradata "No SELECT access" error
         result = normalize_teradata_audit(row)
@@ -507,6 +559,7 @@ class TestNormalizeTeradataAudit:
 
     def test_normalize_teradata_audit_source_engine_id(self):
         from src.governance.audit_schema import normalize_teradata_audit
+
         result = normalize_teradata_audit(self._sample_dbql_row())
         assert result.source_engine_audit_id == "12345678901234567"
 
@@ -538,46 +591,55 @@ class TestNormalizeSnowflakeAudit:
 
     def test_normalize_snowflake_audit_returns_audit_record(self):
         from src.governance.audit_schema import AuditRecord, normalize_snowflake_audit
+
         result = normalize_snowflake_audit(self._sample_access_history_row())
         assert isinstance(result, AuditRecord)
 
     def test_normalize_snowflake_audit_sets_engine(self):
         from src.governance.audit_schema import normalize_snowflake_audit
+
         result = normalize_snowflake_audit(self._sample_access_history_row())
         assert result.engine == "snowflake"
 
     def test_normalize_snowflake_audit_sets_user(self):
         from src.governance.audit_schema import normalize_snowflake_audit
+
         result = normalize_snowflake_audit(self._sample_access_history_row())
         assert result.user_name == "SNOWFLAKE_USER"
 
     def test_normalize_snowflake_audit_sets_query_id(self):
         from src.governance.audit_schema import normalize_snowflake_audit
+
         result = normalize_snowflake_audit(self._sample_access_history_row())
         assert result.query_id == "01a2b3c4-0000-1111-2222-333344445555"
 
     def test_normalize_snowflake_audit_sets_rows_returned(self):
         from src.governance.audit_schema import normalize_snowflake_audit
+
         result = normalize_snowflake_audit(self._sample_access_history_row())
         assert result.rows_returned == 2500
 
     def test_normalize_snowflake_audit_sets_bytes_scanned(self):
         from src.governance.audit_schema import normalize_snowflake_audit
+
         result = normalize_snowflake_audit(self._sample_access_history_row())
         assert result.bytes_scanned == 2048000
 
     def test_normalize_snowflake_audit_extracts_tables(self):
         from src.governance.audit_schema import normalize_snowflake_audit
+
         result = normalize_snowflake_audit(self._sample_access_history_row())
         assert len(result.tables_accessed) >= 1
 
     def test_normalize_snowflake_audit_access_granted_success(self):
         from src.governance.audit_schema import normalize_snowflake_audit
+
         result = normalize_snowflake_audit(self._sample_access_history_row())
         assert result.access_granted is True
 
     def test_normalize_snowflake_audit_access_denied_failed(self):
         from src.governance.audit_schema import normalize_snowflake_audit
+
         row = self._sample_access_history_row()
         row["EXECUTION_STATUS"] = "FAILED"
         result = normalize_snowflake_audit(row)
@@ -585,5 +647,6 @@ class TestNormalizeSnowflakeAudit:
 
     def test_normalize_snowflake_audit_source_engine_id(self):
         from src.governance.audit_schema import normalize_snowflake_audit
+
         result = normalize_snowflake_audit(self._sample_access_history_row())
         assert result.source_engine_audit_id == "01a2b3c4-0000-1111-2222-333344445555"

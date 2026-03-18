@@ -7,7 +7,6 @@ has cube-api and cubestore services properly configured.
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
@@ -68,9 +67,7 @@ class TestTradingMetricsYaml:
 
         for measure in trading["measures"]:
             assert "meta" in measure, f"Measure {measure['name']} missing meta"
-            assert "glossary_term" in measure["meta"], (
-                f"Measure {measure['name']} missing meta.glossary_term"
-            )
+            assert "glossary_term" in measure["meta"], f"Measure {measure['name']} missing meta.glossary_term"
 
 
 # --- Risk exposure cube tests ---
@@ -85,7 +82,11 @@ class TestRiskExposureYaml:
         self.cube = _load_yaml(CUBES_DIR / "risk_exposure.yml")
 
     def test_risk_exposure_yaml_has_required_measures(self):
-        """risk_exposure.yml contains total_market_value, total_var_95, total_var_99, total_expected_shortfall, position_count."""
+        """risk_exposure.yml contains required measures.
+
+        Checks total_market_value, total_var_95, total_var_99,
+        total_expected_shortfall, position_count.
+        """
         cubes = self.cube["cubes"]
         risk = next(c for c in cubes if c["name"] == "risk_exposure")
         measures = {m["name"]: m for m in risk["measures"]}

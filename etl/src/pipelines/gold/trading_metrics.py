@@ -54,15 +54,17 @@ class TradingMetricsGoldPipeline(BasePipeline):
             StructType,
         )
 
-        return StructType([
-            StructField("symbol", StringType(), nullable=False),
-            StructField("side", StringType(), nullable=False),
-            StructField("total_notional", DecimalType(38, 4), nullable=True),
-            StructField("trade_count", LongType(), nullable=False),
-            StructField("avg_price", DecimalType(38, 4), nullable=True),
-            StructField("min_price", DecimalType(18, 4), nullable=True),
-            StructField("max_price", DecimalType(18, 4), nullable=True),
-        ])
+        return StructType(
+            [
+                StructField("symbol", StringType(), nullable=False),
+                StructField("side", StringType(), nullable=False),
+                StructField("total_notional", DecimalType(38, 4), nullable=True),
+                StructField("trade_count", LongType(), nullable=False),
+                StructField("avg_price", DecimalType(38, 4), nullable=True),
+                StructField("min_price", DecimalType(18, 4), nullable=True),
+                StructField("max_price", DecimalType(18, 4), nullable=True),
+            ]
+        )
 
     def extract(self) -> DataFrame:
         """Read cleaned trades from Silver layer.
@@ -88,15 +90,15 @@ class TradingMetricsGoldPipeline(BasePipeline):
         Returns:
             Aggregated metrics DataFrame grouped by symbol and side.
         """
-        from pyspark.sql.functions import avg, col, count, max as spark_max, min as spark_min, sum as spark_sum
+        from pyspark.sql.functions import avg, count
+        from pyspark.sql.functions import max as spark_max
+        from pyspark.sql.functions import min as spark_min
+        from pyspark.sql.functions import sum as spark_sum
 
-        return (
-            df.groupBy("symbol", "side")
-            .agg(
-                spark_sum("notional").alias("total_notional"),
-                count("*").alias("trade_count"),
-                avg("price").alias("avg_price"),
-                spark_min("price").alias("min_price"),
-                spark_max("price").alias("max_price"),
-            )
+        return df.groupBy("symbol", "side").agg(
+            spark_sum("notional").alias("total_notional"),
+            count("*").alias("trade_count"),
+            avg("price").alias("avg_price"),
+            spark_min("price").alias("min_price"),
+            spark_max("price").alias("max_price"),
         )

@@ -17,13 +17,12 @@ Usage::
     records = extractor.extract(since=datetime(2024, 1, 14, tzinfo=timezone.utc))
     count = aggregate_audit_records(records, "postgresql://user:pass@audit-db:5432/audit")
 """
+
 from __future__ import annotations
 
-import json
 import logging
 import os
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 logger = logging.getLogger(__name__)
 
@@ -49,9 +48,10 @@ class TrinoAuditExtractor:
         if self._session is None:
             try:
                 import requests
+
                 self._session = requests.Session()
-            except ImportError:
-                raise RuntimeError("requests library required for TrinoAuditExtractor")
+            except ImportError as err:
+                raise RuntimeError("requests library required for TrinoAuditExtractor") from err
         return self._session
 
     def extract(self, since: datetime) -> list:
@@ -66,7 +66,7 @@ class TrinoAuditExtractor:
         """
         from src.governance.audit_schema import normalize_trino_audit
 
-        since_iso = since.replace(tzinfo=timezone.utc).isoformat() if since.tzinfo is None else since.isoformat()
+        since_iso = since.replace(tzinfo=UTC).isoformat() if since.tzinfo is None else since.isoformat()
         url = f"{self.audit_receiver_url}/api/events"
         params = {"since": since_iso}
 
@@ -86,7 +86,8 @@ class TrinoAuditExtractor:
         except Exception as e:
             logger.warning(
                 "Trino audit extraction failed (receiver at %s): %s. Returning empty.",
-                self.audit_receiver_url, e,
+                self.audit_receiver_url,
+                e,
             )
             return []
 
@@ -103,7 +104,7 @@ class TeradataAuditExtractor:
             TERADATA_PASSWORD).
     """
 
-    def __init__(self, connection_params: Optional[dict] = None):
+    def __init__(self, connection_params: dict | None = None):
         if connection_params:
             self.host = connection_params.get("host", "")
             self.username = connection_params.get("username", "")
@@ -155,30 +156,36 @@ class TeradataAuditExtractor:
             cursor = conn.cursor()
 
             # Main query log
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT q.QueryID, q.UserName, q.QueryText, q.StartTime,
                        q.NumResultRows, q.ReqIOKB, q.ErrorCode, q.ErrorText,
                        q.DatabaseName, q.StatementType
                 FROM DBC.QryLogV q
                 WHERE q.StartTime >= ?
                 ORDER BY q.StartTime
-            """, [since_str])
+            """,
+                [since_str],
+            )
 
             columns = [col[0] for col in cursor.description]
             rows = cursor.fetchall()
-            dbql_rows = [dict(zip(columns, row)) for row in rows]
+            dbql_rows = [dict(zip(columns, row, strict=False)) for row in rows]
 
             # Enrich with column-level access
             for dbql_row in dbql_rows:
                 query_id = dbql_row["QueryID"]
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT DatabaseName, TableName, ColumnName
                     FROM DBC.DBQLObjTbl
                     WHERE QueryID = ? AND ObjectType = 'Column'
-                """, [query_id])
+                """,
+                    [query_id],
+                )
                 col_columns = [col[0] for col in cursor.description]
                 col_rows = cursor.fetchall()
-                dbql_row["columns"] = [dict(zip(col_columns, r)) for r in col_rows]
+                dbql_row["columns"] = [dict(zip(col_columns, r, strict=False)) for r in col_rows]
 
             conn.close()
 
@@ -195,7 +202,8 @@ class TeradataAuditExtractor:
         except Exception as e:
             logger.warning(
                 "Teradata audit extraction failed (host=%s): %s. Returning empty.",
-                self.host, e,
+                self.host,
+                e,
             )
             return []
 
@@ -213,7 +221,7 @@ class SnowflakeAuditExtractor:
             If None, reads from environment variables (SNOWFLAKE_ACCOUNT, etc.).
     """
 
-    def __init__(self, connection_params: Optional[dict] = None):
+    def __init__(self, connection_params: dict | None = None):
         if connection_params:
             self.account = connection_params.get("account", "")
             self.user = connection_params.get("user", "")
@@ -272,7 +280,8 @@ class SnowflakeAuditExtractor:
 
             # Try ACCESS_HISTORY first (Enterprise edition)
             try:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT
                         QUERY_ID,
                         QUERY_START_TIME,
@@ -286,16 +295,18 @@ class SnowflakeAuditExtractor:
                     FROM SNOWFLAKE.ACCOUNT_USAGE.ACCESS_HISTORY
                     WHERE QUERY_START_TIME >= %s
                     ORDER BY QUERY_START_TIME
-                """, [since_str])
+                """,
+                    [since_str],
+                )
                 rows = cursor.fetchall()
                 logger.info("Using Snowflake ACCESS_HISTORY (%d rows)", len(rows))
 
             except Exception as e:
                 logger.info(
-                    "ACCESS_HISTORY unavailable (may need Enterprise edition): %s. "
-                    "Falling back to QUERY_HISTORY.", e
+                    "ACCESS_HISTORY unavailable (may need Enterprise edition): %s. Falling back to QUERY_HISTORY.", e
                 )
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT
                         QUERY_ID,
                         START_TIME AS QUERY_START_TIME,
@@ -309,7 +320,9 @@ class SnowflakeAuditExtractor:
                     FROM SNOWFLAKE.ACCOUNT_USAGE.QUERY_HISTORY
                     WHERE START_TIME >= %s
                     ORDER BY START_TIME
-                """, [since_str])
+                """,
+                    [since_str],
+                )
                 rows = cursor.fetchall()
                 logger.info("Using Snowflake QUERY_HISTORY fallback (%d rows)", len(rows))
 
@@ -329,7 +342,8 @@ class SnowflakeAuditExtractor:
         except Exception as e:
             logger.warning(
                 "Snowflake audit extraction failed (account=%s): %s. Returning empty.",
-                self.account, e,
+                self.account,
+                e,
             )
             return []
 
@@ -358,8 +372,8 @@ def aggregate_audit_records(records: list, db_connection_string: str) -> int:
     try:
         import psycopg2  # type: ignore
         import psycopg2.extras  # type: ignore
-    except ImportError:
-        raise RuntimeError("psycopg2-binary required for aggregate_audit_records")
+    except ImportError as err:
+        raise RuntimeError("psycopg2-binary required for aggregate_audit_records") from err
 
     from src.governance.audit_schema import AUDIT_SCHEMA
 

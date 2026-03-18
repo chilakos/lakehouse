@@ -134,9 +134,7 @@ def create_iceberg_table(
     empty_df.createOrReplaceTempView("_temp_schema_view")
 
     # Build CREATE TABLE statement
-    columns = ", ".join(
-        f"{field.name} {_spark_type_to_sql(field.dataType)}" for field in schema.fields
-    )
+    columns = ", ".join(f"{field.name} {_spark_type_to_sql(field.dataType)}" for field in schema.fields)
 
     partition_clause = ""
     if partition_by:

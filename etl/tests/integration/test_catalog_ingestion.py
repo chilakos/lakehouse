@@ -63,9 +63,7 @@ class TestTrinoIngestionInCatalog:
             "Run: metadata ingest -c infra/docker/openmetadata/connectors/trino-ingestion.yaml"
         )
         data = response.json()
-        assert data.get("serviceType") == "Trino", (
-            f"Expected serviceType 'Trino', got '{data.get('serviceType')}'"
-        )
+        assert data.get("serviceType") == "Trino", f"Expected serviceType 'Trino', got '{data.get('serviceType')}'"
 
     def test_bronze_schema_tables_appear_in_catalog(self, om_session):
         """Bronze layer tables should be discoverable by schema filter."""
@@ -74,9 +72,7 @@ class TestTrinoIngestionInCatalog:
             params={"database": "lakehouse-trino.iceberg.bronze", "limit": 10},
         )
         # 200 or empty results are acceptable; key check is API responds
-        assert response.status_code in (200, 404), (
-            f"Unexpected status fetching bronze tables: {response.status_code}"
-        )
+        assert response.status_code in (200, 404), f"Unexpected status fetching bronze tables: {response.status_code}"
         if response.status_code == 200:
             data = response.json()
             tables = data.get("data", [])
@@ -88,9 +84,7 @@ class TestTrinoIngestionInCatalog:
             f"{OM_BASE_URL}/tables",
             params={"database": "lakehouse-trino.iceberg.silver", "limit": 10},
         )
-        assert response.status_code in (200, 404), (
-            f"Unexpected status fetching silver tables: {response.status_code}"
-        )
+        assert response.status_code in (200, 404), f"Unexpected status fetching silver tables: {response.status_code}"
 
     def test_gold_schema_tables_appear_in_catalog(self, om_session):
         """Gold layer tables should be discoverable by schema filter."""
@@ -98,9 +92,7 @@ class TestTrinoIngestionInCatalog:
             f"{OM_BASE_URL}/tables",
             params={"database": "lakehouse-trino.iceberg.gold", "limit": 10},
         )
-        assert response.status_code in (200, 404), (
-            f"Unexpected status fetching gold tables: {response.status_code}"
-        )
+        assert response.status_code in (200, 404), f"Unexpected status fetching gold tables: {response.status_code}"
 
     def test_search_returns_results_for_table_keyword(self, om_session):
         """Full-text search should return results when querying a table keyword."""
@@ -109,9 +101,7 @@ class TestTrinoIngestionInCatalog:
             params={"q": "trades", "index": "table_search_index", "from": 0, "size": 10},
         )
         # Search may return empty if no tables ingested yet -- just check API is up
-        assert response.status_code == 200, (
-            f"Search endpoint returned status {response.status_code}"
-        )
+        assert response.status_code == 200, f"Search endpoint returned status {response.status_code}"
 
     def test_ingested_table_has_column_metadata(self, om_session):
         """Ingested tables should include column-level metadata."""
@@ -136,9 +126,7 @@ class TestTrinoIngestionInCatalog:
             f"{OM_BASE_URL}/tables/name/{table_fqn}",
             params={"fields": "columns"},
         )
-        assert table_response.status_code == 200, (
-            f"Could not fetch table details for {table_fqn}"
-        )
+        assert table_response.status_code == 200, f"Could not fetch table details for {table_fqn}"
         table_data = table_response.json()
         columns = table_data.get("columns", [])
         assert len(columns) > 0, f"Table {table_fqn} should have at least one column"
