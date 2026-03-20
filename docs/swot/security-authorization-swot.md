@@ -38,8 +38,8 @@ This SWOT evaluates whether to stay with Ranger or adopt a cross-engine authoriz
 | **Snowflake support** | No | No | Yes (PolicySync) | Yes (native) | Partial (Iceberg REST reads) | Partial (Iceberg REST reads) |
 | **Databricks support** | No | No | Yes (native) | Yes (Unity Catalog) | Yes (native) | Yes (connector) |
 | **Teradata support** | No | No | Unknown (verify) | No | No | No |
-| **Column masking** | Yes | Yes | Yes | Yes | Yes (UDF-based) | Planned (ABAC roadmap) |
-| **Row filtering** | Yes | Yes | Yes | Yes | Yes (scan planning) | Planned (ABAC roadmap) |
+| **Column masking** | Yes | Yes | Yes | Yes | Commercial only (not in OSS) | Planned (ABAC roadmap) |
+| **Row filtering** | Yes | Yes | Yes | Yes | Commercial only (not in OSS) | Planned (ABAC roadmap) |
 | **Tag-based policies** | Yes (Atlas integration) | No (custom Rego) | Yes (discovery + tags) | Yes (attribute-based) | Yes (governed tags) | Yes (tag system, ABAC 2026) |
 | **Policy-as-code** | XML/JSON policies | Rego policies | UI + API | UI + API | SQL + API | API + Ranger push-down |
 | **Iceberg REST catalog** | No | No | No | No | Yes (native) | Yes (native) |
@@ -121,10 +121,10 @@ Each new engine-native security integration adds operational burden: separate po
 
 | Dimension | Assessment |
 |-----------|-----------|
-| **Strengths** | Apache 2.0; Iceberg REST catalog native; policies enforced at catalog layer (engine-agnostic); row filtering + column masking via scan planning; 700+ companies using; 1M+ SDK downloads/month |
-| **Weaknesses** | Databricks heritage (perception risk); Trino OAuth2/multi-tenant still maturing; would require catalog migration from Nessie or running alongside; no Teradata support |
-| **Opportunities** | Catalog-level governance means any Iceberg REST client is automatically governed; aligns with Principle 3 and 4; active open-source community |
-| **Threats** | Databricks could steer OSS direction; catalog migration from Nessie has operational risk; losing Nessie branching (unique differentiator) |
+| **Strengths** | Apache 2.0; Iceberg REST catalog native; credential vending for S3/GCS/ADLS; 700+ companies using commercial UC; 1M+ SDK downloads/month |
+| **Weaknesses** | **Critical: row filtering, column masking, and ABAC are commercial Databricks-only features -- NOT available in the open-source version.** OSS UC provides only basic table/schema/catalog-level grants. Tables with row filters or column masks **cannot be accessed via the Iceberg REST API**, undermining the multi-engine governance story. Trino OAuth2/multi-tenant still maturing; would require catalog migration from Nessie; no Teradata support |
+| **Opportunities** | If Databricks opens governance features to OSS, this becomes the strongest option. Iceberg REST native means any engine can discover tables. Active community and LF AI sandbox project |
+| **Threats** | Databricks controls which features are open-sourced; most valuable governance features may remain commercial indefinitely; catalog migration from Nessie has operational risk; losing Nessie branching (unique differentiator) |
 
 ### OPA (Open-Source, Trino-Only)
 
@@ -185,7 +185,7 @@ Run a 4-week proof-of-concept for one of:
 
 1. **Privacera** -- if budget allows and cross-engine coverage is the priority. Fastest path: existing Ranger policies transfer directly. Best for organizations that need Snowflake + Databricks + Trino governance immediately.
 
-2. **Unity Catalog OSS** -- if open-source and catalog-level governance is the priority. Requires evaluating whether UC can coexist with Nessie or whether catalog consolidation is acceptable. Best for organizations committed to Iceberg REST ecosystem.
+2. **Unity Catalog OSS** -- if open-source and catalog-level governance is the priority. **Caveat:** Row filtering, column masking, and ABAC are commercial Databricks-only features not available in the OSS version. Tables with these policies cannot be accessed via Iceberg REST API. Evaluate only if Databricks opens these features to OSS, or if basic catalog-level grants are sufficient.
 
 ### Long-Term (2027): Monitor Gravitino ABAC
 
