@@ -93,8 +93,8 @@ class TestLineageCapture:
         to a manual checkpoint. Here we verify that at least one job or run
         appears in the Marquez namespace after a Spark write.
         """
-        import urllib.request
         import json
+        import urllib.request
 
         spark = lineage_spark_session
 
@@ -102,15 +102,10 @@ class TestLineageCapture:
         test_ns = "lineage_test"
         spark.sql(f"CREATE NAMESPACE IF NOT EXISTS lakehouse.{test_ns}")
         spark.sql(f"DROP TABLE IF EXISTS lakehouse.{test_ns}.lineage_smoke_test")
-        spark.sql(
-            f"CREATE TABLE lakehouse.{test_ns}.lineage_smoke_test "
-            f"(id INT, value STRING) USING iceberg"
-        )
+        spark.sql(f"CREATE TABLE lakehouse.{test_ns}.lineage_smoke_test (id INT, value STRING) USING iceberg")
 
         # Insert data to trigger lineage event
-        spark.sql(
-            f"INSERT INTO lakehouse.{test_ns}.lineage_smoke_test VALUES (1, 'test')"
-        )
+        spark.sql(f"INSERT INTO lakehouse.{test_ns}.lineage_smoke_test VALUES (1, 'test')")
 
         # Allow time for async event delivery
         time.sleep(3)
@@ -124,16 +119,15 @@ class TestLineageCapture:
                 jobs = data.get("jobs", [])
                 # Smoke test: we should have at least one job registered
                 assert len(jobs) > 0, (
-                    f"No jobs found in Marquez namespace 'lakehouse'. "
-                    f"Expected OpenLineage events from Spark write."
+                    "No jobs found in Marquez namespace 'lakehouse'. Expected OpenLineage events from Spark write."
                 )
         except urllib.error.URLError as exc:
             pytest.skip(f"Could not reach Marquez API: {exc}")
 
     def test_marquez_namespace_exists(self, marquez_url):
         """Verify the 'lakehouse' namespace is queryable in Marquez."""
-        import urllib.request
         import json
+        import urllib.request
 
         api_url = f"{marquez_url}/api/v1/namespaces"
         try:
@@ -141,7 +135,7 @@ class TestLineageCapture:
             with urllib.request.urlopen(req, timeout=5) as resp:
                 data = json.loads(resp.read().decode())
                 namespaces = data.get("namespaces", [])
-                ns_names = [ns.get("name") for ns in namespaces]
+                [ns.get("name") for ns in namespaces]
                 # This may or may not contain 'lakehouse' depending on
                 # whether any events have been emitted. Just verify the API works.
                 assert isinstance(namespaces, list), "Marquez namespaces API returned unexpected format"

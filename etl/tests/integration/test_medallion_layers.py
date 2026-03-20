@@ -17,8 +17,8 @@ class TestMedallionBronzeLayer:
 
     def test_bronze_trades_adds_metadata_columns(self, spark_session):
         """Bronze trades pipeline adds source_system, ingestion_ts, batch_id columns."""
-        from src.synthetic.generators import generate_trades
         from src.pipelines.bronze.trades_ingest import TradesBronzePipeline
+        from src.synthetic.generators import generate_trades
 
         batch_id = f"test-{uuid.uuid4().hex[:8]}"
         trades = generate_trades(5, seed=42)
@@ -40,8 +40,8 @@ class TestMedallionBronzeLayer:
 
     def test_bronze_trades_preserves_original_fields(self, spark_session):
         """Bronze trades pipeline preserves all original trade fields without transformation."""
-        from src.synthetic.generators import generate_trades
         from src.pipelines.bronze.trades_ingest import TradesBronzePipeline
+        from src.synthetic.generators import generate_trades
 
         trades = generate_trades(3, seed=42)
         pipeline = TradesBronzePipeline(
@@ -56,9 +56,18 @@ class TestMedallionBronzeLayer:
 
         # Original trade fields should all be present
         original_fields = [
-            "trade_id", "trade_date", "symbol", "side", "trade_type",
-            "quantity", "price", "notional", "account_id", "trader_id",
-            "exchange", "settlement_date",
+            "trade_id",
+            "trade_date",
+            "symbol",
+            "side",
+            "trade_type",
+            "quantity",
+            "price",
+            "notional",
+            "account_id",
+            "trader_id",
+            "exchange",
+            "settlement_date",
         ]
         col_names = [f.name for f in transformed.schema.fields]
         for field_name in original_fields:
@@ -71,10 +80,10 @@ class TestMedallionSilverLayer:
 
     def test_silver_trades_deduplicates_by_trade_id(self, spark_session):
         """Silver trades pipeline deduplicates by trade_id, keeping latest ingestion."""
-        from src.pipelines.silver.trades_clean import TradesSilverPipeline
+        from src.iceberg_utils.catalog import create_iceberg_table, create_namespace
         from src.pipelines.bronze.trades_ingest import TradesBronzePipeline
+        from src.pipelines.silver.trades_clean import TradesSilverPipeline
         from src.synthetic.generators import generate_trades
-        from src.iceberg_utils.catalog import create_namespace, create_iceberg_table
 
         ns = f"bronze_dedup_{uuid.uuid4().hex[:6]}"
         create_namespace(spark_session, ns)
@@ -85,21 +94,28 @@ class TestMedallionSilverLayer:
 
         table_name = f"trades_{uuid.uuid4().hex[:6]}"
         create_iceberg_table(
-            spark_session, ns, table_name, schema,
+            spark_session,
+            ns,
+            table_name,
+            schema,
             f"s3://lakehouse-data/test/{ns}/{table_name}",
         )
 
         # Write same data twice to simulate duplicate ingestion
         pipeline = TradesBronzePipeline(
-            spark=spark_session, source_data=trades,
-            source_system="test", batch_id="batch-1",
+            spark=spark_session,
+            source_data=trades,
+            source_system="test",
+            batch_id="batch-1",
         )
         df1 = pipeline.transform(pipeline.extract())
         df1.writeTo(f"lakehouse.{ns}.{table_name}").append()
 
         pipeline2 = TradesBronzePipeline(
-            spark=spark_session, source_data=trades,
-            source_system="test", batch_id="batch-2",
+            spark=spark_session,
+            source_data=trades,
+            source_system="test",
+            batch_id="batch-2",
         )
         df2 = pipeline2.transform(pipeline2.extract())
         df2.writeTo(f"lakehouse.{ns}.{table_name}").append()
@@ -123,37 +139,80 @@ class TestMedallionGoldLayer:
     def test_gold_trading_metrics_produces_aggregates(self, spark_session):
         """Gold trading metrics pipeline produces aggregated metrics per symbol/side."""
         from pyspark.sql.types import (
-            DateType, DecimalType, IntegerType, StringType,
-            StructField, StructType,
+            DateType,
+            DecimalType,
+            IntegerType,
+            StringType,
+            StructField,
+            StructType,
         )
+
         from src.pipelines.gold.trading_metrics import TradingMetricsGoldPipeline
 
         # Create a simple Silver-like DataFrame directly
-        silver_schema = StructType([
-            StructField("trade_id", IntegerType(), nullable=False),
-            StructField("trade_date", DateType(), nullable=False),
-            StructField("symbol", StringType(), nullable=False),
-            StructField("side", StringType(), nullable=False),
-            StructField("trade_type", StringType(), nullable=False),
-            StructField("quantity", IntegerType(), nullable=False),
-            StructField("price", DecimalType(18, 4), nullable=False),
-            StructField("notional", DecimalType(18, 4), nullable=False),
-            StructField("account_id", StringType(), nullable=False),
-            StructField("trader_id", StringType(), nullable=False),
-            StructField("exchange", StringType(), nullable=False),
-            StructField("settlement_date", DateType(), nullable=False),
-        ])
+        silver_schema = StructType(
+            [
+                StructField("trade_id", IntegerType(), nullable=False),
+                StructField("trade_date", DateType(), nullable=False),
+                StructField("symbol", StringType(), nullable=False),
+                StructField("side", StringType(), nullable=False),
+                StructField("trade_type", StringType(), nullable=False),
+                StructField("quantity", IntegerType(), nullable=False),
+                StructField("price", DecimalType(18, 4), nullable=False),
+                StructField("notional", DecimalType(18, 4), nullable=False),
+                StructField("account_id", StringType(), nullable=False),
+                StructField("trader_id", StringType(), nullable=False),
+                StructField("exchange", StringType(), nullable=False),
+                StructField("settlement_date", DateType(), nullable=False),
+            ]
+        )
 
         from datetime import date
         from decimal import Decimal
 
         data = [
-            (1, date(2024, 1, 1), "AAPL", "BUY", "MARKET", 100,
-             Decimal("150.0000"), Decimal("15000.0000"), "ACCT-1", "TRD-1", "NYSE", date(2024, 1, 2)),
-            (2, date(2024, 1, 1), "AAPL", "BUY", "LIMIT", 200,
-             Decimal("151.0000"), Decimal("30200.0000"), "ACCT-2", "TRD-2", "NYSE", date(2024, 1, 2)),
-            (3, date(2024, 1, 1), "AAPL", "SELL", "MARKET", 50,
-             Decimal("152.0000"), Decimal("7600.0000"), "ACCT-1", "TRD-1", "NYSE", date(2024, 1, 2)),
+            (
+                1,
+                date(2024, 1, 1),
+                "AAPL",
+                "BUY",
+                "MARKET",
+                100,
+                Decimal("150.0000"),
+                Decimal("15000.0000"),
+                "ACCT-1",
+                "TRD-1",
+                "NYSE",
+                date(2024, 1, 2),
+            ),
+            (
+                2,
+                date(2024, 1, 1),
+                "AAPL",
+                "BUY",
+                "LIMIT",
+                200,
+                Decimal("151.0000"),
+                Decimal("30200.0000"),
+                "ACCT-2",
+                "TRD-2",
+                "NYSE",
+                date(2024, 1, 2),
+            ),
+            (
+                3,
+                date(2024, 1, 1),
+                "AAPL",
+                "SELL",
+                "MARKET",
+                50,
+                Decimal("152.0000"),
+                Decimal("7600.0000"),
+                "ACCT-1",
+                "TRD-1",
+                "NYSE",
+                date(2024, 1, 2),
+            ),
         ]
 
         silver_df = spark_session.createDataFrame(data, silver_schema)
@@ -183,11 +242,11 @@ class TestMedallionEndToEnd:
 
     def test_full_medallion_flow(self, spark_session):
         """Synthetic data flows Bronze -> Silver -> Gold, all in Iceberg tables."""
-        from src.synthetic.generators import generate_trades
+        from src.iceberg_utils.catalog import create_iceberg_table, create_namespace
         from src.pipelines.bronze.trades_ingest import TradesBronzePipeline
-        from src.pipelines.silver.trades_clean import TradesSilverPipeline
         from src.pipelines.gold.trading_metrics import TradingMetricsGoldPipeline
-        from src.iceberg_utils.catalog import create_namespace, create_iceberg_table
+        from src.pipelines.silver.trades_clean import TradesSilverPipeline
+        from src.synthetic.generators import generate_trades
 
         suffix = uuid.uuid4().hex[:6]
 
@@ -198,13 +257,18 @@ class TestMedallionEndToEnd:
         # -- Bronze --
         trades = generate_trades(20, seed=42)
         bronze_pipeline = TradesBronzePipeline(
-            spark=spark_session, source_data=trades,
-            source_system="e2e_test", batch_id=f"batch-{suffix}",
+            spark=spark_session,
+            source_data=trades,
+            source_system="e2e_test",
+            batch_id=f"batch-{suffix}",
         )
         bronze_schema = TradesBronzePipeline._build_bronze_schema()
         bronze_table = f"trades_{suffix}"
         create_iceberg_table(
-            spark_session, f"bronze_{suffix}", bronze_table, bronze_schema,
+            spark_session,
+            f"bronze_{suffix}",
+            bronze_table,
+            bronze_schema,
             f"s3://lakehouse-data/test/bronze_{suffix}/{bronze_table}",
         )
         bronze_df = bronze_pipeline.transform(bronze_pipeline.extract())
@@ -225,7 +289,10 @@ class TestMedallionEndToEnd:
         silver_schema = silver_pipeline.config.target_schema
         silver_table = f"trades_{suffix}"
         create_iceberg_table(
-            spark_session, f"silver_{suffix}", silver_table, silver_schema,
+            spark_session,
+            f"silver_{suffix}",
+            silver_table,
+            silver_schema,
             f"s3://lakehouse-data/test/silver_{suffix}/{silver_table}",
         )
         silver_df = silver_pipeline.transform(silver_pipeline.extract())
@@ -248,7 +315,10 @@ class TestMedallionEndToEnd:
         gold_schema = gold_pipeline.config.target_schema
         gold_table = f"trading_metrics_{suffix}"
         create_iceberg_table(
-            spark_session, f"gold_{suffix}", gold_table, gold_schema,
+            spark_session,
+            f"gold_{suffix}",
+            gold_table,
+            gold_schema,
             f"s3://lakehouse-data/test/gold_{suffix}/{gold_table}",
         )
         gold_df = gold_pipeline.transform(gold_pipeline.extract())

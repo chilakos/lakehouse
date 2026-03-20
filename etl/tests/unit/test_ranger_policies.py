@@ -100,10 +100,17 @@ class TestCreateMaskingPolicy:
         result_str = str(result)
         assert "data_readers" in result_str or "groups" in result_str.lower()
 
-    @pytest.mark.parametrize("mask_type", [
-        "MASK", "MASK_SHOW_LAST_4", "MASK_SHOW_FIRST_4", "MASK_HASH",
-        "MASK_NULL", "MASK_NONE",
-    ])
+    @pytest.mark.parametrize(
+        "mask_type",
+        [
+            "MASK",
+            "MASK_SHOW_LAST_4",
+            "MASK_SHOW_FIRST_4",
+            "MASK_HASH",
+            "MASK_NULL",
+            "MASK_NONE",
+        ],
+    )
     def test_all_mask_types_valid(self, mask_type):
         from src.governance.ranger_policies import create_masking_policy
 

@@ -78,7 +78,9 @@ class TestGenerateTrades:
 
         result = generate_trades(10)
         for record in result:
-            assert isinstance(record["notional"], Decimal), f"notional should be Decimal, got {type(record['notional'])}"
+            assert isinstance(record["notional"], Decimal), (
+                f"notional should be Decimal, got {type(record['notional'])}"
+            )
 
     def test_valid_side_values(self):
         from src.synthetic.generators import generate_trades
@@ -109,8 +111,21 @@ class TestGenerateTrades:
 
         result = generate_trades(100)
         valid_symbols = {
-            "AAPL", "GOOGL", "MSFT", "JPM", "GS", "BAC", "C", "WFC",
-            "BRK.B", "V", "MA", "AXP", "BLK", "SCHW", "MS",
+            "AAPL",
+            "GOOGL",
+            "MSFT",
+            "JPM",
+            "GS",
+            "BAC",
+            "C",
+            "WFC",
+            "BRK.B",
+            "V",
+            "MA",
+            "AXP",
+            "BLK",
+            "SCHW",
+            "MS",
         }
         for record in result:
             assert record["symbol"] in valid_symbols, f"Invalid symbol: {record['symbol']}"
@@ -168,9 +183,9 @@ class TestGeneratePositions:
 
         result = generate_positions(10)
         for record in result:
-            assert isinstance(
-                record["market_value"], Decimal
-            ), f"market_value should be Decimal, got {type(record['market_value'])}"
+            assert isinstance(record["market_value"], Decimal), (
+                f"market_value should be Decimal, got {type(record['market_value'])}"
+            )
 
 
 class TestGenerateRiskMetrics:
@@ -233,15 +248,15 @@ class TestGenerateRiskMetrics:
 
         result = generate_risk_metrics(10)
         for record in result:
-            assert isinstance(
-                record["expected_shortfall"], Decimal
-            ), f"expected_shortfall should be Decimal, got {type(record['expected_shortfall'])}"
+            assert isinstance(record["expected_shortfall"], Decimal), (
+                f"expected_shortfall should be Decimal, got {type(record['expected_shortfall'])}"
+            )
 
     def test_stress_pnl_is_decimal(self):
         from src.synthetic.generators import generate_risk_metrics
 
         result = generate_risk_metrics(10)
         for record in result:
-            assert isinstance(
-                record["stress_pnl"], Decimal
-            ), f"stress_pnl should be Decimal, got {type(record['stress_pnl'])}"
+            assert isinstance(record["stress_pnl"], Decimal), (
+                f"stress_pnl should be Decimal, got {type(record['stress_pnl'])}"
+            )

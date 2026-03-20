@@ -13,11 +13,23 @@ from decimal import Decimal
 
 from faker import Faker
 
-
 # Financial reference data
 SYMBOLS = [
-    "AAPL", "GOOGL", "MSFT", "JPM", "GS", "BAC", "C", "WFC",
-    "BRK.B", "V", "MA", "AXP", "BLK", "SCHW", "MS",
+    "AAPL",
+    "GOOGL",
+    "MSFT",
+    "JPM",
+    "GS",
+    "BAC",
+    "C",
+    "WFC",
+    "BRK.B",
+    "V",
+    "MA",
+    "AXP",
+    "BLK",
+    "SCHW",
+    "MS",
 ]
 
 SIDES = ["BUY", "SELL"]
@@ -27,8 +39,15 @@ TRADE_TYPES = ["MARKET", "LIMIT", "STOP", "STOP_LIMIT"]
 EXCHANGES = ["NYSE", "NASDAQ", "LSE", "TSE"]
 
 SECTORS = [
-    "Technology", "Financial Services", "Healthcare", "Consumer Discretionary",
-    "Industrials", "Energy", "Materials", "Utilities", "Real Estate",
+    "Technology",
+    "Financial Services",
+    "Healthcare",
+    "Consumer Discretionary",
+    "Industrials",
+    "Energy",
+    "Materials",
+    "Utilities",
+    "Real Estate",
     "Communication Services",
 ]
 
@@ -60,20 +79,22 @@ def generate_trades(num_records: int, seed: int = 42) -> list[dict]:
             start_date=date(2024, 1, 1),
             end_date=date(2026, 3, 13),
         )
-        trades.append({
-            "trade_id": i + 1,
-            "trade_date": trade_date,
-            "symbol": symbol,
-            "side": rng.choice(SIDES),
-            "trade_type": rng.choice(TRADE_TYPES),
-            "quantity": quantity,
-            "price": Decimal(str(price)),
-            "notional": Decimal(str(round(price * quantity, 4))),
-            "account_id": f"ACCT-{rng.randint(1000, 9999)}",
-            "trader_id": f"TRD-{rng.randint(100, 999)}",
-            "exchange": rng.choice(EXCHANGES),
-            "settlement_date": trade_date + timedelta(days=rng.choice([1, 2, 3])),
-        })
+        trades.append(
+            {
+                "trade_id": i + 1,
+                "trade_date": trade_date,
+                "symbol": symbol,
+                "side": rng.choice(SIDES),
+                "trade_type": rng.choice(TRADE_TYPES),
+                "quantity": quantity,
+                "price": Decimal(str(price)),
+                "notional": Decimal(str(round(price * quantity, 4))),
+                "account_id": f"ACCT-{rng.randint(1000, 9999)}",
+                "trader_id": f"TRD-{rng.randint(100, 999)}",
+                "exchange": rng.choice(EXCHANGES),
+                "settlement_date": trade_date + timedelta(days=rng.choice([1, 2, 3])),
+            }
+        )
     return trades
 
 
@@ -95,19 +116,21 @@ def generate_positions(num_records: int, seed: int = 42) -> list[dict]:
     for i in range(num_records):
         quantity = rng.randint(100, 100000)
         price_per_unit = round(rng.uniform(10.0, 1000.0), 4)
-        positions.append({
-            "position_id": i + 1,
-            "account_id": f"ACCT-{rng.randint(1000, 9999)}",
-            "symbol": rng.choice(SYMBOLS),
-            "quantity": quantity,
-            "market_value": Decimal(str(round(price_per_unit * quantity, 4))),
-            "as_of_date": fake.date_between(
-                start_date=date(2024, 1, 1),
-                end_date=date(2026, 3, 13),
-            ),
-            "sector": rng.choice(SECTORS),
-            "currency": rng.choice(CURRENCIES),
-        })
+        positions.append(
+            {
+                "position_id": i + 1,
+                "account_id": f"ACCT-{rng.randint(1000, 9999)}",
+                "symbol": rng.choice(SYMBOLS),
+                "quantity": quantity,
+                "market_value": Decimal(str(round(price_per_unit * quantity, 4))),
+                "as_of_date": fake.date_between(
+                    start_date=date(2024, 1, 1),
+                    end_date=date(2026, 3, 13),
+                ),
+                "sector": rng.choice(SECTORS),
+                "currency": rng.choice(CURRENCIES),
+            }
+        )
     return positions
 
 
@@ -133,19 +156,21 @@ def generate_risk_metrics(num_records: int, seed: int = 42) -> list[dict]:
         expected_shortfall = round(var_99 * rng.uniform(1.1, 1.5), 2)
         stress_pnl = round(rng.uniform(-2000000.0, -100000.0), 2)
 
-        metrics.append({
-            "metric_id": i + 1,
-            "account_id": f"ACCT-{rng.randint(1000, 9999)}",
-            "var_95": Decimal(str(var_95)),
-            "var_99": Decimal(str(var_99)),
-            "expected_shortfall": Decimal(str(expected_shortfall)),
-            "stress_pnl": Decimal(str(stress_pnl)),
-            "calc_date": fake.date_between(
-                start_date=date(2024, 1, 1),
-                end_date=date(2026, 3, 13),
-            ),
-            "model_version": rng.choice(MODEL_VERSIONS),
-        })
+        metrics.append(
+            {
+                "metric_id": i + 1,
+                "account_id": f"ACCT-{rng.randint(1000, 9999)}",
+                "var_95": Decimal(str(var_95)),
+                "var_99": Decimal(str(var_99)),
+                "expected_shortfall": Decimal(str(expected_shortfall)),
+                "stress_pnl": Decimal(str(stress_pnl)),
+                "calc_date": fake.date_between(
+                    start_date=date(2024, 1, 1),
+                    end_date=date(2026, 3, 13),
+                ),
+                "model_version": rng.choice(MODEL_VERSIONS),
+            }
+        )
     return metrics
 
 
@@ -164,20 +189,22 @@ def trades_schema():
         StructType,
     )
 
-    return StructType([
-        StructField("trade_id", IntegerType(), nullable=False),
-        StructField("trade_date", DateType(), nullable=False),
-        StructField("symbol", StringType(), nullable=False),
-        StructField("side", StringType(), nullable=False),
-        StructField("trade_type", StringType(), nullable=False),
-        StructField("quantity", IntegerType(), nullable=False),
-        StructField("price", DecimalType(18, 4), nullable=False),
-        StructField("notional", DecimalType(18, 4), nullable=False),
-        StructField("account_id", StringType(), nullable=False),
-        StructField("trader_id", StringType(), nullable=False),
-        StructField("exchange", StringType(), nullable=False),
-        StructField("settlement_date", DateType(), nullable=False),
-    ])
+    return StructType(
+        [
+            StructField("trade_id", IntegerType(), nullable=False),
+            StructField("trade_date", DateType(), nullable=False),
+            StructField("symbol", StringType(), nullable=False),
+            StructField("side", StringType(), nullable=False),
+            StructField("trade_type", StringType(), nullable=False),
+            StructField("quantity", IntegerType(), nullable=False),
+            StructField("price", DecimalType(18, 4), nullable=False),
+            StructField("notional", DecimalType(18, 4), nullable=False),
+            StructField("account_id", StringType(), nullable=False),
+            StructField("trader_id", StringType(), nullable=False),
+            StructField("exchange", StringType(), nullable=False),
+            StructField("settlement_date", DateType(), nullable=False),
+        ]
+    )
 
 
 def positions_schema():
@@ -195,16 +222,18 @@ def positions_schema():
         StructType,
     )
 
-    return StructType([
-        StructField("position_id", IntegerType(), nullable=False),
-        StructField("account_id", StringType(), nullable=False),
-        StructField("symbol", StringType(), nullable=False),
-        StructField("quantity", IntegerType(), nullable=False),
-        StructField("market_value", DecimalType(18, 4), nullable=False),
-        StructField("as_of_date", DateType(), nullable=False),
-        StructField("sector", StringType(), nullable=False),
-        StructField("currency", StringType(), nullable=False),
-    ])
+    return StructType(
+        [
+            StructField("position_id", IntegerType(), nullable=False),
+            StructField("account_id", StringType(), nullable=False),
+            StructField("symbol", StringType(), nullable=False),
+            StructField("quantity", IntegerType(), nullable=False),
+            StructField("market_value", DecimalType(18, 4), nullable=False),
+            StructField("as_of_date", DateType(), nullable=False),
+            StructField("sector", StringType(), nullable=False),
+            StructField("currency", StringType(), nullable=False),
+        ]
+    )
 
 
 def risk_metrics_schema():
@@ -222,13 +251,15 @@ def risk_metrics_schema():
         StructType,
     )
 
-    return StructType([
-        StructField("metric_id", IntegerType(), nullable=False),
-        StructField("account_id", StringType(), nullable=False),
-        StructField("var_95", DecimalType(18, 2), nullable=False),
-        StructField("var_99", DecimalType(18, 2), nullable=False),
-        StructField("expected_shortfall", DecimalType(18, 2), nullable=False),
-        StructField("stress_pnl", DecimalType(18, 2), nullable=False),
-        StructField("calc_date", DateType(), nullable=False),
-        StructField("model_version", StringType(), nullable=False),
-    ])
+    return StructType(
+        [
+            StructField("metric_id", IntegerType(), nullable=False),
+            StructField("account_id", StringType(), nullable=False),
+            StructField("var_95", DecimalType(18, 2), nullable=False),
+            StructField("var_99", DecimalType(18, 2), nullable=False),
+            StructField("expected_shortfall", DecimalType(18, 2), nullable=False),
+            StructField("stress_pnl", DecimalType(18, 2), nullable=False),
+            StructField("calc_date", DateType(), nullable=False),
+            StructField("model_version", StringType(), nullable=False),
+        ]
+    )

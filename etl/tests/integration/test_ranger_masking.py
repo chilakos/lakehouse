@@ -85,9 +85,7 @@ class TestRangerMaskingPolicies:
             ssn_value = row[0]
             # MASK_NULL: value is None; MASK_SHOW_LAST_4: only 4 chars
             if ssn_value is not None:
-                assert len(str(ssn_value)) <= 4, (
-                    f"SSN should be masked for data_readers, got: {ssn_value}"
-                )
+                assert len(str(ssn_value)) <= 4, f"SSN should be masked for data_readers, got: {ssn_value}"
 
     def test_ssn_is_unmasked_for_data_admin(self, trino_conn_data_admin):
         """SSN column should be unmasked (MASK_NONE) for data_admin."""

@@ -22,9 +22,9 @@ Pipelines, schemas, metric definitions, and governance rules are built once and 
 
 ## 3. Own Your Destiny
 
-We use open formats (Iceberg), open catalogs (Nessie), and open protocols (REST) so the organization is never locked into a single vendor's proprietary platform for its data layer.
+We use open formats (Iceberg), open catalogs (Nessie), and open protocols (REST) so the organization is never locked into a single vendor's proprietary platform for its data, security, or operations. We control the data. We control the security. We control the destiny.
 
-**Test:** If removing a vendor would require re-writing the data layer, we have a dependency problem.
+**Test:** If removing a vendor would require re-writing the data layer or renegotiating security policies, we have a dependency problem.
 
 ---
 
@@ -73,6 +73,30 @@ Data quality is validated at ingestion (Bronze), transformation (Silver), and ag
 Developers move fast within well-defined boundaries — pre-commit hooks, CI checks, policy-as-code, automated tests — rather than waiting for manual approvals. Speed and safety are not opposites.
 
 **Test:** Can a developer ship a compliant change without waiting for a human gatekeeper?
+
+---
+
+## 10. Modern Pipeline, Legacy Coexistence
+
+New Iceberg-based pipelines and existing Teradata workloads run side by side. We modernize incrementally — legacy consumers keep reading while modern pipelines take over writing. Migration is a gradient, not a cliff.
+
+**Test:** Can a legacy Teradata workload continue operating while the pipeline feeding it is migrated to the lakehouse?
+
+---
+
+## 11. Open-Source Core, Partner Scale
+
+The data layer is built on open-source technology we operate ourselves. For compute and innovation we scale through partners — Teradata, Snowflake, cloud providers — who plug into our open formats. We own the core; partners extend the reach.
+
+**Test:** Does our data layer still function if a compute partner is swapped out or added?
+
+---
+
+## 12. Operational Velocity
+
+Teams can ship, query, and iterate without waiting for infrastructure provisioning, data copies, or committee approvals. Self-service tooling, automated guardrails, and well-documented interfaces mean the answer to "can we do this?" is "go."
+
+**Test:** Can a team go from question to query to production insight without filing a ticket and waiting?
 
 ---
 

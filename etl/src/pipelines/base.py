@@ -146,9 +146,7 @@ class BasePipeline(ABC):
 
         return True
 
-    def add_metadata_columns(
-        self, df: DataFrame, source_system: str, batch_id: str
-    ) -> DataFrame:
+    def add_metadata_columns(self, df: DataFrame, source_system: str, batch_id: str) -> DataFrame:
         """Add Bronze-layer metadata columns to a DataFrame.
 
         Adds:
@@ -249,8 +247,7 @@ class BasePipeline(ABC):
         qc_results = self.run_quality_checks(df)
         if qc_results.get("critical_failures"):
             raise QualityGateError(
-                f"Critical quality checks failed for pipeline '{self.config.name}': "
-                f"{qc_results['critical_failures']}"
+                f"Critical quality checks failed for pipeline '{self.config.name}': {qc_results['critical_failures']}"
             )
         self.logger.info("Quality checks passed")
 

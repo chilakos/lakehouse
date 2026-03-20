@@ -19,7 +19,6 @@ import os
 
 import pytest
 
-
 # Custom marker for Snowflake tests
 pytestmark = [pytest.mark.snowflake, pytest.mark.integration]
 
@@ -46,7 +45,7 @@ def _get_snowflake_connection():
     password = os.environ.get("SNOWFLAKE_PASSWORD")
 
     if not all([account, user, password]):
-        raise EnvironmentError(
+        raise OSError(
             "Missing Snowflake credentials. Set SNOWFLAKE_ACCOUNT, "
             "SNOWFLAKE_USER, SNOWFLAKE_PASSWORD environment variables."
         )
@@ -100,9 +99,7 @@ class TestSnowflakeReads:
         conn = _get_snowflake_connection()
         cursor = conn.cursor()
 
-        nessie_endpoint = os.environ.get(
-            "NESSIE_PUBLIC_ENDPOINT", "http://localhost:19120"
-        )
+        nessie_endpoint = os.environ.get("NESSIE_PUBLIC_ENDPOINT", "http://localhost:19120")
 
         try:
             cursor.execute(
@@ -144,8 +141,11 @@ class TestSnowflakeReads:
             "s3://lakehouse-data/warehouse/snowflake_test/trades",
         )
         write_data(
-            spark_session, "snowflake_test", "trades",
-            generate_trades(50, seed=5001), schema,
+            spark_session,
+            "snowflake_test",
+            "trades",
+            generate_trades(50, seed=5001),
+            schema,
         )
 
         # Snowflake reads
@@ -178,14 +178,15 @@ class TestSnowflakeReads:
             "s3://lakehouse-data/warehouse/sf_schema_evo_test/trades",
         )
         write_data(
-            spark_session, "sf_schema_evo_test", "trades",
-            generate_trades(10, seed=5002), schema,
+            spark_session,
+            "sf_schema_evo_test",
+            "trades",
+            generate_trades(10, seed=5002),
+            schema,
         )
 
         # Evolve schema in Spark
-        spark_session.sql(
-            "ALTER TABLE lakehouse.sf_schema_evo_test.trades ADD COLUMNS (notes STRING)"
-        )
+        spark_session.sql("ALTER TABLE lakehouse.sf_schema_evo_test.trades ADD COLUMNS (notes STRING)")
 
         # Snowflake should see the new column after refresh
         conn = _get_snowflake_connection()
@@ -193,9 +194,7 @@ class TestSnowflakeReads:
         try:
             cursor.execute("DESCRIBE TABLE sf_schema_evo_test.trades")
             columns = [row[0].lower() for row in cursor.fetchall()]
-            assert "notes" in columns, (
-                f"Expected 'notes' column after schema evolution, got: {columns}"
-            )
+            assert "notes" in columns, f"Expected 'notes' column after schema evolution, got: {columns}"
         finally:
             cursor.close()
             conn.close()

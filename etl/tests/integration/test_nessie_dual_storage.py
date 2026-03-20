@@ -24,7 +24,6 @@ from src.synthetic.generators import (
     trades_schema,
 )
 
-
 pytestmark = pytest.mark.integration
 
 

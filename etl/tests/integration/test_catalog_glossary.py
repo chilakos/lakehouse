@@ -67,9 +67,7 @@ def om_session():
 @pytest.fixture(scope="module")
 def seed_terms():
     """Load glossary terms from glossary-seed.json."""
-    seed_path = (
-        PROJECT_ROOT / "infra" / "docker" / "openmetadata" / "glossary-seed.json"
-    )
+    seed_path = PROJECT_ROOT / "infra" / "docker" / "openmetadata" / "glossary-seed.json"
     if not seed_path.is_file():
         pytest.skip("glossary-seed.json not found")
     data = json.loads(seed_path.read_text())
@@ -82,9 +80,7 @@ class TestGlossaryTermsSearchable:
     def test_glossary_api_responds(self, om_session):
         """Glossary API endpoint should be reachable."""
         response = om_session.get(f"{OM_BASE_URL}/glossaries", params={"limit": 10})
-        assert response.status_code == 200, (
-            f"Glossary API returned status {response.status_code}"
-        )
+        assert response.status_code == 200, f"Glossary API returned status {response.status_code}"
 
     def test_glossary_search_returns_results(self, om_session):
         """Glossary term search should return results after seeding."""
@@ -92,9 +88,7 @@ class TestGlossaryTermsSearchable:
             f"{OM_BASE_URL}/search/query",
             params={"q": "Trade", "index": "glossary_search_index", "from": 0, "size": 5},
         )
-        assert response.status_code == 200, (
-            f"Glossary search returned status {response.status_code}"
-        )
+        assert response.status_code == 200, f"Glossary search returned status {response.status_code}"
 
     def test_seeded_terms_have_definitions(self, om_session, seed_terms):
         """Glossary terms imported from seed data should have descriptions."""
@@ -112,9 +106,7 @@ class TestGlossaryTermsSearchable:
             pytest.skip("No glossary terms in catalog -- import glossary-seed.json first")
 
         for term in catalog_terms:
-            assert term.get("description"), (
-                f"Term '{term.get('name')}' in catalog has no description"
-            )
+            assert term.get("description"), f"Term '{term.get('name')}' in catalog has no description"
 
     def test_approval_workflow_states_exist(self, om_session):
         """OpenMetadata glossary should support Draft, In Review, and Approved states."""
@@ -131,11 +123,8 @@ class TestGlossaryTermsSearchable:
         # Terms imported from seed should be in Draft status
         statuses = {t.get("status") for t in catalog_terms if t.get("status")}
         # At minimum Draft should be present (from seed data)
-        expected_states = {"Draft", "In Review", "Approved"}
         # The API should recognise these states (glossary workflow is built into OpenMetadata)
-        assert "Draft" in statuses or not statuses, (
-            f"Expected at least 'Draft' status from seed data, got: {statuses}"
-        )
+        assert "Draft" in statuses or not statuses, f"Expected at least 'Draft' status from seed data, got: {statuses}"
 
     def test_trade_term_has_definition(self, om_session):
         """'Trade' glossary term should have a substantive definition."""
@@ -171,6 +160,4 @@ class TestGlossaryTermsSearchable:
                 "size": 5,
             },
         )
-        assert response.status_code == 200, (
-            f"Search for PII returned status {response.status_code}"
-        )
+        assert response.status_code == 200, f"Search for PII returned status {response.status_code}"

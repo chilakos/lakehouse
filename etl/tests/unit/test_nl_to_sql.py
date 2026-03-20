@@ -35,16 +35,12 @@ class TestGenerateSQL:
         mock_ctx.return_value = "TABLE: gold.trading_metrics"
         mock_client = MagicMock()
         mock_boto3.client.return_value = mock_client
-        mock_client.invoke_model.return_value = _make_bedrock_response(
-            "SELECT * FROM gold.trading_metrics"
-        )
+        mock_client.invoke_model.return_value = _make_bedrock_response("SELECT * FROM gold.trading_metrics")
 
         engine = NLToSQLEngine(model_dir="semantic/model")
         engine.ask("How many trades?")
 
-        mock_boto3.client.assert_called_once_with(
-            "bedrock-runtime", region_name="us-east-1"
-        )
+        mock_boto3.client.assert_called_once_with("bedrock-runtime", region_name="us-east-1")
         mock_client.invoke_model.assert_called_once()
         call_kwargs = mock_client.invoke_model.call_args[1]
         assert "modelId" in call_kwargs
@@ -132,9 +128,7 @@ class TestNLToSQLEngine:
         mock_ctx.return_value = ""
         mock_client = MagicMock()
         mock_boto3.client.return_value = mock_client
-        mock_client.invoke_model.return_value = _make_bedrock_response(
-            "SELECT COUNT(*) FROM gold.trading_metrics"
-        )
+        mock_client.invoke_model.return_value = _make_bedrock_response("SELECT COUNT(*) FROM gold.trading_metrics")
 
         engine = NLToSQLEngine(model_dir="semantic/model")
         result = engine.ask("How many trades?")

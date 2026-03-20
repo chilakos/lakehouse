@@ -10,7 +10,7 @@ Tests the abstract base class behavior:
 - PipelineConfig namespace mapping
 """
 
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -43,10 +43,12 @@ class TestBasePipelineABC:
             name="test",
             target_layer=MedallionLayer.BRONZE,
             target_table="test_table",
-            target_schema=StructType([
-                StructField("id", IntegerType(), nullable=False),
-                StructField("name", StringType(), nullable=True),
-            ]),
+            target_schema=StructType(
+                [
+                    StructField("id", IntegerType(), nullable=False),
+                    StructField("name", StringType(), nullable=True),
+                ]
+            ),
         )
         pipeline = ConcretePipeline(spark=MagicMock(), config=config)
         assert pipeline is not None
@@ -79,10 +81,12 @@ class TestExecuteOrchestration:
             name="order-test",
             target_layer=MedallionLayer.SILVER,
             target_table="test_table",
-            target_schema=StructType([
-                StructField("id", IntegerType(), nullable=False),
-                StructField("name", StringType(), nullable=True),
-            ]),
+            target_schema=StructType(
+                [
+                    StructField("id", IntegerType(), nullable=False),
+                    StructField("name", StringType(), nullable=True),
+                ]
+            ),
         )
 
         pipeline = OrderTrackingPipeline(spark=MagicMock(), config=config)
@@ -143,7 +147,7 @@ class TestMetadataColumns:
     @patch("src.pipelines.base.lit")
     def test_add_metadata_columns_adds_required_fields(self, mock_lit, mock_ts):
         """add_metadata_columns adds source_system, ingestion_ts, batch_id columns."""
-        from pyspark.sql.types import IntegerType, StringType, StructField, StructType
+        from pyspark.sql.types import IntegerType, StructField, StructType
 
         from src.pipelines.base import BasePipeline, MedallionLayer, PipelineConfig
 
@@ -158,9 +162,11 @@ class TestMetadataColumns:
             name="metadata-test",
             target_layer=MedallionLayer.BRONZE,
             target_table="test_table",
-            target_schema=StructType([
-                StructField("id", IntegerType(), nullable=False),
-            ]),
+            target_schema=StructType(
+                [
+                    StructField("id", IntegerType(), nullable=False),
+                ]
+            ),
         )
 
         pipeline = MetadataTestPipeline(spark=MagicMock(), config=config)
@@ -169,7 +175,7 @@ class TestMetadataColumns:
         mock_df = MagicMock()
         mock_df.withColumn.return_value = mock_df
 
-        result = pipeline.add_metadata_columns(mock_df, "test_source", "batch-001")
+        pipeline.add_metadata_columns(mock_df, "test_source", "batch-001")
         # withColumn should have been called 3 times (source_system, ingestion_ts, batch_id)
         assert mock_df.withColumn.call_count == 3
         call_args = [c[0][0] for c in mock_df.withColumn.call_args_list]

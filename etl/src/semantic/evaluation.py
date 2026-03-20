@@ -18,7 +18,6 @@ from __future__ import annotations
 import json
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -83,10 +82,7 @@ def evaluate_accuracy(
     Returns:
         Dict with 'total', 'correct', and 'accuracy_pct' keys.
     """
-    if complexity_filter:
-        filtered = [r for r in results if r.complexity == complexity_filter]
-    else:
-        filtered = results
+    filtered = [r for r in results if r.complexity == complexity_filter] if complexity_filter else results
 
     total = len(filtered)
     if total == 0:
@@ -135,16 +131,18 @@ def run_evaluation(
             generated_sql = engine.ask(question)
         except Exception as exc:
             logger.warning("SQL generation failed for: %s -- %s", question, exc)
-            results.append(EvalResult(
-                question=question,
-                golden_sql=golden_sql,
-                generated_sql="",
-                golden_results=[],
-                generated_results=[],
-                match=False,
-                complexity=complexity,
-                error=f"Generation failed: {exc}",
-            ))
+            results.append(
+                EvalResult(
+                    question=question,
+                    golden_sql=golden_sql,
+                    generated_sql="",
+                    golden_results=[],
+                    generated_results=[],
+                    match=False,
+                    complexity=complexity,
+                    error=f"Generation failed: {exc}",
+                )
+            )
             continue
 
         # Execute golden SQL
@@ -171,16 +169,18 @@ def run_evaluation(
         # Compare results (order-independent)
         match = _compare_results(golden_results, generated_results)
 
-        results.append(EvalResult(
-            question=question,
-            golden_sql=golden_sql,
-            generated_sql=generated_sql,
-            golden_results=golden_results,
-            generated_results=generated_results,
-            match=match,
-            complexity=complexity,
-            error=error,
-        ))
+        results.append(
+            EvalResult(
+                question=question,
+                golden_sql=golden_sql,
+                generated_sql=generated_sql,
+                golden_results=golden_results,
+                generated_results=generated_results,
+                match=match,
+                complexity=complexity,
+                error=error,
+            )
+        )
 
     return results
 

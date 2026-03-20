@@ -12,7 +12,7 @@ Requires Docker Compose services: Nessie, MinIO, Trino.
 
 import pytest
 
-from src.iceberg_utils.trino import execute_ddl, execute_query, get_table_row_count
+from src.iceberg_utils.trino import execute_ddl
 
 
 @pytest.mark.integration
@@ -40,8 +40,11 @@ class TestTrinoWrites:
         )
         # Write initial data via PySpark
         write_data(
-            spark_session, "trino_write_test", "trades",
-            generate_trades(10, seed=4001), schema,
+            spark_session,
+            "trino_write_test",
+            "trades",
+            generate_trades(10, seed=4001),
+            schema,
         )
 
         # Trino inserts additional rows
@@ -82,8 +85,11 @@ class TestTrinoWrites:
             "s3://lakehouse-data/warehouse/trino_update_test/trades",
         )
         write_data(
-            spark_session, "trino_update_test", "trades",
-            generate_trades(10, seed=4002), schema,
+            spark_session,
+            "trino_update_test",
+            "trades",
+            generate_trades(10, seed=4002),
+            schema,
         )
 
         # Trino updates: change side to 'SELL' for trade_id = 1
@@ -119,8 +125,11 @@ class TestTrinoWrites:
             "s3://lakehouse-data/warehouse/trino_delete_test/trades",
         )
         write_data(
-            spark_session, "trino_delete_test", "trades",
-            generate_trades(10, seed=4003), schema,
+            spark_session,
+            "trino_delete_test",
+            "trades",
+            generate_trades(10, seed=4003),
+            schema,
         )
 
         # Trino deletes trade_id = 1
@@ -154,8 +163,11 @@ class TestTrinoWrites:
             "s3://lakehouse-data/warehouse/trino_merge_test/trades",
         )
         write_data(
-            spark_session, "trino_merge_test", "trades",
-            generate_trades(5, seed=4004), schema,
+            spark_session,
+            "trino_merge_test",
+            "trades",
+            generate_trades(5, seed=4004),
+            schema,
         )
 
         # Trino MERGE: update trade_id=1, insert trade_id=999

@@ -28,7 +28,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from pyspark.sql import DataFrame, SparkSession
 
-from pyspark.sql import functions as F
+from pyspark.sql import functions as f
 
 logger = logging.getLogger(__name__)
 
@@ -127,9 +127,7 @@ def reconcile_table(
 
     # 1. Row count comparison
     source_row_count = source_df.count()
-    target_count_result = spark.sql(
-        f"SELECT COUNT(*) as cnt FROM {full_target}"
-    ).collect()
+    target_count_result = spark.sql(f"SELECT COUNT(*) as cnt FROM {full_target}").collect()
     target_row_count = target_count_result[0].cnt
     row_count_match = source_row_count == target_row_count
 
@@ -147,7 +145,7 @@ def reconcile_table(
 
     if checksum_columns:
         # Compute source checksum: SUM of all checksum columns
-        sum_exprs = [F.sum(F.col(col)).alias(f"sum_{col}") for col in checksum_columns]
+        sum_exprs = [f.sum(f.col(col)).alias(f"sum_{col}") for col in checksum_columns]
         source_sums_row = source_df.agg(*sum_exprs).collect()[0]
         source_checksum = Decimal("0")
         for col in checksum_columns:
@@ -157,9 +155,7 @@ def reconcile_table(
 
         # Compute target checksum via SparkSQL
         sum_sql = " + ".join(f"COALESCE(SUM({col}), 0)" for col in checksum_columns)
-        target_checksum_result = spark.sql(
-            f"SELECT {sum_sql} as checksum FROM {full_target}"
-        ).collect()
+        target_checksum_result = spark.sql(f"SELECT {sum_sql} as checksum FROM {full_target}").collect()
         target_checksum = Decimal(str(target_checksum_result[0]["checksum"]))
 
         checksum_match = _within_tolerance(source_checksum, target_checksum, tolerance)
@@ -182,33 +178,25 @@ def reconcile_table(
 
             # Source aggregate
             func_map = {
-                "SUM": F.sum,
-                "AVG": F.avg,
-                "MIN": F.min,
-                "MAX": F.max,
-                "COUNT": F.count,
+                "SUM": f.sum,
+                "AVG": f.avg,
+                "MIN": f.min,
+                "MAX": f.max,
+                "COUNT": f.count,
             }
             spark_func = func_map.get(agg_func.upper())
             if spark_func is None:
                 logger.warning("Unsupported aggregate function: %s", agg_func)
                 continue
 
-            source_agg_row = source_df.agg(
-                spark_func(F.col(col_name)).alias(agg_key)
-            ).collect()[0]
+            source_agg_row = source_df.agg(spark_func(f.col(col_name)).alias(agg_key)).collect()[0]
             source_val = source_agg_row[agg_key]
-            source_aggregates[agg_key] = (
-                Decimal(str(source_val)) if source_val is not None else None
-            )
+            source_aggregates[agg_key] = Decimal(str(source_val)) if source_val is not None else None
 
             # Target aggregate via SparkSQL
-            target_agg_result = spark.sql(
-                f"SELECT {agg_func}({col_name}) as {agg_key} FROM {full_target}"
-            ).collect()
+            target_agg_result = spark.sql(f"SELECT {agg_func}({col_name}) as {agg_key} FROM {full_target}").collect()
             target_val = target_agg_result[0][agg_key]
-            target_aggregates[agg_key] = (
-                Decimal(str(target_val)) if target_val is not None else None
-            )
+            target_aggregates[agg_key] = Decimal(str(target_val)) if target_val is not None else None
 
             match = _within_tolerance(
                 source_aggregates[agg_key],

@@ -8,11 +8,13 @@ environment variables are not set.
 Schedule: Daily at 02:00 UTC (runs after all ETL pipelines complete)
 Owner: governance-team
 """
+
 from __future__ import annotations
 
+import contextlib
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -43,10 +45,7 @@ def _extract_trino_audit(**context) -> int:
 
     # Extract yesterday's records
     logical_date = context["logical_date"]
-    since = datetime(
-        logical_date.year, logical_date.month, logical_date.day,
-        tzinfo=timezone.utc
-    ) - timedelta(days=1)
+    since = datetime(logical_date.year, logical_date.month, logical_date.day, tzinfo=UTC) - timedelta(days=1)
 
     extractor = TrinoAuditExtractor(_AUDIT_RECEIVER_URL)
     records = extractor.extract(since=since)
@@ -58,13 +57,13 @@ def _extract_trino_audit(**context) -> int:
     import tempfile
 
     if records:
-        tmp = tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json",
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".json",
             prefix=f"trino_audit_{since.strftime('%Y%m%d')}_",
             delete=False,
-        )
-        json.dump([r.to_dict() for r in records], tmp, default=str)
-        tmp.close()
+        ) as tmp:
+            json.dump([r.to_dict() for r in records], tmp, default=str)
         context["ti"].xcom_push(key="trino_records_file", value=tmp.name)
         logger.info("Extracted %d Trino audit records, saved to %s", len(records), tmp.name)
     else:
@@ -83,10 +82,7 @@ def _extract_teradata_audit(**context) -> int:
         return 0
 
     logical_date = context["logical_date"]
-    since = datetime(
-        logical_date.year, logical_date.month, logical_date.day,
-        tzinfo=timezone.utc
-    ) - timedelta(days=1)
+    since = datetime(logical_date.year, logical_date.month, logical_date.day, tzinfo=UTC) - timedelta(days=1)
 
     extractor = TeradataAuditExtractor()
     records = extractor.extract(since=since)
@@ -95,13 +91,13 @@ def _extract_teradata_audit(**context) -> int:
     import tempfile
 
     if records:
-        tmp = tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json",
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".json",
             prefix=f"td_audit_{since.strftime('%Y%m%d')}_",
             delete=False,
-        )
-        json.dump([r.to_dict() for r in records], tmp, default=str)
-        tmp.close()
+        ) as tmp:
+            json.dump([r.to_dict() for r in records], tmp, default=str)
         context["ti"].xcom_push(key="teradata_records_file", value=tmp.name)
     else:
         context["ti"].xcom_push(key="teradata_records_file", value=None)
@@ -119,10 +115,7 @@ def _extract_snowflake_audit(**context) -> int:
         return 0
 
     logical_date = context["logical_date"]
-    since = datetime(
-        logical_date.year, logical_date.month, logical_date.day,
-        tzinfo=timezone.utc
-    ) - timedelta(days=1)
+    since = datetime(logical_date.year, logical_date.month, logical_date.day, tzinfo=UTC) - timedelta(days=1)
 
     extractor = SnowflakeAuditExtractor()
     records = extractor.extract(since=since)
@@ -131,13 +124,13 @@ def _extract_snowflake_audit(**context) -> int:
     import tempfile
 
     if records:
-        tmp = tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json",
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            suffix=".json",
             prefix=f"sf_audit_{since.strftime('%Y%m%d')}_",
             delete=False,
-        )
-        json.dump([r.to_dict() for r in records], tmp, default=str)
-        tmp.close()
+        ) as tmp:
+            json.dump([r.to_dict() for r in records], tmp, default=str)
         context["ti"].xcom_push(key="snowflake_records_file", value=tmp.name)
     else:
         context["ti"].xcom_push(key="snowflake_records_file", value=None)
@@ -147,11 +140,11 @@ def _extract_snowflake_audit(**context) -> int:
 
 def _aggregate_records(**context) -> int:
     """Aggregate all extracted audit records into PostgreSQL."""
-    from src.governance.audit_aggregator import aggregate_audit_records
-    from src.governance.audit_schema import AuditRecord
-
     import json
     import os as _os
+
+    from src.governance.audit_aggregator import aggregate_audit_records
+    from src.governance.audit_schema import AuditRecord
 
     all_records = []
     for key in ["trino_records_file", "teradata_records_file", "snowflake_records_file"]:
@@ -163,15 +156,14 @@ def _aggregate_records(**context) -> int:
                 # Reconstruct AuditRecord from dict
                 try:
                     from datetime import datetime
+
                     r["timestamp"] = datetime.fromisoformat(r["timestamp"])
                     all_records.append(AuditRecord(**r))
                 except Exception as e:
                     logger.warning("Failed to reconstruct AuditRecord from dict: %s", e)
             # Clean up temp file
-            try:
+            with contextlib.suppress(Exception):
                 _os.unlink(file_path)
-            except Exception:
-                pass
 
     logger.info("Aggregating %d total audit records", len(all_records))
     inserted = aggregate_audit_records(all_records, _AUDIT_DB_CONN)
@@ -201,13 +193,12 @@ with DAG(
     dag_id="governance_audit_aggregation",
     description="Daily cross-engine audit ETL: Trino + Teradata + Snowflake -> PostgreSQL",
     schedule="0 2 * * *",  # Daily at 02:00 UTC
-    start_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+    start_date=datetime(2024, 1, 1, tzinfo=UTC),
     catchup=False,
     default_args=default_args,
     tags=["governance", "audit", "compliance"],
     doc_md=__doc__,
 ) as dag:
-
     extract_trino_audit = PythonOperator(
         task_id="extract_trino_audit",
         python_callable=_extract_trino_audit,

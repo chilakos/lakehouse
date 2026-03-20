@@ -103,14 +103,34 @@ class TestBronzeTradesQualityChecks:
 
         # Create data with a null trade_id
         trades_with_null = [
-            Row(trade_id=1, trade_date="2026-01-01", symbol="AAPL", side="BUY",
-                trade_type="MARKET", quantity=100, price=150.00, notional=15000.00,
-                account_id="ACCT-1000", trader_id="TRD-100", exchange="NYSE",
-                settlement_date="2026-01-02"),
-            Row(trade_id=None, trade_date="2026-01-02", symbol="GOOGL", side="SELL",
-                trade_type="LIMIT", quantity=50, price=200.00, notional=10000.00,
-                account_id="ACCT-2000", trader_id="TRD-200", exchange="NASDAQ",
-                settlement_date="2026-01-03"),
+            Row(
+                trade_id=1,
+                trade_date="2026-01-01",
+                symbol="AAPL",
+                side="BUY",
+                trade_type="MARKET",
+                quantity=100,
+                price=150.00,
+                notional=15000.00,
+                account_id="ACCT-1000",
+                trader_id="TRD-100",
+                exchange="NYSE",
+                settlement_date="2026-01-02",
+            ),
+            Row(
+                trade_id=None,
+                trade_date="2026-01-02",
+                symbol="GOOGL",
+                side="SELL",
+                trade_type="LIMIT",
+                quantity=50,
+                price=200.00,
+                notional=10000.00,
+                account_id="ACCT-2000",
+                trader_id="TRD-200",
+                exchange="NASDAQ",
+                settlement_date="2026-01-03",
+            ),
         ]
         df = local_spark.createDataFrame(trades_with_null)
 
@@ -135,14 +155,34 @@ class TestBronzeTradesQualityChecks:
 
         # Create data with a negative price
         trades_with_neg_price = [
-            Row(trade_id=1, trade_date="2026-01-01", symbol="AAPL", side="BUY",
-                trade_type="MARKET", quantity=100, price=-50.00, notional=-5000.00,
-                account_id="ACCT-1000", trader_id="TRD-100", exchange="NYSE",
-                settlement_date="2026-01-02"),
-            Row(trade_id=2, trade_date="2026-01-02", symbol="GOOGL", side="SELL",
-                trade_type="LIMIT", quantity=50, price=200.00, notional=10000.00,
-                account_id="ACCT-2000", trader_id="TRD-200", exchange="NASDAQ",
-                settlement_date="2026-01-03"),
+            Row(
+                trade_id=1,
+                trade_date="2026-01-01",
+                symbol="AAPL",
+                side="BUY",
+                trade_type="MARKET",
+                quantity=100,
+                price=-50.00,
+                notional=-5000.00,
+                account_id="ACCT-1000",
+                trader_id="TRD-100",
+                exchange="NYSE",
+                settlement_date="2026-01-02",
+            ),
+            Row(
+                trade_id=2,
+                trade_date="2026-01-02",
+                symbol="GOOGL",
+                side="SELL",
+                trade_type="LIMIT",
+                quantity=50,
+                price=200.00,
+                notional=10000.00,
+                account_id="ACCT-2000",
+                trader_id="TRD-200",
+                exchange="NASDAQ",
+                settlement_date="2026-01-03",
+            ),
         ]
         df = local_spark.createDataFrame(trades_with_neg_price)
 
@@ -190,7 +230,6 @@ class TestBronzeTradesQualityChecks:
         """BasePipeline.execute() raises QualityGateError when critical check fails."""
         from unittest.mock import MagicMock
 
-        from pyspark.sql import Row
         from pyspark.sql.types import (
             DoubleType,
             IntegerType,
@@ -199,27 +238,42 @@ class TestBronzeTradesQualityChecks:
             StructType,
         )
 
-        from src.pipelines.base import BasePipeline, PipelineConfig, QualityGateError
+        from src.pipelines.base import BasePipeline, QualityGateError
 
         # Create a DataFrame with null trade_id (will fail critical check)
-        schema = StructType([
-            StructField("trade_id", IntegerType(), True),
-            StructField("trade_date", StringType(), True),
-            StructField("symbol", StringType(), True),
-            StructField("side", StringType(), True),
-            StructField("trade_type", StringType(), True),
-            StructField("quantity", IntegerType(), True),
-            StructField("price", DoubleType(), True),
-            StructField("notional", DoubleType(), True),
-            StructField("account_id", StringType(), True),
-            StructField("trader_id", StringType(), True),
-            StructField("exchange", StringType(), True),
-            StructField("settlement_date", StringType(), True),
-        ])
+        schema = StructType(
+            [
+                StructField("trade_id", IntegerType(), True),
+                StructField("trade_date", StringType(), True),
+                StructField("symbol", StringType(), True),
+                StructField("side", StringType(), True),
+                StructField("trade_type", StringType(), True),
+                StructField("quantity", IntegerType(), True),
+                StructField("price", DoubleType(), True),
+                StructField("notional", DoubleType(), True),
+                StructField("account_id", StringType(), True),
+                StructField("trader_id", StringType(), True),
+                StructField("exchange", StringType(), True),
+                StructField("settlement_date", StringType(), True),
+            ]
+        )
 
         bad_data = [
             (1, "2026-01-01", "AAPL", "BUY", "MARKET", 100, 150.0, 15000.0, "ACCT-1", "TRD-1", "NYSE", "2026-01-02"),
-            (None, "2026-01-02", "GOOGL", "SELL", "LIMIT", 50, 200.0, 10000.0, "ACCT-2", "TRD-2", "NASDAQ", "2026-01-03"),
+            (
+                None,
+                "2026-01-02",
+                "GOOGL",
+                "SELL",
+                "LIMIT",
+                50,
+                200.0,
+                10000.0,
+                "ACCT-2",
+                "TRD-2",
+                "NASDAQ",
+                "2026-01-03",
+            ),
         ]
         bad_df = local_spark.createDataFrame(bad_data, schema=schema)
 

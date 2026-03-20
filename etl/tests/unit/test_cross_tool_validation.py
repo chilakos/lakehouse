@@ -9,11 +9,9 @@ the Cube YAML validation step.
 from __future__ import annotations
 
 import json
-import os
-import textwrap
 from decimal import Decimal
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 import yaml
@@ -301,11 +299,7 @@ class TestCIWorkflowCubeValidation:
         content = CI_WORKFLOW.read_text()
 
         # Should contain cube-yaml-validate job or step name
-        assert "cube-yaml-validate" in content, (
-            "CI workflow missing cube-yaml-validate step"
-        )
+        assert "cube-yaml-validate" in content, "CI workflow missing cube-yaml-validate step"
 
         # Should reference cross_tool_validation module
-        assert "cross_tool_validation" in content, (
-            "CI workflow missing cross_tool_validation import"
-        )
+        assert "cross_tool_validation" in content, "CI workflow missing cross_tool_validation import"

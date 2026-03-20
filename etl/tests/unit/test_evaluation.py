@@ -7,10 +7,8 @@ with mocked LLM and database connections.
 
 from __future__ import annotations
 
-import json
-import os
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -50,9 +48,7 @@ class TestLoadGoldenDataset:
         """complexity must be 'simple' or 'complex'."""
         dataset = load_golden_dataset(str(_TRADING_PATH))
         for entry in dataset:
-            assert entry["complexity"] in ("simple", "complex"), (
-                f"Invalid complexity: {entry['complexity']}"
-            )
+            assert entry["complexity"] in ("simple", "complex"), f"Invalid complexity: {entry['complexity']}"
 
 
 class TestTradingGoldenDataset:
@@ -98,9 +94,7 @@ class TestRiskGoldenDataset:
         """All risk SQL must reference gold.risk_exposure."""
         dataset = load_golden_dataset(str(_RISK_PATH))
         for entry in dataset:
-            assert "gold.risk_exposure" in entry["sql"], (
-                f"SQL does not reference gold.risk_exposure: {entry['sql']}"
-            )
+            assert "gold.risk_exposure" in entry["sql"], f"SQL does not reference gold.risk_exposure: {entry['sql']}"
 
 
 class TestEvalResult:
@@ -149,11 +143,13 @@ class TestEvaluateAccuracy:
 
     def test_evaluate_accuracy_all_correct(self):
         """100% accuracy when all results match."""
-        results = self._make_results([
-            (True, "simple"),
-            (True, "simple"),
-            (True, "complex"),
-        ])
+        results = self._make_results(
+            [
+                (True, "simple"),
+                (True, "simple"),
+                (True, "complex"),
+            ]
+        )
         acc = evaluate_accuracy(results)
         assert acc["accuracy_pct"] == 100.0
         assert acc["total"] == 3
@@ -161,12 +157,14 @@ class TestEvaluateAccuracy:
 
     def test_evaluate_accuracy_some_wrong(self):
         """Partial accuracy computed correctly."""
-        results = self._make_results([
-            (True, "simple"),
-            (False, "simple"),
-            (True, "complex"),
-            (False, "complex"),
-        ])
+        results = self._make_results(
+            [
+                (True, "simple"),
+                (False, "simple"),
+                (True, "complex"),
+                (False, "complex"),
+            ]
+        )
         acc = evaluate_accuracy(results)
         assert acc["accuracy_pct"] == 50.0
         assert acc["total"] == 4
@@ -174,22 +172,26 @@ class TestEvaluateAccuracy:
 
     def test_evaluate_accuracy_filter_simple(self):
         """complexity_filter='simple' only counts simple entries."""
-        results = self._make_results([
-            (True, "simple"),
-            (True, "simple"),
-            (False, "complex"),
-        ])
+        results = self._make_results(
+            [
+                (True, "simple"),
+                (True, "simple"),
+                (False, "complex"),
+            ]
+        )
         acc = evaluate_accuracy(results, complexity_filter="simple")
         assert acc["accuracy_pct"] == 100.0
         assert acc["total"] == 2
 
     def test_evaluate_accuracy_filter_complex(self):
         """complexity_filter='complex' only counts complex entries."""
-        results = self._make_results([
-            (True, "simple"),
-            (False, "complex"),
-            (True, "complex"),
-        ])
+        results = self._make_results(
+            [
+                (True, "simple"),
+                (False, "complex"),
+                (True, "complex"),
+            ]
+        )
         acc = evaluate_accuracy(results, complexity_filter="complex")
         assert acc["accuracy_pct"] == 50.0
         assert acc["total"] == 2
@@ -247,19 +249,34 @@ class TestEvaluationReport:
         """generate_evaluation_report returns dict with overall, simple, complex accuracy."""
         results = [
             EvalResult(
-                question="q1", golden_sql="S1", generated_sql="S1",
-                golden_results=[(1,)], generated_results=[(1,)],
-                match=True, complexity="simple", error=None,
+                question="q1",
+                golden_sql="S1",
+                generated_sql="S1",
+                golden_results=[(1,)],
+                generated_results=[(1,)],
+                match=True,
+                complexity="simple",
+                error=None,
             ),
             EvalResult(
-                question="q2", golden_sql="S2", generated_sql="S2",
-                golden_results=[(2,)], generated_results=[(2,)],
-                match=True, complexity="complex", error=None,
+                question="q2",
+                golden_sql="S2",
+                generated_sql="S2",
+                golden_results=[(2,)],
+                generated_results=[(2,)],
+                match=True,
+                complexity="complex",
+                error=None,
             ),
             EvalResult(
-                question="q3", golden_sql="S3", generated_sql="S3x",
-                golden_results=[(3,)], generated_results=[(99,)],
-                match=False, complexity="complex", error=None,
+                question="q3",
+                golden_sql="S3",
+                generated_sql="S3x",
+                golden_results=[(3,)],
+                generated_results=[(99,)],
+                match=False,
+                complexity="complex",
+                error=None,
             ),
         ]
         report = generate_evaluation_report(results)

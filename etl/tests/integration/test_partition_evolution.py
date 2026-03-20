@@ -22,7 +22,6 @@ from src.iceberg_utils.catalog import (
 )
 from src.synthetic.generators import generate_trades, trades_schema
 
-
 pytestmark = pytest.mark.integration
 
 
@@ -63,9 +62,7 @@ class TestPartitionEvolution:
 
         # Query a single day -- should use partition pruning
         single_date = all_dates[0]["trade_date"]
-        filtered_df = spark_session.sql(
-            f"SELECT * FROM lakehouse.{ns}.trades WHERE trade_date = DATE '{single_date}'"
-        )
+        filtered_df = spark_session.sql(f"SELECT * FROM lakehouse.{ns}.trades WHERE trade_date = DATE '{single_date}'")
         filtered_count = filtered_df.count()
         assert filtered_count > 0, "Filtered query should return some rows"
         assert filtered_count < 100, "Filtered query should return fewer rows than full table"
@@ -106,8 +103,7 @@ class TestPartitionEvolution:
         # Verify old data is still readable after evolution
         post_evo_count = read_table(spark_session, ns, "trades").count()
         assert post_evo_count == 50, (
-            f"Old data should still be readable after partition evolution: "
-            f"expected 50, got {post_evo_count}"
+            f"Old data should still be readable after partition evolution: expected 50, got {post_evo_count}"
         )
 
         # Write new data with the new partition scheme
@@ -116,9 +112,7 @@ class TestPartitionEvolution:
 
         # Verify combined data
         total_count = read_table(spark_session, ns, "trades").count()
-        assert total_count == 80, (
-            f"Total count should be 80 (50 old + 30 new): got {total_count}"
-        )
+        assert total_count == 80, f"Total count should be 80 (50 old + 30 new): got {total_count}"
 
     def test_partition_evolution_data_integrity(self, spark_session, clean_nessie):
         """Test that partition evolution preserves data integrity.

@@ -150,10 +150,10 @@ def _compare_result_sets(
         sorted_a = rows_a
         sorted_b = rows_b
 
-    for row_a, row_b in zip(sorted_a, sorted_b):
+    for row_a, row_b in zip(sorted_a, sorted_b, strict=False):
         if len(row_a) != len(row_b):
             return False
-        for val_a, val_b in zip(row_a, row_b):
+        for val_a, val_b in zip(row_a, row_b, strict=False):
             if isinstance(val_a, Decimal) and isinstance(val_b, Decimal):
                 if abs(val_a - val_b) > _DECIMAL_TOLERANCE:
                     return False
@@ -278,15 +278,11 @@ def validate_cube_yaml_structure(
                     errors.append(f"{yml_file.name}: cube missing 'name'")
 
                 if "sql_table" not in cube:
-                    errors.append(
-                        f"{yml_file.name}: cube '{cube_name}' missing 'sql_table'"
-                    )
+                    errors.append(f"{yml_file.name}: cube '{cube_name}' missing 'sql_table'")
 
                 measures = cube.get("measures")
                 if not measures:
-                    errors.append(
-                        f"{yml_file.name}: cube '{cube_name}' has no measures"
-                    )
+                    errors.append(f"{yml_file.name}: cube '{cube_name}' has no measures")
                 else:
                     for measure in measures:
                         m_name = measure.get("name", "<unnamed>")

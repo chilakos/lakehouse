@@ -37,32 +37,24 @@ class TestEtlPatternsDoc:
 
     def test_etl_patterns_file_exists(self):
         """docs/etl-patterns.md must exist."""
-        assert ETL_PATTERNS_PATH.exists(), (
-            f"ETL patterns documentation not found at {ETL_PATTERNS_PATH}"
-        )
+        assert ETL_PATTERNS_PATH.exists(), f"ETL patterns documentation not found at {ETL_PATTERNS_PATH}"
 
     def test_etl_patterns_has_all_sections(self):
         """All 8 required sections must be present."""
         content = ETL_PATTERNS_PATH.read_text()
         for section in REQUIRED_SECTIONS:
-            assert section in content, (
-                f"Missing required section: '{section}' in etl-patterns.md"
-            )
+            assert section in content, f"Missing required section: '{section}' in etl-patterns.md"
 
     def test_etl_patterns_has_minimum_length(self):
         """Documentation must be at least 100 lines (per must_haves)."""
         lines = ETL_PATTERNS_PATH.read_text().splitlines()
-        assert len(lines) >= 100, (
-            f"etl-patterns.md has {len(lines)} lines, expected >= 100"
-        )
+        assert len(lines) >= 100, f"etl-patterns.md has {len(lines)} lines, expected >= 100"
 
     def test_etl_patterns_has_code_examples(self):
         """Documentation must contain Python code examples."""
         content = ETL_PATTERNS_PATH.read_text()
         code_blocks = re.findall(r"```python\n(.*?)```", content, re.DOTALL)
-        assert len(code_blocks) >= 3, (
-            f"Expected at least 3 Python code examples, found {len(code_blocks)}"
-        )
+        assert len(code_blocks) >= 3, f"Expected at least 3 Python code examples, found {len(code_blocks)}"
 
     def test_code_examples_reference_importable_modules(self):
         """Python import statements in code examples must reference real modules."""
@@ -90,20 +82,15 @@ class TestEtlPatternsDoc:
                 py_file = src_root.parent / f"{module_path}.py"
                 init_file = src_root.parent / module_path / "__init__.py"
                 assert py_file.exists() or init_file.exists(), (
-                    f"Import '{line}' references non-existent module: "
-                    f"neither {py_file} nor {init_file} exists"
+                    f"Import '{line}' references non-existent module: neither {py_file} nor {init_file} exists"
                 )
 
     def test_documentation_mentions_financial_precision(self):
         """Documentation must mention DecimalType for financial precision."""
         content = ETL_PATTERNS_PATH.read_text()
-        assert "DecimalType" in content, (
-            "Documentation must mention DecimalType for financial precision"
-        )
+        assert "DecimalType" in content, "Documentation must mention DecimalType for financial precision"
 
     def test_documentation_mentions_openlineage(self):
         """Documentation must mention OpenLineage for lineage tracking."""
         content = ETL_PATTERNS_PATH.read_text()
-        assert "OpenLineage" in content, (
-            "Documentation must mention OpenLineage for lineage tracking"
-        )
+        assert "OpenLineage" in content, "Documentation must mention OpenLineage for lineage tracking"

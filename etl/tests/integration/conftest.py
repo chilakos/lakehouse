@@ -40,10 +40,7 @@ def ensure_services():
             unreachable.append(name)
 
     if unreachable:
-        pytest.skip(
-            f"Docker services not running ({', '.join(unreachable)}). "
-            "Start with: docker compose up -d"
-        )
+        pytest.skip(f"Docker services not running ({', '.join(unreachable)}). Start with: docker compose up -d")
 
 
 @pytest.fixture()
@@ -53,8 +50,8 @@ def clean_nessie(nessie_url):
     Function-scoped: drops namespaces and tables created during the test.
     Uses Nessie REST API for cleanup.
     """
-    import urllib.request
     import json
+    import urllib.request
 
     iceberg_base = f"{nessie_url}/iceberg/main"
 

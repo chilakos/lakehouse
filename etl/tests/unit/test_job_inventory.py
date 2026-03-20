@@ -8,7 +8,6 @@ for CRUD, filtering, classification, statistics, and JSON persistence.
 
 from __future__ import annotations
 
-import json
 import os
 import tempfile
 
@@ -83,10 +82,20 @@ class TestDataStageJob:
         job = self._make_job()
         d = job.to_dict()
         expected_keys = {
-            "job_name", "job_id", "complexity", "source_systems",
-            "target_tables", "dependencies", "estimated_effort_hours",
-            "has_mainframe_source", "transformation_description", "schedule",
-            "avg_runtime_minutes", "row_volume_estimate", "migration_status", "notes",
+            "job_name",
+            "job_id",
+            "complexity",
+            "source_systems",
+            "target_tables",
+            "dependencies",
+            "estimated_effort_hours",
+            "has_mainframe_source",
+            "transformation_description",
+            "schedule",
+            "avg_runtime_minutes",
+            "row_volume_estimate",
+            "migration_status",
+            "notes",
         }
         assert expected_keys == set(d.keys())
 
@@ -267,9 +276,7 @@ class TestJobInventory:
 
         inventory = self._make_inventory()
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as f:
             tmp_path = f.name
 
         try:
@@ -277,7 +284,7 @@ class TestJobInventory:
             loaded = JobInventory.load_from_json(tmp_path)
 
             assert len(loaded.jobs) == len(inventory.jobs)
-            for orig, restored in zip(inventory.jobs, loaded.jobs):
+            for orig, restored in zip(inventory.jobs, loaded.jobs, strict=False):
                 assert orig.job_id == restored.job_id
                 assert orig.job_name == restored.job_name
                 assert orig.complexity == restored.complexity

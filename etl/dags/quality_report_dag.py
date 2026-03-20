@@ -11,9 +11,9 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 
-from airflow.sdk import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.providers.standard.sensors.external_task import ExternalTaskSensor
+from airflow.sdk import DAG
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +21,14 @@ logger = logging.getLogger(__name__)
 def _on_failure_callback(context):
     """Failure callback for alerting."""
     dag_id = context.get("dag", {}).dag_id if hasattr(context.get("dag", {}), "dag_id") else "unknown"
-    task_id = context.get("task_instance", {}).task_id if hasattr(context.get("task_instance", {}), "task_id") else "unknown"
+    task_id = (
+        context.get("task_instance", {}).task_id if hasattr(context.get("task_instance", {}), "task_id") else "unknown"
+    )
     logger.error(
         "Task failed: dag_id=%s, task_id=%s, execution_date=%s",
-        dag_id, task_id, context.get("execution_date", "unknown"),
+        dag_id,
+        task_id,
+        context.get("execution_date", "unknown"),
     )
 
 
@@ -77,7 +81,6 @@ with DAG(
     **Checks:** SodaCL definitions per table
     """,
 ) as dag:
-
     # Wait for Gold pipeline to finish (implies Bronze/Silver done too)
     wait_for_gold = ExternalTaskSensor(
         task_id="wait_for_gold_metrics",

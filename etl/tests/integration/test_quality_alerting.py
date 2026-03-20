@@ -139,25 +139,39 @@ class TestQualityCheckAlertingStructure:
         from src.quality.scanner import run_soda_checks
 
         # Explicit schema needed because null trade_id prevents type inference
-        schema = StructType([
-            StructField("trade_id", IntegerType(), True),
-            StructField("trade_date", StringType(), True),
-            StructField("symbol", StringType(), True),
-            StructField("side", StringType(), True),
-            StructField("trade_type", StringType(), True),
-            StructField("quantity", IntegerType(), True),
-            StructField("price", DoubleType(), True),
-            StructField("notional", DoubleType(), True),
-            StructField("account_id", StringType(), True),
-            StructField("trader_id", StringType(), True),
-            StructField("exchange", StringType(), True),
-            StructField("settlement_date", StringType(), True),
-        ])
+        schema = StructType(
+            [
+                StructField("trade_id", IntegerType(), True),
+                StructField("trade_date", StringType(), True),
+                StructField("symbol", StringType(), True),
+                StructField("side", StringType(), True),
+                StructField("trade_type", StringType(), True),
+                StructField("quantity", IntegerType(), True),
+                StructField("price", DoubleType(), True),
+                StructField("notional", DoubleType(), True),
+                StructField("account_id", StringType(), True),
+                StructField("trader_id", StringType(), True),
+                StructField("exchange", StringType(), True),
+                StructField("settlement_date", StringType(), True),
+            ]
+        )
 
         # Create data with null trade_id to trigger critical failure
         bad_data = [
-            (None, "2026-01-01", "AAPL", "BUY", "MARKET", 100, 150.0, 15000.0,
-             "ACCT-1000", "TRD-100", "NYSE", "2026-01-02"),
+            (
+                None,
+                "2026-01-01",
+                "AAPL",
+                "BUY",
+                "MARKET",
+                100,
+                150.0,
+                15000.0,
+                "ACCT-1000",
+                "TRD-100",
+                "NYSE",
+                "2026-01-02",
+            ),
         ]
         df = local_spark.createDataFrame(bad_data, schema=schema)
 
@@ -180,9 +194,8 @@ class TestQualityCheckAlertingStructure:
 
     def test_all_results_serializable_to_json_batch(self, local_spark, bronze_checks_path):
         """All check results from a scan can be batch-serialized for alerting."""
-        from src.synthetic.generators import generate_trades
-
         from src.quality.scanner import run_soda_checks
+        from src.synthetic.generators import generate_trades
 
         trades = generate_trades(num_records=50, seed=99)
         df = local_spark.createDataFrame(trades)
@@ -213,9 +226,8 @@ class TestQualityCheckAlertingStructure:
 
     def test_sequential_runs_produce_comparable_results(self, local_spark, bronze_checks_path):
         """Multiple sequential runs produce comparable results (no flaky checks)."""
-        from src.synthetic.generators import generate_trades
-
         from src.quality.scanner import run_soda_checks
+        from src.synthetic.generators import generate_trades
 
         trades = generate_trades(num_records=50, seed=42)
         df = local_spark.createDataFrame(trades)

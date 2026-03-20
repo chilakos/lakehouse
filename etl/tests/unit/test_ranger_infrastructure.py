@@ -132,11 +132,9 @@ class TestTrinoConfigProperties:
     def test_file_based_rbac_removed(self, trino_config):
         # Should not have uncommented file-based RBAC
         lines = trino_config.splitlines()
-        active_lines = [l for l in lines if l.strip() and not l.strip().startswith("#")]
+        active_lines = [line for line in lines if line.strip() and not line.strip().startswith("#")]
         for line in active_lines:
-            assert "access-control.name=file" not in line, (
-                "File-based RBAC should be commented out, not active"
-            )
+            assert "access-control.name=file" not in line, "File-based RBAC should be commented out, not active"
 
     def test_ranger_service_name_set(self, trino_config):
         assert "ranger.service.name" in trino_config or "ranger.plugin" in trino_config, (
@@ -150,9 +148,7 @@ class TestEventListenerProperties:
 
     @pytest.fixture(scope="class")
     def event_listener_config(self):
-        config_path = (
-            PROJECT_ROOT / "infra" / "docker" / "trino" / "etc" / "event-listener.properties"
-        )
+        config_path = PROJECT_ROOT / "infra" / "docker" / "trino" / "etc" / "event-listener.properties"
         assert config_path.is_file(), "event-listener.properties not found"
         return config_path.read_text()
 

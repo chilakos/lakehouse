@@ -93,12 +93,14 @@ class NLToSQLEngine:
         # Call Bedrock
         try:
             client = boto3.client("bedrock-runtime", region_name=self.region_name)
-            body = json.dumps({
-                "anthropic_version": "bedrock-2023-05-31",
-                "max_tokens": 1024,
-                "system": system_content,
-                "messages": [{"role": "user", "content": user_message}],
-            })
+            body = json.dumps(
+                {
+                    "anthropic_version": "bedrock-2023-05-31",
+                    "max_tokens": 1024,
+                    "system": system_content,
+                    "messages": [{"role": "user", "content": user_message}],
+                }
+            )
 
             response = client.invoke_model(
                 modelId=self.model_id,

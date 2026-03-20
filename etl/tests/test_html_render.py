@@ -22,20 +22,23 @@ import textwrap
 from pathlib import Path
 
 import pytest
-import yaml
 
 # Ensure docs/ is importable
 _project_root = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(_project_root))
 
-from docs.render_html import extract_versions, render_swots  # noqa: E402
-from docs.render_html import extract_services, render_architecture  # noqa: E402
-from docs.render_html import render_developer_docs, render_dev_index  # noqa: E402
-from docs.render_html import extract_package_api, extract_all_apis  # noqa: E402
-from docs.render_html import extract_glossary_terms, extract_freshness_slas  # noqa: E402
-from docs.render_html import render_catalog_docs  # noqa: E402
-from docs.render_html import extract_cube_metrics  # noqa: E402
-
+from docs.render_html import (  # noqa: E402  # noqa: E402  # noqa: E402  # noqa: E402  # noqa: E402
+    extract_cube_metrics,  # noqa: E402
+    extract_freshness_slas,
+    extract_glossary_terms,
+    extract_package_api,
+    extract_services,
+    extract_versions,
+    render_architecture,
+    render_catalog_docs,  # noqa: E402
+    render_developer_docs,
+    render_swots,
+)
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -144,6 +147,7 @@ def rendered_html(sample_data_dir: Path, template_dir: Path, output_dir: Path) -
 # SWOT-01: Embedded CSS
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_css_embedded(rendered_html: str) -> None:
     """Rendered HTML must contain an embedded <style> block (SWOT-01)."""
@@ -159,6 +163,7 @@ def test_no_external_css(rendered_html: str) -> None:
 # ---------------------------------------------------------------------------
 # SWOT-10: Responsive design
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_responsive_meta_viewport(rendered_html: str) -> None:
@@ -176,6 +181,7 @@ def test_responsive_tablet_breakpoint(rendered_html: str) -> None:
 # SWOT-09: Collapsible sections
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_collapsible_details_elements(rendered_html: str) -> None:
     """Rendered HTML must contain details and summary elements (SWOT-09)."""
@@ -192,6 +198,7 @@ def test_print_details_expansion(rendered_html: str) -> None:
 # ---------------------------------------------------------------------------
 # ARCH-09: Version-stamped footer
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_footer_generation_date(rendered_html: str) -> None:
@@ -213,6 +220,7 @@ def test_footer_version_strings(rendered_html: str) -> None:
 # Branding: Navy/Gold
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_navy_color_in_css(rendered_html: str) -> None:
     """CSS must contain navy color #1a2332."""
@@ -228,13 +236,15 @@ def test_gold_color_in_css(rendered_html: str) -> None:
 @pytest.mark.unit
 def test_system_font_stack(rendered_html: str) -> None:
     """CSS must contain system font stack with Segoe UI."""
-    assert '"Segoe UI"' in rendered_html or "'Segoe UI'" in rendered_html, \
+    assert '"Segoe UI"' in rendered_html or "'Segoe UI'" in rendered_html, (
         'Missing system font stack (should contain "Segoe UI")'
+    )
 
 
 # ---------------------------------------------------------------------------
 # extract_versions()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_extract_versions_returns_dict() -> None:
@@ -253,10 +263,9 @@ def test_extract_versions_returns_dict() -> None:
 # render_swots() produces .html output
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
-def test_render_swots_produces_html(
-    sample_data_dir: Path, template_dir: Path, output_dir: Path
-) -> None:
+def test_render_swots_produces_html(sample_data_dir: Path, template_dir: Path, output_dir: Path) -> None:
     """render_swots() must produce .html files from .yml data files."""
     results = render_swots(
         data_dir=sample_data_dir,
@@ -274,6 +283,7 @@ def test_render_swots_produces_html(
 # ---------------------------------------------------------------------------
 # Architecture: Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def compose_path() -> Path:
@@ -327,6 +337,7 @@ def rendered_architecture(
 # ARCH-01: extract_services() metadata
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_extract_services_ports(compose_path: Path) -> None:
     """extract_services() returns dict with ports, healthcheck, depends_on for all services."""
@@ -335,10 +346,8 @@ def test_extract_services_ports(compose_path: Path) -> None:
     # Should have all 25 docker-compose services
     assert len(services) >= 25, f"Expected >= 25 services, got {len(services)}"
     # Check specific port values
-    assert any("8080" in str(p) for p in services["trino"]["ports"]), \
-        "Trino should have port 8080"
-    assert any("9000" in str(p) for p in services["minio"]["ports"]), \
-        "MinIO should have port 9000"
+    assert any("8080" in str(p) for p in services["trino"]["ports"]), "Trino should have port 8080"
+    assert any("9000" in str(p) for p in services["minio"]["ports"]), "MinIO should have port 9000"
     # Each service should have required keys
     for name, svc in services.items():
         assert "ports" in svc, f"{name} missing 'ports'"
@@ -375,6 +384,7 @@ def test_extract_services_layer_assignment(compose_path: Path, arch_data_dir: Pa
 # ARCH-01: Marketecture stats banner and capability groups
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_marketecture_stats_banner(rendered_architecture: dict[str, str]) -> None:
     """Marketecture HTML contains stats banner with key numbers (ARCH-01)."""
@@ -382,8 +392,7 @@ def test_marketecture_stats_banner(rendered_architecture: dict[str, str]) -> Non
     assert "1.5 PB" in html, "Missing '1.5 PB' in stats banner"
     assert "300+" in html, "Missing '300+' in stats banner"
     assert "40+" in html, "Missing '40+' in stats banner"
-    assert "Query Engines" in html or "query engines" in html.lower(), \
-        "Missing 'Query Engines' in stats banner"
+    assert "Query Engines" in html or "query engines" in html.lower(), "Missing 'Query Engines' in stats banner"
 
 
 @pytest.mark.unit
@@ -391,8 +400,15 @@ def test_marketecture_capability_groups(rendered_architecture: dict[str, str]) -
     """Marketecture HTML contains all 8 capability group labels (ARCH-01)."""
     html = rendered_architecture["marketecture.html"]
     groups = [
-        "Sources", "ETL", "Ingestion", "Iceberg Lakehouse",
-        "Query Engines", "Semantic", "Consumers", "Governance", "Security",
+        "Sources",
+        "ETL",
+        "Ingestion",
+        "Iceberg Lakehouse",
+        "Query Engines",
+        "Semantic",
+        "Consumers",
+        "Governance",
+        "Security",
     ]
     for group in groups:
         assert group in html, f"Missing capability group label: '{group}'"
@@ -401,6 +417,7 @@ def test_marketecture_capability_groups(rendered_architecture: dict[str, str]) -
 # ---------------------------------------------------------------------------
 # ARCH-02: Detailed architecture all services
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_detailed_arch_all_services(rendered_architecture: dict[str, str]) -> None:
@@ -415,18 +432,19 @@ def test_detailed_arch_all_services(rendered_architecture: dict[str, str]) -> No
 # ARCH-08: CSS hover tooltips
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_css_hover_tooltips(rendered_architecture: dict[str, str]) -> None:
     """Detailed architecture HTML contains tooltip CSS class and hover rule (ARCH-08)."""
     html = rendered_architecture["detailed-architecture.html"]
     assert "service-tooltip" in html, "Missing 'service-tooltip' CSS class"
-    assert ".service-node:hover .service-tooltip" in html, \
-        "Missing CSS hover rule for tooltips"
+    assert ".service-node:hover .service-tooltip" in html, "Missing CSS hover rule for tooltips"
 
 
 # ---------------------------------------------------------------------------
 # ARCH-03: Data flow medallion path
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_data_flow_medallion_path(rendered_architecture: dict[str, str]) -> None:
@@ -436,13 +454,13 @@ def test_data_flow_medallion_path(rendered_architecture: dict[str, str]) -> None
     assert "Silver" in html, "Missing 'Silver' in data flow page"
     assert "Gold" in html, "Missing 'Gold' in data flow page"
     # Should show at least one end-to-end path element
-    assert "Sources" in html or "Ingestion" in html, \
-        "Missing source/ingestion reference in data flow"
+    assert "Sources" in html or "Ingestion" in html, "Missing source/ingestion reference in data flow"
 
 
 # ---------------------------------------------------------------------------
 # ARCH-04: Service dependency edges
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_service_dependency_edges(rendered_architecture: dict[str, str]) -> None:
@@ -459,6 +477,7 @@ def test_service_dependency_edges(rendered_architecture: dict[str, str]) -> None
 # ARCH-05: Security layer with Ranger
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_security_ranger_services(rendered_architecture: dict[str, str]) -> None:
     """Security-layer.html contains Ranger services and RBAC flow (ARCH-05)."""
@@ -467,13 +486,13 @@ def test_security_ranger_services(rendered_architecture: dict[str, str]) -> None
     assert "ranger-admin" in html_lower, "Missing 'ranger-admin' in security page"
     assert "ranger-solr" in html_lower, "Missing 'ranger-solr' in security page"
     assert "ranger-zk" in html_lower, "Missing 'ranger-zk' in security page"
-    assert "rbac" in html_lower or "role-based" in html_lower, \
-        "Missing RBAC reference in security page"
+    assert "rbac" in html_lower or "role-based" in html_lower, "Missing RBAC reference in security page"
 
 
 # ---------------------------------------------------------------------------
 # ARCH-06: Governance lineage flow
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_governance_lineage_flow(rendered_architecture: dict[str, str]) -> None:
@@ -482,13 +501,13 @@ def test_governance_lineage_flow(rendered_architecture: dict[str, str]) -> None:
     assert "OpenLineage" in html, "Missing 'OpenLineage' in governance page"
     assert "Marquez" in html, "Missing 'Marquez' in governance page"
     assert "Grafana" in html, "Missing 'Grafana' in governance page"
-    assert "BCBS 239" in html or "lineage" in html.lower(), \
-        "Missing BCBS 239 or lineage reference in governance page"
+    assert "BCBS 239" in html or "lineage" in html.lower(), "Missing BCBS 239 or lineage reference in governance page"
 
 
 # ---------------------------------------------------------------------------
 # ARCH-07: Environment comparison table
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_environment_table_columns(rendered_architecture: dict[str, str]) -> None:
@@ -504,6 +523,7 @@ def test_environment_table_columns(rendered_architecture: dict[str, str]) -> Non
 # ---------------------------------------------------------------------------
 # Architecture Index: links to all 6 architecture pages
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_architecture_index_links(rendered_architecture: dict[str, str]) -> None:
@@ -612,11 +632,17 @@ def dev_output_dir(tmp_path: Path) -> Path:
 # Developer Docs: render_developer_docs() - guide page_type
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_docs_render_guide(
-    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+    dev_data_dir: Path,
+    template_dir: Path,
+    dev_output_dir: Path,
 ) -> None:
-    """render_developer_docs() with page_type: guide produces valid HTML with DOCTYPE, navy branding, and version footer."""
+    """render_developer_docs() with page_type: guide produces valid HTML.
+
+    Checks for DOCTYPE, navy branding, and version footer.
+    """
     (dev_data_dir / "test-guide.yml").write_text(SAMPLE_GUIDE_YAML)
     results = render_developer_docs(
         data_dir=dev_data_dir,
@@ -637,9 +663,12 @@ def test_developer_docs_render_guide(
 # Developer Docs: render_developer_docs() - checklist page_type
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_docs_render_checklist(
-    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+    dev_data_dir: Path,
+    template_dir: Path,
+    dev_output_dir: Path,
 ) -> None:
     """render_developer_docs() with page_type: checklist produces HTML with checkbox items and @media print CSS."""
     (dev_data_dir / "test-checklist.yml").write_text(SAMPLE_CHECKLIST_YAML)
@@ -660,9 +689,12 @@ def test_developer_docs_render_checklist(
 # Developer Docs: render_developer_docs() - reference page_type
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_docs_render_reference(
-    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+    dev_data_dir: Path,
+    template_dir: Path,
+    dev_output_dir: Path,
 ) -> None:
     """render_developer_docs() with page_type: reference produces HTML with table structures."""
     (dev_data_dir / "test-reference.yml").write_text(SAMPLE_REFERENCE_YAML)
@@ -682,9 +714,12 @@ def test_developer_docs_render_reference(
 # Developer Docs: render_developer_docs() - faq page_type
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_docs_render_faq(
-    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+    dev_data_dir: Path,
+    template_dir: Path,
+    dev_output_dir: Path,
 ) -> None:
     """render_developer_docs() with page_type: faq produces HTML with details/summary collapsible entries."""
     (dev_data_dir / "test-faq.yml").write_text(SAMPLE_FAQ_YAML)
@@ -705,9 +740,12 @@ def test_developer_docs_render_faq(
 # Developer Docs: render_developer_docs() - skip empty YAML
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_docs_render_skip_empty(
-    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+    dev_data_dir: Path,
+    template_dir: Path,
+    dev_output_dir: Path,
 ) -> None:
     """render_developer_docs() skips empty/None YAML files without error."""
     (dev_data_dir / "empty.yml").write_text("")
@@ -725,9 +763,12 @@ def test_developer_docs_render_skip_empty(
 # Developer Docs: code_block macro
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_docs_code_block_macro(
-    dev_data_dir: Path, template_dir: Path, dev_output_dir: Path,
+    dev_data_dir: Path,
+    template_dir: Path,
+    dev_output_dir: Path,
 ) -> None:
     """code_block macro produces pre/code HTML with syntax class."""
     (dev_data_dir / "code-test.yml").write_text(SAMPLE_GUIDE_YAML)
@@ -747,6 +788,7 @@ def test_developer_docs_code_block_macro(
 # Developer Docs: Fixtures for real YAML data files
 # ---------------------------------------------------------------------------
 
+
 @pytest.fixture
 def real_dev_data_dir() -> Path:
     """Return path to the real developer docs YAML data directory."""
@@ -763,7 +805,9 @@ def real_dev_output_dir(tmp_path: Path) -> Path:
 
 @pytest.fixture
 def rendered_developer_pages(
-    real_dev_data_dir: Path, template_dir: Path, real_dev_output_dir: Path,
+    real_dev_data_dir: Path,
+    template_dir: Path,
+    real_dev_output_dir: Path,
 ) -> dict[str, str]:
     """Render real developer docs and return dict of filename -> HTML content."""
     results = render_developer_docs(
@@ -778,13 +822,13 @@ def rendered_developer_pages(
 # DEV-01: Onboarding guide
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_onboarding(rendered_developer_pages: dict[str, str]) -> None:
     """DEV-01: Onboarding HTML contains docker-compose, service verification, prerequisites."""
     html = rendered_developer_pages["onboarding.html"]
     assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
-    assert "docker compose up -d" in html or "docker-compose up" in html, \
-        "Missing docker-compose launch command"
+    assert "docker compose up -d" in html or "docker-compose up" in html, "Missing docker-compose launch command"
     assert "curl" in html, "Missing service verification curl commands"
     assert "localhost:8081" in html or "8081" in html, "Missing Airflow health check"
     assert "trino" in html.lower(), "Missing Trino verification"
@@ -795,6 +839,7 @@ def test_developer_onboarding(rendered_developer_pages: dict[str, str]) -> None:
 # ---------------------------------------------------------------------------
 # DEV-02: Repository structure
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_developer_repo_structure(rendered_developer_pages: dict[str, str]) -> None:
@@ -817,6 +862,7 @@ def test_developer_repo_structure(rendered_developer_pages: dict[str, str]) -> N
 # DEV-03: First pipeline tutorial
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_first_pipeline(rendered_developer_pages: dict[str, str]) -> None:
     """DEV-03: First pipeline HTML contains BasePipeline, hello world, step-by-step code blocks."""
@@ -834,6 +880,7 @@ def test_developer_first_pipeline(rendered_developer_pages: dict[str, str]) -> N
 # ---------------------------------------------------------------------------
 # DEV-09: Day 1 checklist
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_developer_day1_checklist(rendered_developer_pages: dict[str, str]) -> None:
@@ -857,6 +904,7 @@ def test_developer_day1_checklist(rendered_developer_pages: dict[str, str]) -> N
 # DEV-04: ETL Patterns Reference
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_etl_patterns(rendered_developer_pages: dict[str, str]) -> None:
     """DEV-04: ETL patterns HTML contains all 8 sections from etl-patterns.md with code block elements."""
@@ -866,14 +914,14 @@ def test_developer_etl_patterns(rendered_developer_pages: dict[str, str]) -> Non
     assert "Medallion" in html or "medallion" in html.lower(), "Missing Medallion architecture reference"
     # All 8 section headings (numbered in the YAML)
     section_markers = [
-        "Architecture Overview",    # Section 1
+        "Architecture Overview",  # Section 1
         "Creating a New Pipeline",  # Section 2
-        "Quality",                  # Section 3 (Data Quality Integration)
-        "DAG Patterns",             # Section 4 (Airflow DAG Patterns)
-        "Incremental Loading",      # Section 5
-        "Mainframe",                # Section 6
-        "Testing Patterns",         # Section 7
-        "Quick Reference",          # Section 8
+        "Quality",  # Section 3 (Data Quality Integration)
+        "DAG Patterns",  # Section 4 (Airflow DAG Patterns)
+        "Incremental Loading",  # Section 5
+        "Mainframe",  # Section 6
+        "Testing Patterns",  # Section 7
+        "Quick Reference",  # Section 8
     ]
     for marker in section_markers:
         assert marker in html, f"Missing section: '{marker}'"
@@ -885,6 +933,7 @@ def test_developer_etl_patterns(rendered_developer_pages: dict[str, str]) -> Non
 # ---------------------------------------------------------------------------
 # DEV-05: Testing Guide
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_developer_testing_guide(rendered_developer_pages: dict[str, str]) -> None:
@@ -909,27 +958,29 @@ def test_developer_testing_guide(rendered_developer_pages: dict[str, str]) -> No
 # DEV-06: CI/CD Workflow
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_cicd(rendered_developer_pages: dict[str, str]) -> None:
     """DEV-06: CI/CD HTML contains staging, production, workflow names, and Mermaid SVG or placeholder."""
     html = rendered_developer_pages["cicd.html"]
     assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
     assert "staging" in html.lower(), "Missing 'staging' environment reference"
-    assert "production" in html.lower() or "prod" in html.lower(), \
-        "Missing 'production' environment reference"
+    assert "production" in html.lower() or "prod" in html.lower(), "Missing 'production' environment reference"
     # Workflow names
     assert "ci.yml" in html, "Missing ci.yml workflow reference"
     assert "deploy-dev.yml" in html or "deploy-dev" in html, "Missing deploy-dev workflow"
     assert "deploy-staging.yml" in html or "deploy-staging" in html, "Missing deploy-staging workflow"
     assert "deploy-prod.yml" in html or "deploy-prod" in html, "Missing deploy-prod workflow"
     # Mermaid SVG or placeholder
-    assert "svg" in html.lower() or "diagram" in html.lower() or "Placeholder" in html, \
+    assert "svg" in html.lower() or "diagram" in html.lower() or "Placeholder" in html, (
         "Missing Mermaid SVG or placeholder for CI/CD flow diagram"
+    )
 
 
 # ---------------------------------------------------------------------------
 # DEV-07: Service URL Reference
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_developer_service_urls(rendered_developer_pages: dict[str, str]) -> None:
@@ -954,6 +1005,7 @@ def test_developer_service_urls(rendered_developer_pages: dict[str, str]) -> Non
 # DEV-08: Troubleshooting FAQ
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_troubleshooting(rendered_developer_pages: dict[str, str]) -> None:
     """DEV-08: Troubleshooting FAQ HTML has Symptom-Fix-Why entries with collapsible details elements."""
@@ -961,14 +1013,12 @@ def test_developer_troubleshooting(rendered_developer_pages: dict[str, str]) -> 
     assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
     # Symptom-Fix-Why format
     html_lower = html.lower()
-    assert "symptom" in html_lower or "Spark executor OOM" in html, \
-        "Missing symptom references in FAQ"
+    assert "symptom" in html_lower or "Spark executor OOM" in html, "Missing symptom references in FAQ"
     assert "Fix:" in html, "Missing 'Fix:' label in FAQ entries"
     assert "Why:" in html, "Missing 'Why:' label in FAQ entries"
     # Collapsible details/summary elements
     details_count = html.count("<details")
-    assert details_count >= 8, \
-        f"Expected at least 8 FAQ entries with <details>, got {details_count}"
+    assert details_count >= 8, f"Expected at least 8 FAQ entries with <details>, got {details_count}"
     assert "<summary" in html, "Missing <summary> elements for FAQ"
     # Categories
     assert "Docker" in html, "Missing 'Docker and Services' category"
@@ -982,6 +1032,7 @@ def test_developer_troubleshooting(rendered_developer_pages: dict[str, str]) -> 
 # DEV-10: API Reference
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_api_reference(rendered_developer_pages: dict[str, str]) -> None:
     """DEV-10: API reference HTML contains all 8 package names, BasePipeline, and function signatures."""
@@ -989,8 +1040,14 @@ def test_developer_api_reference(rendered_developer_pages: dict[str, str]) -> No
     assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
     # All 8 packages
     package_names = [
-        "pipelines", "config", "governance", "quality",
-        "semantic", "iceberg_utils", "lineage", "inventory",
+        "pipelines",
+        "config",
+        "governance",
+        "quality",
+        "semantic",
+        "iceberg_utils",
+        "lineage",
+        "inventory",
     ]
     for pkg in package_names:
         assert pkg in html, f"Missing package '{pkg}' in API reference"
@@ -1007,6 +1064,7 @@ def test_developer_api_reference(rendered_developer_pages: dict[str, str]) -> No
 # DEV-11: Class Hierarchy
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_class_hierarchy(rendered_developer_pages: dict[str, str]) -> None:
     """DEV-11: Class hierarchy HTML contains SVG placeholder, BasePipeline, TradesBronzePipeline."""
@@ -1014,8 +1072,9 @@ def test_developer_class_hierarchy(rendered_developer_pages: dict[str, str]) -> 
     assert "<!DOCTYPE html>" in html, "Missing DOCTYPE"
     assert "BasePipeline" in html, "Missing BasePipeline in class hierarchy"
     # SVG placeholder or actual rendered SVG
-    assert "svg" in html.lower() or "Placeholder" in html, \
+    assert "svg" in html.lower() or "Placeholder" in html, (
         "Missing Mermaid SVG or placeholder for class hierarchy diagram"
+    )
     # Pipeline names should be in supporting text
     assert "TradesBronzePipeline" in html, "Missing TradesBronzePipeline reference"
 
@@ -1023,6 +1082,7 @@ def test_developer_class_hierarchy(rendered_developer_pages: dict[str, str]) -> 
 # ---------------------------------------------------------------------------
 # DEV-12: Contributor Guidelines
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 def test_developer_contributor(rendered_developer_pages: dict[str, str]) -> None:
@@ -1036,11 +1096,9 @@ def test_developer_contributor(rendered_developer_pages: dict[str, str]) -> None
     # Pre-commit hooks
     assert "trailing-whitespace" in html, "Missing trailing-whitespace hook"
     assert "detect-secrets" in html, "Missing detect-secrets hook"
-    assert "terraform_fmt" in html or "terraform" in html.lower(), \
-        "Missing terraform_fmt hook reference"
+    assert "terraform_fmt" in html or "terraform" in html.lower(), "Missing terraform_fmt hook reference"
     # Commit format
-    assert "Conventional Commits" in html or "conventional" in html.lower(), \
-        "Missing conventional commits reference"
+    assert "Conventional Commits" in html or "conventional" in html.lower(), "Missing conventional commits reference"
     # Naming conventions
     assert "PascalCase" in html, "Missing PascalCase naming convention"
     assert "snake_case" in html, "Missing snake_case naming convention"
@@ -1050,6 +1108,7 @@ def test_developer_contributor(rendered_developer_pages: dict[str, str]) -> None
 # Developer Index: links to all 12 pages
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_developer_index(rendered_developer_pages: dict[str, str]) -> None:
     """Developer index HTML contains card-grid, links to all 12 pages, and audience badges."""
@@ -1058,10 +1117,18 @@ def test_developer_index(rendered_developer_pages: dict[str, str]) -> None:
     assert "card-grid" in html, "Missing card-grid layout"
     # Check key filenames from all 3 audience groups
     expected_pages = [
-        "onboarding.html", "repo-structure.html", "first-pipeline.html",
-        "day1-checklist.html", "etl-patterns.html", "testing.html",
-        "cicd.html", "service-urls.html", "troubleshooting.html",
-        "api-reference.html", "class-hierarchy.html", "contributor.html",
+        "onboarding.html",
+        "repo-structure.html",
+        "first-pipeline.html",
+        "day1-checklist.html",
+        "etl-patterns.html",
+        "testing.html",
+        "cicd.html",
+        "service-urls.html",
+        "troubleshooting.html",
+        "api-reference.html",
+        "class-hierarchy.html",
+        "contributor.html",
     ]
     for page in expected_pages:
         assert page in html, f"Missing link to '{page}' in developer index"
@@ -1079,6 +1146,7 @@ def test_developer_index(rendered_developer_pages: dict[str, str]) -> None:
 # extract_package_api() unit test
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 def test_extract_package_api() -> None:
     """extract_package_api() parses etl/src/config (simplest package) and finds Settings class."""
@@ -1090,11 +1158,7 @@ def test_extract_package_api() -> None:
     assert api["package_name"] == "config"
     assert len(api["modules"]) >= 1
     # Find Settings class
-    all_classes = [
-        cls["name"]
-        for mod in api["modules"]
-        for cls in mod["classes"]
-    ]
+    all_classes = [cls["name"] for mod in api["modules"] for cls in mod["classes"]]
     assert "Settings" in all_classes, f"Expected 'Settings' in classes, got {all_classes}"
 
 
@@ -1270,7 +1334,7 @@ def test_extract_glossary_terms() -> None:
     total = sum(len(v) for v in terms.values())
     assert total >= 17, f"Expected >= 17 terms, got {total}"
     # Check slug field
-    for domain, term_list in terms.items():
+    for _domain, term_list in terms.items():
         for t in term_list:
             assert "slug" in t, f"Term {t['name']} missing slug"
             assert t["slug"] == t["name"].lower().replace(" ", "-").replace("_", "-")
@@ -1413,8 +1477,16 @@ def test_catalog_metrics(catalog_output) -> None:
     html = metrics_path.read_text()
     assert len(html.splitlines()) >= 80, "metrics.html too short"
     # All 8 measures present
-    for name in ["total_notional", "trade_count", "avg_price", "total_market_value",
-                  "total_var_95", "total_var_99", "total_expected_shortfall", "position_count"]:
+    for name in [
+        "total_notional",
+        "trade_count",
+        "avg_price",
+        "total_market_value",
+        "total_var_95",
+        "total_var_99",
+        "total_expected_shortfall",
+        "position_count",
+    ]:
         assert name in html, f"Measure {name} not in metrics.html"
     # Collapsible SQL sections
     assert "Calculation Detail" in html

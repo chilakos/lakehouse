@@ -12,6 +12,19 @@ Provides:
 - archive_old_records() for S3 Parquet archival of audit records
 """
 
+from .anomaly_detector import (
+    AnomalyReport,
+    AnomalyType,
+    detect_anomalies,
+    format_anomaly_report,
+)
+from .audit_schema import (
+    AUDIT_SCHEMA,
+    AuditRecord,
+    normalize_snowflake_audit,
+    normalize_teradata_audit,
+    normalize_trino_audit,
+)
 from .classification import (
     CLASSIFICATION_RULES,
     SensitivityLevel,
@@ -37,19 +50,6 @@ from .ranger_policies import (
     create_masking_policy,
     create_row_filter_policy,
     create_tag_policy,
-)
-from .audit_schema import (
-    AUDIT_SCHEMA,
-    AuditRecord,
-    normalize_trino_audit,
-    normalize_teradata_audit,
-    normalize_snowflake_audit,
-)
-from .anomaly_detector import (
-    AnomalyType,
-    AnomalyReport,
-    detect_anomalies,
-    format_anomaly_report,
 )
 
 __all__ = [

@@ -6,11 +6,12 @@ module and writes results to a PostgreSQL metrics table for Grafana queries.
 Schedule: Every 2 hours (*/2 * * * *)
 Owner: governance-team
 """
+
 from __future__ import annotations
 
 import logging
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from airflow import DAG
 from airflow.operators.python import PythonOperator
@@ -71,11 +72,14 @@ def _check_freshness(**context) -> list[dict]:
 
         conn = psycopg2.connect(_AUDIT_DB_CONN)
         cursor = conn.cursor()
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT table_name, last_updated
             FROM table_freshness_metadata
             WHERE table_name = ANY(%s)
-        """, [list(table_slas.keys())])
+        """,
+            [list(table_slas.keys())],
+        )
         rows = cursor.fetchall()
         conn.close()
 
@@ -84,8 +88,7 @@ def _check_freshness(**context) -> list[dict]:
 
     except Exception as e:
         logger.warning(
-            "Could not fetch table metadata from PostgreSQL: %s. "
-            "Using None (all tables will show RED status).", e
+            "Could not fetch table metadata from PostgreSQL: %s. Using None (all tables will show RED status).", e
         )
 
     # Run freshness check
@@ -100,14 +103,16 @@ def _check_freshness(**context) -> list[dict]:
     # Serialize for XCom (convert enum to string)
     serializable = []
     for r in results:
-        serializable.append({
-            "table": r["table"],
-            "status": r["status"].value,
-            "hours_since_update": r["hours_since_update"],
-            "sla_hours": r["sla_hours"],
-            "badge_status": r["badge"]["status"],
-            "badge_label": r["badge"]["label"],
-        })
+        serializable.append(
+            {
+                "table": r["table"],
+                "status": r["status"].value,
+                "hours_since_update": r["hours_since_update"],
+                "sla_hours": r["sla_hours"],
+                "badge_status": r["badge"]["status"],
+                "badge_label": r["badge"]["label"],
+            }
+        )
 
     context["ti"].xcom_push(key="freshness_results", value=serializable)
     return serializable
@@ -146,7 +151,8 @@ def _update_metrics(**context) -> int:
 
         # Upsert freshness status per table
         for result in results:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO freshness_metrics
                     (table_name, status, hours_since_update, sla_hours, badge_status, badge_label, checked_at)
                 VALUES (%s, %s, %s, %s, %s, %s, NOW())
@@ -157,14 +163,16 @@ def _update_metrics(**context) -> int:
                     badge_status = EXCLUDED.badge_status,
                     badge_label = EXCLUDED.badge_label,
                     checked_at = NOW()
-            """, [
-                result["table"],
-                result["status"],
-                result["hours_since_update"],
-                result["sla_hours"],
-                result["badge_status"],
-                result["badge_label"],
-            ])
+            """,
+                [
+                    result["table"],
+                    result["status"],
+                    result["hours_since_update"],
+                    result["sla_hours"],
+                    result["badge_status"],
+                    result["badge_label"],
+                ],
+            )
 
         conn.commit()
         conn.close()
@@ -181,13 +189,12 @@ with DAG(
     dag_id="governance_freshness_check",
     description="Data freshness SLA check every 2 hours, writes to PostgreSQL for Grafana",
     schedule="0 */2 * * *",  # Every 2 hours
-    start_date=datetime(2024, 1, 1, tzinfo=timezone.utc),
+    start_date=datetime(2024, 1, 1, tzinfo=UTC),
     catchup=False,
     default_args=default_args,
     tags=["governance", "freshness", "sla", "monitoring"],
     doc_md=__doc__,
 ) as dag:
-
     check_freshness = PythonOperator(
         task_id="check_freshness",
         python_callable=_check_freshness,

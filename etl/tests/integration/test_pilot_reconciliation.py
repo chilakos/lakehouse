@@ -11,8 +11,6 @@ Requires Docker services: Nessie, MinIO, Spark.
 """
 
 import uuid
-from datetime import date
-from decimal import Decimal
 
 import pytest
 
@@ -34,7 +32,10 @@ class TestTradesBronzeReconciliation:
         trades = generate_trades(100, seed=42)
         schema = TradesBronzePipeline._build_bronze_schema()
         create_iceberg_table(
-            spark_session, ns, table, schema,
+            spark_session,
+            ns,
+            table,
+            schema,
             f"s3://lakehouse-data/test/{ns}/{table}",
         )
 
@@ -49,9 +50,7 @@ class TestTradesBronzeReconciliation:
         df.writeTo(f"lakehouse.{ns}.{table}").append()
 
         result = spark_session.table(f"lakehouse.{ns}.{table}")
-        assert result.count() == len(trades), (
-            f"Row count mismatch: source={len(trades)}, bronze={result.count()}"
-        )
+        assert result.count() == len(trades), f"Row count mismatch: source={len(trades)}, bronze={result.count()}"
 
     def test_bronze_notional_checksum_matches_source(self, spark_session):
         """Sum of notional values in Bronze matches source within Decimal precision."""
@@ -68,7 +67,10 @@ class TestTradesBronzeReconciliation:
 
         schema = TradesBronzePipeline._build_bronze_schema()
         create_iceberg_table(
-            spark_session, ns, table, schema,
+            spark_session,
+            ns,
+            table,
+            schema,
             f"s3://lakehouse-data/test/{ns}/{table}",
         )
 
@@ -112,7 +114,10 @@ class TestPositionsBronzeSilverReconciliation:
         bronze_schema = PositionsBronzePipeline._build_bronze_schema()
 
         create_iceberg_table(
-            spark_session, bronze_ns, table, bronze_schema,
+            spark_session,
+            bronze_ns,
+            table,
+            bronze_schema,
             f"s3://lakehouse-data/test/{bronze_ns}/{table}",
         )
 
@@ -137,7 +142,10 @@ class TestPositionsBronzeSilverReconciliation:
         )
         silver_schema = silver_pipeline.config.target_schema
         create_iceberg_table(
-            spark_session, silver_ns, table, silver_schema,
+            spark_session,
+            silver_ns,
+            table,
+            silver_schema,
             f"s3://lakehouse-data/test/{silver_ns}/{table}",
         )
 
@@ -145,12 +153,8 @@ class TestPositionsBronzeSilverReconciliation:
         silver_df.writeTo(f"lakehouse.{silver_ns}.{table}").append()
 
         silver_count = spark_session.table(f"lakehouse.{silver_ns}.{table}").count()
-        assert silver_count <= bronze_count, (
-            f"Silver ({silver_count}) should have <= rows than Bronze ({bronze_count})"
-        )
-        assert silver_count == 50, (
-            f"Silver should have 50 unique positions after dedup, got {silver_count}"
-        )
+        assert silver_count <= bronze_count, f"Silver ({silver_count}) should have <= rows than Bronze ({bronze_count})"
+        assert silver_count == 50, f"Silver should have 50 unique positions after dedup, got {silver_count}"
 
     def test_silver_no_duplicate_position_ids_per_as_of_date(self, spark_session):
         """Silver table has no duplicate position_ids per as_of_date."""
@@ -171,7 +175,10 @@ class TestPositionsBronzeSilverReconciliation:
         bronze_schema = PositionsBronzePipeline._build_bronze_schema()
 
         create_iceberg_table(
-            spark_session, bronze_ns, table, bronze_schema,
+            spark_session,
+            bronze_ns,
+            table,
+            bronze_schema,
             f"s3://lakehouse-data/test/{bronze_ns}/{table}",
         )
 
@@ -193,7 +200,10 @@ class TestPositionsBronzeSilverReconciliation:
         )
         silver_schema = silver_pipeline.config.target_schema
         create_iceberg_table(
-            spark_session, silver_ns, table, silver_schema,
+            spark_session,
+            silver_ns,
+            table,
+            silver_schema,
             f"s3://lakehouse-data/test/{silver_ns}/{table}",
         )
         silver_df = silver_pipeline.transform(silver_pipeline.extract())

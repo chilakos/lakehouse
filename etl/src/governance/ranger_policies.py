@@ -228,12 +228,14 @@ def create_access_policy(
     policy_items = []
     for group, permissions in groups_permissions.items():
         accesses = [{"type": perm, "isAllowed": True} for perm in permissions]
-        policy_items.append({
-            "groups": [group],
-            "accesses": accesses,
-            "conditions": [],
-            "delegateAdmin": False,
-        })
+        policy_items.append(
+            {
+                "groups": [group],
+                "accesses": accesses,
+                "conditions": [],
+                "delegateAdmin": False,
+            }
+        )
 
     return {
         "name": policy_name,

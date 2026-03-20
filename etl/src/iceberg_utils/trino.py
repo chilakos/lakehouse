@@ -91,9 +91,7 @@ def execute_ddl(conn: Connection, sql: str) -> None:
         cursor.close()
 
 
-def get_table_schema(
-    conn: Connection, schema: str, table: str
-) -> list[dict]:
+def get_table_schema(conn: Connection, schema: str, table: str) -> list[dict]:
     """Get column names and types from a table using DESCRIBE.
 
     Args:
@@ -108,9 +106,7 @@ def get_table_schema(
     return [{"name": row[0], "type": row[1]} for row in rows]
 
 
-def get_table_row_count(
-    conn: Connection, schema: str, table: str
-) -> int:
+def get_table_row_count(conn: Connection, schema: str, table: str) -> int:
     """Get the row count of a table.
 
     Args:
