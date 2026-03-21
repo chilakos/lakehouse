@@ -100,6 +100,16 @@ Teams can ship, query, and iterate without waiting for infrastructure provisioni
 
 ---
 
+## 13. Good Today Beats Perfect Never
+
+You cannot have best-of-breed at every layer and still control your own destiny. Optimising every component for maximum capability creates a portfolio of vendor dependencies that, in aggregate, own your architecture. A good open tool you can fork, extend, and replace is worth more than a great closed one you cannot.
+
+Ship working architecture incrementally. The enemy of a delivered lakehouse is the search for the perfect one.
+
+**Test:** If you are delaying a decision because a better tool might exist, ask whether the current good-enough option lets you move forward without creating lock-in. If yes, ship it.
+
+---
+
 ## How to Use These Principles
 
 | Context | How to Apply |
