@@ -38,16 +38,18 @@ created: 2026-03-14
 
 | Task ID | Plan | Wave | Requirement | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|-----------|-------------------|-------------|--------|
-| 06-01-01 | 01 | 1 | ARCH-01 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_marketecture_stats_banner -x` | ❌ W0 | ⬜ pending |
-| 06-01-02 | 01 | 1 | ARCH-01 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_marketecture_capability_groups -x` | ❌ W0 | ⬜ pending |
-| 06-01-03 | 01 | 1 | ARCH-02 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_detailed_arch_all_services -x` | ❌ W0 | ⬜ pending |
-| 06-01-04 | 01 | 1 | ARCH-02 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_extract_services_ports -x` | ❌ W0 | ⬜ pending |
-| 06-01-05 | 01 | 1 | ARCH-08 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_css_hover_tooltips -x` | ❌ W0 | ⬜ pending |
-| 06-02-01 | 02 | 2 | ARCH-03 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_data_flow_medallion_path -x` | ❌ W0 | ⬜ pending |
-| 06-02-02 | 02 | 2 | ARCH-04 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_service_dependency_edges -x` | ❌ W0 | ⬜ pending |
-| 06-02-03 | 02 | 2 | ARCH-05 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_security_ranger_services -x` | ❌ W0 | ⬜ pending |
-| 06-02-04 | 02 | 2 | ARCH-06 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_governance_lineage_flow -x` | ❌ W0 | ⬜ pending |
-| 06-02-05 | 02 | 2 | ARCH-07 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_environment_table_columns -x` | ❌ W0 | ⬜ pending |
+| 06-01-01 | 01 | 1 | ARCH-01 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_marketecture_stats_banner -x` | ✅ | ⬜ pending |
+| 06-01-02 | 01 | 1 | ARCH-01 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_marketecture_capability_groups -x` | ✅ | ⬜ pending |
+| 06-01-03 | 01 | 1 | ARCH-02 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_detailed_arch_all_services -x` | ✅ | ⬜ pending |
+| 06-01-04 | 01 | 1 | ARCH-02 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_extract_services_ports -x` | ✅ | ⬜ pending |
+| 06-01-05 | 01 | 1 | ARCH-02 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_extract_services_excludes_init -x` | ✅ | ⬜ pending |
+| 06-01-06 | 01 | 1 | ARCH-02 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_extract_services_layer_assignment -x` | ✅ | ⬜ pending |
+| 06-01-07 | 01 | 1 | ARCH-08 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_css_hover_tooltips -x` | ✅ | ⬜ pending |
+| 06-02-01 | 02 | 2 | ARCH-03 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_data_flow_medallion_path -x` | ✅ | ⬜ pending |
+| 06-02-02 | 02 | 2 | ARCH-04 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_service_dependency_edges -x` | ✅ | ⬜ pending |
+| 06-02-03 | 02 | 2 | ARCH-05 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_security_ranger_services -x` | ✅ | ⬜ pending |
+| 06-02-04 | 02 | 2 | ARCH-06 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_governance_lineage_flow -x` | ✅ | ⬜ pending |
+| 06-02-05 | 02 | 2 | ARCH-07 | unit | `python3 -m pytest etl/tests/test_html_render.py::test_environment_table_columns -x` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -55,12 +57,7 @@ created: 2026-03-14
 
 ## Wave 0 Requirements
 
-- [ ] `etl/tests/test_html_render.py` — extend with test functions for ARCH-01 through ARCH-08 (file exists, needs new tests)
-- [ ] `render_architecture()` function — must exist in render_html.py for tests to call
-- [ ] `extract_services()` function — must exist in render_html.py for tests to call
-- [ ] `@mermaid-js/mermaid-cli` — npx availability for Mermaid rendering (tests can validate HTML output without mmdc if SVG is pre-generated)
-
-*Wave 0 extends existing test infrastructure from Phase 5.*
+Existing infrastructure covers all phase requirements. All 12 test functions exist in `etl/tests/test_html_render.py` and pass (57 total tests in file, all green).
 
 ---
 
