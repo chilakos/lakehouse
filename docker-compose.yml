@@ -95,6 +95,7 @@ services:
       - ./infra/docker/ranger/ranger-trino-security.xml:/etc/trino/ranger/ranger-trino-security.xml:ro
       - ./infra/docker/ranger/ranger-trino-audit.xml:/etc/trino/ranger/ranger-trino-audit.xml:ro
       - ./infra/docker/trino/etc/event-listener.properties:/etc/trino/event-listener.properties:ro
+      - ./infra/docker/trino/etc/resource-groups:/etc/trino/resource-groups:ro
 
   # --- Airflow services ---
 

@@ -91,3 +91,49 @@ variable "access_control_rules" {
     }
   EOT
 }
+
+variable "resource_group_rules" {
+  description = "JSON string with Trino resource group definitions (ADR-004)"
+  type        = string
+  default     = <<-EOT
+    {
+      "rootGroups": [
+        {
+          "name": "engineering",
+          "softMemoryLimit": "60%",
+          "maxQueued": 100,
+          "hardConcurrencyLimit": 20,
+          "schedulingPolicy": "fair",
+          "subGroups": [
+            { "name": "etl_pipelines", "softMemoryLimit": "40%", "hardConcurrencyLimit": 15, "schedulingWeight": 3, "runningTimeLimit": "4h" },
+            { "name": "soda_quality",  "softMemoryLimit": "15%", "hardConcurrencyLimit": 5,  "runningTimeLimit": "30m" },
+            { "name": "schema_ops",    "softMemoryLimit": "5%",  "hardConcurrencyLimit": 3,  "runningTimeLimit": "10m" }
+          ]
+        },
+        {
+          "name": "bi",
+          "softMemoryLimit": "35%",
+          "maxQueued": 200,
+          "hardConcurrencyLimit": 30,
+          "schedulingPolicy": "weighted_fair",
+          "subGroups": [
+            { "name": "cube_semantic", "softMemoryLimit": "20%", "hardConcurrencyLimit": 20, "runningTimeLimit": "5m" },
+            { "name": "power_bi",      "softMemoryLimit": "10%", "hardConcurrencyLimit": 15, "runningTimeLimit": "10m" },
+            { "name": "tableau",       "softMemoryLimit": "5%",  "hardConcurrencyLimit": 10, "runningTimeLimit": "10m" }
+          ]
+        },
+        { "name": "ai_agents", "softMemoryLimit": "5%", "maxQueued": 50, "hardConcurrencyLimit": 5, "runningTimeLimit": "2m" }
+      ],
+      "selectors": [
+        { "group": "engineering.etl_pipelines", "user": "svc_etl_pipeline|svc_airflow|svc_spark" },
+        { "group": "engineering.soda_quality",  "user": "svc_soda" },
+        { "group": "engineering.schema_ops",    "source": "schema-migration|ddl-runner" },
+        { "group": "bi.cube_semantic",          "source": "cube" },
+        { "group": "bi.power_bi",               "source": "PowerBI|power-bi" },
+        { "group": "bi.tableau",                "source": "Tableau|tableau" },
+        { "group": "ai_agents",                 "user": "svc_borealis|svc_rbc_assist|svc_fastapi_ai" },
+        { "group": "engineering.etl_pipelines", "user": ".*" }
+      ]
+    }
+  EOT
+}

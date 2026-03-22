@@ -74,6 +74,28 @@ resource "kubernetes_config_map" "trino_access_rules" {
 }
 
 # -----------------------------------------------------------------------------
+# Trino Resource Groups ConfigMap (ADR-004 — workload isolation)
+# -----------------------------------------------------------------------------
+
+resource "kubernetes_config_map" "trino_resource_groups" {
+  metadata {
+    name      = "trino-resource-groups-${var.environment}"
+    namespace = var.namespace
+
+    labels = {
+      "app.kubernetes.io/name"       = "trino"
+      "app.kubernetes.io/component"  = "resource-groups"
+      "app.kubernetes.io/managed-by" = "terraform"
+    }
+  }
+
+  data = {
+    "resource-groups.properties" = "resource-groups.config-file=/etc/trino/resource-groups/rules.json"
+    "rules.json"                 = var.resource_group_rules
+  }
+}
+
+# -----------------------------------------------------------------------------
 # cert-manager Certificate for Trino TLS (SEC-06)
 # -----------------------------------------------------------------------------
 

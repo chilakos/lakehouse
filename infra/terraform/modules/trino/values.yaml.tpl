@@ -51,6 +51,11 @@ accessControl:
   refreshPeriod: "60s"
   configFile: "/etc/trino/access-control/rules.json"
 
+# Workload isolation — resource groups (ADR-004)
+additionalConfigFiles:
+  resource-groups.properties: |
+    resource-groups.config-file=/etc/trino/resource-groups/rules.json
+
 # TLS certificate volume mounts
 extraVolumes:
   - name: tls-certs
@@ -59,6 +64,9 @@ extraVolumes:
   - name: access-rules
     configMap:
       name: "trino-access-rules-${environment}"
+  - name: resource-groups
+    configMap:
+      name: "trino-resource-groups-${environment}"
 
 extraVolumeMounts:
   - name: tls-certs
@@ -66,6 +74,9 @@ extraVolumeMounts:
     readOnly: true
   - name: access-rules
     mountPath: "/etc/trino/access-control"
+    readOnly: true
+  - name: resource-groups
+    mountPath: "/etc/trino/resource-groups"
     readOnly: true
 
 # Coordinator resources
