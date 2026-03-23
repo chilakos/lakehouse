@@ -1,4 +1,4 @@
-# ADR-002: Use Trino + Python for Compute — No Apache Spark
+# ADR-005: Use Trino + Python for Compute — No Apache Spark
 
 **Status:** Accepted  
 **Date:** 2026-03-23  
