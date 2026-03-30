@@ -29,6 +29,12 @@ recommendation: |
   (conflicts with compute-only Snowflake strategy), and all commercial solutions have limited
   customization of prompt engineering for domain-specific accuracy.
 
+  **Scaling decision (2026-03-30):** ADR-006 adopts Retrieval-Augmented Schema Linking (RASL)
+  with pgvector to scale from 2 to 200+ Cube-modeled tables. ADR-009 extends the AI layer
+  with an AI Data Hub for RAG-based entity retrieval (client briefs, risk narratives,
+  surveillance context) alongside NL-to-SQL. Accuracy thresholds (90%/70%) apply to
+  Cube-modeled Gold tables only — unmodeled tables are out of scope for NL-to-SQL.
+
 strengths:
   - id: S1
     title: "Cube YAML Integration for Context-Aware SQL Generation"
@@ -80,6 +86,13 @@ weaknesses:
       the NL-to-SQL prompts must be updated to reflect the new schema. This creates an
       ongoing maintenance burden tied to schema evolution.
     evidence: "Prompt context derived from Cube YAML; schema changes require prompt regeneration and golden dataset updates"
+    resolution: |
+      ADR-006 (Retrieval-Augmented Schema Linking) addresses this. The pgvector index is
+      automatically re-built when Cube YAML changes (Airflow DAG trigger). Schema evolution
+      is handled by re-indexing, not manual prompt editing. Few-shot examples are dynamically
+      retrieved from golden datasets, not hardcoded.
+    resolution_date: "2026-03-30"
+    resolution_adr: "ADR-006"
 
   - id: W2
     title: "LLM Accuracy Variability for Complex Joins"

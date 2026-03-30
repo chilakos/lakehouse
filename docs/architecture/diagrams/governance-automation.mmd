@@ -1,0 +1,58 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#1a1a2e', 'primaryTextColor': '#fff', 'primaryBorderColor': '#16213e', 'lineColor': '#0f3460', 'secondaryColor': '#533483', 'tertiaryColor': '#e94560'}}}%%
+flowchart TB
+    subgraph Sources["Source Systems"]
+        S1[Core Banking]
+        S2[Trading Platforms]
+        S3[CRM]
+    end
+
+    subgraph Bronze["Bronze Layer"]
+        B1[raw_trades_history]
+        B2[raw_positions_daily]
+        B3[raw_counterparty]
+    end
+
+    subgraph Silver["Silver Layer — FSDM Conformed"]
+        SV1[fsdm_party]
+        SV2[fsdm_account]
+        SV3[fsdm_financial_transaction]
+        SV4[fsdm_risk_exposure]
+    end
+
+    subgraph Gold["Gold Layer — Business Ready"]
+        G1[trading_metrics]
+        G2[risk_exposure]
+        G3[customer_360]
+        G4[desk_risk_summary]
+    end
+
+    subgraph Governance["Automated Governance Pipeline"]
+        OM_Ingest["OpenMetadata\nMetadata Ingestion"]
+        OM_Classify["OpenMetadata\nAuto-Classification\n(spaCy + Presidio)"]
+        TagBridge["Tag Sync Bridge\n(Airflow DAG)"]
+        RangerTag["Ranger TagREST API\n/service/tags/tagresourceassoc"]
+        RangerMask["Ranger Masking Policies\nRESTRICTED → MASK_NULL\nCONFIDENTIAL → MASK_HASH"]
+    end
+
+    subgraph Nessie["Nessie Catalog"]
+        NC[Table Registration\nDeny-by-Default]
+    end
+
+    Sources --> Bronze
+    Bronze -->|"Quality Gate\nSchema + PK checks"| Silver
+    Silver -->|"Quality Gate\nBusiness rules"| Gold
+
+    Gold --> NC
+    NC -->|"Table discovered"| OM_Ingest
+    OM_Ingest -->|"Schema + columns"| OM_Classify
+    OM_Classify -->|"PII.Sensitive tags"| TagBridge
+    TagBridge -->|"Map PII → RESTRICTED\nMap email → CONFIDENTIAL"| RangerTag
+    RangerTag --> RangerMask
+    RangerMask -->|"Masking active\nfor all queries via Trino"| Gold
+
+    style Governance fill:#1a1a2e,color:#fff
+    style Sources fill:#533483,color:#fff
+    style Bronze fill:#0f3460,color:#fff
+    style Silver fill:#16213e,color:#fff
+    style Gold fill:#e94560,color:#fff
+    style Nessie fill:#533483,color:#fff

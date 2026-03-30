@@ -131,6 +131,44 @@ Policy: mask_pii_default
   Masking: MASK (replace with 'XXXXXXXX')
 ```
 
+### Automated Column Classification Pipeline (ADR-007)
+
+> **Status:** Approved (2026-03-30). Addresses the manual classification bottleneck
+> identified in `bootstrap-policies.py` (`seed_classification_tags()` deferral).
+
+The manual gap between table creation and PII masking is closed by an automated pipeline:
+
+```
+Table lands in Nessie → Ranger deny-by-default (immediate)
+    ↓
+OpenMetadata Trino connector discovers table (existing)
+    ↓
+OpenMetadata Auto-Classification workflow scans columns
+    (spaCy NLP + Microsoft Presidio: SSN, email, phone, credit card, etc.)
+    ↓
+Tag Sync Bridge (Airflow DAG) reads classified columns
+    ↓
+Maps to Ranger tag taxonomy:
+    PII.Sensitive (SSN/SIN patterns)  → RESTRICTED  → MASK_NULL / SHOW_LAST_4
+    PII.Sensitive (email/phone)       → CONFIDENTIAL → MASK_HASH / SHOW_LAST_4
+    No PII tag (gold schema)          → INTERNAL     → MASK_NONE
+    No PII tag (public schema)        → PUBLIC       → MASK_NONE
+    ↓
+Pushes tag-resource associations to Ranger TagREST API
+    (POST /service/tags/tagresourceassoc — no Atlas required)
+    ↓
+Existing Ranger tag-based masking policies activate automatically
+```
+
+**Classification latency:** New tables have PII tags applied within 6 hours of ingestion
+(target: near real-time via OpenMetadata webhook in Phase 1.3).
+
+**Row-level filters:** Tables with a `business_unit` column are automatically given
+row-filter policies following the same pattern as `build_row_filter_policies()` in
+`bootstrap-policies.py`.
+
+See ADR-007 for full architecture and implementation phases.
+
 ### Service account identity passthrough
 
 Python ETL pipelines, Airflow DAGs, and AI agents authenticate to Trino using

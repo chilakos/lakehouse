@@ -1,0 +1,93 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#1a1a2e', 'primaryTextColor': '#fff', 'primaryBorderColor': '#16213e', 'lineColor': '#0f3460', 'secondaryColor': '#533483', 'tertiaryColor': '#e94560'}}}%%
+flowchart TB
+    subgraph Sources["300+ Source Systems"]
+        S1[Core Banking\nFIS / Temenos]
+        S2[Trading\nMurex / Calypso]
+        S3[Market Data\nBloomberg / Reuters]
+        S4[CRM\nSalesforce]
+    end
+
+    subgraph Bronze["Bronze — Raw Ingestion"]
+        B1["raw_trades_history\nraw_positions_daily\nraw_counterparty\n+ source_system, ingestion_ts, batch_id"]
+    end
+
+    subgraph Silver["Silver — FSDM 3NF Conformed"]
+        direction LR
+        SV1["Party\nIndividual\nOrganization\nParty_Role\nParty_Relationship"]
+        SV2["Account\nAccount_Balance\nAgreement\nCollateral"]
+        SV3["Transaction\nTransaction_Party\nTransaction_Leg\nMonetary_Event"]
+        SV4["Instrument\nInstrument_Price\nRisk_Exposure\nRisk_Rating"]
+    end
+
+    subgraph Gold["Gold — Denormalized Business-Ready"]
+        direction LR
+        G1[trading_metrics]
+        G2[risk_exposure]
+        G3[customer_360]
+        G4[desk_risk_summary]
+        G5[surveillance_alert_context]
+    end
+
+    subgraph AIHub["AI Data Hub"]
+        direction TB
+        subgraph Tier1["Tier 1: Metadata Embeddings"]
+            M1["Cube YAML definitions\nTable/column descriptions\nFSDM glossary terms\nGolden dataset Q&A pairs"]
+        end
+        subgraph Tier2["Tier 2: Entity Summary Embeddings"]
+            E1["Client profiles\nAccount summaries\nDesk risk narratives\nCounterparty profiles\nSurveillance contexts"]
+        end
+        subgraph Tier3["Tier 3: Real-Time Query"]
+            Q1["NL-to-SQL via Cube\nTrino execution\nFresh numbers on demand"]
+        end
+    end
+
+    subgraph VectorDB["pgvector (PostgreSQL)"]
+        V1[Metadata Index\n~5K chunks]
+        V2[Entity Index\n~2M documents]
+    end
+
+    subgraph Agent["AI Agent (Claude on Bedrock)"]
+        direction LR
+        T1["search_metadata()"]
+        T2["search_entities()"]
+        T3["run_query()"]
+        T4["lookup_glossary()"]
+    end
+
+    subgraph Consumers["AI Consumers"]
+        C1[RM Copilot]
+        C2[Risk Narratives]
+        C3[Compliance Assistant]
+        C4[Analyst NL-to-SQL]
+        C5[Regulatory Q&A]
+    end
+
+    Sources -->|"CDC / Batch"| Bronze
+    Bronze -->|"Quality Gate"| Silver
+    Silver -->|"Denormalize\n15+ table joins → wide tables"| Gold
+
+    Gold -->|"Text templates\n+ Titan Embeddings"| Tier2
+    Gold -->|"Cube YAML\n+ OpenMetadata API"| Tier1
+    Gold -->|"Trino SQL"| Tier3
+
+    Tier1 --> V1
+    Tier2 --> V2
+
+    T1 -.->|"Schema linking"| V1
+    T2 -.->|"Entity retrieval"| V2
+    T3 -.->|"Live SQL"| Tier3
+    T4 -.->|"Term lookup"| Tier1
+
+    Agent --> Consumers
+
+    style Sources fill:#533483,color:#fff
+    style Bronze fill:#0f3460,color:#fff
+    style Silver fill:#16213e,color:#fff
+    style Gold fill:#e94560,color:#fff
+    style AIHub fill:#1a1a2e,color:#fff
+    style Tier1 fill:#0f3460,color:#fff
+    style Tier2 fill:#533483,color:#fff
+    style Tier3 fill:#e94560,color:#fff
+    style VectorDB fill:#16213e,color:#fff
+    style Agent fill:#533483,color:#fff
+    style Consumers fill:#0f3460,color:#fff

@@ -37,11 +37,13 @@ recommendation: |
   4. Self-service portal for analysts with full-text search and domain tagging
   5. Apache 2.0 licensed with no vendor lock-in
 
-  Gravitino should be tracked as a potential future addition in a complementary role.
-  Its multi-catalog REST API (wrapping Nessie, Hive, and JDBC behind a single endpoint)
-  could consolidate the OpenMetadata ingestion pipeline from three separate connectors
-  to one Gravitino connector. This is a Phase 4+ investigation item, not a replacement
-  of OpenMetadata.
+  Gravitino assessment firmed up (2026-03-30, ADR-007): Gravitino is complementary but
+  premature. Its RBAC push-down to Ranger duplicates what we already have. ABAC (tag-based
+  policy enforcement) is on roadmap but not shipped. It does not do PII classification,
+  business glossary, or data quality profiling. The governance automation gap (column
+  classification → Ranger tags) is solved by OpenMetadata auto-classification + Ranger
+  TagREST API (ADR-007), not Gravitino. Re-evaluate when Gravitino ships production-ready
+  ABAC and/or an OpenMetadata connector that simplifies ingestion.
 
 strengths:
   - id: S1
@@ -126,13 +128,17 @@ weaknesses:
 
 opportunities:
   - id: O1
-    title: "Gravitino as a Unified Ingestion Simplification Layer"
+    title: "Gravitino as a Unified Ingestion Simplification Layer (Deferred)"
     description: |
       Apache Gravitino exposes a single REST API aggregating multiple catalog backends
       (Nessie/Iceberg, Hive, JDBC). If OpenMetadata adds a Gravitino connector, the
       ingestion pipeline simplifies from N per-source connectors to one Gravitino
       connector. This reduces operational overhead as the number of source systems grows.
     evidence: "Gravitino multi-catalog REST API; OpenMetadata connector ecosystem expanding; potential single-source ingestion pipeline"
+    status: |
+      Deferred (2026-03-30). No OpenMetadata-Gravitino connector exists today. Gravitino v1.2.0
+      is production-ready for catalog federation but does not address governance automation
+      (ADR-007). Monitor for connector development. See ADR-007 for full assessment.
 
   - id: O2
     title: "Lineage Enrichment from Marquez Integration"

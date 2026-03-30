@@ -1,0 +1,49 @@
+%%{init: {'theme': 'base', 'themeVariables': {'primaryColor': '#1a1a2e', 'primaryTextColor': '#fff', 'primaryBorderColor': '#16213e', 'lineColor': '#0f3460', 'secondaryColor': '#533483', 'tertiaryColor': '#e94560'}}}%%
+flowchart LR
+    subgraph TD["Teradata FSDM\n(800 TB, 3NF)"]
+        T1["Party\n+Individual\n+Organization"]
+        T2["Account\n+Balance\n+Interest"]
+        T3["Transaction\n+Party_Role\n+Leg"]
+        T4["Instrument\n+Price"]
+        T5["Risk\n+Rating\n+Exposure"]
+        T6["Agreement\n+Collateral"]
+    end
+
+    subgraph Bronze["Bronze\n(Raw)"]
+        B1["raw_party_extract"]
+        B2["raw_account_extract"]
+        B3["raw_trades_history"]
+        B4["raw_positions_daily"]
+    end
+
+    subgraph Silver["Silver\n(FSDM Conformed)"]
+        S1["fsdm_party\nfsdm_party_role\nfsdm_party_relationship"]
+        S2["fsdm_account\nfsdm_account_balance"]
+        S3["fsdm_financial_transaction\nfsdm_transaction_party"]
+        S4["fsdm_risk_exposure\nfsdm_instrument"]
+    end
+
+    subgraph Gold["Gold\n(AI-Ready Wide Tables)"]
+        G1["customer_360\n15 FSDM tables → 1 wide table\nper-client: AUM, accounts,\nrisk score, activity, segment"]
+        G2["desk_risk_summary\n8 FSDM tables → 1 wide table\nper-desk: VaR, positions,\nlimits, P&L attribution"]
+        G3["surveillance_alert_context\n10 FSDM tables → 1 wide table\nper-alert: trader pattern,\ninstrument context, flags"]
+        G4["trading_metrics\nrisk_exposure\n(existing pilot tables)"]
+    end
+
+    subgraph AI["AI Data Hub\n(Embedded)"]
+        A1["Client summaries\n500-word profiles\nembedded in pgvector"]
+        A2["Risk narratives\ndesk-level context\nembedded in pgvector"]
+        A3["Alert packages\nsurveillance context\nembedded in pgvector"]
+        A4["Schema metadata\nCube YAML + glossary\nembedded in pgvector"]
+    end
+
+    TD -->|"TPT Extract\nDual-write shadow"| Bronze
+    Bronze -->|"Cleanse\nConform\nDedup"| Silver
+    Silver -->|"Denormalize\nAggregate\nEnrich"| Gold
+    Gold -->|"Summarize\nEmbed\nIndex"| AI
+
+    style TD fill:#533483,color:#fff
+    style Bronze fill:#0f3460,color:#fff
+    style Silver fill:#16213e,color:#fff
+    style Gold fill:#e94560,color:#fff
+    style AI fill:#1a1a2e,color:#fff
