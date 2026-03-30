@@ -170,7 +170,7 @@
 <body>
   <header class="doc-header">
     <h1>Iceberg Catalog SWOT Analysis</h1>
-    <p class="subtitle">Glue vs Nessie vs HMS vs Polaris</p>
+    <p class="subtitle">Glue vs Nessie vs HMS vs Polaris vs Gravitino</p>
     <p class="meta">
       <span class="status-badge status-decided">Decided</span>
  | Decision: <strong>Nessie</strong>      | 2026-03-13
@@ -276,14 +276,20 @@ reporting, and change management documentation for audits.</li>
       <li><strong>T1: Apache Polaris Gaining Momentum</strong> &mdash; Apache Polaris (incubating) is a competing REST catalog implementation
 backed by Snowflake. If Polaris gains broader adoption, Nessie may
 face community fragmentation.</li>
-      <li><strong>T2: Vendor Lock-In Risk if Migrating to Managed Catalog</strong> &mdash; If we later decide to move to a managed catalog (AWS Glue, Polaris SaaS),
+      <li><strong>T2: Apache Gravitino as Unified Metadata Alternative</strong> &mdash; Apache Gravitino (incubating) is a unified metadata lake that provides a single
+point of access to multiple data catalogs (Hive, Iceberg, JDBC, and more). It
+implements the Iceberg REST catalog specification and adds multi-catalog federation,
+centralized access control, and a tag-based governance model. If Gravitino matures
+and gains enterprise adoption, it could position itself as a superset of Nessie's
+capabilities by managing Iceberg catalogs alongside non-Iceberg metadata sources.</li>
+      <li><strong>T3: Vendor Lock-In Risk if Migrating to Managed Catalog</strong> &mdash; If we later decide to move to a managed catalog (AWS Glue, Polaris SaaS),
 migration effort includes metadata export/import, connection string changes
 across all engines, and testing and validation.</li>
-      <li><strong>T3: REST Catalog Specification Still Evolving</strong> &mdash; The Iceberg REST catalog spec is not yet fully finalized. Breaking changes,
+      <li><strong>T4: REST Catalog Specification Still Evolving</strong> &mdash; The Iceberg REST catalog spec is not yet fully finalized. Breaking changes,
 while unlikely, could require Nessie updates.</li>
-      <li><strong>T4: Nessie Project Governance Changes</strong> &mdash; Nessie is primarily maintained by Dremio. A change in Dremio's strategy
+      <li><strong>T5: Nessie Project Governance Changes</strong> &mdash; Nessie is primarily maintained by Dremio. A change in Dremio's strategy
 (acquisition, pivot) could affect project maintenance.</li>
-      <li><strong>T5: Scale Limitations Under Extreme Load</strong> &mdash; Nessie's performance characteristics at extreme scale (millions of tables,
+      <li><strong>T6: Scale Limitations Under Extreme Load</strong> &mdash; Nessie's performance characteristics at extreme scale (millions of tables,
 thousands of concurrent connections) are less proven than AWS Glue or
 Hive Metastore.</li>
     </ul>
@@ -404,7 +410,7 @@ reporting, and change management documentation for audits.</p>
   </details>
 
   <details>
-    <summary>Threats (5 items)</summary>
+    <summary>Threats (6 items)</summary>
     <div class="details-body">
       <h3>T1: Apache Polaris Gaining Momentum</h3>
       <p>Apache Polaris (incubating) is a competing REST catalog implementation
@@ -416,7 +422,21 @@ them is possible because the REST API is standardized. Our code uses
 catalog.type=rest (not Nessie-specific), enabling catalog switching without
 application changes.
 </div>
-      <h3>T2: Vendor Lock-In Risk if Migrating to Managed Catalog</h3>
+      <h3>T2: Apache Gravitino as Unified Metadata Alternative</h3>
+      <p>Apache Gravitino (incubating) is a unified metadata lake that provides a single
+point of access to multiple data catalogs (Hive, Iceberg, JDBC, and more). It
+implements the Iceberg REST catalog specification and adds multi-catalog federation,
+centralized access control, and a tag-based governance model. If Gravitino matures
+and gains enterprise adoption, it could position itself as a superset of Nessie's
+capabilities by managing Iceberg catalogs alongside non-Iceberg metadata sources.</p>
+      <div class="evidence"><strong>Evidence:</strong> Apache Gravitino (incubating); REST catalog support; multi-catalog federation; backed by Datastrato</div>
+      <div class="mitigation"><strong>Mitigation:</strong> Gravitino is still in Apache incubation and has a smaller production footprint than
+Nessie. Our architecture uses the standard REST catalog API, so a future migration
+to Gravitino (or using Gravitino as a federation layer on top of Nessie) is feasible
+without application changes. Monitor Gravitino's graduation status and evaluate as
+a federation layer when the project reaches 1.0.
+</div>
+      <h3>T3: Vendor Lock-In Risk if Migrating to Managed Catalog</h3>
       <p>If we later decide to move to a managed catalog (AWS Glue, Polaris SaaS),
 migration effort includes metadata export/import, connection string changes
 across all engines, and testing and validation.</p>
@@ -425,7 +445,7 @@ across all engines, and testing and validation.</p>
 operational, not architectural. Our infrastructure-as-code approach means
 connection configuration changes are automated through Terraform.
 </div>
-      <h3>T3: REST Catalog Specification Still Evolving</h3>
+      <h3>T4: REST Catalog Specification Still Evolving</h3>
       <p>The Iceberg REST catalog spec is not yet fully finalized. Breaking changes,
 while unlikely, could require Nessie updates.</p>
       <div class="evidence"><strong>Evidence:</strong> REST catalog spec still evolving; breaking changes possible in future versions</div>
@@ -433,16 +453,16 @@ while unlikely, could require Nessie updates.</p>
 before promotion. Docker Compose and Helm chart configurations lock the
 version (currently 0.107.4).
 </div>
-      <h3>T4: Nessie Project Governance Changes</h3>
+      <h3>T5: Nessie Project Governance Changes</h3>
       <p>Nessie is primarily maintained by Dremio. A change in Dremio's strategy
 (acquisition, pivot) could affect project maintenance.</p>
       <div class="evidence"><strong>Evidence:</strong> Dremio is primary maintainer; governance risk if Dremio strategy changes</div>
       <div class="mitigation"><strong>Mitigation:</strong> Nessie is Apache 2.0 licensed and the code can be forked if necessary.
 Multiple organizations contribute beyond Dremio. The REST catalog spec
 ensures our architecture is not Nessie-specific. We maintain the ability
-to switch to Polaris with less than 1 week of engineering effort.
+to switch to Polaris or Gravitino with less than 1 week of engineering effort.
 </div>
-      <h3>T5: Scale Limitations Under Extreme Load</h3>
+      <h3>T6: Scale Limitations Under Extreme Load</h3>
       <p>Nessie's performance characteristics at extreme scale (millions of tables,
 thousands of concurrent connections) are less proven than AWS Glue or
 Hive Metastore.</p>
@@ -467,6 +487,7 @@ can be added.
         <th>Polaris</th>
         <th>AWS Glue</th>
         <th>Hive Metastore</th>
+        <th>Gravitino</th>
       </tr>
     </thead>
     <tbody>
@@ -476,6 +497,7 @@ can be added.
         <td>Free (OSS) / Paid (SaaS)</td>
         <td>Per-request pricing</td>
         <td>Free</td>
+        <td>Free</td>
       </tr>
       <tr>
         <td><strong>REST catalog spec</strong></td>
@@ -483,6 +505,7 @@ can be added.
         <td>Yes</td>
         <td>Partial</td>
         <td>No</td>
+        <td>Yes</td>
       </tr>
       <tr>
         <td><strong>Multi-engine support</strong></td>
@@ -490,10 +513,12 @@ can be added.
         <td>Trino, Spark</td>
         <td>Spark, Athena</td>
         <td>Trino, Spark, Hive</td>
+        <td>Trino, Spark, Flink</td>
       </tr>
       <tr>
         <td><strong>Branching</strong></td>
         <td>Yes (unique)</td>
+        <td>No</td>
         <td>No</td>
         <td>No</td>
         <td>No</td>
@@ -504,6 +529,7 @@ can be added.
         <td>Unknown</td>
         <td>Yes (Glue)</td>
         <td>Yes</td>
+        <td>Unknown</td>
       </tr>
       <tr>
         <td><strong>Snowflake integration</strong></td>
@@ -511,12 +537,14 @@ can be added.
         <td>Yes (ICEBERG_REST)</td>
         <td>No</td>
         <td>No</td>
+        <td>Yes (ICEBERG_REST)</td>
       </tr>
       <tr>
         <td><strong>Cloud-agnostic</strong></td>
         <td>Yes</td>
         <td>Yes</td>
         <td>AWS only</td>
+        <td>Yes</td>
         <td>Yes</td>
       </tr>
       <tr>
@@ -525,6 +553,7 @@ can be added.
         <td>Medium (K8s)</td>
         <td>Low (managed)</td>
         <td>High (HMS HA)</td>
+        <td>Medium (K8s)</td>
       </tr>
       <tr>
         <td><strong>Community size</strong></td>
@@ -532,6 +561,7 @@ can be added.
         <td>Emerging</td>
         <td>Large (AWS)</td>
         <td>Largest</td>
+        <td>Emerging (incubating)</td>
       </tr>
     </tbody>
   </table>
@@ -541,7 +571,7 @@ can be added.
   </details>
 
   <footer class="doc-footer">
-    <p>Generated: 2026-03-14 | Next review: 2026-Q2</p>
+    <p>Generated: 2026-03-30 | Next review: 2026-Q2</p>
     <p>Phase: Phase 1 - Foundation and Feasibility Validation</p>
     <div class="versions">
       <span class="version-item">postgres: 15</span>

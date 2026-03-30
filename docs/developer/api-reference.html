@@ -410,6 +410,12 @@ result = MyPipeline(spark, config).execute()
             <td>Read mainframe data using Cobrix with COBOL copybook.</td>
           </tr>
           <tr>
+            <td><code>execute</code></td>
+            <td><code></code></td>
+            <td><code>dict</code></td>
+            <td>Orchestrate the pipeline and update the manifest on completion.</td>
+          </tr>
+          <tr>
             <td><code>transform</code></td>
             <td><code>df: DataFrame</code></td>
             <td><code>DataFrame</code></td>
@@ -708,7 +714,7 @@ print(settings.SPARK_MASTER)
       <p style="font-size: 0.9rem; color: #475569;">Structured anomaly report with evidence and severity classification.</p>
     </div>
     <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
-      <p><span class="ref-name">detect_anomalies</span><code>(records: list, business_hours: tuple[int, int], bulk_download_threshold: int, high_freq_threshold: int, restricted_schemas: Optional[set[str]])</code>
+      <p><span class="ref-name">detect_anomalies</span><code>(records: list, business_hours: tuple[int, int], bulk_download_threshold: int, high_freq_threshold: int, restricted_schemas: set[str] | None)</code>
  &rarr; <code>list[AnomalyReport]</code>      <span class="ref-type">function</span></p>
       <p style="font-size: 0.9rem; color: #475569;">Run all anomaly detection heuristics against audit records.</p>
       <details>
@@ -858,7 +864,7 @@ record = normalize_trino_audit(event_payload)
     <h3>governance.classification <span class="ref-type">classification.py</span></h3>
     <div class="ref-entry" style="margin-bottom: 1.25rem; border-left: 3px solid #c8a961; padding-left: 1rem;">
       <p><span class="ref-name">SensitivityLevel</span> <span class="ref-type">class</span>
- extends str, Enum</p>
+ extends StrEnum</p>
       <p style="font-size: 0.9rem; color: #475569;">Sensitivity classification levels for data columns.</p>
     </div>
     <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
@@ -899,7 +905,7 @@ assert level == SensitivityLevel.PII
       <p style="font-size: 0.9rem; color: #475569;">Service Level Agreement for data freshness per table.</p>
     </div>
     <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
-      <p><span class="ref-name">check_table_freshness</span><code>(last_updated: Optional[datetime], sla: FreshnessSLA)</code>
+      <p><span class="ref-name">check_table_freshness</span><code>(last_updated: datetime | None, sla: FreshnessSLA)</code>
  &rarr; <code>FreshnessStatus</code>      <span class="ref-type">function</span></p>
       <p style="font-size: 0.9rem; color: #475569;">Check data freshness status for a single table against its SLA.</p>
     </div>
@@ -909,7 +915,7 @@ assert level == SensitivityLevel.PII
       <p style="font-size: 0.9rem; color: #475569;">Return traffic-light UI metadata for a freshness status.</p>
     </div>
     <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
-      <p><span class="ref-name">get_all_freshness</span><code>(table_slas: dict[str, FreshnessSLA], last_updated_map: dict[str, Optional[datetime]])</code>
+      <p><span class="ref-name">get_all_freshness</span><code>(table_slas: dict[str, FreshnessSLA], last_updated_map: dict[str, datetime | None])</code>
  &rarr; <code>list[dict]</code>      <span class="ref-type">function</span></p>
       <p style="font-size: 0.9rem; color: #475569;">Batch freshness check for multiple tables.</p>
     </div>
@@ -917,7 +923,7 @@ assert level == SensitivityLevel.PII
   <div class="section-block" style="margin-left: 1rem;">
     <h3>governance.lineage_stubs <span class="ref-type">lineage_stubs.py</span></h3>
     <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
-      <p><span class="ref-name">register_legacy_lineage_stub</span><code>(marquez_url: str, namespace: str, source_name: str, dataset_name: str, description: str, fields: Optional[list[dict]], tags: Optional[list[str]])</code>
+      <p><span class="ref-name">register_legacy_lineage_stub</span><code>(marquez_url: str, namespace: str, source_name: str, dataset_name: str, description: str, fields: list[dict] | None, tags: list[str] | None)</code>
  &rarr; <code>dict</code>      <span class="ref-type">function</span></p>
       <p style="font-size: 0.9rem; color: #475569;">Register a legacy dataset stub in Marquez via REST API.</p>
     </div>
@@ -1294,7 +1300,7 @@ compact_table(spark, "lakehouse.bronze.trades", target_file_size_bytes=128*1024*
   <div class="section-block" style="margin-left: 1rem;">
     <h3>iceberg_utils.trino <span class="ref-type">trino.py</span></h3>
     <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
-      <p><span class="ref-name">get_trino_connection</span><code>(host: str | None, port: int | None, user: str, catalog: str, schema: str)</code>
+      <p><span class="ref-name">get_trino_connection</span><code>(host: str | None, port: int | None, user: str, catalog: str, schema: str, source: str)</code>
  &rarr; <code>Connection</code>      <span class="ref-type">function</span></p>
       <p style="font-size: 0.9rem; color: #475569;">Create a Trino DBAPI connection.</p>
       <details>
@@ -1307,6 +1313,31 @@ conn = get_trino_connection(host="localhost", port=8080, catalog="iceberg")
       </details>
     </div>
     <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_etl_connection</span><code>(schema: str)</code>
+ &rarr; <code>Connection</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Connection for Airflow DAGs and Python ETL pipelines.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_soda_connection</span><code>(schema: str)</code>
+ &rarr; <code>Connection</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Connection for Soda quality gate checks.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_schema_ops_connection</span><code>(schema: str)</code>
+ &rarr; <code>Connection</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Connection for DDL operations — CREATE TABLE, ALTER TABLE, etc.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_ai_connection</span><code>(schema: str)</code>
+ &rarr; <code>Connection</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Connection for AI agent queries (FastAPI middleware, Borealis, RBC Assist).</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_nessie_branch_connection</span><code>(branch: str, schema: str, source: str)</code>
+ &rarr; <code>Connection</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Connection pointing at a specific Nessie branch.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
       <p><span class="ref-name">execute_query</span><code>(conn: Connection, sql: str)</code>
  &rarr; <code>list[tuple]</code>      <span class="ref-type">function</span></p>
       <p style="font-size: 0.9rem; color: #475569;">Execute a SQL query and return all result rows.</p>
@@ -1314,12 +1345,17 @@ conn = get_trino_connection(host="localhost", port=8080, catalog="iceberg")
     <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
       <p><span class="ref-name">execute_ddl</span><code>(conn: Connection, sql: str)</code>
  &rarr; <code>None</code>      <span class="ref-type">function</span></p>
-      <p style="font-size: 0.9rem; color: #475569;">Execute a DDL statement (CREATE, ALTER, DROP, INSERT, UPDATE, DELETE, MERGE).</p>
+      <p style="font-size: 0.9rem; color: #475569;">Execute a DDL statement. Calls fetchall() to force completion.</p>
     </div>
     <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
       <p><span class="ref-name">get_table_schema</span><code>(conn: Connection, schema: str, table: str)</code>
  &rarr; <code>list[dict]</code>      <span class="ref-type">function</span></p>
       <p style="font-size: 0.9rem; color: #475569;">Get column names and types from a table using DESCRIBE.</p>
+    </div>
+    <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
+      <p><span class="ref-name">get_table_schema_fields</span><code>(conn: Connection, schema: str, table: str)</code>
+ &rarr; <code>list[str]</code>      <span class="ref-type">function</span></p>
+      <p style="font-size: 0.9rem; color: #475569;">Get column names only — used by the tag classifier.</p>
     </div>
     <div class="ref-entry" style="margin-bottom: 1rem; border-left: 3px solid #3b82f6; padding-left: 1rem;">
       <p><span class="ref-name">get_table_row_count</span><code>(conn: Connection, schema: str, table: str)</code>
@@ -1466,7 +1502,7 @@ job = DataStageJob(name="DS_TRADES_LOAD", complexity=JobComplexity.HIGH)
 
 
   <footer class="doc-footer">
-    <p>Generated: 2026-03-14</p>
+    <p>Generated: 2026-03-30</p>
     <div class="versions">
       <span class="version-item">postgres: 15</span>
       <span class="version-item">minio: latest</span>
