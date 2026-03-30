@@ -219,9 +219,22 @@ class RawZoneManager:
             for obj in page.get("Contents", []):
                 key: str = obj["Key"]
                 filename = key.split("/")[-1]
-                checksum = obj.get("ETag", "").strip('"')
                 arrival_ts = obj.get("LastModified")
                 arrival_iso = arrival_ts.isoformat() if arrival_ts else ""
+
+                # Retrieve the MD5 checksum stored during upload.
+                # list_objects_v2 does not return custom metadata, so we
+                # fall back to the ETag (which may differ for multipart
+                # uploads or server-side encrypted objects).
+                checksum = ""
+                try:
+                    head = s3.head_object(Bucket=self.config.bucket, Key=key)
+                    checksum = head.get("Metadata", {}).get("md5checksum", "")
+                except Exception:  # noqa: BLE001 – best-effort metadata fetch
+                    pass
+                if not checksum:
+                    checksum = obj.get("ETag", "").strip('"')
+
                 results.append(
                     RawZoneFile(
                         raw_path=f"s3://{self.config.bucket}/{key}",

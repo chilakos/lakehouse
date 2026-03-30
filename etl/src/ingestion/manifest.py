@@ -20,11 +20,18 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import uuid
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 
+from botocore.exceptions import ClientError
+
 logger = logging.getLogger(__name__)
+
+# Validation patterns for path components
+_SOURCE_SYSTEM_RE = re.compile(r"^[a-zA-Z0-9_\-]+$")
+_BUSINESS_DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
 # ---------------------------------------------------------------------------
@@ -167,15 +174,31 @@ class IngestionManifest:
 
         Returns:
             S3 key string, e.g. ``raw/_manifest/mainframe_db2/2026-03-15.jsonl``.
+
+        Raises:
+            ValueError: If ``source_system`` or ``business_date`` contain
+                invalid characters (path traversal prevention).
         """
+        if not _SOURCE_SYSTEM_RE.match(source_system):
+            msg = f"Invalid source_system (alphanumeric, hyphens, underscores only): {source_system!r}"
+            raise ValueError(msg)
+        if not _BUSINESS_DATE_RE.match(business_date):
+            msg = f"Invalid business_date (expected YYYY-MM-DD): {business_date!r}"
+            raise ValueError(msg)
         return f"raw/_manifest/{source_system}/{business_date}.jsonl"
 
     def _append_entry(self, entry: ManifestEntry) -> None:
         """Append a single ``ManifestEntry`` to the manifest on S3.
 
         Reads the current manifest (if any), appends the new record, and
-        writes the updated content back.  This is intentionally simple and
-        does not require server-side atomic operations.
+        writes the updated content back.
+
+        .. warning::
+            This operation is **not atomic**.  Concurrent callers writing to
+            the same manifest file will race.  This is acceptable for batch
+            ETL where a single Airflow task processes one source/date at a
+            time.  If concurrent writes are needed in the future, switch to
+            S3 conditional writes or a DynamoDB-backed manifest.
 
         Args:
             entry: The entry to append.
@@ -187,7 +210,7 @@ class IngestionManifest:
         try:
             response = s3.get_object(Bucket=self.bucket, Key=key)
             existing = response["Body"].read().decode("utf-8")
-        except Exception as exc:  # noqa: BLE001
+        except ClientError as exc:
             if not _is_no_such_key(exc):
                 raise
 
@@ -349,7 +372,7 @@ class IngestionManifest:
         try:
             response = s3.get_object(Bucket=self.bucket, Key=key)
             content = response["Body"].read().decode("utf-8")
-        except Exception as exc:  # noqa: BLE001
+        except ClientError as exc:
             if _is_no_such_key(exc):
                 return {}
             raise

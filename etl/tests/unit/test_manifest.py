@@ -10,6 +10,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+from botocore.exceptions import ClientError
 
 from src.ingestion.manifest import (
     STATUS_FAILED,
@@ -60,7 +61,10 @@ def _manifest_with_mock_s3(existing_entries: list[ManifestEntry] | None = None):
         body_mock.read.return_value = body_text.encode()
         mock_s3.get_object.return_value = {"Body": body_mock}
     else:
-        mock_s3.get_object.side_effect = Exception("NoSuchKey")
+        mock_s3.get_object.side_effect = ClientError(
+            {"Error": {"Code": "NoSuchKey", "Message": "The specified key does not exist."}},
+            "GetObject",
+        )
 
     return manifest, mock_s3
 
