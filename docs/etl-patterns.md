@@ -317,14 +317,149 @@ view and Spark SQL.
 
 ## 6. Mainframe Sources
 
-### Cobrix for COBOL Copybook Parsing
+### Full Ingestion Flow
 
-Mainframe flat files use COBOL copybooks to define record layouts. Cobrix
-is a Spark data source that reads these natively:
+Mainframe data flows through four stages before landing in the Bronze Iceberg table:
+
+```
+SFTP / Connect:Direct drop zone
+        │  (local staging path, e.g. /sftp/drop/)
+        │
+        │  1. RawZoneManager.upload_to_raw_zone()
+        ▼
+s3://lakehouse-raw/raw/mainframe/{source_system}/{YYYY-MM-DD}/{filename}
+        │  (original EBCDIC binary, never modified, 7-year retention)
+        │
+        │  2. IngestionManifest.register_file()   →  status: LANDED
+        │
+        │  3. MainframeBronzePipeline.execute()
+        │     (Cobrix parses EBCDIC → Spark DataFrame)
+        ▼
+lakehouse.bronze.{table}  (Apache Iceberg)
+        │
+        │  4. IngestionManifest.mark_processed()  →  status: PROCESSED
+```
+
+### RawZoneManager Usage
 
 ```python
+from src.ingestion.raw_zone import RawZoneConfig, RawZoneManager
+
+# AWS S3
+config = RawZoneConfig(bucket="lakehouse-raw", region="us-east-1")
+
+# MinIO (local / on-prem)
+config = RawZoneConfig(
+    bucket="lakehouse-raw",
+    endpoint_url="http://minio:9000",
+)
+
+manager = RawZoneManager(config=config)
+
+# Upload from SFTP drop zone to raw zone
+raw_file = manager.upload_to_raw_zone(
+    local_path="/sftp/drop/accounts.dat",
+    source_system="mainframe_db2",
+    business_date="2026-03-15",
+)
+# raw_file.raw_path  = "s3://lakehouse-raw/raw/mainframe/mainframe_db2/2026-03-15/accounts.dat"
+# raw_file.md5_checksum  = "..."
+# raw_file.file_size_bytes  = 204800
+
+# Discover files already in the raw zone
+files = manager.list_raw_files("mainframe_db2", "2026-03-15")
+```
+
+### IngestionManifest Usage
+
+```python
+from src.ingestion.manifest import IngestionManifest
+
+manifest = IngestionManifest(bucket="lakehouse-raw")
+
+# 1. Register the file (creates LANDED entry with UUID)
+entry = manifest.register_file(
+    raw_path=raw_file.raw_path,
+    source_system=raw_file.source_system,
+    business_date=raw_file.business_date,
+    file_size_bytes=raw_file.file_size_bytes,
+    md5_checksum=raw_file.md5_checksum,
+    arrival_ts=raw_file.arrival_ts,
+)
+
+# 2. Mark as PROCESSING when the ETL batch starts
+entry = manifest.mark_processing(
+    file_id=entry.file_id,
+    batch_id="batch-mf-001",
+    source_system="mainframe_db2",
+    business_date="2026-03-15",
+)
+
+# 3a. Mark as PROCESSED on success
+manifest.mark_processed(
+    file_id=entry.file_id,
+    bronze_table="lakehouse.bronze.accounts",
+    row_count=50000,
+    source_system="mainframe_db2",
+    business_date="2026-03-15",
+)
+
+# 3b. Mark as FAILED on error
+manifest.mark_failed(
+    file_id=entry.file_id,
+    error_message="Cobrix JAR not found",
+    source_system="mainframe_db2",
+    business_date="2026-03-15",
+)
+
+# Find all files needing processing
+unprocessed = manifest.get_unprocessed("mainframe_db2", "2026-03-15")
+```
+
+### MainframeBronzePipeline with Raw Zone Integration
+
+```python
+from src.ingestion.raw_zone import RawZoneConfig, RawZoneManager
+from src.ingestion.manifest import IngestionManifest
 from src.pipelines.bronze.mainframe_ingest import MainframeBronzePipeline
 
+config = RawZoneConfig(bucket="lakehouse-raw")
+manager = RawZoneManager(config=config)
+manifest = IngestionManifest(bucket="lakehouse-raw")
+
+# Step 1: land the file
+raw_file = manager.upload_to_raw_zone("/sftp/drop/accounts.dat", "mainframe_db2", "2026-03-15")
+entry = manifest.register_file(
+    raw_path=raw_file.raw_path,
+    source_system=raw_file.source_system,
+    business_date=raw_file.business_date,
+    file_size_bytes=raw_file.file_size_bytes,
+    md5_checksum=raw_file.md5_checksum,
+    arrival_ts=raw_file.arrival_ts,
+)
+manifest.mark_processing(entry.file_id, "batch-mf-001", "mainframe_db2", "2026-03-15")
+
+# Step 2: run the pipeline (manifest updated automatically on success/failure)
+pipeline = MainframeBronzePipeline(
+    spark=spark,
+    copybook_path="etl/tests/fixtures/sample_copybook.cpy",
+    data_path=raw_file.raw_path,
+    source_system="mainframe_db2",
+    batch_id="batch-mf-001",
+    raw_zone_config=config,   # enables raw zone verification in extract()
+    manifest=manifest,        # enables automatic status updates in execute()
+    manifest_entry=entry,
+)
+result = pipeline.execute()
+# entry is now PROCESSED in the manifest
+```
+
+### Backward Compatibility
+
+The pipeline still works without raw zone config (original behaviour):
+
+```python
+# Original usage -- unchanged
 pipeline = MainframeBronzePipeline(
     spark=spark,
     data_path="s3://lakehouse-onprem/mainframe/accounts.dat",
@@ -340,6 +475,8 @@ result = pipeline.execute()
 | Aspect | Approach |
 |--------|----------|
 | **COBOL copybooks** | Cobrix parses EBCDIC encoding, packed decimal, and record layouts |
+| **Raw zone retention** | Original EBCDIC files stored untouched in S3/MinIO for 7 years |
+| **Manifest storage** | JSON Lines at `s3://{bucket}/raw/_manifest/{source}/{date}.jsonl` |
 | **DB2 z/OS JDBC** | `ibm_db` Python driver for direct mainframe database access |
 | **Schema validation** | Overridden -- Cobrix derives schema from copybook at runtime |
 | **Testing** | Unit tests use mock data; integration tests need real EBCDIC binary files |
@@ -354,6 +491,10 @@ result = pipeline.execute()
            05  BALANCE             PIC S9(13)V99 COMP-3.
            05  LAST-UPDATE         PIC X(8).
 ```
+
+For a comprehensive guide to mainframe data ingestion including SFTP/Connect:Direct
+transfer patterns, regulatory retention, and troubleshooting, see
+[`docs/mainframe-ingestion.md`](mainframe-ingestion.md).
 
 ---
 
@@ -514,6 +655,10 @@ from src.pipelines.base import SchemaValidationError, QualityGateError
 from src.pipelines.bronze.trades_ingest import TradesBronzePipeline
 from src.pipelines.bronze.positions_ingest import PositionsBronzePipeline
 from src.pipelines.bronze.mainframe_ingest import MainframeBronzePipeline
+
+# Raw zone & ingestion manifest
+from src.ingestion.raw_zone import RawZoneConfig, RawZoneFile, RawZoneManager
+from src.ingestion.manifest import IngestionManifest, ManifestEntry
 
 # Silver pipelines
 from src.pipelines.silver.trades_clean import TradesSilverPipeline
