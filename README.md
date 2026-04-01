@@ -13,15 +13,21 @@ A data architecture transformation converting a legacy Teradata/DataStage data w
 ## Target Architecture
 
 ```
-                    ┌──────────────────────────────────────────┐
-                    │         Consumption Layer                │
-                    │  Tableau  ·  Power BI  ·  NL-to-SQL AI  │
-                    └────────────────┬─────────────────────────┘
-                                     │
-                    ┌────────────────┴─────────────────────────┐
-                    │          Semantic Layer (Cube)            │
-                    │   YAML metric definitions · SQL API      │
-                    └────────────────┬─────────────────────────┘
+     ┌──────────────────────────────────────────────────────────────┐
+     │                    Consumption Layer                         │
+     │  Power BI · Tableau · RBC Assist (AI chatbot)               │
+     └───────────────────────────┬──────────────────────────────────┘
+                                  │
+     ┌───────────────────────────┴──────────────────────────────────┐
+     │         Fabric Semantic Model  (Import mode · VertiPaq)      │
+     │  DAX measures · RLS · Prep for AI · Fabric Data Agent        │
+     │  NL2DAX → Azure AI Foundry → RBC Assist REST endpoint        │
+     └───────────────────────────┬──────────────────────────────────┘
+                                  │  Python ETL copy (Gold-only · V-Order)
+     ┌───────────────────────────┴──────────────────────────────────┐
+     │               Cube Semantic Layer (NL-to-SQL)                │
+     │          YAML metric definitions · SQL API (port 15432)      │
+     └───────────────────────────┬──────────────────────────────────┘
                                      │
         ┌────────────────────────────┼───────────────────────┐
         │                            │                       │
@@ -44,7 +50,7 @@ A data architecture transformation converting a legacy Teradata/DataStage data w
                     └──────────────────────────────────────────┘
 ```
 
-**Core principle:** A single, governed copy of data in Iceberg format that every consumer -- Teradata, Trino, Snowflake, BI tools, and AI -- can access without creating additional copies.
+**Core principle:** A single, governed copy of data in Iceberg format that every compute-plane consumer — Teradata, Trino, BI tools, and AI — can access without creating additional copies. Gold data exists in a second deliberate representation as Delta in Fabric for BI/AI surface consumption (see ADR-010). No OneLake shortcuts or XTable metadata virtualization are used.
 
 ## Tech Stack
 
@@ -60,7 +66,9 @@ A data architecture transformation converting a legacy Teradata/DataStage data w
 | Data Quality | Soda Core (SodaCL) | 3.5+ |
 | Governance | Apache Ranger | 2.8.0 |
 | Data Catalog | OpenMetadata | 1.6.0 |
-| Semantic Layer | Cube | 0.36.0 |
+| Semantic Layer (NL-to-SQL) | Cube | 0.36.0 |
+| BI/AI Semantic Layer | Microsoft Fabric (Import mode) | — |
+| AI Chatbot Integration | Fabric Data Agent → Azure AI Foundry | — |
 | AI/NL-to-SQL | Claude on AWS Bedrock | Sonnet |
 | Monitoring | Grafana + Prometheus | — |
 | IaC | Terraform | — |
@@ -220,7 +228,8 @@ See [`docs/mainframe-ingestion.md`](docs/mainframe-ingestion.md) for the full gu
 
 ## Semantic & AI Layer
 
-- **Cube** -- YAML-defined metrics served via SQL API (Postgres wire protocol) for Tableau/Power BI
+- **Cube** -- YAML-defined metrics served via SQL API (Postgres wire protocol); NL-to-SQL schema linking (ADR-006)
+- **Microsoft Fabric (Import mode)** -- BI and AI surface layer for Gold data; DAX semantic model serving Power BI, Tableau (XMLA), and RBC Assist via Fabric Data Agent (ADR-010)
 - **NL-to-SQL** -- Natural language query engine using Claude on AWS Bedrock with Cube YAML context
 - **Evaluation Framework** -- Golden datasets (trading + risk exposure) with execution accuracy scoring
 

@@ -357,7 +357,7 @@
       <li><strong>Bronze (Raw):</strong> Append-only ingestion preserves source fidelity. Schema-on-read. Data arrives in its original format as Apache Iceberg tables.</li>
       <li><strong>Silver (Cleansed):</strong> Schema validation, null/range checks, and deduplication produce typed, clean records. Failed records are quarantined for review.</li>
       <li><strong>Gold (Business-Ready):</strong> Business rules, per-symbol aggregation, and cross-source joins create curated datasets ready for analytics consumption.</li>
-      <li><strong>Consumers:</strong> Gold tables are queried via Trino, Teradata OTF, and Snowflake. Cube provides a unified BI metrics layer. Tableau, Power BI, and Claude AI consume the data.</li>
+      <li><strong>Consumers:</strong> Gold tables are queried via Trino and Teradata OTF (compute plane, Ranger-governed). A Python ETL copy pushes curated Gold tables to <strong>Microsoft Fabric</strong> as Delta (V-Order optimised). A <strong>Fabric Import semantic model</strong> serves Power BI, Tableau (XMLA endpoint), and <strong>RBC Assist</strong> via Fabric Data Agent → Azure AI Foundry (ADR-010). Cube remains the NL-to-SQL schema linking layer. No OneLake shortcuts or XTable virtualization are used (ADR-008).</li>
     </ul>
     <p>OpenLineage captures lineage at every transformation step, providing full BCBS 239 auditability from source to consumer.</p>
   </div>

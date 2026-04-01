@@ -438,3 +438,302 @@ s3 = boto3.client("s3")
 config = TransferConfig(multipart_threshold=1024 * 25, max_concurrency=10)
 s3.upload_file("large_file.dat", "bucket", "key", Config=config)
 ```
+
+---
+
+## AWS CLI — Pushing Files to the Raw Zone
+
+For operational teams and automated shell scripts, the AWS CLI provides a direct
+path to push mainframe batch files into the raw zone without invoking the Python
+`RawZoneManager`. This is the preferred method for:
+
+- **Bulk back-fills** — loading historical mainframe files in bulk
+- **Shell-script automation** — when the calling environment cannot import Python
+- **SRE runbooks** — manual re-land of a failed file from the command line
+- **Connect:Direct post-processing scripts** — shell post-step after NDM transfer
+
+> **Important:** The AWS CLI path bypasses `IngestionManifest` registration.
+> After using `aws s3 cp` or `aws s3 sync`, you must register the landed file
+> manually via `manifest.register_file()` before the Bronze pipeline can process it.
+> See the [Manifest Lifecycle](#manifest-lifecycle) section above.
+
+---
+
+### Prerequisites
+
+```bash
+# Install AWS CLI v2
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip && sudo ./aws/install
+
+# Verify
+aws --version
+
+# Configure credentials (production: use IAM role on the host, not static keys)
+aws configure
+# AWS Access Key ID:     <from IAM role or ~/.aws/credentials>
+# AWS Secret Access Key: <from IAM role or ~/.aws/credentials>
+# Default region:        ca-central-1    # or us-east-1 for AWS S3
+# Default output format: json
+```
+
+For **MinIO (on-premises)**, set a custom endpoint:
+
+```bash
+# Add to ~/.aws/config
+[profile minio-lakehouse]
+endpoint_url = http://minio:9000
+region = us-east-1
+
+# Or pass inline
+aws --endpoint-url http://minio:9000 s3 ls s3://lakehouse-raw/
+```
+
+---
+
+### Single File Upload
+
+Push one mainframe batch file to the canonical raw zone path:
+
+```bash
+SOURCE_SYSTEM="mainframe_db2"
+BUSINESS_DATE="2026-04-01"
+FILENAME="accounts.dat"
+BUCKET="lakehouse-raw"
+
+# Build the canonical S3 key (mirrors RawZoneManager.get_raw_zone_path())
+S3_KEY="raw/mainframe/${SOURCE_SYSTEM}/${BUSINESS_DATE}/${FILENAME}"
+
+# Upload with server-side encryption and content-type preservation
+aws s3 cp \
+  "/sftp/drop/${SOURCE_SYSTEM}/${FILENAME}" \
+  "s3://${BUCKET}/${S3_KEY}" \
+  --sse aws:kms \
+  --storage-class STANDARD \
+  --no-progress
+
+echo "Landed: s3://${BUCKET}/${S3_KEY}"
+```
+
+For **MinIO** (on-prem, no KMS):
+
+```bash
+aws --endpoint-url http://minio:9000 s3 cp \
+  "/sftp/drop/mainframe_db2/accounts.dat" \
+  "s3://lakehouse-raw/raw/mainframe/mainframe_db2/2026-04-01/accounts.dat"
+```
+
+---
+
+### Bulk Sync — Multiple Files for a Business Date
+
+When a mainframe job drops multiple files at once (e.g., end-of-day batch), sync
+the entire SFTP drop directory for a given date:
+
+```bash
+SOURCE_SYSTEM="mainframe_db2"
+BUSINESS_DATE="2026-04-01"
+LOCAL_DROP="/sftp/drop/${SOURCE_SYSTEM}"
+BUCKET="lakehouse-raw"
+S3_PREFIX="raw/mainframe/${SOURCE_SYSTEM}/${BUSINESS_DATE}/"
+
+# Sync all files in the drop directory to the S3 date partition
+# --exact-timestamps: re-upload if the local file has a newer mtime
+# --exclude: skip hidden files and lock files
+aws s3 sync \
+  "${LOCAL_DROP}/" \
+  "s3://${BUCKET}/${S3_PREFIX}" \
+  --sse aws:kms \
+  --exclude "*.tmp" \
+  --exclude ".*" \
+  --exact-timestamps \
+  --no-progress
+
+echo "Synced ${LOCAL_DROP} → s3://${BUCKET}/${S3_PREFIX}"
+```
+
+---
+
+### Verify Landing
+
+Confirm files are visible in the raw zone after upload:
+
+```bash
+# List all files for a business date
+aws s3 ls "s3://lakehouse-raw/raw/mainframe/mainframe_db2/2026-04-01/" --human-readable
+
+# Check file size matches local (catch truncated uploads)
+LOCAL_SIZE=$(stat -c%s "/sftp/drop/mainframe_db2/accounts.dat")
+S3_SIZE=$(aws s3api head-object \
+  --bucket lakehouse-raw \
+  --key "raw/mainframe/mainframe_db2/2026-04-01/accounts.dat" \
+  --query ContentLength \
+  --output text)
+
+if [ "$LOCAL_SIZE" == "$S3_SIZE" ]; then
+  echo "✓ Size match: ${S3_SIZE} bytes"
+else
+  echo "✗ Size mismatch — local=${LOCAL_SIZE}, s3=${S3_SIZE}"
+  exit 1
+fi
+```
+
+---
+
+### Compute and Tag with MD5 Checksum
+
+The `RawZoneManager` computes MD5 before upload and stores it in the manifest.
+When using the AWS CLI, compute and record the checksum manually:
+
+```bash
+FILENAME="accounts.dat"
+LOCAL_PATH="/sftp/drop/mainframe_db2/${FILENAME}"
+
+# Compute MD5 before upload
+MD5=$(md5sum "${LOCAL_PATH}" | awk '{print $1}')
+echo "MD5: ${MD5}"
+
+# Upload with checksum metadata tag
+aws s3 cp \
+  "${LOCAL_PATH}" \
+  "s3://lakehouse-raw/raw/mainframe/mainframe_db2/2026-04-01/${FILENAME}" \
+  --metadata "md5checksum=${MD5}" \
+  --sse aws:kms
+
+# Later, verify in-flight integrity via ETag (S3 MD5 for non-multipart uploads)
+aws s3api head-object \
+  --bucket lakehouse-raw \
+  --key "raw/mainframe/mainframe_db2/2026-04-01/accounts.dat" \
+  --query '{ETag: ETag, MD5Meta: Metadata.md5checksum}' \
+  --output json
+```
+
+---
+
+### Post-Upload: Register with the Manifest
+
+After CLI upload, register the file with the Python manifest so the Bronze
+pipeline can pick it up:
+
+```python
+from src.ingestion.manifest import IngestionManifest
+from src.ingestion.raw_zone import RawZoneConfig, RawZoneManager
+import hashlib, os
+
+# Re-compute MD5 from local file (or read from the S3 metadata tag)
+with open("/sftp/drop/mainframe_db2/accounts.dat", "rb") as f:
+    md5 = hashlib.md5(f.read()).hexdigest()
+
+file_size = os.path.getsize("/sftp/drop/mainframe_db2/accounts.dat")
+raw_path = "s3://lakehouse-raw/raw/mainframe/mainframe_db2/2026-04-01/accounts.dat"
+
+manifest = IngestionManifest(bucket="lakehouse-raw")
+entry = manifest.register_file(
+    raw_path=raw_path,
+    source_system="mainframe_db2",
+    business_date="2026-04-01",
+    file_size_bytes=file_size,
+    md5_checksum=md5,
+    arrival_ts="2026-04-01T06:00:00Z",
+)
+print(f"Registered: {entry.file_id}")
+```
+
+---
+
+### Object Lock — Compliance Retention
+
+For production raw zone buckets with S3 Object Lock enabled (7-year compliance
+retention), uploaded files are automatically protected. Verify Lock status:
+
+```bash
+aws s3api get-object-legal-hold \
+  --bucket lakehouse-raw \
+  --key "raw/mainframe/mainframe_db2/2026-04-01/accounts.dat"
+
+aws s3api get-object-retention \
+  --bucket lakehouse-raw \
+  --key "raw/mainframe/mainframe_db2/2026-04-01/accounts.dat"
+```
+
+If Object Lock is in governance mode during testing, temporarily bypass:
+
+```bash
+# Requires s3:BypassGovernanceRetention IAM permission — not available in prod
+aws s3 rm "s3://lakehouse-raw/raw/mainframe/.../test_file.dat" \
+  --bypass-governance-retention
+```
+
+---
+
+### Connect:Direct (NDM) Post-Step Shell Script
+
+A complete shell script suitable for use as a Connect:Direct PNODE post-step:
+
+```bash
+#!/bin/bash
+# ndm_post_step.sh — called by Connect:Direct after successful file transfer
+# Usage: ./ndm_post_step.sh <local_file_path> <source_system> <business_date>
+
+set -euo pipefail
+
+LOCAL_PATH="${1}"
+SOURCE_SYSTEM="${2}"
+BUSINESS_DATE="${3}"
+BUCKET="lakehouse-raw"
+FILENAME=$(basename "${LOCAL_PATH}")
+S3_KEY="raw/mainframe/${SOURCE_SYSTEM}/${BUSINESS_DATE}/${FILENAME}"
+
+echo "[$(date -u +%FT%TZ)] Starting raw zone upload"
+echo "  File:          ${LOCAL_PATH}"
+echo "  Source system: ${SOURCE_SYSTEM}"
+echo "  Business date: ${BUSINESS_DATE}"
+echo "  S3 target:     s3://${BUCKET}/${S3_KEY}"
+
+# Compute MD5 before upload
+MD5=$(md5sum "${LOCAL_PATH}" | awk '{print $1}')
+echo "  MD5:           ${MD5}"
+
+# Upload to raw zone
+aws s3 cp \
+  "${LOCAL_PATH}" \
+  "s3://${BUCKET}/${S3_KEY}" \
+  --sse aws:kms \
+  --metadata "md5checksum=${MD5},source_system=${SOURCE_SYSTEM},business_date=${BUSINESS_DATE}" \
+  --no-progress
+
+# Verify size
+LOCAL_SIZE=$(stat -c%s "${LOCAL_PATH}")
+S3_SIZE=$(aws s3api head-object \
+  --bucket "${BUCKET}" \
+  --key "${S3_KEY}" \
+  --query ContentLength \
+  --output text)
+
+if [ "${LOCAL_SIZE}" != "${S3_SIZE}" ]; then
+  echo "[ERROR] Size mismatch: local=${LOCAL_SIZE} s3=${S3_SIZE}"
+  exit 1
+fi
+
+echo "[$(date -u +%FT%TZ)] Upload complete: ${S3_SIZE} bytes"
+echo "[$(date -u +%FT%TZ)] Triggering manifest registration..."
+
+# Register with Python manifest
+python3 - <<PYEOF
+from src.ingestion.manifest import IngestionManifest
+from datetime import datetime, timezone
+
+manifest = IngestionManifest(bucket="${BUCKET}")
+entry = manifest.register_file(
+    raw_path="s3://${BUCKET}/${S3_KEY}",
+    source_system="${SOURCE_SYSTEM}",
+    business_date="${BUSINESS_DATE}",
+    file_size_bytes=${LOCAL_SIZE},
+    md5_checksum="${MD5}",
+    arrival_ts=datetime.now(timezone.utc).isoformat(),
+)
+print(f"Manifest entry: {entry.file_id}")
+PYEOF
+
+echo "[$(date -u +%FT%TZ)] Done. Raw zone landing complete."
+```
