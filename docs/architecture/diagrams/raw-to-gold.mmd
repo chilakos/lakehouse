@@ -1,0 +1,192 @@
+flowchart LR
+
+    %% ══════════════════════════════════════
+    %% SOURCES
+    %% ══════════════════════════════════════
+    subgraph SRC["Sources  •  300+"]
+        direction TB
+        S1["Mainframe z/OS\nDB2 · VSAM · COBOL\nDW00 / N500"]
+        S2["Op. Databases\nOracle · DB2 · MSSQL\nCDC / batch"]
+        S3["Market Data\nReuters · Bloomberg\nReal-time + EOD"]
+        S4["Files / APIs\nCSV · XML · JSON\n300+ systems"]
+    end
+
+    %% ══════════════════════════════════════
+    %% RAW ZONE
+    %% ══════════════════════════════════════
+    subgraph RAW["Raw Zone  •  Immutable  •  7-yr Retention"]
+        direction TB
+        R1["SFTP / NDM\nConnect:Direct post-step\n/sftp/drop/{source}/"]
+        R2["AWS CLI\naws s3 cp · s3 sync\nBulk back-fill · SRE"]
+        R3[("MinIO / S3\ns3://lakehouse-raw/\nraw/mainframe/{src}/{date}/\nObject Lock · FINRA")]
+        R4["IngestionManifest\nMD5 · JSONL\nLANDED → PROCESSED"]
+    end
+
+    %% ══════════════════════════════════════
+    %% BRONZE
+    %% ══════════════════════════════════════
+    subgraph BRZ["Bronze  •  Append-Only  •  Immutable History"]
+        direction TB
+        B1["Airflow 3.1\nDAG per source domain\n:8081 · Celery · Redis"]
+        B2["Python ETL\nCobrix EBCDIC decode\n~12,000 jobs migrating"]
+        B3[("Iceberg V2\nbronze.{source}_{table}\nAppend-only")]
+        B4["Nessie 0.107\nBranch-per-load\n:19120 · Git-style"]
+        B5["Gravitino\nPII · Confidential tags\nPolicy → Ranger push"]
+        B6["OpenLineage\nEmitted every transform\n→ Marquez :5000"]
+    end
+
+    %% ══════════════════════════════════════
+    %% SILVER
+    %% ══════════════════════════════════════
+    subgraph SLV["Silver  •  FSDM-Conformed  •  Ranger-Governed"]
+        direction TB
+        SV1["Python ETL\nFSDM conformance\nDedup · SCD · type cast"]
+        SV2["Trino 479\nMandatory gateway\nADR-002 · :8080"]
+        SV3[("Iceberg V2\nParty · Account\nTransaction · Risk")]
+        SV4["Soda Core\nSodaCL quality gates\nNull % · RI · row counts"]
+        SV5["Apache Ranger\nColumn masking · RBAC\n:6080 · Solr audit"]
+    end
+
+    %% ══════════════════════════════════════
+    %% GOLD — COMPUTE PLANE
+    %% ══════════════════════════════════════
+    subgraph GLD["Gold  •  Iceberg V2  •  Compute Plane  •  Ranger ACL"]
+        direction TB
+        G1["Teradata Vantage\nOTF / Iceberg engine\nAggregations · KPIs"]
+        G2["Trino 479\nCross-domain joins\nADR-002 mandatory"]
+        G3[("Iceberg V2\nAuthoritative Gold\nStable paths · OPTIMIZE\nVACUUM on schedule")]
+        G4["Cube v0.36\nNL-to-SQL · RASL\n:15432 PostgreSQL wire\nADR-006"]
+        G5["Apache Ranger\nAuthoritative compute ACL\nAll engines enforced"]
+    end
+
+    %% ══════════════════════════════════════
+    %% DUAL-GOLD SPLIT
+    %% ══════════════════════════════════════
+    SPLIT{{"Dual-Gold\nSplit\nADR-010"}}
+
+    %% ══════════════════════════════════════
+    %% FABRIC — BI/AI SURFACE
+    %% ══════════════════════════════════════
+    subgraph FAB["Fabric  •  BI / AI Surface Layer  •  ADR-010"]
+        direction TB
+        F1["Python ETL Copy\nGold Iceberg → Fabric Delta\nV-Order · VertiPaq optimised"]
+        F2[("Delta Tables\nOneLake Tables/ section\nNo XTable · No shortcuts")]
+        F3["Import Semantic Model\nVertiPaq in-memory · DAX\nKPIs defined once · RLS\nPrep for AI enabled"]
+        F4["Fabric Data Agent\nNL2DAX · REST endpoint\nEntra ID · user identity"]
+    end
+
+    %% ══════════════════════════════════════
+    %% CONSUMERS
+    %% ══════════════════════════════════════
+    subgraph CON["Consumption Layer"]
+        direction TB
+        C1["Power BI\nVertiPaq in-memory\n1,000+ OBIEE reports\nCopilot · certified datasets"]
+        C2["Tableau\nXMLA endpoint\nSame semantic model\nConsistent KPIs · no drift"]
+        C3["Azure AI Foundry\nMicrosoftFabricPreviewTool\ngpt-4o orchestration"]
+        C4["RBC Assist\nAI enterprise chatbot\nEntra ID · RLS enforced\nRaw data never leaves RBC"]
+    end
+
+    %% ══════════════════════════════════════
+    %% NL-TO-SQL PATH
+    %% ══════════════════════════════════════
+    subgraph NLP["NL-to-SQL Path  •  ADR-006 / ADR-009"]
+        direction TB
+        N1["AWS Bedrock\nClaude Sonnet\nNL-to-SQL engine\nVPC · data stays in RBC"]
+    end
+
+    %% ══════════════════════════════════════
+    %% CROSS-CUTTING — GOVERNANCE
+    %% ══════════════════════════════════════
+    subgraph GOV["Governance Plane  •  OSFI B-13  •  BCBS 239"]
+        direction LR
+        GV1["Gravitino\nUnified policy authoring\nOne policy → all engines"]
+        GV2["Apache Ranger 2.8\n:6080 · Solr :8983 · ZK :2181\nCol masking · Row RBAC · Audit"]
+        GV3["Nessie 0.107\nCatalog versioning\nBranch-per-load · Git history"]
+        GV4["OpenMetadata 1.6\nData catalog · Glossary\nClassification · :8585"]
+    end
+
+    %% ══════════════════════════════════════
+    %% CROSS-CUTTING — LINEAGE & QUALITY
+    %% ══════════════════════════════════════
+    subgraph LIN["Lineage & Quality"]
+        direction LR
+        L1["OpenLineage\nEmitted every transform\nAirflow DAG level"]
+        L2["Marquez 0.50\n:5000 REST · :3000 UI\nOpenLineage server"]
+        L3["Soda Core SodaCL\nBronze + Silver gates\nRow counts · RI · nulls"]
+    end
+
+    %% ══════════════════════════════════════
+    %% CROSS-CUTTING — OBSERVABILITY
+    %% ══════════════════════════════════════
+    subgraph OBS["Observability & Delivery"]
+        direction LR
+        O1["Prometheus :9090\nStatsD :9102\nAirflow task metrics"]
+        O2["Grafana :3001\nReporter :8686\nBCBS 239 · freshness · SLA"]
+        O3["GitHub\nAll ETL · ADRs versioned\nPR reviews · CI/CD"]
+    end
+
+    %% ══════════════════════════════════════
+    %% MAIN FLOW EDGES
+    %% ══════════════════════════════════════
+    SRC -->|"SFTP / NDM / CDC"| RAW
+    RAW -->|"Airflow DAG trigger"| BRZ
+    BRZ -->|"Bronze → Silver ETL"| SLV
+    SLV -->|"Silver → Gold ETL"| GLD
+    GLD --> SPLIT
+
+    SPLIT -->|"Authoritative Iceberg\ncompute plane"| G3
+    SPLIT -->|"Python ETL copy\nDelta · V-Order"| FAB
+
+    F3 -->|"Direct Lake / XMLA"| C1
+    F3 -->|"XMLA endpoint"| C2
+    F4 -->|"NL2DAX REST"| C3
+    C3 -->|"→ RBC Assist"| C4
+
+    G4 -->|"NL-to-SQL"| N1
+
+    %% ══════════════════════════════════════
+    %% CROSS-CUTTING EDGES
+    %% ══════════════════════════════════════
+    GV1 -.->|"policy push"| GV2
+    L1 -.->|"lineage events"| L2
+    O1 -.->|"metrics"| O2
+
+    %% ══════════════════════════════════════
+    %% STYLES
+    %% ══════════════════════════════════════
+    classDef sourceStyle    fill:#7f1d1d,stroke:#c53030,color:#fecaca,stroke-width:2px
+    classDef rawStyle       fill:#7c2d12,stroke:#9c4a1a,color:#fed7aa,stroke-width:2px
+    classDef bronzeStyle    fill:#78350f,stroke:#b45309,color:#fde68a,stroke-width:2px
+    classDef silverStyle    fill:#1f2937,stroke:#4a5568,color:#d1d5db,stroke-width:2px
+    classDef goldStyle      fill:#78350f,stroke:#d97706,color:#fde68a,stroke-width:3px
+    classDef fabricStyle    fill:#3730a3,stroke:#8b5cf6,color:#ddd6fe,stroke-width:3px
+    classDef consumerStyle  fill:#1a2332,stroke:#c8a961,color:#fde68a,stroke-width:2px
+    classDef nlpStyle       fill:#0c4a6e,stroke:#0891b2,color:#bae6fd,stroke-width:2px
+    classDef govStyle       fill:#450a0a,stroke:#dc2626,color:#fecaca,stroke-width:2px
+    classDef linStyle       fill:#4a044e,stroke:#be185d,color:#fbcfe8,stroke-width:2px
+    classDef obsStyle       fill:#14532d,stroke:#16a34a,color:#bbf7d0,stroke-width:2px
+    classDef splitStyle     fill:#92400e,stroke:#c8a961,color:#fde68a,stroke-width:3px
+
+    class SRC sourceStyle
+    class RAW rawStyle
+    class BRZ bronzeStyle
+    class SLV silverStyle
+    class GLD goldStyle
+    class FAB fabricStyle
+    class CON consumerStyle
+    class NLP nlpStyle
+    class GOV govStyle
+    class LIN linStyle
+    class OBS obsStyle
+    class SPLIT splitStyle
+
+    %% ══════════════════════════════════════
+    %% NOTES
+    %% ══════════════════════════════════════
+    %% ADR-002: Trino is mandatory query gateway — no direct Spark on Silver/Gold
+    %% ADR-005: Python ETL only — no dbt, no Spark
+    %% ADR-008: OneLake shortcuts NOT adopted — XTable fidelity gaps, RLS 403 issues
+    %% ADR-010: Fabric Import semantic model — dual-Gold, no shortcuts, VertiPaq
+    %% Migrations in flight: DataStage→Python ~12,000 jobs · OBIEE→Power BI ~1,000 reports
+    %% Services: postgres:5432 · minio:9000 · nessie:19120 · trino:8080 · airflow:8081
+    %%           cube:15432 · marquez:5000 · ranger:6080 · grafana:3001 · om:8585

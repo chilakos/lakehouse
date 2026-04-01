@@ -1,84 +1,91 @@
 flowchart TD
-    subgraph Sources["Market Data Sources"]
+    subgraph Sources["Sources  •  300+"]
         direction LR
-        S1["Reuters / Bloomberg<br/>Real-time Feeds"]
-        S2["Mainframe Extracts<br/>Batch Files"]
-        S3["Database CDC<br/>Change Data Capture"]
+        S1["Mainframe z/OS\nDB2 · VSAM · COBOL\nDW00 / N500"]
+        S2["Op. Databases\nOracle · DB2 · MSSQL\nCDC / batch"]
+        S3["Market Data\nReuters · Bloomberg"]
+        S4["Files / APIs\nCSV · XML · JSON"]
     end
 
-    subgraph Ingestion["PySpark / Airflow Ingestion"]
+    subgraph Ingestion["Ingestion  •  Python ETL  •  Airflow 3.1"]
         direction LR
-        I1["Airflow DAGs<br/><i>Schedule + Monitor</i>"]
-        I2["PySpark + PyIceberg<br/><i>Transform + Write</i>"]
-        I3["OpenLineage<br/><i>Lineage Capture</i>"]
+        I1["Airflow DAGs\nSchedule + Monitor\n:8081"]
+        I2["Python ETL\nCobrix EBCDIC decode\n~12,000 jobs migrating"]
+        I3["OpenLineage\nLineage capture\n→ Marquez :5000"]
     end
 
-    subgraph Bronze["Bronze Layer (Raw)"]
+    subgraph Bronze["Bronze Layer  •  Immutable  •  Iceberg V2"]
         direction LR
-        B1["Raw Ingested Data<br/>Schema-on-read"]
+        B1["Raw ingested data\nAppend-only · schema-on-read\nNessie branch-per-load"]
     end
 
-    subgraph QC["Quality Checks"]
+    subgraph QC["Quality Checks  •  Soda Core SodaCL"]
         direction LR
-        QC1["Schema Validation"]
-        QC2["Null / Range Checks"]
-        QC3["Deduplication"]
+        QC1["Schema validation\nPK not-null · PK unique"]
+        QC2["Null / range checks\nReferential integrity"]
     end
 
-    subgraph Silver["Silver Layer (Cleansed)"]
+    subgraph Silver["Silver Layer  •  FSDM-Conformed  •  Iceberg V2"]
         direction LR
-        SV1["Validated + Deduped<br/>Typed Columns"]
+        SV1["Validated + deduped\nFSDM-schema conformed\nParty · Account · Transaction"]
     end
 
-    subgraph Agg["Aggregation"]
+    subgraph Agg["Gold Transforms  •  Teradata Vantage + Trino"]
         direction LR
-        AG1["Business Rules"]
-        AG2["Per-Symbol Aggregation"]
-        AG3["Cross-Source Joins"]
+        AG1["Business rules\nFSDM multi-table joins"]
+        AG2["Per-domain aggregation\nKPIs · risk calculations"]
+        AG3["Ranger ACL enforced\nGitHub · ADR log"]
     end
 
-    subgraph Gold["Gold Layer (Business-Ready)"]
+    subgraph Gold["Gold Layer  •  Iceberg V2  •  Compute Plane"]
         direction LR
-        GD1["Curated Datasets<br/>Analytics-Ready"]
+        GD1["Curated analytics datasets\nAuthoritative · stable paths\nOPTIMIZE + VACUUM enforced"]
     end
 
-    subgraph QueryEngines["Query Engines"]
+    subgraph ComputeEngines["Compute Engines  •  ADR-002 Trino Gateway"]
         direction LR
-        QE1["Trino<br/>Federated SQL"]
-        QE2["Teradata OTF"]
-        QE3["Snowflake"]
+        QE1["Trino 479\nMandatory query gateway\n:8080 · JDBC"]
+        QE2["Teradata Vantage\nOTF / Iceberg engine"]
     end
 
-    subgraph SemanticLayer["Semantic Layer"]
+    subgraph SemanticLayers["Semantic Layers"]
         direction LR
-        SEM1["Cube<br/>BI Metrics"]
+        SEM1["Cube v0.36\nNL-to-SQL · RASL\n:15432 PostgreSQL wire\nADR-006"]
+        SEM2["Fabric Import Model\nVertiPaq in-memory · DAX\nRLS · Prep for AI\nADR-010"]
     end
 
     subgraph Consumers["BI / AI Consumers"]
         direction LR
-        CON1["Tableau"]
-        CON2["Power BI"]
-        CON3["Claude AI"]
+        CON1["Power BI\n1,000+ OBIEE reports\nCopilot enabled"]
+        CON2["Tableau\nXMLA endpoint\nSame semantic model"]
+        CON3["RBC Assist\nFabric Data Agent → NL2DAX\n→ Azure AI Foundry"]
     end
 
-    Sources -->|"raw files + streams"| Ingestion
-    Ingestion -->|"append-only writes"| Bronze
+    Sources -->|"SFTP · NDM · CDC\naws s3 cp / s3 sync"| Ingestion
+    Ingestion -->|"append-only Iceberg writes\nGravitino PII tags"| Bronze
     Bronze -->|"schema validation"| QC
-    QC -->|"cleansed records"| Silver
-    Silver -->|"dedup + business rules"| Agg
-    Agg -->|"aggregate per-symbol"| Gold
-    Gold -->|"Iceberg tables"| QueryEngines
-    QueryEngines -->|"SQL API"| SemanticLayer
-    SemanticLayer -->|"unified metrics"| Consumers
+    QC -->|"cleansed · deduped records"| Silver
+    Silver -->|"FSDM joins · business rules"| Agg
+    Agg -->|"aggregate · enrich · curate"| Gold
+    Gold -->|"Iceberg V2 · Nessie catalog"| ComputeEngines
+    ComputeEngines -->|"SQL API"| SemanticLayers
+    Gold -->|"Python ETL copy\nDelta · V-Order\nADR-010 dual-Gold"| SEM2
+    SemanticLayers -->|"DAX · XMLA · NL2DAX"| Consumers
 
-    classDef bronzeLayer fill:#cd7f32,stroke:#1a2332,color:#fff,stroke-width:2px
-    classDef silverLayer fill:#c0c0c0,stroke:#1a2332,color:#1a2332,stroke-width:2px
-    classDef goldLayer fill:#c8a961,stroke:#1a2332,color:#1a2332,stroke-width:2px
+    classDef bronzeLayer  fill:#78350f,stroke:#b45309,color:#fde68a,stroke-width:2px
+    classDef silverLayer  fill:#1f2937,stroke:#4a5568,color:#d1d5db,stroke-width:2px
+    classDef goldLayer    fill:#78350f,stroke:#d97706,color:#fde68a,stroke-width:3px
+    classDef fabricLayer  fill:#3730a3,stroke:#8b5cf6,color:#ddd6fe,stroke-width:3px
     classDef defaultLayer fill:#f8fafc,stroke:#1a2332,color:#1a2332,stroke-width:2px
 
     class Bronze bronzeLayer
     class Silver silverLayer
     class Gold goldLayer
-    class Sources,Ingestion,QC,Agg,QueryEngines,SemanticLayer,Consumers defaultLayer
+    class SEM2 fabricLayer
+    class Sources,Ingestion,QC,Agg,ComputeEngines,SemanticLayers,Consumers defaultLayer
 
-    %% Note: All 300+ sources follow this medallion pattern
+    %% ADR-002: Trino mandatory gateway — no Spark
+    %% ADR-005: Python ETL only — no dbt
+    %% ADR-010: Fabric Import mode — dual-Gold, no OneLake shortcuts
+    %% ADR-008: OneLake shortcuts not adopted
+    %% Snowflake deprecated — see docs/migration/snowflake-deprecation.md
