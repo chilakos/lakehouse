@@ -1,0 +1,111 @@
+# POC-only docker-compose — minimal 4-service stack
+# Postgres (Nessie metadata) + MinIO (object storage) + Nessie (catalog) + Trino (query engine)
+# No Spark, no Airflow, no Ranger, no Grafana
+#
+# Usage:
+#   docker-compose -f docker-compose.poc.yml up -d
+#   python scripts/poc_pipeline.py
+#   docker-compose -f docker-compose.poc.yml down -v
+
+services:
+
+  # ── Nessie metadata store ──────────────────────────────────────────────────
+  nessie-db:
+    image: postgres:15
+    container_name: poc-nessie-db
+    environment:
+      POSTGRES_USER: nessie
+      POSTGRES_PASSWORD: nessie
+      POSTGRES_DB: nessie
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nessie -d nessie"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - poc_nessie_db:/var/lib/postgresql/data
+
+  # ── Object storage (MinIO) ─────────────────────────────────────────────────
+  minio:
+    image: minio/minio:latest
+    container_name: poc-minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: admin123456
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - poc_minio_data:/data
+
+  # ── Bucket initialisation ──────────────────────────────────────────────────
+  minio-init:
+    image: minio/mc:latest
+    container_name: poc-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 admin admin123456;
+      mc mb --ignore-existing local/lakehouse-data;
+      mc mb --ignore-existing local/lakehouse-raw;
+      mc version enable local/lakehouse-data;
+      mc version enable local/lakehouse-raw;
+      echo 'Buckets ready: lakehouse-data, lakehouse-raw';
+      "
+    restart: on-failure
+
+  # ── Nessie catalog (Iceberg REST) ─────────────────────────────────────────
+  nessie:
+    image: ghcr.io/projectnessie/nessie:0.107.4
+    container_name: poc-nessie
+    depends_on:
+      nessie-db:
+        condition: service_healthy
+    environment:
+      QUARKUS_DATASOURCE_DB_KIND: postgresql
+      QUARKUS_DATASOURCE_USERNAME: nessie
+      QUARKUS_DATASOURCE_PASSWORD: nessie
+      QUARKUS_DATASOURCE_JDBC_URL: jdbc:postgresql://nessie-db:5432/nessie
+      NESSIE_VERSION_STORE_TYPE: JDBC
+    ports:
+      - "19120:19120"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:19120/api/v2/config"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+
+  # ── Trino query engine ─────────────────────────────────────────────────────
+  trino:
+    image: trinodb/trino:479
+    container_name: poc-trino
+    depends_on:
+      nessie:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./infra/docker/trino/etc:/etc/trino
+    environment:
+      # Point S3 connector at local MinIO
+      AWS_ACCESS_KEY_ID: admin
+      AWS_SECRET_ACCESS_KEY: admin123456
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/v1/info"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+volumes:
+  poc_nessie_db:
+  poc_minio_data:
