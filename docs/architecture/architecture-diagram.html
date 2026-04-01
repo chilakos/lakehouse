@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RBC Lakehouse — End-to-End Architecture Diagram</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #060c18;
+    color: #e2e8f0;
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: auto;
+  }
+
+  .page-header {
+    padding: 1.5rem 2rem 1rem;
+    border-bottom: 1px solid rgba(200,169,97,0.2);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .page-header h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #c8a961;
+    letter-spacing: 0.05em;
+  }
+  .page-header .meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: #4a5568;
+    letter-spacing: 0.08em;
+  }
+
+  .diagram-wrap {
+    padding: 1.5rem 1rem 2rem;
+    overflow-x: auto;
+  }
+
+  svg {
+    display: block;
+    min-width: 2000px;
+  }
+
+  /* ── SVG animation ── */
+  @keyframes flowRight {
+    from { stroke-dashoffset: 30; }
+    to   { stroke-dashoffset: 0; }
+  }
+  @keyframes flowDown {
+    from { stroke-dashoffset: 30; }
+    to   { stroke-dashoffset: 0; }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.4; }
+  }
+  @keyframes glow {
+    0%, 100% { filter: drop-shadow(0 0 3px currentColor); }
+    50%       { filter: drop-shadow(0 0 8px currentColor); }
+  }
+
+  .flow-line      { stroke-dasharray: 8 4; animation: flowRight 0.9s linear infinite; }
+  .flow-line-slow { stroke-dasharray: 8 4; animation: flowRight 1.6s linear infinite; }
+  .flow-down      { stroke-dasharray: 8 4; animation: flowDown 1.2s linear infinite; }
+  .pulse-dot      { animation: pulse 2s ease-in-out infinite; }
+  .glow-node      { animation: glow 3s ease-in-out infinite; }
+
+  .node:hover rect, .node:hover .node-bg { opacity: 0.9; cursor: default; }
+  .node .tooltip { display: none; }
+  .node:hover .tooltip { display: block; }
+
+  .legend-item { font-family: 'IBM Plex Mono', monospace; font-size: 10px; }
+
+  .page-footer {
+    padding: 1rem 2rem;
+    border-top: 1px solid rgba(200,169,97,0.15);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: #2d3748;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>RBC ENTERPRISE LAKEHOUSE — END-TO-END ARCHITECTURE</h1>
+  <span class="meta">RAW ZONE → BRONZE → SILVER → GOLD → FABRIC → BI/AI · ADR-010 · 2026-04-01</span>
+</div>
+
+<div class="diagram-wrap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2020 980" width="2020" height="980">
+  <defs>
+    <!-- Grid pattern -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(200,169,97,0.04)" stroke-width="0.5"/>
+    </pattern>
+    <!-- Arrow markers -->
+    <marker id="arr-gold" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#c8a961"/>
+    </marker>
+    <marker id="arr-compute" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#4a9eed"/>
+    </marker>
+    <marker id="arr-fabric" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#9b7eff"/>
+    </marker>
+    <marker id="arr-green" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#2dd4a0"/>
+    </marker>
+    <marker id="arr-red" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#fc8181"/>
+    </marker>
+    <marker id="arr-grey" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#64748b"/>
+    </marker>
+    <!-- Glow filters -->
+    <filter id="glow-gold" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-purple" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- ══ BACKGROUND ══ -->
+  <rect width="2020" height="980" fill="#060c18"/>
+  <rect width="2020" height="980" fill="url(#grid)"/>
+
+  <!-- ══ SWIMLANE BANDS ══ -->
+  <!-- Sources -->
+  <rect x="14" y="14" width="188" height="700" rx="6" fill="rgba(197,48,48,0.06)" stroke="rgba(197,48,48,0.2)" stroke-width="1"/>
+  <!-- Raw Zone -->
+  <rect x="218" y="14" width="196" height="700" rx="6" fill="rgba(156,74,26,0.06)" stroke="rgba(156,74,26,0.2)" stroke-width="1"/>
+  <!-- Bronze -->
+  <rect x="430" y="14" width="196" height="700" rx="6" fill="rgba(156,110,26,0.06)" stroke="rgba(156,110,26,0.2)" stroke-width="1"/>
+  <!-- Silver -->
+  <rect x="642" y="14" width="196" height="700" rx="6" fill="rgba(74,85,104,0.08)" stroke="rgba(74,85,104,0.25)" stroke-width="1"/>
+  <!-- Gold Compute -->
+  <rect x="854" y="14" width="210" height="700" rx="6" fill="rgba(183,121,31,0.06)" stroke="rgba(183,121,31,0.2)" stroke-width="1"/>
+  <!-- Fabric -->
+  <rect x="1082" y="14" width="210" height="700" rx="6" fill="rgba(85,60,154,0.08)" stroke="rgba(85,60,154,0.25)" stroke-width="1"/>
+  <!-- Consumers -->
+  <rect x="1310" y="14" width="396" height="700" rx="6" fill="rgba(26,35,50,0.4)" stroke="rgba(200,169,97,0.15)" stroke-width="1"/>
+
+  <!-- ══ SWIMLANE HEADERS ══ -->
+  <!-- Sources -->
+  <rect x="14" y="14" width="188" height="38" rx="6" fill="#7f1d1d"/>
+  <text x="108" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="white" letter-spacing="1">SOURCES</text>
+  <!-- Raw Zone -->
+  <rect x="218" y="14" width="196" height="38" rx="6" fill="#7c2d12"/>
+  <text x="316" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="white" letter-spacing="1">RAW ZONE</text>
+  <!-- Bronze -->
+  <rect x="430" y="14" width="196" height="38" rx="6" fill="#78350f"/>
+  <text x="528" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="white" letter-spacing="1">BRONZE</text>
+  <!-- Silver -->
+  <rect x="642" y="14" width="196" height="38" rx="6" fill="#374151"/>
+  <text x="740" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="white" letter-spacing="1">SILVER</text>
+  <!-- Gold -->
+  <rect x="854" y="14" width="210" height="38" rx="6" fill="#92400e"/>
+  <text x="959" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="white" letter-spacing="1">GOLD</text>
+  <!-- Fabric -->
+  <rect x="1082" y="14" width="210" height="38" rx="6" fill="#3730a3"/>
+  <text x="1187" y="34" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="white" letter-spacing="1">FABRIC</text>
+  <text x="1187" y="46" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="rgba(255,255,255,0.7)" letter-spacing="0.5">SEMANTIC LAYER · ADR-010</text>
+  <!-- Consumers -->
+  <rect x="1310" y="14" width="396" height="38" rx="6" fill="#1a2332"/>
+  <text x="1508" y="38" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#c8a961" letter-spacing="1">CONSUMPTION LAYER</text>
+
+
+  <!-- ══════════════════════════════════════════════
+       SOURCES COLUMN
+  ══════════════════════════════════════════════ -->
+
+  <!-- Mainframe z/OS -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="24" y="68" width="168" height="58" rx="5" fill="#1a0a0a" stroke="#c53030" stroke-width="1.5"/>
+    <rect x="24" y="68" width="5" height="58" rx="2" fill="#c53030"/>
+    <text x="106" y="86" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fc8181">MAINFRAME z/OS</text>
+    <text x="106" y="100" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">DB2 · VSAM · COBOL</text>
+    <text x="106" y="116" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">DW00 / N500 batch</text>
+  </g>
+
+  <!-- Operational DBs -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="24" y="144" width="168" height="58" rx="5" fill="#1a0a0a" stroke="#c53030" stroke-width="1.5"/>
+    <rect x="24" y="144" width="5" height="58" rx="2" fill="#c53030"/>
+    <text x="106" y="163" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fc8181">OP. DATABASES</text>
+    <text x="106" y="177" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Oracle · DB2 · MSSQL</text>
+    <text x="106" y="191" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">CDC / batch extract</text>
+  </g>
+
+  <!-- Market Data -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="24" y="220" width="168" height="58" rx="5" fill="#1a0a0a" stroke="#c53030" stroke-width="1.5"/>
+    <rect x="24" y="220" width="5" height="58" rx="2" fill="#c53030"/>
+    <text x="106" y="239" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fc8181">MARKET DATA</text>
+    <text x="106" y="253" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Reuters · Bloomberg</text>
+    <text x="106" y="267" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Real-time + EOD feeds</text>
+  </g>
+
+  <!-- Files / APIs -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="24" y="296" width="168" height="58" rx="5" fill="#1a0a0a" stroke="#c53030" stroke-width="1.5"/>
+    <rect x="24" y="296" width="5" height="58" rx="2" fill="#c53030"/>
+    <text x="106" y="315" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fc8181">FILES / APIs</text>
+    <text x="106" y="329" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">CSV · XML · JSON</text>
+    <text x="106" y="343" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">300+ source systems</text>
+  </g>
+
+  <!-- Sources count badge -->
+  <rect x="60" y="374" width="90" height="22" rx="11" fill="rgba(197,48,48,0.2)" stroke="rgba(197,48,48,0.4)" stroke-width="1"/>
+  <text x="105" y="389" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#fc8181">300+ SOURCES</text>
+
+
+  <!-- ══════════════════════════════════════════════
+       RAW ZONE COLUMN
+  ══════════════════════════════════════════════ -->
+
+  <!-- SFTP / NDM -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="228" y="68" width="176" height="58" rx="5" fill="#110d08" stroke="#9c4a1a" stroke-width="1.5"/>
+    <rect x="228" y="68" width="5" height="58" rx="2" fill="#9c4a1a"/>
+    <text x="316" y="86" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fbbf24">SFTP / NDM</text>
+    <text x="316" y="100" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Connect:Direct post-step</text>
+    <text x="316" y="114" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">/sftp/drop/{source}/</text>
+  </g>
+
+  <!-- AWS CLI -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="228" y="144" width="176" height="58" rx="5" fill="#110d08" stroke="#9c4a1a" stroke-width="1.5"/>
+    <rect x="228" y="144" width="5" height="58" rx="2" fill="#9c4a1a"/>
+    <text x="316" y="163" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fbbf24">AWS CLI</text>
+    <text x="316" y="177" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">aws s3 cp · s3 sync</text>
+    <text x="316" y="191" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Bulk back-fill · SRE</text>
+  </g>
+
+  <!-- MinIO / S3 raw bucket -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="228" y="222" width="176" height="76" rx="5" fill="#110d08" stroke="#d97706" stroke-width="2"/>
+    <rect x="228" y="222" width="5" height="76" rx="2" fill="#d97706"/>
+    <text x="316" y="241" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fcd34d">MinIO / S3</text>
+    <text x="316" y="255" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">s3://lakehouse-raw/</text>
+    <text x="316" y="269" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">raw/mainframe/{src}/{date}/</text>
+    <text x="316" y="283" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Object Lock · 7yr FINRA</text>
+  </g>
+
+  <!-- Manifest -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="228" y="316" width="176" height="58" rx="5" fill="#110d08" stroke="#9c4a1a" stroke-width="1.5"/>
+    <rect x="228" y="316" width="5" height="58" rx="2" fill="#9c4a1a"/>
+    <text x="316" y="335" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fbbf24">MANIFEST</text>
+    <text x="316" y="349" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">IngestionManifest.jsonl</text>
+    <text x="316" y="363" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">MD5 · LANDED→PROCESSED</text>
+  </g>
+
+
+  <!-- ══════════════════════════════════════════════
+       BRONZE COLUMN
+  ══════════════════════════════════════════════ -->
+
+  <!-- Airflow -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="440" y="68" width="176" height="58" rx="5" fill="#0f0b06" stroke="#b45309" stroke-width="1.5"/>
+    <rect x="440" y="68" width="5" height="58" rx="2" fill="#b45309"/>
+    <text x="528" y="86" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fcd34d">AIRFLOW 3.1</text>
+    <text x="528" y="100" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">DAG per source domain</text>
+    <text x="528" y="114" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">:8081 · Celery · Redis</text>
+  </g>
+
+  <!-- Python ETL -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="440" y="144" width="176" height="58" rx="5" fill="#0f0b06" stroke="#b45309" stroke-width="1.5"/>
+    <rect x="440" y="144" width="5" height="58" rx="2" fill="#b45309"/>
+    <text x="528" y="163" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fcd34d">PYTHON ETL</text>
+    <text x="528" y="177" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Cobrix EBCDIC decode</text>
+    <text x="528" y="191" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">~12,000 jobs migrating</text>
+  </g>
+
+  <!-- Iceberg V2 -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="440" y="220" width="176" height="58" rx="5" fill="#0f0b06" stroke="#d97706" stroke-width="2"/>
+    <rect x="440" y="220" width="5" height="58" rx="2" fill="#d97706"/>
+    <text x="528" y="239" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fcd34d">ICEBERG V2</text>
+    <text x="528" y="253" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Append-only · immutable</text>
+    <text x="528" y="267" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">bronze.{source}_{table}</text>
+  </g>
+
+  <!-- Nessie -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="440" y="296" width="176" height="58" rx="5" fill="#0f0b06" stroke="#b45309" stroke-width="1.5"/>
+    <rect x="440" y="296" width="5" height="58" rx="2" fill="#b45309"/>
+    <text x="528" y="315" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fcd34d">NESSIE 0.107</text>
+    <text x="528" y="329" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Branch-per-load catalog</text>
+    <text x="528" y="343" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">:19120 · Git-style history</text>
+  </g>
+
+  <!-- Gravitino Tags -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="440" y="372" width="176" height="58" rx="5" fill="#0f0b06" stroke="#b45309" stroke-width="1.5"/>
+    <rect x="440" y="372" width="5" height="58" rx="2" fill="#b45309"/>
+    <text x="528" y="391" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fcd34d">GRAVITINO</text>
+    <text x="528" y="405" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">PII · Confidential tags</text>
+    <text x="528" y="419" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Policy → Ranger push</text>
+  </g>
+
+  <!-- OpenLineage -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="440" y="448" width="176" height="58" rx="5" fill="#0f0b06" stroke="#b45309" stroke-width="1.5"/>
+    <rect x="440" y="448" width="5" height="58" rx="2" fill="#b45309"/>
+    <text x="528" y="467" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fcd34d">OPENLINEAGE</text>
+    <text x="528" y="481" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Emitted every transform</text>
+    <text x="528" y="495" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">→ Marquez :5000</text>
+  </g>
+
+
+  <!-- ══════════════════════════════════════════════
+       SILVER COLUMN
+  ══════════════════════════════════════════════ -->
+
+  <!-- Python ETL Silver -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="652" y="68" width="176" height="58" rx="5" fill="#0a0d12" stroke="#4a5568" stroke-width="1.5"/>
+    <rect x="652" y="68" width="5" height="58" rx="2" fill="#4a5568"/>
+    <text x="740" y="86" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#cbd5e0">PYTHON ETL</text>
+    <text x="740" y="100" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">FSDM conformance</text>
+    <text x="740" y="114" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Dedup · SCD · type cast</text>
+  </g>
+
+  <!-- Trino Silver -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="652" y="144" width="176" height="58" rx="5" fill="#0a0d12" stroke="#2563eb" stroke-width="2"/>
+    <rect x="652" y="144" width="5" height="58" rx="2" fill="#2563eb"/>
+    <text x="740" y="163" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#93c5fd">TRINO 479</text>
+    <text x="740" y="177" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Mandatory gateway ADR-002</text>
+    <text x="740" y="191" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">:8080 · JDBC · no Spark</text>
+  </g>
+
+  <!-- Iceberg V2 Silver -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="652" y="220" width="176" height="58" rx="5" fill="#0a0d12" stroke="#4a5568" stroke-width="1.5"/>
+    <rect x="652" y="220" width="5" height="58" rx="2" fill="#4a5568"/>
+    <text x="740" y="239" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#cbd5e0">ICEBERG V2</text>
+    <text x="740" y="253" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">FSDM · Party · Account</text>
+    <text x="740" y="267" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Transaction · Risk · Compliance</text>
+  </g>
+
+  <!-- Soda Core -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="652" y="296" width="176" height="58" rx="5" fill="#0a0d12" stroke="#4a5568" stroke-width="1.5"/>
+    <rect x="652" y="296" width="5" height="58" rx="2" fill="#4a5568"/>
+    <text x="740" y="315" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#cbd5e0">SODA CORE</text>
+    <text x="740" y="329" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">SodaCL quality gates</text>
+    <text x="740" y="343" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Null % · RI · row counts</text>
+  </g>
+
+  <!-- Ranger ACL Silver -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="652" y="372" width="176" height="58" rx="5" fill="#0a0d12" stroke="#dc2626" stroke-width="1.5"/>
+    <rect x="652" y="372" width="5" height="58" rx="2" fill="#dc2626"/>
+    <text x="740" y="391" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fca5a5">APACHE RANGER</text>
+    <text x="740" y="405" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Column masking · RBAC</text>
+    <text x="740" y="419" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">:6080 · Solr audit log</text>
+  </g>
+
+
+  <!-- ══════════════════════════════════════════════
+       GOLD COLUMN
+  ══════════════════════════════════════════════ -->
+
+  <!-- Teradata Vantage -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="864" y="68" width="190" height="58" rx="5" fill="#100c04" stroke="#d97706" stroke-width="2"/>
+    <rect x="864" y="68" width="5" height="58" rx="2" fill="#d97706"/>
+    <text x="959" y="86" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fcd34d">TERADATA VANTAGE</text>
+    <text x="959" y="100" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">OTF / Iceberg engine</text>
+    <text x="959" y="114" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Aggregations · KPIs · FSDM</text>
+  </g>
+
+  <!-- Trino Gold -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="864" y="144" width="190" height="58" rx="5" fill="#100c04" stroke="#2563eb" stroke-width="2"/>
+    <rect x="864" y="144" width="5" height="58" rx="2" fill="#2563eb"/>
+    <text x="959" y="163" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#93c5fd">TRINO 479</text>
+    <text x="959" y="177" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Cross-domain Gold joins</text>
+    <text x="959" y="191" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">ADR-002 · Iceberg catalog</text>
+  </g>
+
+  <!-- Iceberg V2 Gold -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="864" y="220" width="190" height="76" rx="5" fill="#100c04" stroke="#f59e0b" stroke-width="2.5" filter="url(#glow-gold)"/>
+    <rect x="864" y="220" width="5" height="76" rx="2" fill="#f59e0b"/>
+    <text x="959" y="241" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fde68a">ICEBERG V2</text>
+    <text x="959" y="255" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Authoritative Gold tables</text>
+    <text x="959" y="269" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Stable paths · OPTIMIZE</text>
+    <text x="959" y="283" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">VACUUM on schedule</text>
+  </g>
+
+  <!-- Cube NL-to-SQL -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="864" y="314" width="190" height="58" rx="5" fill="#100c04" stroke="#0891b2" stroke-width="1.5"/>
+    <rect x="864" y="314" width="5" height="58" rx="2" fill="#0891b2"/>
+    <text x="959" y="333" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#67e8f9">CUBE v0.36</text>
+    <text x="959" y="347" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">NL-to-SQL · RASL ADR-006</text>
+    <text x="959" y="361" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">:15432 PostgreSQL wire</text>
+  </g>
+
+  <!-- Ranger Gold -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="864" y="390" width="190" height="58" rx="5" fill="#100c04" stroke="#dc2626" stroke-width="1.5"/>
+    <rect x="864" y="390" width="5" height="58" rx="2" fill="#dc2626"/>
+    <text x="959" y="409" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fca5a5">RANGER ACL</text>
+    <text x="959" y="423" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Authoritative compute ACL</text>
+    <text x="959" y="437" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">GitHub · ADR log versioned</text>
+  </g>
+
+
+  <!-- ══════════════════════════════════════════════
+       DUAL-GOLD SPLIT INDICATOR
+  ══════════════════════════════════════════════ -->
+  <!-- Split label at x=1060 -->
+  <line x1="1060" y1="130" x2="1060" y2="540" stroke="rgba(200,169,97,0.25)" stroke-width="1" stroke-dasharray="4 4"/>
+  <rect x="1037" y="460" width="46" height="72" rx="4" fill="rgba(200,169,97,0.08)" stroke="rgba(200,169,97,0.3)" stroke-width="1"/>
+  <text x="1060" y="480" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#c8a961">DUAL</text>
+  <text x="1060" y="492" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#c8a961">GOLD</text>
+  <text x="1060" y="504" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#c8a961">SPLIT</text>
+  <text x="1060" y="520" text-anchor="middle" font-family="IBM Plex Mono" font-size="6.5" fill="#92400e">ADR-010</text>
+
+
+  <!-- ══════════════════════════════════════════════
+       FABRIC COLUMN
+  ══════════════════════════════════════════════ -->
+
+  <!-- Python ETL Copy -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="1092" y="68" width="190" height="58" rx="5" fill="#0c0a1a" stroke="#7c3aed" stroke-width="1.5"/>
+    <rect x="1092" y="68" width="5" height="58" rx="2" fill="#7c3aed"/>
+    <text x="1187" y="86" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#c4b5fd">PYTHON ETL COPY</text>
+    <text x="1187" y="100" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Gold Iceberg → Fabric Delta</text>
+    <text x="1187" y="114" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">V-Order · VertiPaq optimised</text>
+  </g>
+
+  <!-- Delta Tables -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="1092" y="144" width="190" height="58" rx="5" fill="#0c0a1a" stroke="#7c3aed" stroke-width="1.5"/>
+    <rect x="1092" y="144" width="5" height="58" rx="2" fill="#7c3aed"/>
+    <text x="1187" y="163" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#c4b5fd">DELTA TABLES</text>
+    <text x="1187" y="177" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">OneLake Tables/ section</text>
+    <text x="1187" y="191" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">No XTable · No shortcuts</text>
+  </g>
+
+  <!-- Fabric Import Semantic Model — HERO BOX -->
+  <g class="node" filter="url(#glow-purple)">
+    <rect x="1092" y="222" width="190" height="92" rx="5" fill="#120e28" stroke="#8b5cf6" stroke-width="2.5"/>
+    <rect x="1092" y="222" width="5" height="92" rx="2" fill="#8b5cf6"/>
+    <rect x="1092" y="222" width="190" height="22" rx="4" fill="rgba(139,92,246,0.2)"/>
+    <text x="1187" y="238" text-anchor="middle" font-family="IBM Plex Mono" font-size="9.5" font-weight="600" fill="#e9d5ff">IMPORT SEMANTIC MODEL</text>
+    <text x="1187" y="256" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#c4b5fd">VertiPaq in-memory · DAX</text>
+    <text x="1187" y="270" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#a78bfa">KPIs defined once · shared</text>
+    <text x="1187" y="284" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#a78bfa">RLS at semantic layer</text>
+    <text x="1187" y="298" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#7c3aed">ADR-010 ✓</text>
+  </g>
+
+  <!-- AI Prep -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="1092" y="332" width="190" height="58" rx="5" fill="#0c0a1a" stroke="#7c3aed" stroke-width="1.5"/>
+    <rect x="1092" y="332" width="5" height="58" rx="2" fill="#7c3aed"/>
+    <text x="1187" y="351" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#c4b5fd">PREP FOR AI</text>
+    <text x="1187" y="365" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">AI Data Schema · Verified Q&amp;A</text>
+    <text x="1187" y="379" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Import mode only ← key</text>
+  </g>
+
+  <!-- Fabric Data Agent -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="1092" y="408" width="190" height="58" rx="5" fill="#0c0a1a" stroke="#2dd4a0" stroke-width="2"/>
+    <rect x="1092" y="408" width="5" height="58" rx="2" fill="#2dd4a0"/>
+    <text x="1187" y="427" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#6ee7b7">FABRIC DATA AGENT</text>
+    <text x="1187" y="441" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">NL2DAX · REST endpoint</text>
+    <text x="1187" y="455" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Entra ID · user identity</text>
+  </g>
+
+
+  <!-- ══════════════════════════════════════════════
+       CONSUMPTION COLUMN
+  ══════════════════════════════════════════════ -->
+
+  <!-- Power BI -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="1320" y="68" width="175" height="76" rx="5" fill="#0a0e18" stroke="#1d4ed8" stroke-width="2"/>
+    <rect x="1320" y="68" width="5" height="76" rx="2" fill="#1d4ed8"/>
+    <text x="1407" y="88" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#93c5fd">POWER BI</text>
+    <text x="1407" y="103" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">VertiPaq in-memory</text>
+    <text x="1407" y="117" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">1,000+ OBIEE reports</text>
+    <text x="1407" y="130" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Copilot · certified datasets</text>
+  </g>
+
+  <!-- Tableau -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="1320" y="162" width="175" height="76" rx="5" fill="#0a0e18" stroke="#b91c1c" stroke-width="2"/>
+    <rect x="1320" y="162" width="5" height="76" rx="2" fill="#b91c1c"/>
+    <text x="1407" y="182" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fca5a5">TABLEAU</text>
+    <text x="1407" y="197" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">XMLA endpoint</text>
+    <text x="1407" y="211" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Same semantic model</text>
+    <text x="1407" y="225" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Consistent KPIs · no drift</text>
+  </g>
+
+  <!-- Azure AI Foundry -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="1320" y="310" width="175" height="58" rx="5" fill="#0a0e18" stroke="#2dd4a0" stroke-width="1.5"/>
+    <rect x="1320" y="310" width="5" height="58" rx="2" fill="#2dd4a0"/>
+    <text x="1407" y="329" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#6ee7b7">AZURE AI FOUNDRY</text>
+    <text x="1407" y="343" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">MicrosoftFabricPreviewTool</text>
+    <text x="1407" y="357" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">gpt-4o orchestration</text>
+  </g>
+
+  <!-- RBC Assist -->
+  <g class="node" filter="url(#glow-gold)">
+    <rect x="1320" y="386" width="175" height="76" rx="5" fill="#0a0e18" stroke="#c8a961" stroke-width="2.5"/>
+    <rect x="1320" y="386" width="5" height="76" rx="2" fill="#c8a961"/>
+    <text x="1407" y="406" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#fde68a">RBC ASSIST</text>
+    <text x="1407" y="421" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">AI enterprise chatbot</text>
+    <text x="1407" y="435" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Entra ID · RLS enforced</text>
+    <text x="1407" y="449" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">Raw data never leaves RBC</text>
+  </g>
+
+  <!-- AWS Bedrock NL-to-SQL -->
+  <g class="node" filter="url(#shadow)">
+    <rect x="1524" y="314" width="175" height="58" rx="5" fill="#0a0e18" stroke="#0891b2" stroke-width="1.5"/>
+    <rect x="1524" y="314" width="5" height="58" rx="2" fill="#0891b2"/>
+    <text x="1611" y="333" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="#67e8f9">AWS BEDROCK</text>
+    <text x="1611" y="347" text-anchor="middle" font-family="IBM Plex Sans" font-size="9" fill="#a0aec0">Claude Sonnet · NL-to-SQL</text>
+    <text x="1611" y="361" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#718096">ADR-009 · VPC · data stays</text>
+  </g>
+
+
+  <!-- ══════════════════════════════════════════════
+       FLOW ARROWS — MAIN COMPUTE PATH
+  ══════════════════════════════════════════════ -->
+
+  <!-- Sources → Raw Zone (4 arrows) -->
+  <line x1="192" y1="97" x2="226" y2="97" stroke="#fc8181" stroke-width="1.5" marker-end="url(#arr-red)" class="flow-line"/>
+  <line x1="192" y1="173" x2="226" y2="173" stroke="#fc8181" stroke-width="1.5" marker-end="url(#arr-red)" class="flow-line"/>
+  <line x1="192" y1="249" x2="226" y2="249" stroke="#fc8181" stroke-width="1.5" marker-end="url(#arr-red)" class="flow-line"/>
+  <line x1="192" y1="325" x2="226" y2="325" stroke="#fc8181" stroke-width="1.5" marker-end="url(#arr-red)" class="flow-line"/>
+
+  <!-- SFTP/AWS → MinIO (converge) -->
+  <polyline points="404,97 415,97 415,260 426,260" fill="none" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-gold)" class="flow-line-slow"/>
+  <polyline points="404,173 415,173 415,260 426,260" fill="none" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-gold)" class="flow-line-slow"/>
+
+  <!-- MinIO → Airflow (Raw→Bronze) -->
+  <line x1="404" y1="260" x2="438" y2="97" stroke="#b45309" stroke-width="1.5" marker-end="url(#arr-gold)" class="flow-line-slow" stroke-dasharray="6 4"/>
+
+  <!-- Bronze internal flow -->
+  <line x1="616" y1="97" x2="650" y2="97" stroke="#4a9eed" stroke-width="1.5" marker-end="url(#arr-compute)" class="flow-line"/>
+  <line x1="616" y1="173" x2="650" y2="173" stroke="#4a9eed" stroke-width="1.5" marker-end="url(#arr-compute)" class="flow-line"/>
+  <line x1="616" y1="249" x2="650" y2="249" stroke="#4a9eed" stroke-width="1.5" marker-end="url(#arr-compute)" class="flow-line"/>
+  <line x1="616" y1="325" x2="650" y2="325" stroke="#4a9eed" stroke-width="1.5" marker-end="url(#arr-compute)" class="flow-line"/>
+  <line x1="616" y1="401" x2="650" y2="401" stroke="#4a9eed" stroke-width="1.5" marker-end="url(#arr-compute)" class="flow-line"/>
+  <line x1="616" y1="477" x2="650" y2="477" stroke="#4a9eed" stroke-width="1.5" marker-end="url(#arr-compute)" class="flow-line"/>
+
+  <!-- Silver → Gold -->
+  <line x1="828" y1="97" x2="862" y2="97" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-gold)" class="flow-line"/>
+  <line x1="828" y1="173" x2="862" y2="173" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-gold)" class="flow-line"/>
+  <line x1="828" y1="249" x2="862" y2="249" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-gold)" class="flow-line"/>
+  <line x1="828" y1="325" x2="862" y2="325" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-gold)" class="flow-line"/>
+  <line x1="828" y1="401" x2="862" y2="401" stroke="#d97706" stroke-width="1.5" marker-end="url(#arr-gold)" class="flow-line"/>
+
+  <!-- Gold → Fabric (Python ETL copy — dashed gold) -->
+  <line x1="1054" y1="258" x2="1090" y2="97" stroke="#c8a961" stroke-width="2" marker-end="url(#arr-gold)" stroke-dasharray="7 4" class="flow-line-slow"/>
+
+  <!-- Fabric internal -->
+  <line x1="1282" y1="97" x2="1318" y2="106" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr-fabric)" class="flow-line"/>
+  <line x1="1282" y1="173" x2="1318" y2="200" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arr-fabric)" class="flow-line"/>
+
+  <!-- Fabric Semantic Model → Data Agent (internal) -->
+  <polyline points="1282,268 1295,268 1295,437 1282,437" fill="none" stroke="rgba(139,92,246,0.4)" stroke-width="1" stroke-dasharray="4 3"/>
+
+  <!-- Fabric Data Agent → AI Foundry -->
+  <polyline points="1282,437 1310,437 1310,339 1318,339" fill="none" stroke="#2dd4a0" stroke-width="2" marker-end="url(#arr-green)" class="flow-line-slow"/>
+
+  <!-- AI Foundry → RBC Assist -->
+  <line x1="1495" y1="339" x2="1495" y2="424" stroke="#2dd4a0" stroke-width="2" marker-end="url(#arr-green)" class="flow-down"/>
+
+  <!-- Cube → AWS Bedrock -->
+  <polyline points="1054,343 1120,343 1120,570 1310,570 1310,530 1318,530" fill="none" stroke="#0891b2" stroke-width="1.5" marker-end="url(#arr-compute)" stroke-dasharray="6 4" class="flow-line-slow"/>
+  <!-- Bedrock label -->
+  <text x="1200" y="565" font-family="IBM Plex Mono" font-size="8" fill="#0891b2">NL-to-SQL path (ADR-006)</text>
+
+  <!-- Gold Iceberg → Compute consumers label -->
+  <text x="990" y="253" font-family="IBM Plex Mono" font-size="7.5" fill="rgba(200,169,97,0.6)">Iceberg V2</text>
+  <text x="990" y="264" font-family="IBM Plex Mono" font-size="7.5" fill="rgba(200,169,97,0.6)">on MinIO/S3</text>
+
+  <!-- Python ETL copy label on arrow -->
+  <rect x="1038" y="140" width="106" height="28" rx="3" fill="rgba(0,0,0,0.6)" stroke="rgba(200,169,97,0.3)" stroke-width="1"/>
+  <text x="1091" y="152" text-anchor="middle" font-family="IBM Plex Mono" font-size="8" fill="#c8a961">Python ETL copy</text>
+  <text x="1091" y="163" text-anchor="middle" font-family="IBM Plex Mono" font-size="7.5" fill="#92400e">Delta · V-Order</text>
+
+
+  <!-- ══════════════════════════════════════════════
+       CROSS-CUTTING CONCERNS RAIL
+  ══════════════════════════════════════════════ -->
+
+  <!-- Rail background -->
+  <rect x="14" y="726" width="1692" height="228" rx="6" fill="rgba(10,15,25,0.8)" stroke="rgba(200,169,97,0.15)" stroke-width="1"/>
+  <text x="860" y="748" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" font-weight="600" fill="rgba(200,169,97,0.5)" letter-spacing="3">CROSS-CUTTING CONCERNS — GOVERNANCE · LINEAGE · OBSERVABILITY</text>
+
+  <!-- Governance block -->
+  <rect x="24" y="756" width="400" height="188" rx="5" fill="rgba(220,38,38,0.06)" stroke="rgba(220,38,38,0.2)" stroke-width="1"/>
+  <rect x="24" y="756" width="400" height="24" rx="4" fill="rgba(220,38,38,0.2)"/>
+  <text x="60" y="773" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="#fca5a5" letter-spacing="1">SECURITY &amp; GOVERNANCE</text>
+
+  <rect x="34" y="788" width="175" height="60" rx="4" fill="rgba(0,0,0,0.3)" stroke="rgba(220,38,38,0.2)" stroke-width="1"/>
+  <text x="121" y="805" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="#f87171">GRAVITINO</text>
+  <text x="121" y="820" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Unified policy authoring</text>
+  <text x="121" y="834" text-anchor="middle" font-family="IBM Plex Sans" font-size="8" fill="#6b7280">One policy → all engines</text>
+
+  <!-- Arrow Gravitino → Ranger -->
+  <line x1="209" y1="818" x2="223" y2="818" stroke="#dc2626" stroke-width="1.5" marker-end="url(#arr-red)" class="flow-line"/>
+
+  <rect x="224" y="788" width="190" height="60" rx="4" fill="rgba(0,0,0,0.3)" stroke="rgba(220,38,38,0.2)" stroke-width="1"/>
+  <text x="319" y="805" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="#f87171">APACHE RANGER 2.8</text>
+  <text x="319" y="820" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Enforcement engine</text>
+  <text x="319" y="834" text-anchor="middle" font-family="IBM Plex Sans" font-size="8" fill="#6b7280">:6080 · Solr audit · ZK</text>
+
+  <rect x="34" y="856" width="380" height="80" rx="4" fill="rgba(0,0,0,0.2)" stroke="rgba(220,38,38,0.1)" stroke-width="1"/>
+  <text x="224" y="873" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Col-level masking · Row-level RBAC · Audit log → Solr :8983</text>
+  <text x="224" y="887" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Nessie 0.107 — branch-per-load catalog versioning</text>
+  <text x="224" y="901" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">OpenMetadata 1.6 — data catalog · glossary · classification</text>
+  <text x="224" y="916" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">OSFI B-13 · BCBS 239 — source-to-consumer lineage auditability</text>
+  <text x="224" y="930" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Fabric: Purview discovery + lineage on ADLS/cloud plane</text>
+
+  <!-- Lineage block -->
+  <rect x="434" y="756" width="400" height="188" rx="5" fill="rgba(190,24,93,0.06)" stroke="rgba(190,24,93,0.2)" stroke-width="1"/>
+  <rect x="434" y="756" width="400" height="24" rx="4" fill="rgba(190,24,93,0.2)"/>
+  <text x="470" y="773" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="#f9a8d4" letter-spacing="1">LINEAGE &amp; DATA QUALITY</text>
+
+  <rect x="444" y="788" width="175" height="60" rx="4" fill="rgba(0,0,0,0.3)" stroke="rgba(190,24,93,0.2)" stroke-width="1"/>
+  <text x="531" y="805" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="#f9a8d4">OPENLINEAGE</text>
+  <text x="531" y="820" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Emitted every transform</text>
+  <text x="531" y="834" text-anchor="middle" font-family="IBM Plex Sans" font-size="8" fill="#6b7280">Airflow DAG level</text>
+
+  <line x1="619" y1="818" x2="633" y2="818" stroke="#be185d" stroke-width="1.5" marker-end="url(#arr-red)" class="flow-line"/>
+
+  <rect x="634" y="788" width="190" height="60" rx="4" fill="rgba(0,0,0,0.3)" stroke="rgba(190,24,93,0.2)" stroke-width="1"/>
+  <text x="729" y="805" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="#f9a8d4">MARQUEZ 0.50</text>
+  <text x="729" y="820" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">:5000 REST · :3000 Web UI</text>
+  <text x="729" y="834" text-anchor="middle" font-family="IBM Plex Sans" font-size="8" fill="#6b7280">OpenLineage server</text>
+
+  <rect x="444" y="856" width="380" height="80" rx="4" fill="rgba(0,0,0,0.2)" stroke="rgba(190,24,93,0.1)" stroke-width="1"/>
+  <text x="634" y="873" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Soda Core SodaCL — quality gates at Bronze and Silver layers</text>
+  <text x="634" y="887" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Row counts · null % · referential integrity · range checks</text>
+  <text x="634" y="901" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Airflow SLA alerts — pipeline failure per-domain notification</text>
+  <text x="634" y="915" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Gold OPTIMIZE + VACUUM — Airflow schedule, Iceberg file health</text>
+  <text x="634" y="930" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Schema evolution — Nessie catalog, non-breaking changes only</text>
+
+  <!-- Observability block -->
+  <rect x="844" y="756" width="862" height="188" rx="5" fill="rgba(101,163,13,0.05)" stroke="rgba(101,163,13,0.18)" stroke-width="1"/>
+  <rect x="844" y="756" width="862" height="24" rx="4" fill="rgba(101,163,13,0.15)"/>
+  <text x="880" y="773" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="#bef264" letter-spacing="1">OBSERVABILITY · DELIVERY · ADR LOG</text>
+
+  <rect x="854" y="788" width="175" height="60" rx="4" fill="rgba(0,0,0,0.3)" stroke="rgba(101,163,13,0.2)" stroke-width="1"/>
+  <text x="941" y="806" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="#bef264">PROMETHEUS</text>
+  <text x="941" y="821" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">:9090 · StatsD :9102</text>
+  <text x="941" y="835" text-anchor="middle" font-family="IBM Plex Sans" font-size="8" fill="#6b7280">Airflow task metrics</text>
+
+  <line x1="1029" y1="818" x2="1043" y2="818" stroke="#65a30d" stroke-width="1.5" marker-end="url(#arr-green)" class="flow-line"/>
+
+  <rect x="1044" y="788" width="190" height="60" rx="4" fill="rgba(0,0,0,0.3)" stroke="rgba(101,163,13,0.2)" stroke-width="1"/>
+  <text x="1139" y="806" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="#bef264">GRAFANA</text>
+  <text x="1139" y="821" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">:3001 · Reporter :8686</text>
+  <text x="1139" y="835" text-anchor="middle" font-family="IBM Plex Sans" font-size="8" fill="#6b7280">BCBS 239 · freshness · SLA</text>
+
+  <rect x="1244" y="788" width="380" height="60" rx="4" fill="rgba(0,0,0,0.3)" stroke="rgba(101,163,13,0.2)" stroke-width="1"/>
+  <text x="1434" y="806" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" font-weight="600" fill="#bef264">CODE &amp; DELIVERY — GITHUB</text>
+  <text x="1434" y="821" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">All ETL · ADRs · configs versioned · PR reviews enforced</text>
+  <text x="1434" y="835" text-anchor="middle" font-family="IBM Plex Sans" font-size="8" fill="#6b7280">GitHub Actions CI/CD · dev / staging / prod environments</text>
+
+  <rect x="854" y="856" width="852" height="80" rx="4" fill="rgba(0,0,0,0.2)" stroke="rgba(101,163,13,0.1)" stroke-width="1"/>
+  <text x="1280" y="873" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Active migrations: DataStage → Python (~12,000 jobs) · OBIEE → Power BI (~1,000 reports) · Tech Mahindra exit in flight</text>
+  <text x="1280" y="887" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">ADR-001 Teradata OTF · ADR-002 Trino gateway · ADR-003 Teradata decoupling · ADR-004 workload isolation · ADR-005 No Spark</text>
+  <text x="1280" y="901" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">ADR-006 RASL NL-to-SQL · ADR-007 governance automation · ADR-008 OneLake not adopted · ADR-009 AI Data Hub · ADR-010 Fabric Import</text>
+  <text x="1280" y="916" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Fabric SKU: F64 recommended (128 GB VertiPaq) · F128 for quarter-end reporting peaks · Teradata Vantage dispute: in-flight</text>
+  <text x="1280" y="930" text-anchor="middle" font-family="IBM Plex Sans" font-size="8.5" fill="#9ca3af">Services: postgres :5432 · minio :9000 · nessie :19120 · trino :8080 · airflow :8081 · cube :15432 · marquez :5000 · ranger :6080 · grafana :3001</text>
+
+
+  <!-- ══════════════════════════════════════════════
+       LEGEND
+  ══════════════════════════════════════════════ -->
+  <rect x="14" y="960" width="1692" height="16" rx="3" fill="rgba(200,169,97,0.03)" stroke="rgba(200,169,97,0.08)" stroke-width="1"/>
+  <text x="20" y="972" font-family="IBM Plex Mono" font-size="8" fill="#4a5568">— COMPUTE FLOW</text>
+  <line x1="120" y1="968" x2="155" y2="968" stroke="#4a9eed" stroke-width="1.5" stroke-dasharray="6 3"/>
+  <text x="160" y="972" font-family="IBM Plex Mono" font-size="8" fill="#4a5568">BRONZE→GOLD</text>
+  <line x1="255" y1="968" x2="290" y2="968" stroke="#c8a961" stroke-width="1.5" stroke-dasharray="6 3"/>
+  <text x="295" y="972" font-family="IBM Plex Mono" font-size="8" fill="#4a5568">GOLD→FABRIC ETL COPY (dual-gold ADR-010)</text>
+  <line x1="525" y1="968" x2="560" y2="968" stroke="#8b5cf6" stroke-width="1.5" stroke-dasharray="6 3"/>
+  <text x="565" y="972" font-family="IBM Plex Mono" font-size="8" fill="#4a5568">FABRIC SEMANTIC PATH</text>
+  <line x1="700" y1="968" x2="735" y2="968" stroke="#2dd4a0" stroke-width="1.5" stroke-dasharray="6 3"/>
+  <text x="740" y="972" font-family="IBM Plex Mono" font-size="8" fill="#4a5568">RBC ASSIST / AI FOUNDRY PATH</text>
+  <line x1="900" y1="968" x2="935" y2="968" stroke="#0891b2" stroke-width="1.5" stroke-dasharray="6 3"/>
+  <text x="940" y="972" font-family="IBM Plex Mono" font-size="8" fill="#4a5568">NL-TO-SQL / CUBE / BEDROCK PATH</text>
+  <text x="1140" y="972" font-family="IBM Plex Mono" font-size="8" fill="#4a5568">ALL LINES ANIMATED — DIRECTION INDICATES DATA FLOW</text>
+  <text x="1520" y="972" font-family="IBM Plex Mono" font-size="8" fill="#4a5568">RBC ENTERPRISE DATA · INTERNAL</text>
+
+</svg>
+</div>
+
+<div class="page-footer">
+  <span>postgres: 15</span>
+  <span>minio: latest</span>
+  <span>nessie: 0.107.4</span>
+  <span>trino: 479</span>
+  <span>airflow: 3.1.x</span>
+  <span>cube: v0.36.0</span>
+  <span>marquez: 0.50.0</span>
+  <span>openmetadata: 1.6.0</span>
+  <span>elasticsearch: 8.15.0</span>
+  <span>ranger: 2.8.0</span>
+  <span>grafana: latest</span>
+  <span>prometheus: latest</span>
+  <span>|</span>
+  <span>CONFIDENTIAL — INTERNAL USE ONLY</span>
+</div>
+
+</body>
+</html>
