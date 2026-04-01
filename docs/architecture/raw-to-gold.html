@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Raw to Gold — End-to-End Architecture</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2rem;
+      color: #2d3748;
+      line-height: 1.6;
+      font-size: clamp(0.9rem, 1.4vw, 1rem);
+      background: #ffffff;
+    }
+
+    h2 { color: #1a2332; margin-top: 2.5rem; margin-bottom: 0.75rem; font-size: 1.35rem; padding-bottom: 0.4rem; border-bottom: 2px solid #e2e8f0; }
+    h3 { color: #1a2332; margin-top: 1.2rem; margin-bottom: 0.4rem; font-size: 1.05rem; }
+    p  { margin-bottom: 0.7rem; }
+    ul { padding-left: 1.4rem; margin-bottom: 0.7rem; }
+    li { margin-bottom: 0.3rem; }
+    code { background: #e2e8f0; padding: 0.1rem 0.35rem; border-radius: 3px; font-size: 0.85em; }
+
+    /* HEADER */
+    .doc-header {
+      background: #1a2332;
+      color: white;
+      padding: 2rem;
+      border-radius: 8px 8px 0 0;
+      margin: -2rem -2rem 2rem -2rem;
+    }
+    .doc-header h1 { color: #c8a961; font-size: 1.9rem; margin-bottom: 0.2rem; }
+    .doc-header .subtitle { color: #94a3b8; font-size: 1rem; margin-bottom: 1rem; }
+    .doc-header .nav-links { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .doc-header .nav-links a {
+      color: #c8a961; font-size: 0.8rem; text-decoration: none;
+      border: 1px solid rgba(200,169,97,0.3); padding: 0.2rem 0.6rem; border-radius: 3px;
+    }
+    .doc-header .nav-links a:hover { background: rgba(200,169,97,0.1); }
+
+    /* STATS */
+    .stats-banner {
+      display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;
+      background: linear-gradient(135deg, #1a2332 0%, #2d3a4a 100%);
+      padding: 1.5rem 2rem; border-radius: 8px; margin: 0 0 2rem 0;
+    }
+    .stat { text-align: center; color: white; }
+    .stat-value { font-size: 1.8rem; font-weight: 800; color: #c8a961; display: block; }
+    .stat-label { font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* PIPELINE FLOW */
+    .pipeline-flow {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 0;
+      margin: 1.5rem 0 2.5rem 0;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .pipeline-stage {
+      padding: 1rem 0.75rem;
+      text-align: center;
+      color: white;
+      position: relative;
+    }
+    .pipeline-stage:not(:last-child)::after {
+      content: "▶";
+      position: absolute;
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      color: #64748b;
+      z-index: 2;
+    }
+    .pipeline-stage .stage-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      opacity: 0.8;
+      margin-bottom: 0.3rem;
+    }
+    .pipeline-stage .stage-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+    .pipeline-stage .stage-tech {
+      font-size: 0.7rem;
+      opacity: 0.85;
+      margin-top: 0.35rem;
+      line-height: 1.4;
+    }
+    .stage-raw    { background: #c53030; }
+    .stage-bronze { background: #9c4a1a; }
+    .stage-silver { background: #4a5568; }
+    .stage-gold   { background: #b7791f; }
+    .stage-fabric { background: #553c9a; }
+    .stage-consume { background: #1a2332; }
+
+    /* LAYER SECTIONS */
+    .layer-section {
+      margin-bottom: 2rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .layer-section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+    }
+    .layer-section-header .layer-badge {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      background: rgba(255,255,255,0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .layer-section-body {
+      padding: 1.25rem;
+      background: #fff;
+    }
+    .layer-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    .layer-cols-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.25rem;
+    }
+    .detail-block {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 0.9rem 1rem;
+    }
+    .detail-block h4 {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #64748b;
+      margin-bottom: 0.5rem;
+    }
+    .detail-block ul { margin: 0; padding-left: 1.1rem; }
+    .detail-block li { font-size: 0.85rem; margin-bottom: 0.2rem; }
+    .detail-block p  { font-size: 0.85rem; margin-bottom: 0; }
+    .detail-block code { font-size: 0.78em; }
+
+    /* ADR CALLOUT */
+    .adr-callout {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-left: 4px solid #b7791f;
+      border-radius: 4px;
+      padding: 0.75rem 1rem;
+      margin: 0.75rem 0;
+      font-size: 0.85rem;
+    }
+    .adr-callout .adr-tag {
+      font-family: monospace;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #92400e;
+      white-space: nowrap;
+      margin-top: 0.05rem;
+    }
+    .adr-callout .adr-text { color: #78350f; line-height: 1.5; }
+    .adr-callout .adr-text strong { color: #451a03; }
+
+    /* SERVICE GRID */
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.75rem;
+      padding: 1rem;
+      background: #fff;
+    }
+    .service-node {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0.65rem 0.5rem;
+      background: #f8fafc;
+      border: 1.5px solid #1a2332;
+      border-radius: 6px;
+      cursor: default;
+      text-align: center;
+    }
+    .service-name { font-weight: 700; color: #1a2332; font-size: 0.82rem; }
+    .service-port { font-family: monospace; color: #c8a961; font-size: 0.75rem; margin-top: 0.15rem; }
+    .service-tooltip {
+      visibility: hidden; opacity: 0;
+      position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+      background: #1a2332; color: #f8fafc;
+      padding: 0.65rem 0.9rem; border-radius: 6px;
+      font-size: 0.75rem; line-height: 1.5; white-space: nowrap;
+      z-index: 100; transition: opacity 0.15s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    }
+    .service-tooltip::after {
+      content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border-width: 5px; border-style: solid;
+      border-color: #1a2332 transparent transparent transparent;
+    }
+    .service-node:hover .service-tooltip { visibility: visible; opacity: 1; }
+
+    /* CROSS-CUTTING RAIL */
+    .rail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    .rail-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .rail-card-header {
+      padding: 0.6rem 1rem;
+      font-weight: 700;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: white;
+    }
+    .rail-card-body {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+    }
+    .rail-card-body ul { margin: 0; padding-left: 1.1rem; }
+    .rail-card-body li { font-size: 0.82rem; margin-bottom: 0.3rem; }
+    .rail-card-body li strong { color: #1a2332; }
+
+    /* CONSUMPTION CARDS */
+    .consumer-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .consumer-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .consumer-card-header {
+      padding: 0.75rem 1rem;
+      color: white;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .consumer-card-body {
+      padding: 0.75rem 1rem;
+      background: #f8fafc;
+      font-size: 0.83rem;
+    }
+    .consumer-card-body ul { margin: 0; padding-left: 1.1rem; }
+    .consumer-card-body li { margin-bottom: 0.25rem; }
+
+    /* ARCH LAYER (service reference) */
+    .arch-layer { margin-bottom: 1.5rem; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+    .layer-header { padding: 0.65rem 1.25rem; color: white; font-weight: 700; font-size: 0.95rem; }
+
+    /* NARRATIVE CALLOUT */
+    .narrative {
+      background: #f8fafc;
+      border-left: 4px solid #c8a961;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      border-radius: 0 6px 6px 0;
+    }
+    .narrative h3 { margin-top: 0; font-size: 0.95rem; }
+
+    /* FOOTER */
+    .doc-footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 2px solid #1a2332; font-size: 0.82rem; color: #64748b; }
+    .doc-footer .versions { display: flex; flex-wrap: wrap; gap: 0.4rem 1.25rem; margin-top: 0.5rem; }
+    .doc-footer .version-item { white-space: nowrap; }
+
+    /* RESPONSIVE */
+    @media (max-width: 900px) {
+      .pipeline-flow { grid-template-columns: repeat(3, 1fr); }
+      .pipeline-stage:nth-child(3)::after { display: none; }
+      .layer-cols, .layer-cols-3, .rail-grid, .consumer-grid { grid-template-columns: 1fr; }
+      .service-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      body { padding: 1rem; }
+      .doc-header { margin: -1rem -1rem 1.5rem -1rem; padding: 1.25rem; }
+      .pipeline-flow { grid-template-columns: 1fr 1fr; }
+      .pipeline-stage:nth-child(2)::after { display: none; }
+    }
+    @media print {
+      body { max-width: none; padding: 0; font-size: 9pt; }
+      .doc-header { background: white; color: #1a2332; border: 2px solid #1a2332; border-radius: 0; }
+      .doc-header h1 { color: #1a2332; }
+      .service-tooltip { visibility: visible !important; opacity: 1 !important; position: static; transform: none; background: #f1f5f9; color: #1a2332; white-space: normal; box-shadow: none; }
+      .service-tooltip::after { display: none; }
+      .stats-banner { background: #f1f5f9; }
+      .stat-value { color: #1a2332; }
+      @page { margin: 1.5cm; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="doc-header">
+    <h1>Raw → Gold — End-to-End Architecture</h1>
+    <p class="subtitle">Complete pipeline from mainframe ingestion through Bronze · Silver · Gold to Fabric BI/AI surface and RBC Assist</p>
+    <div class="nav-links">
+      <a href="index.html">← Architecture Index</a>
+      <a href="data-flow.html">Data Flow</a>
+      <a href="detailed-architecture.html">Service Reference</a>
+      <a href="marketecture.html">Marketecture</a>
+      <a href="governance-stack.html">Governance</a>
+      <a href="security-layer.html">Security</a>
+      <a href="../adr/010-fabric-import-semantic-layer.md">ADR-010</a>
+      <a href="../adr/008-onelake-evaluation.md">ADR-008</a>
+    </div>
+  </header>
+
+  <!-- STATS BANNER -->
+  <div class="stats-banner">
+    <div class="stat"><span class="stat-value">1.5 PB</span><span class="stat-label">Managed Data</span></div>
+    <div class="stat"><span class="stat-value">300+</span><span class="stat-label">Data Sources</span></div>
+    <div class="stat"><span class="stat-value">12,000</span><span class="stat-label">ETL Jobs Migrating</span></div>
+    <div class="stat"><span class="stat-value">1,000+</span><span class="stat-label">Reports Migrating</span></div>
+    <div class="stat"><span class="stat-value">23</span><span class="stat-label">Platform Services</span></div>
+    <div class="stat"><span class="stat-value">7 yr</span><span class="stat-label">Raw Retention (FINRA)</span></div>
+  </div>
+
+  <!-- PIPELINE FLOW STRIP -->
+  <div class="pipeline-flow">
+    <div class="pipeline-stage stage-raw">
+      <div class="stage-label">Ingestion</div>
+      <div class="stage-name">Raw Zone</div>
+      <div class="stage-tech">Mainframe · SFTP<br>Connect:Direct · CDC<br>AWS CLI / S3</div>
+    </div>
+    <div class="pipeline-stage stage-bronze">
+      <div class="stage-label">Layer 1</div>
+      <div class="stage-name">Bronze</div>
+      <div class="stage-tech">Iceberg V2 · Nessie<br>Python ETL · Airflow<br>OpenLineage · Gravitino</div>
+    </div>
+    <div class="pipeline-stage stage-silver">
+      <div class="stage-label">Layer 2</div>
+      <div class="stage-name">Silver</div>
+      <div class="stage-tech">FSDM conformed<br>Trino · Soda Core<br>Ranger ACL</div>
+    </div>
+    <div class="pipeline-stage stage-gold">
+      <div class="stage-label">Layer 3</div>
+      <div class="stage-name">Gold</div>
+      <div class="stage-tech">Teradata OTF · Trino<br>Iceberg V2 · OPTIMIZE<br>GitHub · ADR log</div>
+    </div>
+    <div class="pipeline-stage stage-fabric">
+      <div class="stage-label">BI/AI Surface</div>
+      <div class="stage-name">Fabric</div>
+      <div class="stage-tech">Import semantic model<br>DAX · AI Prep<br>Fabric Data Agent</div>
+    </div>
+    <div class="pipeline-stage stage-consume">
+      <div class="stage-label">Consumers</div>
+      <div class="stage-name">BI + AI</div>
+      <div class="stage-tech">Power BI · Tableau<br>RBC Assist<br>Azure AI Foundry</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LAYER 0 — RAW ZONE
+  ═══════════════════════════════════════════════════════ -->
+  <div class="layer-section">
+    <div class="layer-section-header" style="background:#c53030;">
+      Raw Zone — Source Ingestion
+      <span class="layer-badge">Immutable · Binary-Exact · 7-Year Retention</span>
+    </div>
+    <div class="layer-section-body">
+      <div class="layer-cols">
+        <div>
+          <h3>What lands here</h3>
+          <p>All source files arrive in the raw zone before any processing. Files are stored binary-exact — no encoding conversion. EBCDIC bytes are preserved as-is. This layer satisfies SEC Rule 17a-4, FINRA 4370, and BCBS 239 source record retention requirements.</p>
+          <div class="detail-block">
+            <h4>Transfer Mechanisms</h4>
+            <ul>
+              <li><strong>SFTP</strong> — z/OS batch job GDG → Linux landing server → S3</li>
+              <li><strong>Connect:Direct / NDM</strong> — bank-to-bank standard; deposits at local path identical to SFTP</li>
+              <li><strong>AWS CLI</strong> — <code>aws s3 cp</code> / <code>aws s3 sync</code> for bulk back-fills and SRE runbooks</li>
+              <li><strong>CDC</strong> — Debezium or custom change capture for operational DB sources</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="detail-block">
+            <h4>S3 Path Convention</h4>
+            <p><code>s3://lakehouse-raw/raw/mainframe/{source}/{YYYY-MM-DD}/{filename}</code></p>
+            <p>Manifest co-located at: <code>_manifest/{source}/{date}.jsonl</code></p>
+          </div>
+          <div class="detail-block" style="margin-top:0.75rem;">
+            <h4>Key Controls</h4>
+            <ul>
+              <li>MD5 checksum computed before upload, stored in manifest + S3 metadata tag</li>
+              <li>S3 Object Lock (Compliance mode) — 7-year retention, no deletion</li>
+              <li>Lifecycle: Standard → Standard-IA (90d) → Glacier IR (1yr) → Deep Archive (3yr)</li>
+              <li>After CLI upload: register via <code>IngestionManifest.register_file()</code></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="adr-callout">
+        <span class="adr-tag">GUIDE</span>
+        <span class="adr-text">Full AWS CLI commands, Connect:Direct post-step script, and Object Lock verification in <strong>docs/mainframe-ingestion.md</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LAYER 1 — BRONZE
+  ═══════════════════════════════════════════════════════ -->
+  <div class="layer-section">
+    <div class="layer-section-header" style="background:#9c4a1a;">
+      Bronze Layer — Raw Iceberg Landing
+      <span class="layer-badge">Append-Only · Schema-on-Read · Immutable History</span>
+    </div>
+    <div class="layer-section-body">
+      <div class="layer-cols">
+        <div>
+          <h3>What happens here</h3>
+          <p>Raw files are decoded (EBCDIC→Parquet via Cobrix for mainframe, passthrough for structured sources) and written as append-only Apache Iceberg V2 tables. No business rules. No deduplication. Bronze is the permanent historical record.</p>
+          <div class="detail-block">
+            <h4>Transforms</h4>
+            <ul>
+              <li>Format conversion only: EBCDIC → typed Parquet columns</li>
+              <li>Metadata columns appended: <code>source_system</code>, <code>ingestion_ts</code>, <code>batch_id</code></li>
+              <li>No filtering, no deduplication, no business rules</li>
+            </ul>
+          </div>
+          <div class="detail-block" style="margin-top:0.75rem;">
+            <h4>Quality Gate</h4>
+            <ul>
+              <li>Schema validation — required columns present and typed</li>
+              <li>PK not-null, PK unique within batch</li>
+              <li>Soda Core checks defined in <code>etl/src/quality/checks/bronze_*.yml</code></li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="detail-block">
+            <h4>Technology</h4>
+            <ul>
+              <li><strong>Format:</strong> Apache Iceberg V2 on MinIO/S3</li>
+              <li><strong>Catalog:</strong> Nessie — branch-per-load, Git-style versioning</li>
+              <li><strong>ETL:</strong> Python (DataStage migration: ~12,000 jobs)</li>
+              <li><strong>Decode:</strong> Cobrix <code>spark-cobol_2.12:2.9.2</code> for EBCDIC</li>
+              <li><strong>Orchestration:</strong> Apache Airflow DAG per source domain</li>
+              <li><strong>Lineage:</strong> OpenLineage emitted at every step → Marquez</li>
+            </ul>
+          </div>
+          <div class="detail-block" style="margin-top:0.75rem;">
+            <h4>Governance</h4>
+            <ul>
+              <li>Gravitino policy labels applied at ingest (PII, Confidential, Restricted)</li>
+              <li>Labels push to Apache Ranger for column-level enforcement</li>
+              <li>Nessie branch merged on successful quality gate pass</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LAYER 2 — SILVER
+  ═══════════════════════════════════════════════════════ -->
+  <div class="layer-section">
+    <div class="layer-section-header" style="background:#4a5568;">
+      Silver Layer — FSDM-Conformed Cleansed Records
+      <span class="layer-badge">Deduplicated · Entity-Resolved · Ranger-Governed</span>
+    </div>
+    <div class="layer-section-body">
+      <div class="layer-cols">
+        <div>
+          <h3>What happens here</h3>
+          <p>Bronze records are cleansed, deduplicated, and entity-resolved to conform to the Teradata Financial Services Data Model (FSDM). Silver is the canonical source of truth for all downstream Gold builds. All queries run via Trino (ADR-002 — mandatory gateway, no direct Spark).</p>
+          <div class="detail-block">
+            <h4>Transforms</h4>
+            <ul>
+              <li>Type casting, null handling, valid-value range checks</li>
+              <li>Deduplication by PK (window function, keep latest)</li>
+              <li>SCD Type 2 for slowly-changing entities</li>
+              <li>FSDM entity conformance: Party, Account, Transaction, Instrument, Risk, Compliance</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="detail-block">
+            <h4>Technology</h4>
+            <ul>
+              <li><strong>Query engine:</strong> Trino 479 — mandatory per ADR-002, no Spark on Silver</li>
+              <li><strong>ETL:</strong> Python (no dbt — confirmed ADR)</li>
+              <li><strong>Catalog:</strong> Nessie with Iceberg V2</li>
+              <li><strong>Quality:</strong> Soda Core SodaCL — uniqueness, RI, range checks</li>
+              <li><strong>Governance:</strong> Gravitino → Ranger, column masking, row-level RBAC</li>
+              <li><strong>Lineage:</strong> OpenLineage → Marquez → OpenMetadata</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="adr-callout">
+        <span class="adr-tag">ADR-002</span>
+        <span class="adr-text"><strong>Trino is the mandatory query gateway.</strong> No direct Spark SQL on Silver or Gold. All engine access routes through Trino for consistent audit logging and Ranger enforcement.</span>
+      </div>
+      <div class="adr-callout">
+        <span class="adr-tag">ADR-005</span>
+        <span class="adr-text"><strong>No Spark, Python ETL only.</strong> DataStage → Python migration (~12,000 jobs). Python is the sole transformation engine — testable, Git-native, debuggable without a cluster.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LAYER 3 — GOLD
+  ═══════════════════════════════════════════════════════ -->
+  <div class="layer-section">
+    <div class="layer-section-header" style="background:#b7791f;">
+      Gold Layer — Curated Business-Ready Analytics
+      <span class="layer-badge">Teradata OTF · Trino · Iceberg V2 · Ranger ACL</span>
+    </div>
+    <div class="layer-section-body">
+      <div class="layer-cols">
+        <div>
+          <h3>What happens here</h3>
+          <p>Multi-table joins across FSDM subject areas, pre-aggregation, and business rule application produce curated, denormalized wide tables optimised for analytics. Gold is the authoritative compute-plane source: queried by Trino, Teradata Vantage (OTF), and the Cube NL-to-SQL layer.</p>
+          <div class="detail-block">
+            <h4>Transforms</h4>
+            <ul>
+              <li>Multi-table FSDM joins: Party × Account × Transaction × Instrument</li>
+              <li>Aggregations: daily, MTD, YTD, rolling windows</li>
+              <li>Enrichment: market data overlays, risk calculations, compliance flags</li>
+              <li>Denormalization for analytics performance</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="detail-block">
+            <h4>Technology</h4>
+            <ul>
+              <li><strong>Teradata Vantage</strong> — OTF/Iceberg engine, primary aggregation compute</li>
+              <li><strong>Trino</strong> — cross-domain Gold joins, ADR-002 mandatory gateway</li>
+              <li><strong>Format:</strong> Iceberg V2 on MinIO/S3, stable paths enforced</li>
+              <li><strong>Maintenance:</strong> OPTIMIZE + VACUUM on schedule (Airflow DAG)</li>
+              <li><strong>Code:</strong> GitHub — all ETL versioned, PR reviews, ADR log</li>
+              <li><strong>Security:</strong> Ranger — authoritative ACL for all compute consumers</li>
+            </ul>
+          </div>
+          <div class="detail-block" style="margin-top:0.75rem;">
+            <h4>Cube Semantic Layer (NL-to-SQL path)</h4>
+            <ul>
+              <li>YAML metric definitions over Gold tables (<code>trading_metrics</code>, <code>risk_exposure</code>)</li>
+              <li>PostgreSQL wire protocol on <code>:15432</code> for any SQL-speaking tool</li>
+              <li>RASL vector retrieval scales to 200+ Cube-modelled tables (ADR-006)</li>
+              <li>Feeds NL-to-SQL engine: Claude on AWS Bedrock (ADR-009)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="adr-callout">
+        <span class="adr-tag">ADR-001</span>
+        <span class="adr-text"><strong>Teradata Vantage as Iceberg OTF engine.</strong> Teradata is decoupled from storage — it reads Iceberg V2 files in S3/MinIO via Open Table Format. Compute and storage are separated.</span>
+      </div>
+      <div class="adr-callout">
+        <span class="adr-tag">ADR-006</span>
+        <span class="adr-text"><strong>RASL for NL-to-SQL at scale.</strong> pgvector schema linking replaces full-schema prompt stuffing. Scales from 2 to 200+ Cube-modelled Gold tables with 90%/70% accuracy thresholds on simple/complex queries.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LAYER 4 — FABRIC SEMANTIC LAYER
+  ═══════════════════════════════════════════════════════ -->
+  <div class="layer-section">
+    <div class="layer-section-header" style="background:#553c9a;">
+      Fabric Semantic Layer — BI &amp; AI Surface
+      <span class="layer-badge">Import Mode · VertiPaq · DAX · Prep for AI · ADR-010</span>
+    </div>
+    <div class="layer-section-body">
+      <div class="narrative">
+        <h3>Dual-Gold Design Decision</h3>
+        <p>Gold exists in two deliberate representations. The Iceberg on-prem copy (above) is the authoritative compute plane, governed by Ranger. A separate Python ETL job copies curated Gold tables to Microsoft Fabric as Delta (V-Order optimised for VertiPaq). A Fabric Import semantic model reads this copy. <strong>No OneLake shortcuts. No XTable metadata virtualization. No OPDG agents.</strong> See ADR-010 for full rationale.</p>
+      </div>
+      <div class="layer-cols">
+        <div>
+          <div class="detail-block">
+            <h4>Python ETL Copy (Gold → Fabric)</h4>
+            <ul>
+              <li>Runs as Airflow DAG: <code>gold_to_fabric_copy</code> after Gold refresh</li>
+              <li>Reads Gold Iceberg via PyIceberg or Trino → Pandas</li>
+              <li>Writes Delta to Fabric OneLake Tables section</li>
+              <li>V-Order applied: VertiPaq-optimised sort and compression</li>
+              <li>Gold-layer tables only — not Bronze or Silver</li>
+            </ul>
+          </div>
+          <div class="detail-block" style="margin-top:0.75rem;">
+            <h4>Fabric Import Semantic Model</h4>
+            <ul>
+              <li><strong>Mode:</strong> Import — VertiPaq in-memory, fastest query path</li>
+              <li>DAX measures, relationships, KPIs defined once, reused everywhere</li>
+              <li>RLS at semantic model layer (not OneLake security layer)</li>
+              <li>"Prep for AI" — AI Data Schema, Verified Answers, AI Instructions</li>
+              <li>NL2DAX via Fabric Data Agent → published REST endpoint</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="detail-block">
+            <h4>Why Import over Direct Lake</h4>
+            <ul>
+              <li>Fastest query performance — full VertiPaq in-memory</li>
+              <li>"Prep for AI" only available in Import (not Direct Lake)</li>
+              <li>RLS is cleanest at semantic model layer with no shortcut path failures</li>
+              <li>No XTable fidelity risk, no Iceberg partition compatibility issues</li>
+              <li>Gold is pre-aggregated — fits in Fabric capacity memory</li>
+            </ul>
+          </div>
+          <div class="detail-block" style="margin-top:0.75rem;">
+            <h4>Fabric SKU Guidance</h4>
+            <ul>
+              <li>F32 — minimum for production BI</li>
+              <li><strong>F64 — recommended</strong> for 1,000+ reports / ~150 concurrent users</li>
+              <li>F128 — quarter-end and regulatory reporting peaks</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="adr-callout">
+        <span class="adr-tag">ADR-010</span>
+        <span class="adr-text"><strong>Fabric Import semantic model as BI/AI surface.</strong> Supersedes the ADR-008 "Contingency" pattern. No OneLake shortcuts. No XTable. Dual-Gold is intentional. Full decision at <code>docs/adr/010-fabric-import-semantic-layer.md</code>.</span>
+      </div>
+      <div class="adr-callout">
+        <span class="adr-tag">ADR-008</span>
+        <span class="adr-text"><strong>OneLake shortcuts and XTable not adopted.</strong> S3-compatible shortcuts require key/secret auth only, XTable has partition fidelity gaps, RLS on cross-workspace shortcut paths returns 403. Full analysis at <code>docs/adr/008-onelake-evaluation.md</code>.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LAYER 5 — CONSUMPTION
+  ═══════════════════════════════════════════════════════ -->
+  <h2>Consumption Layer — BI &amp; AI Surfaces</h2>
+  <p>One Fabric Import semantic model powers three consumption surfaces. DAX measures are defined once and shared across all three. RLS is enforced uniformly.</p>
+  <div class="consumer-grid">
+    <div class="consumer-card">
+      <div class="consumer-card-header" style="background:#1d4ed8;">Power BI</div>
+      <div class="consumer-card-body">
+        <ul>
+          <li>Connects via Import semantic model (VertiPaq)</li>
+          <li>1,000+ OBIEE reports migrating to certified datasets</li>
+          <li>Near import-mode query speed — no Trino round-trip per visual</li>
+          <li>DAX time intelligence, semi-additive measures, financial calculations</li>
+          <li>RLS enforced at semantic model layer</li>
+          <li>Copilot in Power BI active and grounded by semantic model</li>
+        </ul>
+      </div>
+    </div>
+    <div class="consumer-card">
+      <div class="consumer-card-header" style="background:#b91c1c;">Tableau</div>
+      <div class="consumer-card-body">
+        <ul>
+          <li>Connects via Fabric XMLA endpoint — same semantic model as Power BI</li>
+          <li>Consistent KPIs across both BI tools — no definition drift</li>
+          <li>No separate Tableau data source or extract to maintain</li>
+          <li>RLS and CLS inherited from semantic model</li>
+          <li>WebFOCUS migration also routed through Fabric semantic model</li>
+        </ul>
+      </div>
+    </div>
+    <div class="consumer-card">
+      <div class="consumer-card-header" style="background:#065f46;">RBC Assist (AI Chatbot)</div>
+      <div class="consumer-card-body">
+        <ul>
+          <li>Fabric Data Agent generates NL2DAX against semantic model</li>
+          <li>Published as REST endpoint from Fabric workspace</li>
+          <li>Azure AI Foundry wraps it as <code>MicrosoftFabricPreviewTool</code></li>
+          <li>RBC Assist calls Foundry → Data Agent → DAX → structured answer</li>
+          <li>Entra ID identity propagated end-to-end — per-user RLS enforced</li>
+          <li>Only schema/metadata sent to Azure OpenAI — raw data never leaves RBC</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       CROSS-CUTTING CONCERNS
+  ═══════════════════════════════════════════════════════ -->
+  <h2>Cross-Cutting Concerns</h2>
+  <div class="rail-grid">
+    <div class="rail-card">
+      <div class="rail-card-header" style="background:#1a2332;">Governance Plane</div>
+      <div class="rail-card-body">
+        <ul>
+          <li><strong>Gravitino</strong> — unified policy authoring plane; one policy definition pushed to all engines</li>
+          <li><strong>Apache Ranger</strong> — enforcement engine; column masking, row-level RBAC, audit trail</li>
+          <li><strong>Nessie</strong> — catalog versioning; branch-per-load, Git-style table history and rollback</li>
+          <li><strong>OpenMetadata</strong> — data discovery, classification, business glossary (v1.6.0)</li>
+          <li><strong>Microsoft Purview</strong> — discovery + lineage on ADLS/Fabric surface (cloud plane)</li>
+          <li><strong>OSFI B-13 / BCBS 239</strong> — lineage auditability from source to consumer</li>
+        </ul>
+      </div>
+    </div>
+    <div class="rail-card">
+      <div class="rail-card-header" style="background:#be185d;">Lineage &amp; Quality</div>
+      <div class="rail-card-body">
+        <ul>
+          <li><strong>OpenLineage</strong> — provenance emitted at every transformation step</li>
+          <li><strong>Marquez</strong> — OpenLineage server + web UI (<code>:5000</code> / <code>:3000</code>)</li>
+          <li><strong>Soda Core SodaCL</strong> — quality gate checks at Bronze and Silver</li>
+          <li><strong>Airflow SLA alerts</strong> — pipeline failure notifications per domain</li>
+          <li><strong>Gold OPTIMIZE + VACUUM</strong> — enforced on schedule; required for Fabric Delta copy fidelity</li>
+          <li><strong>Schema evolution</strong> — tracked via Nessie catalog; non-breaking changes only</li>
+        </ul>
+      </div>
+    </div>
+    <div class="rail-card">
+      <div class="rail-card-header" style="background:#65a30d;">Monitoring &amp; Delivery</div>
+      <div class="rail-card-body">
+        <ul>
+          <li><strong>Grafana + Prometheus</strong> — pipeline observability dashboards (<code>:3001</code> / <code>:9090</code>)</li>
+          <li><strong>StatsD exporter</strong> — Airflow metrics bridge to Prometheus (<code>:9102</code>)</li>
+          <li><strong>Grafana Reporter</strong> — scheduled PDF report delivery (<code>:8686</code>)</li>
+          <li><strong>GitHub</strong> — all ETL code, ADRs, config versioned; PR reviews enforced</li>
+          <li><strong>Python ETL</strong> — no dbt, no Spark; sole transform engine (ADR-005)</li>
+          <li><strong>GitHub Actions</strong> — CI/CD across dev / staging / prod environments</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       FULL SERVICE REFERENCE (preserved from detailed-architecture.html)
+  ═══════════════════════════════════════════════════════ -->
+  <h2>Service Reference — All 23 Platform Services</h2>
+  <p>Hover over any service card to view version, protocol, health check endpoint, and dependencies. Port numbers reflect <code>docker-compose.yml</code> host mappings.</p>
+
+  <div class="arch-layer">
+    <div class="layer-header" style="background:#2563eb;">Storage (2 services)</div>
+    <div class="service-grid">
+      <div class="service-node">
+        <div class="service-name">postgres</div><div class="service-port">:5432</div>
+        <div class="service-tooltip"><strong>postgres</strong><br>Version: 15<br>Protocol: PostgreSQL wire (5432)<br>Health: <code>CMD-SHELL pg_isready -U nessie -d nessie</code><br>Depends on: none<br>Role: Nessie metadata store</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">minio</div><div class="service-port">:9000</div>
+        <div class="service-tooltip"><strong>minio</strong><br>Version: latest<br>Protocol: S3 API (HTTP)<br>Health: <code>CMD curl -f http://localhost:9000/minio/health/live</code><br>Depends on: none<br>Role: On-premises object storage (S3-compatible)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-header" style="background:#7c3aed;">Catalog (1 service)</div>
+    <div class="service-grid">
+      <div class="service-node">
+        <div class="service-name">nessie</div><div class="service-port">:19120</div>
+        <div class="service-tooltip"><strong>nessie</strong><br>Version: 0.107.4<br>Protocol: REST (HTTP)<br>Health: <code>CMD curl -f http://localhost:19120/api/v2/config</code><br>Depends on: postgres, minio<br>Role: Iceberg catalog with Git-style branching</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-header" style="background:#059669;">Query Engines (1 service)</div>
+    <div class="service-grid">
+      <div class="service-node">
+        <div class="service-name">trino</div><div class="service-port">:8080</div>
+        <div class="service-tooltip"><strong>trino</strong><br>Version: 479<br>Protocol: HTTP / JDBC<br>Health: N/A<br>Depends on: nessie<br>Role: Mandatory query gateway (ADR-002) — all Silver/Gold queries route through Trino</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-header" style="background:#d97706;">ETL / Orchestration (5 services)</div>
+    <div class="service-grid">
+      <div class="service-node">
+        <div class="service-name">airflow-webserver</div><div class="service-port">:8081</div>
+        <div class="service-tooltip"><strong>airflow-webserver</strong><br>Version: custom (3.1.x)<br>Protocol: HTTP<br>Health: <code>CMD curl -f http://localhost:8080/health</code><br>Depends on: airflow-init, airflow-db, redis</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">airflow-scheduler</div><div class="service-port">:N/A</div>
+        <div class="service-tooltip"><strong>airflow-scheduler</strong><br>Version: custom (3.1.x)<br>Protocol: Internal<br>Depends on: airflow-init, airflow-db, redis<br>Role: DAG scheduling engine</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">airflow-worker</div><div class="service-port">:N/A</div>
+        <div class="service-tooltip"><strong>airflow-worker</strong><br>Version: custom (3.1.x)<br>Protocol: Internal (Celery)<br>Depends on: airflow-init, airflow-db, redis<br>Role: Task execution worker</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">airflow-db</div><div class="service-port">:5433</div>
+        <div class="service-tooltip"><strong>airflow-db</strong><br>Version: 15<br>Protocol: PostgreSQL wire (5432)<br>Health: <code>CMD-SHELL pg_isready -U airflow -d airflow</code><br>Depends on: none</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">redis</div><div class="service-port">:6379</div>
+        <div class="service-tooltip"><strong>redis</strong><br>Version: 7<br>Protocol: Redis wire<br>Health: <code>CMD redis-cli ping</code><br>Depends on: none<br>Role: Celery broker for Airflow</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-header" style="background:#0891b2;">Semantic Layer — NL-to-SQL (2 services)</div>
+    <div class="service-grid">
+      <div class="service-node">
+        <div class="service-name">cube-api</div><div class="service-port">:4000 / :15432</div>
+        <div class="service-tooltip"><strong>cube-api</strong><br>Version: v0.36.0<br>Protocol: REST (HTTP :4000) / SQL (PostgreSQL wire :15432)<br>Depends on: trino, cubestore<br>Role: YAML metric definitions, NL-to-SQL schema linking (ADR-006), PostgreSQL wire for BI tools</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">cubestore</div><div class="service-port">:9999</div>
+        <div class="service-tooltip"><strong>cubestore</strong><br>Version: v0.36.0<br>Protocol: gRPC<br>Depends on: none<br>Role: Pre-aggregation cache for Cube query acceleration</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-header" style="background:#be185d;">Governance &amp; Lineage (7 services)</div>
+    <div class="service-grid">
+      <div class="service-node">
+        <div class="service-name">marquez</div><div class="service-port">:5000</div>
+        <div class="service-tooltip"><strong>marquez</strong><br>Version: 0.50.0<br>Protocol: REST (HTTP)<br>Health: <code>CMD curl -f http://localhost:5000/api/v1/namespaces</code><br>Depends on: marquez-db<br>Role: OpenLineage server — receives lineage events from all Airflow DAGs</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">marquez-db</div><div class="service-port">:5434</div>
+        <div class="service-tooltip"><strong>marquez-db</strong><br>Version: 15<br>Protocol: PostgreSQL wire<br>Health: <code>CMD-SHELL pg_isready -U marquez -d marquez</code><br>Depends on: none</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">marquez-web</div><div class="service-port">:3000</div>
+        <div class="service-tooltip"><strong>marquez-web</strong><br>Version: 0.50.0<br>Protocol: HTTP<br>Depends on: marquez<br>Role: Lineage visualisation UI</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">openmetadata-server</div><div class="service-port">:8585</div>
+        <div class="service-tooltip"><strong>openmetadata-server</strong><br>Version: 1.6.0<br>Protocol: REST (HTTP)<br>Health: <code>CMD curl -sf http://localhost:8585/healthcheck</code><br>Depends on: om-db, elasticsearch<br>Role: Data catalog — discovery, glossary, classification, RASL metadata source (ADR-006)</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">openmetadata-ingestion</div><div class="service-port">:8086</div>
+        <div class="service-tooltip"><strong>openmetadata-ingestion</strong><br>Version: 1.6.0<br>Protocol: HTTP<br>Depends on: openmetadata-server<br>Role: Trino connector ingestion for catalog sync</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">om-db</div><div class="service-port">:5436</div>
+        <div class="service-tooltip"><strong>om-db</strong><br>Version: 15<br>Protocol: PostgreSQL wire<br>Health: <code>CMD-SHELL pg_isready -U openmetadata -d openmetadata</code><br>Depends on: none</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">elasticsearch</div><div class="service-port">:9200</div>
+        <div class="service-tooltip"><strong>elasticsearch</strong><br>Version: 8.15.0<br>Protocol: REST (HTTP)<br>Health: <code>CMD-SHELL curl -sf http://localhost:9200/_cluster/health || exit 1</code><br>Depends on: none<br>Role: OpenMetadata search index</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-header" style="background:#dc2626;">Security (5 services)</div>
+    <div class="service-grid">
+      <div class="service-node">
+        <div class="service-name">ranger-admin</div><div class="service-port">:6080</div>
+        <div class="service-tooltip"><strong>ranger-admin</strong><br>Version: 2.8.0<br>Protocol: HTTP<br>Health: <code>CMD curl -f http://localhost:6080/login.jsp</code><br>Depends on: ranger-db, ranger-solr, ranger-zk<br>Role: Policy management UI; receives policies from Gravitino, enforces on Trino</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">ranger-db</div><div class="service-port">:5435</div>
+        <div class="service-tooltip"><strong>ranger-db</strong><br>Version: 15<br>Protocol: PostgreSQL wire<br>Health: <code>CMD-SHELL pg_isready -U ranger -d ranger</code><br>Depends on: none</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">ranger-solr</div><div class="service-port">:8983</div>
+        <div class="service-tooltip"><strong>ranger-solr</strong><br>Version: 2.8.0<br>Protocol: HTTP<br>Health: <code>CMD curl -f http://localhost:8983/solr/ranger_audits/admin/ping</code><br>Depends on: ranger-zk<br>Role: Audit log search index</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">ranger-zk</div><div class="service-port">:2181</div>
+        <div class="service-tooltip"><strong>ranger-zk</strong><br>Version: 2.8.0<br>Protocol: ZooKeeper wire<br>Health: <code>CMD-SHELL echo ruok | nc localhost 2181 | grep imok</code><br>Depends on: none</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">audit-receiver</div><div class="service-port">:8090</div>
+        <div class="service-tooltip"><strong>audit-receiver</strong><br>Version: 3.11-slim<br>Protocol: HTTP<br>Depends on: none<br>Role: Ranger audit event sink; forwards to Solr for BCBS 239 audit trail</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="arch-layer">
+    <div class="layer-header" style="background:#65a30d;">Monitoring (4 services)</div>
+    <div class="service-grid">
+      <div class="service-node">
+        <div class="service-name">grafana</div><div class="service-port">:3001</div>
+        <div class="service-tooltip"><strong>grafana</strong><br>Version: latest<br>Protocol: HTTP<br>Depends on: prometheus<br>Role: Pipeline observability dashboards — audit overview, BCBS 239 compliance, data freshness, pipeline SLAs</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">grafana-reporter</div><div class="service-port">:8686</div>
+        <div class="service-tooltip"><strong>grafana-reporter</strong><br>Version: latest<br>Protocol: HTTP<br>Depends on: grafana<br>Role: Scheduled PDF report delivery from Grafana dashboards</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">prometheus</div><div class="service-port">:9090</div>
+        <div class="service-tooltip"><strong>prometheus</strong><br>Version: latest<br>Protocol: HTTP<br>Depends on: statsd-exporter<br>Role: Metrics store — scrapes StatsD exporter for Airflow task metrics</div>
+      </div>
+      <div class="service-node">
+        <div class="service-name">statsd-exporter</div><div class="service-port">:9102</div>
+        <div class="service-tooltip"><strong>statsd-exporter</strong><br>Version: latest<br>Protocol: StatsD (UDP) / HTTP<br>Depends on: none<br>Role: Bridges Airflow StatsD metrics to Prometheus format</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADR INDEX -->
+  <h2>Architecture Decision Records</h2>
+  <div class="layer-cols-3">
+    <div class="detail-block">
+      <h4>Data Platform</h4>
+      <ul>
+        <li><a href="../adr/001-teradata-otf-nessie-feasibility.md">ADR-001</a> — Teradata OTF + Nessie feasibility</li>
+        <li><a href="../adr/002-trino-as-mandatory-query-gateway.md">ADR-002</a> — Trino mandatory query gateway</li>
+        <li><a href="../adr/003-teradata-decoupling-strategy.md">ADR-003</a> — Teradata decoupling strategy</li>
+        <li><a href="../adr/004-trino-workload-isolation.md">ADR-004</a> — Trino workload isolation</li>
+        <li><a href="../adr/005-no-spark-trino-python-instead.md">ADR-005</a> — No Spark; Python ETL only</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <h4>AI &amp; Semantic</h4>
+      <ul>
+        <li><a href="../adr/006-ai-semantic-layer-scaling.md">ADR-006</a> — RASL NL-to-SQL at scale</li>
+        <li><a href="../adr/007-governance-automation-pipeline.md">ADR-007</a> — Governance automation</li>
+        <li><a href="../adr/009-ai-data-hub-architecture.md">ADR-009</a> — AI Data Hub architecture</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <h4>BI / Fabric</h4>
+      <ul>
+        <li><a href="../adr/008-onelake-evaluation.md">ADR-008</a> — OneLake shortcuts: not adopted (superseded)</li>
+        <li><a href="../adr/010-fabric-import-semantic-layer.md">ADR-010</a> — Fabric Import semantic model: <strong>adopted</strong></li>
+      </ul>
+    </div>
+  </div>
+
+  <footer class="doc-footer">
+    <p>Last updated: 2026-04-01 &nbsp;|&nbsp; <a href="index.html">Architecture Index</a> &nbsp;|&nbsp; <a href="../adr/010-fabric-import-semantic-layer.md">ADR-010</a></p>
+    <div class="versions">
+      <span class="version-item">postgres: 15</span>
+      <span class="version-item">minio: latest</span>
+      <span class="version-item">nessie: 0.107.4</span>
+      <span class="version-item">trino: 479</span>
+      <span class="version-item">airflow: 3.1.x</span>
+      <span class="version-item">redis: 7</span>
+      <span class="version-item">marquez: 0.50.0</span>
+      <span class="version-item">cube-api: v0.36.0</span>
+      <span class="version-item">cubestore: v0.36.0</span>
+      <span class="version-item">openmetadata: 1.6.0</span>
+      <span class="version-item">elasticsearch: 8.15.0</span>
+      <span class="version-item">ranger: 2.8.0</span>
+      <span class="version-item">grafana: latest</span>
+      <span class="version-item">prometheus: latest</span>
+      <span class="version-item">statsd-exporter: latest</span>
+    </div>
+    <p style="margin-top:0.6rem; font-size:0.78rem; color:#94a3b8;">RBC Enterprise Lakehouse Architecture Documentation — Confidential Internal Use Only</p>
+  </footer>
+
+</body>
+</html>
