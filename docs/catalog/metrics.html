@@ -197,7 +197,7 @@
 </header>
 
 <!-- ===================== METRICS PAGE ===================== -->
-<p style="margin-bottom: 1.5rem; color: #475569;">All metric calculations are defined in the Cube semantic layer and consumed by Tableau, Power BI, and NL-to-SQL. Values shown below are extracted from Cube YAML at render time.</p>
+<p style="margin-bottom: 1.5rem; color: #475569;">All metric calculations are defined in the Cube semantic layer. Metrics are consumed via the <strong>Microsoft Fabric Import semantic model</strong> (Power BI and Tableau XMLA endpoint) and via <strong>Fabric Data Agent NL2DAX</strong> (RBC Assist). Cube retains its role as the NL-to-SQL schema linking layer (ADR-006). Values shown below are extracted from Cube YAML at render time.</p>
 
 <h2>risk_exposure</h2>
 <p style="color: #64748b; margin-bottom: 1rem;">Risk exposure metrics per account, sector, and currency.</p>
