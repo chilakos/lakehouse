@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Data Security Vendor Comparison — Trust3 AI vs Immuta vs OPA</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A1628;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC;--white:#FFFFFF;--green:#059669;--green-bg:#F0FDF4;--green-b:#BBF7D0;--red:#DC2626;--red-bg:#FEF2F2;--red-b:#FECACA;--amber:#D97706;--amber-bg:#FFFBEB;--amber-b:#FDE68A;--blue:#1E4D8C;--blue-bg:#EFF6FF;--blue-b:#BFDBFE;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);padding-bottom:60px;}
+.hero{background:var(--navy);padding:40px 32px 32px;}
+.back{font-size:10px;font-family:'DM Mono',monospace;color:#475569;margin-bottom:14px;}
+.back a{color:#94A3B8;text-decoration:none;}
+.hero h1{font-family:'Lora',serif;font-size:26px;font-weight:600;color:#fff;margin-bottom:8px;}
+.hero p{font-size:12px;color:#94A3B8;max-width:680px;line-height:1.7;}
+.hero-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.pill{font-size:9px;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:#94A3B8;}
+.pill.warn{background:rgba(220,38,38,0.15);color:#FCA5A5;border-color:rgba(252,165,165,0.3);}
+.pill.ok{background:rgba(5,150,105,0.15);color:#6EE7B7;border-color:rgba(110,231,183,0.3);}
+.canvas{max-width:1080px;margin:0 auto;padding:28px 24px;}
+.slabel{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--line);}
+.card{background:#fff;border-radius:12px;padding:22px 24px;border:1.5px solid var(--line);margin-bottom:14px;}
+.note{border-radius:8px;padding:11px 14px;font-size:10px;line-height:1.7;margin-bottom:14px;}
+.note.warn{background:var(--amber-bg);border:1.5px solid var(--amber-b);color:#78350F;}
+.note.info{background:var(--blue-bg);border:1.5px solid var(--blue-b);color:#1E3A5F;}
+.note.tip{background:var(--green-bg);border:1.5px solid var(--green-b);color:#065F46;}
+.note.alert{background:var(--red-bg);border:1.5px solid var(--red-b);color:#7F1D1D;}
+
+/* VENDOR SNAPSHOT GRID */
+.vendor-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;}
+@media(max-width:680px){.vendor-grid{grid-template-columns:1fr;}}
+.vendor-card{border-radius:10px;border:2px solid;padding:14px 16px;}
+.vc-name{font-size:13px;font-weight:800;margin-bottom:3px;}
+.vc-tag{font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:8px;display:inline-block;margin-bottom:9px;}
+.vc-body{font-size:10px;line-height:1.8;}
+
+/* MAIN COMPARISON TABLE */
+.ctable{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:14px;}
+.ctable th{padding:10px 12px;text-align:left;font-weight:700;vertical-align:top;}
+.ctable td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6;}
+.ctable tr:last-child td{border-bottom:none;}
+.ctable tr:nth-child(even) td{background:#F8FAFC;}
+.ch{background:var(--navy);color:#fff;}
+.ch-t3{background:#7C2D12;color:#fff;}
+.ch-im{background:#1E4D8C;color:#fff;}
+.ch-oss{background:#065F46;color:#fff;}
+.cat-row td{background:#F1F5F9!important;font-weight:700;font-size:9px;color:var(--muted);padding:5px 12px;letter-spacing:0.5px;text-transform:uppercase;}
+.p{display:inline-block;font-size:8px;font-weight:700;padding:2px 6px;border-radius:4px;}
+.p-yes{background:#D1FAE5;color:#065F46;}
+.p-no{background:#FEE2E2;color:#991B1B;}
+.p-part{background:#FEF3C7;color:#92400E;}
+.p-na{background:#F1F5F9;color:#64748B;}
+
+/* DEPLOYMENT DIAGRAM */
+.dep-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;}
+@media(max-width:680px){.dep-grid{grid-template-columns:1fr;}}
+.dep-card{border-radius:8px;border:1.5px solid;padding:12px 14px;}
+.dep-title{font-size:11px;font-weight:700;margin-bottom:8px;}
+.dep-plane{border-radius:5px;padding:8px 10px;margin-bottom:6px;font-size:9px;line-height:1.7;}
+.dep-label{font-size:8px;font-family:'DM Mono',monospace;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;}
+
+/* RECOMMENDATION */
+.rec-box{border-radius:10px;padding:20px 22px;border:2px solid;}
+.rec-title{font-family:'Lora',serif;font-size:16px;font-weight:600;margin-bottom:8px;}
+.rec-body{font-size:11px;line-height:1.8;}
+
+.footer{max-width:1080px;margin:24px auto 0;padding:14px 24px 0;border-top:1px solid var(--line);font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div style="max-width:1080px;margin:0 auto"><div class="back"><a href="../">&#8592; Lakehouse Hub</a></div></div>
+  <h1>Data Security Vendor Comparison</h1>
+  <p>Trust3 AI (formerly Privacera) vs Immuta vs OPA + Kyuubi (OSS). Evaluated for RBC on-prem lakehouse: Spark, Trino, Databricks cloud burst, MinIO storage, OSFI B-10 data sovereignty, and BCBS 239 audit requirements.</p>
+  <div class="hero-pills">
+    <span class="pill warn">&#9888; Trust3 AI: rebranded Mar 2026 &mdash; AI pivot</span>
+    <span class="pill warn">&#9888; No new Privacera funding since Series B 2021</span>
+    <span class="pill ok">&#10003; Immuta v2025.1.10 &mdash; Jan 2026 &mdash; actively maintained</span>
+    <span class="pill ok">&#10003; OPA: CNCF graduated &mdash; zero vendor risk</span>
+    <span class="pill">Research date: April 2026</span>
+  </div>
+</div>
+
+<div class="canvas">
+
+  <!-- CONTEXT -->
+  <div class="note warn">
+    <strong>&#9888; Material development since original vendor selection:</strong> On March 9, 2026, Privacera rebranded to Trust3 AI and announced a pivot to &ldquo;agentic AI governance.&rdquo; Their last funding round was a Series B in March 2021 &mdash; five years ago with no subsequent round. The rebrand raises a legitimate question: is the engineering team investing in Iceberg/Polaris data security integration, or building LLM guardrails and EU AI Act compliance tooling? This table was produced to frame the decision with updated context.
+  </div>
+
+  <!-- VENDOR SNAPSHOTS -->
+  <div class="slabel">Vendor Snapshots &mdash; April 2026</div>
+  <div class="vendor-grid">
+
+    <div class="vendor-card" style="border-color:#FED7AA;background:#FFFBEB">
+      <div class="vc-name" style="color:#7C2D12">Trust3 AI</div>
+      <div class="vc-tag" style="background:#7C2D12;color:#fff">formerly Privacera</div>
+      <div class="vc-body" style="color:#78350F">
+        <strong>Founded:</strong> 2016 &mdash; creators of Apache Ranger<br/>
+        <strong>Funding:</strong> $63.5M total &mdash; Series B Mar 2021 (5 years, no new round)<br/>
+        <strong>Rebrand:</strong> March 9, 2026 &rarr; Trust3 AI<br/>
+        <strong>Core tech:</strong> Apache Ranger-based engine<br/>
+        <strong>New focus:</strong> Agentic AI governance, Trustscore, EU AI Act<br/>
+        <strong>Data security:</strong> Still sold &mdash; engineering focus unclear<br/>
+        <strong>Deployment:</strong> SaaS control plane + on-prem Ranger plugins<br/>
+        <strong>Self-hosted:</strong> Kubernetes &mdash; resolves OSFI B-10
+      </div>
+    </div>
+
+    <div class="vendor-card" style="border-color:var(--blue-b);background:var(--blue-bg)">
+      <div class="vc-name" style="color:var(--blue)">Immuta</div>
+      <div class="vc-tag" style="background:var(--blue);color:#fff">cloud-first, self-hosted available</div>
+      <div class="vc-body" style="color:#1E3A5F">
+        <strong>Founded:</strong> 2015 &mdash; purpose-built data access control<br/>
+        <strong>Funding:</strong> Acquired by ABN AMRO Ventures 2021 &mdash; stable<br/>
+        <strong>Latest:</strong> v2025.1.10 &mdash; January 13, 2026<br/>
+        <strong>Core tech:</strong> ABAC policy engine &mdash; ImmutaSystemAccessControl<br/>
+        <strong>Focus:</strong> Data security &mdash; no AI pivot<br/>
+        <strong>Trino:</strong> 4.26x query speedup &mdash; Sep 2025 release<br/>
+        <strong>Deployment:</strong> SaaS or Helm chart (OCP/Kubernetes)<br/>
+        <strong>Pricing:</strong> ~$5,000/user/month (expensive)
+      </div>
+    </div>
+
+    <div class="vendor-card" style="border-color:var(--green-b);background:var(--green-bg)">
+      <div class="vc-name" style="color:#065F46">OPA + Kyuubi</div>
+      <div class="vc-tag" style="background:#065F46;color:#fff">100% open source</div>
+      <div class="vc-body" style="color:#065F46">
+        <strong>OPA:</strong> CNCF graduated project &mdash; zero vendor risk<br/>
+        <strong>Kyuubi:</strong> Apache TLP &mdash; Spark session gateway with RBAC<br/>
+        <strong>Cost:</strong> Free (operational effort to run)<br/>
+        <strong>Focus:</strong> Trino (OPA), Spark (Kyuubi) &mdash; separate tools per engine<br/>
+        <strong>Deployment:</strong> 100% on-prem &mdash; no SaaS, no B-10 concern<br/>
+        <strong>No column masking:</strong> OPA does row filtering + access control &mdash; masking requires additional UDF layer<br/>
+        <strong>Operational cost:</strong> You own every line of integration
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAIN TABLE -->
+  <div class="slabel">Head-to-Head Comparison</div>
+  <div style="overflow-x:auto">
+  <table class="ctable">
+    <thead>
+      <tr>
+        <th class="ch" style="min-width:170px">Dimension</th>
+        <th class="ch-t3" style="min-width:170px">Trust3 AI (Privacera)</th>
+        <th class="ch-im" style="min-width:170px">Immuta</th>
+        <th class="ch-oss" style="min-width:170px">OPA + Kyuubi (OSS)</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <tr class="cat-row"><td colspan="4">DEPLOYMENT &amp; DATA SOVEREIGNTY</td></tr>
+      <tr><td><strong>Control plane options</strong></td><td>SaaS (US-hosted) or self-hosted Kubernetes</td><td>SaaS (cloud) or self-hosted Helm chart (OCP)</td><td>100% on-prem &mdash; no SaaS involved</td></tr>
+      <tr><td><strong>OSFI B-10 posture</strong></td><td><span class="p p-part">&#9888; SaaS default &mdash; policy metadata US-hosted</span><br/>Self-hosted resolves concern</td><td><span class="p p-part">&#9888; Cloud-first by default</span><br/>Helm chart on OCP resolves concern</td><td><span class="p p-yes">&#10003; No issue &mdash; no vendor, no SaaS</span></td></tr>
+      <tr><td><strong>Data leaves your environment?</strong></td><td>No &mdash; only policy metadata to control plane</td><td>No &mdash; PII scan runs inside Trino engine</td><td>No &mdash; entirely self-contained</td></tr>
+      <tr><td><strong>On-prem production maturity</strong></td><td><span class="p p-yes">&#10003; Strong &mdash; Ranger heritage, Hadoop origins</span></td><td><span class="p p-part">&#9888; Supported but cloud-first &mdash; limited on-prem docs</span></td><td><span class="p p-yes">&#10003; Native on-prem by design</span></td></tr>
+
+      <tr class="cat-row"><td colspan="4">POLICY MODEL &amp; ENFORCEMENT</td></tr>
+      <tr><td><strong>Policy model</strong></td><td>ABAC (Attribute-Based) + RBAC &mdash; tag-driven</td><td>ABAC-first &mdash; purpose-based access, subscription model</td><td>OPA: Rego policy-as-code (ABAC/RBAC). Kyuubi: RBAC per Spark session</td></tr>
+      <tr><td><strong>Column masking</strong></td><td><span class="p p-yes">&#10003; Native &mdash; full masking at query time</span></td><td><span class="p p-yes">&#10003; Native &mdash; view expressions pushed to Trino</span></td><td><span class="p p-part">&#9888; OPA does row filter/access &mdash; masking needs UDF layer</span></td></tr>
+      <tr><td><strong>Row-level filtering</strong></td><td><span class="p p-yes">&#10003; Yes</span></td><td><span class="p p-yes">&#10003; Yes &mdash; pushed to Trino as WHERE clauses</span></td><td><span class="p p-yes">&#10003; Yes &mdash; OPA Trino integration</span></td></tr>
+      <tr><td><strong>PII/PCI auto-classification</strong></td><td><span class="p p-yes">&#10003; Built-in scanner &mdash; 50+ identifiers</span></td><td><span class="p p-yes">&#10003; Built-in &mdash; scans inside Trino, data never leaves</span></td><td><span class="p p-no">&#10007; Manual tagging or separate tool needed</span></td></tr>
+      <tr><td><strong>Attribute sync (AD/LDAP)</strong></td><td><span class="p p-yes">&#10003; Native AD/LDAP sync &mdash; policies follow group membership</span></td><td><span class="p p-yes">&#10003; AD/LDAP sync &mdash; ABAC uses user attributes</span></td><td><span class="p p-part">&#9888; Manual or custom OPA bundle pipeline</span></td></tr>
+
+      <tr class="cat-row"><td colspan="4">ENGINE COVERAGE (RBC STACK)</td></tr>
+      <tr><td><strong>Trino (on-prem)</strong></td><td><span class="p p-yes">&#10003; Ranger plugin</span></td><td><span class="p p-yes">&#10003; ImmutaSystemAccessControl &mdash; 4.26x faster (Sep 2025)</span></td><td><span class="p p-yes">&#10003; OPA Trino authorizer plugin</span></td></tr>
+      <tr><td><strong>Spark / Kyuubi (Python pipelines)</strong></td><td><span class="p p-yes">&#10003; Ranger plugin in Spark Driver</span></td><td><span class="p p-yes">&#10003; Spark integration via Databricks or OSS</span></td><td><span class="p p-yes">&#10003; Kyuubi RBAC + OPA for Spark sessions</span></td></tr>
+      <tr><td><strong>Databricks (cloud burst)</strong></td><td><span class="p p-yes">&#10003; Native Databricks plugin &mdash; Unity Catalog + legacy</span></td><td><span class="p p-yes">&#10003; Unity Catalog integration &mdash; v2025.1 GA</span></td><td><span class="p p-no">&#10007; No Databricks integration &mdash; OPA/Kyuubi on-prem only</span></td></tr>
+      <tr><td><strong>Microsoft Fabric / Power BI</strong></td><td><span class="p p-no">&#10007; No &mdash; Fabric uses T-SQL DDM (ADR-010)</span></td><td><span class="p p-no">&#10007; No &mdash; Fabric uses T-SQL DDM (ADR-010)</span></td><td><span class="p p-na">N/A &mdash; Fabric DDM enforces natively</span></td></tr>
+      <tr><td><strong>Snowflake (cloud burst)</strong></td><td><span class="p p-yes">&#10003; Snowflake integration supported</span></td><td><span class="p p-yes">&#10003; Snowflake Iceberg tables &mdash; v2024.3 GA</span></td><td><span class="p p-no">&#10007; No Snowflake integration</span></td></tr>
+
+      <tr class="cat-row"><td colspan="4">AUDIT &amp; COMPLIANCE</td></tr>
+      <tr><td><strong>Query-level audit log</strong></td><td><span class="p p-yes">&#10003; Yes &mdash; centralised audit dashboard</span></td><td><span class="p p-yes">&#10003; Yes &mdash; audit reports, export</span></td><td><span class="p p-part">&#9888; OPA decision logs &mdash; needs SIEM pipeline to be useful</span></td></tr>
+      <tr><td><strong>BCBS 239 audit trail</strong></td><td><span class="p p-yes">&#10003; Access logs per query/user/column</span></td><td><span class="p p-yes">&#10003; Policy decision audit per query</span></td><td><span class="p p-part">&#9888; OPA logs available &mdash; requires custom aggregation</span></td></tr>
+      <tr><td><strong>OSFI B-13 report support</strong></td><td><span class="p p-yes">&#10003; Centralised audit with WORM export</span></td><td><span class="p p-yes">&#10003; Audit export to SIEM</span></td><td><span class="p p-part">&#9888; DIY aggregation required</span></td></tr>
+
+      <tr class="cat-row"><td colspan="4">VENDOR &amp; COMMERCIAL RISK</td></tr>
+      <tr><td><strong>Engineering investment in data security</strong></td><td><span class="p p-part">&#9888; Pivoting to AI governance (Trust3 AI rebrand Mar 2026) &mdash; data security still sold, investment unclear</span></td><td><span class="p p-yes">&#10003; No AI pivot &mdash; all releases focused on data security</span></td><td><span class="p p-yes">&#10003; CNCF governance &mdash; no commercial pivot risk</span></td></tr>
+      <tr><td><strong>Funding / commercial stability</strong></td><td><span class="p p-part">&#9888; Series B Mar 2021 &mdash; 5 years no new round. Rebrand may signal fundraise attempt</span></td><td><span class="p p-yes">&#10003; ABN AMRO Ventures acquisition &mdash; stable commercial backing</span></td><td><span class="p p-yes">&#10003; No commercial dependency</span></td></tr>
+      <tr><td><strong>Iceberg / Polaris integration roadmap</strong></td><td><span class="p p-part">&#9888; Unconfirmed &mdash; validate Polaris REST schema sync with Trust3 AI directly</span></td><td><span class="p p-yes">&#10003; Snowflake Iceberg tables supported (v2024.3) &mdash; REST catalog validation needed</span></td><td><span class="p p-part">&#9888; Polaris OPA integration in v1.3 &mdash; community-maintained</span></td></tr>
+      <tr><td><strong>Vendor lock-in risk</strong></td><td>Medium &mdash; proprietary policy format, migration cost</td><td>Medium &mdash; Immuta policy DSL, migration cost</td><td><span class="p p-yes">&#10003; Zero lock-in &mdash; Rego is portable, no proprietary DSL</span></td></tr>
+      <tr><td><strong>Pricing</strong></td><td>Mid-market SaaS &mdash; negotiate enterprise</td><td>~$5,000/user/month &mdash; expensive, budget approval required</td><td><span class="p p-yes">&#10003; Free &mdash; operational engineering cost only</span></td></tr>
+
+      <tr class="cat-row"><td colspan="4">OPERATIONAL COMPLEXITY</td></tr>
+      <tr><td><strong>Time to first policy enforcement</strong></td><td>Days &mdash; plugin install + policy sync</td><td>Days &mdash; plugin install + integration setup</td><td>Weeks &mdash; Rego policy authoring + pipeline build</td></tr>
+      <tr><td><strong>Policy management UI</strong></td><td><span class="p p-yes">&#10003; Full portal</span></td><td><span class="p p-yes">&#10003; Full portal &mdash; redesigned v2025.1</span></td><td><span class="p p-no">&#10007; Code-only (Rego) &mdash; no business user UI</span></td></tr>
+      <tr><td><strong>Self-service data access requests</strong></td><td><span class="p p-yes">&#10003; Request/approval workflow</span></td><td><span class="p p-yes">&#10003; Subscription model &mdash; purpose-based access</span></td><td><span class="p p-no">&#10007; Manual process &mdash; no self-service workflow</span></td></tr>
+      <tr><td><strong>Ongoing operational burden</strong></td><td>Low &mdash; SaaS manages control plane</td><td>Low (SaaS) / Medium (self-hosted)</td><td>High &mdash; team owns all policy code, tooling, and pipelines</td></tr>
+
+      <tr class="cat-row"><td colspan="4">RBC ASSESSMENT</td></tr>
+      <tr><td><strong>Best fit for RBC?</strong></td><td><span class="p p-part">&#9888; Conditional &mdash; validate Polaris integration + get roadmap commitment from Trust3 AI before procurement</span></td><td><span class="p p-yes">&#10003; Strong candidate &mdash; no AI distraction, active Trino investment, self-hosted resolves B-10</span></td><td><span class="p p-part">&#9888; Fallback &mdash; strong for Trino/Spark but no Databricks, no auto-classification, higher ops burden</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <!-- DEPLOYMENT ARCHITECTURES -->
+  <div class="slabel">Deployment Architecture Side-by-Side</div>
+  <div class="dep-grid">
+
+    <div class="dep-card" style="border-color:#FED7AA">
+      <div class="dep-title" style="color:#7C2D12">Trust3 AI (SaaS mode)</div>
+      <div class="dep-plane" style="background:#FEF3C7;border:1px solid #FDE68A">
+        <div class="dep-label" style="color:#92400E">&#9729;&#65039; SaaS Control Plane (US)</div>
+        Policy authoring &middot; User/group sync &middot; Audit aggregation &middot; Classification dashboard
+      </div>
+      <div style="text-align:center;font-size:10px;color:var(--muted);padding:3px">&#8597; policy sync (no data)</div>
+      <div class="dep-plane" style="background:#FFFBEB;border:1px solid #FDE68A">
+        <div class="dep-label" style="color:#92400E">&#127968; On-Prem (RBC OCP)</div>
+        Ranger plugin in Spark Driver &middot; Ranger plugin on Trino coordinator &middot; Enforcement fully local &middot; Cached policies survive SaaS outage
+      </div>
+      <div class="p p-part" style="margin-top:8px;font-size:9px">&#9888; OSFI B-10: policy metadata US-hosted. Self-hosted K8s resolves.</div>
+    </div>
+
+    <div class="dep-card" style="border-color:var(--blue-b)">
+      <div class="dep-title" style="color:var(--blue)">Immuta (self-hosted on OCP)</div>
+      <div class="dep-plane" style="background:var(--blue-bg);border:1px solid var(--blue-b)">
+        <div class="dep-label" style="color:var(--blue)">&#127968; OCP Control Plane (RBC DC)</div>
+        Immuta Helm chart &middot; PostgreSQL backend &middot; Policy engine &middot; Audit store &middot; Web UI &middot; All inside Canadian DC
+      </div>
+      <div style="text-align:center;font-size:10px;color:var(--muted);padding:3px">&#8595; plugin registration</div>
+      <div class="dep-plane" style="background:#F0F7FF;border:1px solid var(--blue-b)">
+        <div class="dep-label" style="color:var(--blue)">&#127968; On-Prem Engines</div>
+        ImmutaSystemAccessControl on Trino coordinator &middot; Spark cluster policies via bootstrap &middot; Enforcement inline at query time
+      </div>
+      <div class="p p-yes" style="margin-top:8px;font-size:9px">&#10003; OSFI B-10: fully resolved with self-hosted Helm deployment</div>
+    </div>
+
+    <div class="dep-card" style="border-color:var(--green-b)">
+      <div class="dep-title" style="color:#065F46">OPA + Kyuubi (OSS)</div>
+      <div class="dep-plane" style="background:var(--green-bg);border:1px solid var(--green-b)">
+        <div class="dep-label" style="color:#065F46">&#127968; OCP &mdash; OPA Server</div>
+        Policy bundles (Rego) &middot; Authorization API &middot; Decision log &middot; AD/LDAP input data
+      </div>
+      <div style="text-align:center;font-size:10px;color:var(--muted);padding:3px">&#8595; authz API calls</div>
+      <div class="dep-plane" style="background:#F0FDF9;border:1px solid var(--green-b)">
+        <div class="dep-label" style="color:#065F46">&#127968; OCP &mdash; Engines</div>
+        Trino OPA plugin &middot; Kyuubi gateway (Spark RBAC) &middot; UDF layer for column masking
+      </div>
+      <div class="p p-yes" style="margin-top:8px;font-size:9px">&#10003; OSFI B-10: zero concern. All on-prem by design. No vendor involved.</div>
+    </div>
+
+  </div>
+
+  <!-- RECOMMENDATION -->
+  <div class="slabel">RBC Recommendation &mdash; April 2026</div>
+
+  <div class="rec-box" style="border-color:var(--blue-b);background:var(--blue-bg);margin-bottom:12px">
+    <div class="rec-title" style="color:var(--blue)">First Choice: Immuta (self-hosted on OCP)</div>
+    <div class="rec-body" style="color:#1E3A5F">
+      Immuta is the strongest candidate given the current Trust3 AI situation. Its engineering focus has not pivoted &mdash; the January 2026 release was a data security patch update. The September 2025 Trino performance improvement (4.26x) shows active investment in exactly the integration RBC needs most. Self-hosted Helm on OCP resolves the OSFI B-10 concern entirely. The ABAC policy model is more expressive than Ranger RBAC for complex jurisdictional access rules common in Canadian banking regulation.<br/><br/>
+      <strong>The blocker is price.</strong> At ~$5k/user/month for a 150-person data org, this needs Rex and Joey involved before any POC commitment. The price signals enterprise procurement, not a tactical tool evaluation.
+    </div>
+  </div>
+
+  <div class="rec-box" style="border-color:var(--amber-b);background:var(--amber-bg);margin-bottom:12px">
+    <div class="rec-title" style="color:#78350F">Conditional: Trust3 AI (self-hosted, with roadmap validation)</div>
+    <div class="rec-body" style="color:#78350F">
+      Trust3 AI is not disqualified &mdash; the Ranger-based data security platform is still sold and supported. The question is how much engineering investment it receives going forward. Before any procurement decision, RBC needs answers to three specific questions from Trust3 AI:<br/><br/>
+      1. What is the roadmap for Polaris REST catalog schema sync as a supported integration?<br/>
+      2. Who owns the data security product engineering &mdash; and are they separate from the AI governance team?<br/>
+      3. What is the self-hosted deployment SLA and support commitment for on-prem Kubernetes?<br/><br/>
+      Honest answers to these determine whether Trust3 AI is still viable or whether the AI rebrand has effectively orphaned the data security platform.
+    </div>
+  </div>
+
+  <div class="rec-box" style="border-color:var(--green-b);background:var(--green-bg)">
+    <div class="rec-title" style="color:#065F46">Fallback: OPA + Kyuubi (OSS)</div>
+    <div class="rec-body" style="color:#065F46">
+      If both commercial options fail the procurement or roadmap test, OPA + Kyuubi is a credible alternative for the on-prem Trino and Spark engines. Zero vendor risk, zero SaaS, zero lock-in. The gaps &mdash; no Databricks integration, no auto-classification, no self-service workflow, manual policy authoring in Rego &mdash; are real but manageable with engineering investment. The Polaris OPA integration (v1.3) means the catalog and enforcement plane speak to the same policy engine. This path requires staffing a small data security engineering team, not a third-party product.
+    </div>
+  </div>
+
+  <div class="note alert" style="margin-top:14px">
+    <strong>Critical pre-decision action for all three paths:</strong> None of these vendors have a documented, tested integration with Apache Polaris REST catalog as a supported deployment. The specific question &mdash; &ldquo;can your product sync schema and enforce column/row policies against tables served by Polaris REST API?&rdquo; &mdash; needs a direct answer from each vendor before architectural lock-in. This is the most important unresolved integration point in the architecture.
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>Lumina &middot; RBC Enterprise Data &middot; Security Vendor Comparison &middot; April 2026</span>
+  <span>George Chilakos, VP Enterprise Data</span>
+</div>
+
+</body>
+</html>
