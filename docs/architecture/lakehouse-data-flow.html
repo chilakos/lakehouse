@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lakehouse End-to-End Data Flow — RBC Enterprise</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A1628;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC;--white:#FFFFFF;--src:#78350F;--src-bg:#FFFBEB;--src-b:#FDE68A;--raw:#1E3A5F;--raw-bg:#EFF6FF;--raw-b:#BFDBFE;--brz:#7C2D12;--brz-bg:#FFF7ED;--brz-b:#FED7AA;--slv:#1E4D8C;--slv-bg:#EFF6FF;--slv-b:#93C5FD;--gld:#713F12;--gld-bg:#FEFCE8;--gld-b:#FEF08A;--sem:#4C1D95;--sem-bg:#FAF5FF;--sem-b:#DDD6FE;--con:#065F46;--con-bg:#F0FDF4;--con-b:#86EFAC;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);min-height:100vh;}
+.hero{background:var(--navy);padding:44px 32px 36px;}
+.back{font-size:10px;font-family:'DM Mono',monospace;color:#475569;margin-bottom:16px;}
+.back a{color:#94A3B8;text-decoration:none;}
+.hero h1{font-family:'Lora',serif;font-size:28px;font-weight:600;color:#fff;margin-bottom:8px;letter-spacing:-0.3px;}
+.hero p{font-size:12px;color:#94A3B8;max-width:680px;line-height:1.7;}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+.pill{font-size:9px;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.08);color:#94A3B8;border:1px solid rgba(255,255,255,0.1);}
+.canvas{max-width:1200px;margin:0 auto;padding:28px 24px 60px;}
+.rail{border-radius:10px;border:1.5px dashed #FED7AA;background:#FFFBEB;padding:14px 18px;margin-bottom:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+@media(max-width:700px){.rail{grid-template-columns:1fr;}}
+.rt{font-size:10px;font-weight:700;margin-bottom:5px;}
+.rd{font-size:9px;line-height:1.8;}
+.lbl{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:0 0 12px;display:flex;align-items:center;gap:10px;}
+.lbl::after{content:'';flex:1;height:1px;background:var(--line);}
+.flow-wrap{overflow-x:auto;padding-bottom:8px;}
+.flow-inner{display:flex;gap:0;min-width:1020px;}
+.layer{flex:1;display:flex;flex-direction:column;}
+.lh{border-radius:8px 8px 0 0;padding:10px 11px 8px;text-align:center;}
+.ln{font-family:'DM Mono',monospace;font-size:8px;font-weight:500;opacity:0.6;margin-bottom:2px;letter-spacing:0.3px;}
+.lt{font-size:11px;font-weight:700;line-height:1.2;}
+.ls{font-size:8px;opacity:0.65;margin-top:2px;}
+.lb{flex:1;border-radius:0 0 8px 8px;padding:10px 9px;display:flex;flex-direction:column;gap:6px;}
+.arr{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 2px;flex-shrink:0;width:22px;gap:3px;}
+.ap{width:1px;flex:1;background:var(--line);min-height:20px;}
+.ai{font-size:12px;color:#CBD5E1;line-height:1;flex-shrink:0;}
+.al{font-size:7px;font-family:'DM Mono',monospace;color:var(--muted);writing-mode:vertical-rl;transform:rotate(180deg);letter-spacing:0.4px;}
+.zc{border-radius:6px;border:1px solid;padding:7px 9px;background:#fff;}
+.zt{font-size:9px;font-weight:700;margin-bottom:3px;line-height:1.3;}
+.zd{font-size:8px;line-height:1.6;opacity:0.8;}
+.ztag{display:inline-block;font-size:7px;font-family:'DM Mono',monospace;padding:1px 5px;border-radius:3px;margin-top:3px;font-weight:500;}
+.sg{border-radius:6px;padding:7px 9px;margin-bottom:2px;}
+.sgt{font-size:8px;font-weight:700;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.4px;}
+.si{font-size:8px;display:flex;align-items:center;gap:4px;line-height:1.5;}
+.vb{background:var(--navy);color:#94A3B8;font-size:8px;font-family:'DM Mono',monospace;padding:2px 7px;border-radius:3px;display:inline-block;margin-top:3px;}
+.store-bar{background:var(--navy);border-radius:8px;padding:12px 18px;display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:14px;}
+.sb-label{font-size:9px;font-family:'DM Mono',monospace;color:#64748B;font-weight:600;letter-spacing:1px;text-transform:uppercase;flex-shrink:0;}
+.sb-item{font-size:9px;color:#CBD5E1;flex:1;min-width:180px;line-height:1.6;}
+.sb-item strong{color:#E2E8F0;}
+.footer{max-width:1200px;margin:28px auto 0;padding:14px 24px 0;border-top:1px solid var(--line);font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div class="back"><a href="../">&#8592; Lakehouse Hub</a></div>
+  <h1>End-to-End Data Flow</h1>
+  <p>From 300+ enterprise sources through the Iceberg medallion architecture to BI, AI, and analytical consumers. Polaris serves catalog metadata to all engines. Privacera enforces column masking and row-level security at every query boundary.</p>
+  <div class="pills">
+    <span class="pill">300+ sources</span>
+    <span class="pill">Iceberg V2 &middot; Apache Polaris</span>
+    <span class="pill">Raw &rarr; Bronze &rarr; Silver &rarr; Gold</span>
+    <span class="pill">Privacera FGAC</span>
+    <span class="pill">Fabric ADR-010</span>
+    <span class="pill">OpenLineage &middot; BCBS 239</span>
+  </div>
+</div>
+<div class="canvas">
+  <div class="rail">
+    <div><div class="rt" style="color:#9A3412">&#128272; Privacera &mdash; every query boundary</div><div class="rd" style="color:#7C2D12">Column masking &middot; Row-level security &middot; ABAC/RBAC &middot; AD/LDAP sync &middot; Unified audit &rarr; SIEM &middot; Agents: Spark &middot; Trino &middot; Databricks &middot; Fabric DDM/RLS</div></div>
+    <div><div class="rt" style="color:#065F46">&#128203; Apache Polaris &mdash; single REST catalog</div><div class="rd" style="color:#065F46">Iceberg REST spec &middot; Table metadata &middot; Schema evolution &middot; Atomic commits &middot; Credential vending (STS) &rarr; MinIO &middot; Snowflake Open Catalog &middot; Databricks REST</div></div>
+    <div><div class="rt" style="color:#0F766E">&#128205; OpenLineage &mdash; column-level lineage</div><div class="rd" style="color:#134E4A">Spark + Trino emitters &rarr; Marquez &middot; BCBS 239 Principles 2,3,4,6 &middot; End-to-end column provenance from mainframe source to Gold consumer</div></div>
+  </div>
+  <div class="lbl">Data Flow &mdash; Source to Consumer</div>
+  <div class="flow-wrap"><div class="flow-inner">
+
+    <!-- SOURCES -->
+    <div class="layer">
+      <div class="lh" style="background:var(--src-bg);color:var(--src);border:1.5px solid var(--src-b)"><div class="ln">INGESTION</div><div class="lt">300+ Sources</div><div class="ls">Enterprise estate</div></div>
+      <div class="lb" style="background:var(--src-bg);border:1.5px solid var(--src-b);border-top:none">
+        <div class="sg" style="background:#FEF3C7;border:1px solid #FDE68A"><div class="sgt" style="color:#92400E">Core Banking</div><div class="si" style="color:var(--src)">&#127970; Mainframe COBOL/EBCDIC</div><div class="si" style="color:var(--src)">&#128179; Card &amp; payments</div><div class="si" style="color:var(--src)">&#127968; Mortgage &amp; lending</div><div class="si" style="color:var(--src)">&#128202; Teradata FSDM</div></div>
+        <div class="sg" style="background:#FFFBEB;border:1px solid #FDE68A"><div class="sgt" style="color:#92400E">Enterprise Apps</div><div class="si" style="color:var(--src)">&#9881;&#65039; Oracle EBS / SAP</div><div class="si" style="color:var(--src)">&#128101; CRM / Salesforce</div><div class="si" style="color:var(--src)">&#127963;&#65039; Risk / Treasury / ALM</div></div>
+        <div class="sg" style="background:#FFFBEB;border:1px solid #FDE68A"><div class="sgt" style="color:#92400E">Streaming &amp; External</div><div class="si" style="color:var(--src)">&#9889; Kafka event streams</div><div class="si" style="color:var(--src)">&#128268; REST APIs (3rd party)</div><div class="si" style="color:var(--src)">&#128241; Digital channels</div></div>
+        <div class="vb">~300+ source systems</div>
+      </div>
+    </div>
+    <div class="arr"><div class="ap"></div><div class="ai">&#8594;</div><div class="al">CDC &middot; batch &middot; stream</div><div class="ap"></div></div>
+
+    <!-- RAW -->
+    <div class="layer">
+      <div class="lh" style="background:var(--raw-bg);color:var(--raw);border:1.5px solid var(--raw-b)"><div class="ln">LAYER 0</div><div class="lt">Raw Zone</div><div class="ls">Immutable landing</div></div>
+      <div class="lb" style="background:var(--raw-bg);border:1.5px solid var(--raw-b);border-top:none">
+        <div class="zc" style="border-color:var(--raw-b)"><div class="zt" style="color:var(--raw)">Immutable ingest zone</div><div class="zd">Raw files as-received. No transformation. EBCDIC decoded, Parquet serialised. Partitioned by source + date.</div><div class="ztag" style="background:#DBEAFE;color:#1E40AF">source-of-record</div></div>
+        <div class="zc" style="border-color:var(--raw-b)"><div class="zt" style="color:var(--raw)">Polaris schema registration</div><div class="zd">Source schemas registered as Iceberg tables in Polaris namespace. No FSDM mapping yet.</div><div class="ztag" style="background:#DBEAFE;color:#1E40AF">Polaris catalog</div></div>
+        <div class="zc" style="border-color:var(--raw-b)"><div class="zt" style="color:var(--raw)">7-year WORM retention</div><div class="zd">MinIO Object Lock. Raw data never deleted. OSFI B-13 Principle 10 forensic access.</div><div class="ztag" style="background:#DBEAFE;color:#1E40AF">OSFI B-13</div></div>
+      </div>
+    </div>
+    <div class="arr"><div class="ap"></div><div class="ai">&#8594;</div><div class="al">Python pipelines</div><div class="ap"></div></div>
+
+    <!-- BRONZE -->
+    <div class="layer">
+      <div class="lh" style="background:var(--brz-bg);color:var(--brz);border:1.5px solid var(--brz-b)"><div class="ln">LAYER 1</div><div class="lt">Bronze</div><div class="ls">Iceberg V2 &middot; cleansed</div></div>
+      <div class="lb" style="background:var(--brz-bg);border:1.5px solid var(--brz-b);border-top:none">
+        <div class="zc" style="border-color:var(--brz-b)"><div class="zt" style="color:var(--brz)">Iceberg V2 tables</div><div class="zd">Source-aligned. Type normalisation, null handling, dedup. One table per source entity.</div><div class="ztag" style="background:#FFEDD5;color:#C2410C">Iceberg V2</div></div>
+        <div class="zc" style="border-color:var(--brz-b)"><div class="zt" style="color:var(--brz)">Soda quality gates</div><div class="zd">Freshness, completeness, referential integrity. Failed checks block Silver promotion.</div><div class="ztag" style="background:#FFEDD5;color:#C2410C">quality gate</div></div>
+        <div class="zc" style="border-color:var(--brz-b)"><div class="zt" style="color:var(--brz)">PII auto-classification</div><div class="zd">Privacera classifiers scan new columns. PII/PCI tags auto-applied. Default-deny until approved.</div><div class="ztag" style="background:#FFEDD5;color:#C2410C">Privacera</div></div>
+      </div>
+    </div>
+    <div class="arr"><div class="ap"></div><div class="ai">&#8594;</div><div class="al">FSDM mapping</div><div class="ap"></div></div>
+
+    <!-- SILVER -->
+    <div class="layer">
+      <div class="lh" style="background:var(--slv-bg);color:var(--slv);border:1.5px solid var(--slv-b)"><div class="ln">LAYER 2</div><div class="lt">Silver</div><div class="ls">FSDM &middot; conformed</div></div>
+      <div class="lb" style="background:var(--slv-bg);border:1.5px solid var(--slv-b);border-top:none">
+        <div class="zc" style="border-color:var(--slv-b)"><div class="zt" style="color:var(--slv)">FSDM-aligned entities</div><div class="zd">Financial Services Data Model. Account, Customer, Product, Transaction, Party. SCD Type 2 history.</div><div class="ztag" style="background:#DBEAFE;color:#1D4ED8">FSDM canonical</div></div>
+        <div class="zc" style="border-color:var(--slv-b)"><div class="zt" style="color:var(--slv)">Customer 360 joins</div><div class="zd">Cross-source identity resolution. Unified customer key across mainframe, CRM, digital channels.</div><div class="ztag" style="background:#DBEAFE;color:#1D4ED8">entity resolution</div></div>
+        <div class="zc" style="border-color:var(--slv-b)"><div class="zt" style="color:var(--slv)">Column-level lineage</div><div class="zd">OpenLineage captures every transform. Silver column traces to raw source &mdash; BCBS 239 compliance.</div><div class="ztag" style="background:#DBEAFE;color:#1D4ED8">BCBS 239</div></div>
+      </div>
+    </div>
+    <div class="arr"><div class="ap"></div><div class="ai">&#8594;</div><div class="al">aggregations</div><div class="ap"></div></div>
+
+    <!-- GOLD -->
+    <div class="layer">
+      <div class="lh" style="background:var(--gld-bg);color:var(--gld);border:1.5px solid var(--gld-b)"><div class="ln">LAYER 3</div><div class="lt">Gold</div><div class="ls">Domain aggregates</div></div>
+      <div class="lb" style="background:var(--gld-bg);border:1.5px solid var(--gld-b);border-top:none">
+        <div class="zc" style="border-color:var(--gld-b)"><div class="zt" style="color:var(--gld)">Domain marts</div><div class="zd">Risk &middot; Finance &middot; Retail Banking &middot; Capital Markets &middot; Wealth. Business-ready aggregates per domain.</div><div class="ztag" style="background:#FEF9C3;color:#713F12">domain marts</div></div>
+        <div class="zc" style="border-color:var(--gld-b)"><div class="zt" style="color:var(--gld)">Two representations (ADR-010)</div><div class="zd"><strong>Iceberg V2</strong> on-prem &rarr; compute (Trino, Databricks). <strong>Delta copy</strong> in Fabric &rarr; BI/AI surface.</div><div class="ztag" style="background:#FEF9C3;color:#713F12">ADR-010</div></div>
+        <div class="zc" style="border-color:var(--gld-b)"><div class="zt" style="color:var(--gld)">Regulatory snapshots</div><div class="zd">Month-end Iceberg snapshot tags preserved forever. Any historical state reproducible for OSFI / BCBS 239.</div><div class="ztag" style="background:#FEF9C3;color:#713F12">immutable tags</div></div>
+      </div>
+    </div>
+    <div class="arr"><div class="ap"></div><div class="ai">&#8594;</div><div class="al">semantic layer</div><div class="ap"></div></div>
+
+    <!-- SEMANTIC -->
+    <div class="layer">
+      <div class="lh" style="background:var(--sem-bg);color:var(--sem);border:1.5px solid var(--sem-b)"><div class="ln">LAYER 4</div><div class="lt">Semantic Layer</div><div class="ls">BI &middot; AI &middot; agents</div></div>
+      <div class="lb" style="background:var(--sem-bg);border:1.5px solid var(--sem-b);border-top:none">
+        <div class="zc" style="border-color:var(--sem-b)"><div class="zt" style="color:var(--sem)">Fabric Semantic Model</div><div class="zd">Power BI Import mode. Business KPIs, metrics, measures defined once. NL-to-DAX for RBC Assist. T-SQL DDM enforced.</div><div class="ztag" style="background:#EDE9FE;color:#5B21B6">human BI &middot; DDM active</div></div>
+        <div class="zc" style="border-color:var(--sem-b)"><div class="zt" style="color:var(--sem)">FastAPI Trust Boundary</div><div class="zd">Python gateway for AI/agent consumers. Certified parameterised queries only. Direct Gold access blocked. (ADR-009)</div><div class="ztag" style="background:#EDE9FE;color:#5B21B6">AI trust boundary</div></div>
+        <div class="zc" style="border-color:var(--sem-b)"><div class="zt" style="color:var(--sem)">RAG schema linking</div><div class="zd">Vector-embedded schema metadata. NL queries retrieve relevant tables at inference. Scales to 10k+ tables. (ADR-006)</div><div class="ztag" style="background:#EDE9FE;color:#5B21B6">ADR-006</div></div>
+      </div>
+    </div>
+    <div class="arr"><div class="ap"></div><div class="ai">&#8594;</div><div class="al">consumers</div><div class="ap"></div></div>
+
+    <!-- CONSUMPTION -->
+    <div class="layer">
+      <div class="lh" style="background:var(--con-bg);color:var(--con);border:1.5px solid var(--con-b)"><div class="ln">LAYER 5</div><div class="lt">Consumers</div><div class="ls">BI &middot; AI &middot; analytics</div></div>
+      <div class="lb" style="background:var(--con-bg);border:1.5px solid var(--con-b);border-top:none">
+        <div class="zc" style="border-color:var(--con-b)"><div class="zt" style="color:var(--con)">&#128311; Power BI</div><div class="zd">Import &rarr; Fabric SQL endpoint &rarr; T-SQL DDM enforced. Self-service analytics. Certified datasets.</div><div class="ztag" style="background:#D1FAE5;color:#065F46">DDM active &middot; ADR-010</div></div>
+        <div class="zc" style="border-color:var(--con-b)"><div class="zt" style="color:var(--con)">&#128202; Tableau</div><div class="zd">Complex visualisations. Trino JDBC &rarr; Privacera FGAC &rarr; Polaris catalog &rarr; MinIO storage.</div><div class="ztag" style="background:#D1FAE5;color:#065F46">Privacera enforced</div></div>
+        <div class="zc" style="border-color:var(--con-b)"><div class="zt" style="color:var(--con)">&#129302; RBC Assist (AI)</div><div class="zd">Azure AI Foundry. NL &rarr; Fabric DAX or FastAPI certified query. OSFI B-13 guardrails.</div><div class="ztag" style="background:#D1FAE5;color:#065F46">certified queries only</div></div>
+        <div class="zc" style="border-color:var(--con-b)"><div class="zt" style="color:var(--con)">&#9729;&#65039; Databricks / Snowflake</div><div class="zd">Cloud burst via PrivateLink &rarr; Polaris REST. Data stays on-prem. Compute bursts to cloud.</div><div class="ztag" style="background:#D1FAE5;color:#065F46">Polaris REST &middot; data on-prem</div></div>
+        <div class="zc" style="border-color:var(--con-b)"><div class="zt" style="color:var(--con)">&#128269; Trino (direct SQL)</div><div class="zd">Risk, Finance, Data Science ad-hoc SQL &rarr; Privacera FGAC &rarr; Polaris &rarr; MinIO Parquet.</div><div class="ztag" style="background:#D1FAE5;color:#065F46">FGAC at query time</div></div>
+      </div>
+    </div>
+
+  </div></div>
+
+  <div class="store-bar">
+    <div class="sb-label">Storage &middot; All Layers</div>
+    <div class="sb-item">&#129523; <strong>MinIO AIStor</strong> &mdash; S3-compatible on-prem &middot; AES-256 SSE-KMS &middot; Object Lock (WORM) &middot; STS credential vending via Polaris &middot; All Iceberg Parquet &middot; Canadian DC</div>
+    <div class="sb-item">&#128505;&#65039; <strong>HashiCorp Vault</strong> &mdash; KMS key management &middot; Secrets for all services &middot; Short-lived STS tokens &middot; Encryption key rotation</div>
+    <div class="sb-item">&#128202; <strong>SIEM (Splunk)</strong> &mdash; All Privacera audit logs &middot; PCI 10.x automated review &middot; 7yr WORM &middot; Anomaly alerting &middot; OSFI B-13 forensics</div>
+  </div>
+</div>
+<div class="footer"><span>Lumina &middot; RBC Enterprise Data &middot; End-to-End Data Flow &middot; April 2026</span><span>George Chilakos, VP Enterprise Data</span></div>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Architecture Decision Records — RBC Lakehouse</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --navy: #0A1628; --blue: #1E4D8C; --line: #E2E8F0;
+  --muted: #64748B; --text: #1E293B; --soft: #F8FAFC; --white: #FFFFFF;
+  --accepted: #059669; --draft: #D97706; --superseded: #64748B; --proposed: #2563EB;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(--text); padding: 0 0 60px; }
+
+.hero { background: var(--navy); padding: 44px 32px 36px; }
+.back { font-size: 10px; font-family: 'DM Mono', monospace; color: #475569; margin-bottom: 16px; }
+.back a { color: #94A3B8; text-decoration: none; }
+.back a:hover { color: #E2E8F0; }
+.hero h1 { font-family: 'Lora', serif; font-size: 28px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+.hero p { font-size: 12px; color: #94A3B8; max-width: 520px; line-height: 1.7; }
+
+.main { max-width: 860px; margin: 0 auto; padding: 36px 24px; }
+
+.legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--muted); }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.adr-list { display: flex; flex-direction: column; gap: 10px; }
+
+.adr-card {
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 18px 22px;
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  transition: all 0.15s ease;
+  position: relative;
+  overflow: hidden;
+}
+.adr-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+  border-radius: 2px 0 0 2px;
+}
+.adr-card.accepted::before  { background: var(--accepted); }
+.adr-card.draft::before     { background: var(--draft); }
+.adr-card.superseded::before{ background: var(--superseded); }
+.adr-card.proposed::before  { background: var(--proposed); }
+
+.adr-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.07); transform: translateY(-1px); border-color: #BFDBFE; }
+
+.adr-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 500;
+  color: #CBD5E1;
+  flex-shrink: 0;
+  width: 48px;
+  text-align: right;
+  line-height: 1;
+  margin-top: 2px;
+}
+.adr-body { flex: 1; }
+.adr-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 5px; line-height: 1.4; }
+.adr-summary { font-size: 11px; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
+.adr-footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.status-pill {
+  font-size: 9px; font-weight: 600; font-family: 'DM Mono', monospace;
+  padding: 2px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: 0.4px;
+}
+.status-accepted  { background: #D1FAE5; color: #065F46; }
+.status-draft     { background: #FEF3C7; color: #92400E; }
+.status-superseded{ background: #F1F5F9; color: #475569; }
+.status-proposed  { background: #DBEAFE; color: #1E40AF; }
+.adr-date { font-size: 9px; font-family: 'DM Mono', monospace; color: #CBD5E1; }
+.adr-tag  { font-size: 9px; font-family: 'DM Mono', monospace; background: #F1F5F9; color: #64748B; padding: 2px 7px; border-radius: 4px; }
+
+.adr-md-link {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: #94A3B8;
+  text-decoration: none;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  transition: all 0.1s;
+}
+.adr-md-link:hover { background: #F1F5F9; color: var(--text); }
+
+.footer { max-width:860px; margin:32px auto 0; padding:16px 24px 0; border-top:1px solid var(--line); font-size:10px; font-family:'DM Mono',monospace; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="back"><a href="../">← Lakehouse Hub</a></div>
+  <h1>Architecture Decision Records</h1>
+  <p>Formal records of significant architectural decisions for the RBC Enterprise Lakehouse. Each ADR captures the context, decision, and consequences.</p>
+</div>
+
+<div class="main">
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--accepted)"></div> Accepted</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--draft)"></div> Draft</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--superseded)"></div> Superseded</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--proposed)"></div> Proposed</div>
+  </div>
+
+  <div class="adr-list">
+
+    <a class="adr-card draft" href="001-teradata-otf-nessie-feasibility.md">
+      <div class="adr-num">001</div>
+      <div class="adr-body">
+        <div class="adr-title">Teradata OTF + Nessie REST Catalog Feasibility</div>
+        <div class="adr-summary">Feasibility assessment of Teradata Open Table Format with Nessie as the REST catalog backend. Informed ADR-003 and the subsequent decision to remove Teradata OTF from the catalog architecture.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-draft">Draft</span>
+          <span class="adr-tag">Teradata OTF</span>
+          <span class="adr-tag">Nessie</span>
+          <span class="adr-date">Mar 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card accepted" href="002-trino-as-mandatory-query-gateway.md">
+      <div class="adr-num">002</div>
+      <div class="adr-body">
+        <div class="adr-title">Trino as the Mandatory Query Gateway for All Iceberg Access</div>
+        <div class="adr-summary">All Iceberg table access must route through Trino as the federated SQL gateway. Direct engine access to storage is prohibited for user-facing queries. Establishes Trino as the primary on-prem interactive analytics engine.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-accepted">Accepted</span>
+          <span class="adr-tag">Trino</span>
+          <span class="adr-tag">query gateway</span>
+          <span class="adr-date">Mar 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card accepted" href="003-teradata-decoupling-strategy.md">
+      <div class="adr-num">003</div>
+      <div class="adr-body">
+        <div class="adr-title">Teradata Decoupling Strategy — Dual-Write Migration to Iceberg</div>
+        <div class="adr-summary">Strategy for decoupling from Teradata via dual-write migration pattern. Iceberg tables shadow Teradata tables; consumers migrate incrementally. Teradata OTF removed from catalog dependency.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-accepted">Accepted</span>
+          <span class="adr-tag">Teradata</span>
+          <span class="adr-tag">migration</span>
+          <span class="adr-tag">Iceberg</span>
+          <span class="adr-date">Mar 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card accepted" href="004-trino-workload-isolation.md">
+      <div class="adr-num">004</div>
+      <div class="adr-body">
+        <div class="adr-title">Trino Workload Isolation via Resource Groups</div>
+        <div class="adr-summary">Trino resource groups partition query workloads into priority lanes — ETL, interactive analytics, AI/ML, and reporting — preventing runaway queries from starving critical workloads. Defines SLAs per lane.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-accepted">Accepted</span>
+          <span class="adr-tag">Trino</span>
+          <span class="adr-tag">resource groups</span>
+          <span class="adr-date">Mar 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card accepted" href="005-no-spark-trino-python-instead.md">
+      <div class="adr-num">005</div>
+      <div class="adr-body">
+        <div class="adr-title">Use Trino + Python for Compute — No Apache Spark</div>
+        <div class="adr-summary">Python is the transformation language for all ETL/ELT pipelines (not dbt, not Spark DAGs). Trino handles all SQL compute. Spark is available for cloud burst ML workloads on Databricks only.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-accepted">Accepted</span>
+          <span class="adr-tag">Python</span>
+          <span class="adr-tag">Trino</span>
+          <span class="adr-tag">no Spark on-prem</span>
+          <span class="adr-date">Mar 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card accepted" href="006-ai-semantic-layer-scaling.md">
+      <div class="adr-num">006</div>
+      <div class="adr-body">
+        <div class="adr-title">Retrieval-Augmented Schema Linking for NL-to-SQL at Scale</div>
+        <div class="adr-summary">RAG-based schema linking resolves the NL-to-SQL scalability problem at tens of thousands of tables. Vector-embedded schema metadata retrieved at inference time — no full schema in prompt context.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-accepted">Accepted</span>
+          <span class="adr-tag">NL-to-SQL</span>
+          <span class="adr-tag">RAG</span>
+          <span class="adr-tag">AI semantic layer</span>
+          <span class="adr-date">Mar 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card accepted" href="007-governance-automation-pipeline.md">
+      <div class="adr-num">007</div>
+      <div class="adr-body">
+        <div class="adr-title">Automated Governance Pipeline — Classification to Ranger TagREST</div>
+        <div class="adr-summary">Automated pipeline: Privacera classifiers scan new tables → PII/PCI tags applied → Privacera policy engine propagates masking rules. No manual policy authoring for standard classification tiers.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-accepted">Accepted</span>
+          <span class="adr-tag">Privacera</span>
+          <span class="adr-tag">governance automation</span>
+          <span class="adr-date">Mar 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card superseded" href="008-onelake-evaluation.md">
+      <div class="adr-num">008</div>
+      <div class="adr-body">
+        <div class="adr-title">Microsoft Fabric OneLake — Shortcuts and XTable Not Adopted</div>
+        <div class="adr-summary">OneLake Shortcuts and XTable (Delta↔Iceberg conversion) evaluated and rejected. Shortcuts create a dependent path that bypasses Polaris credential vending. XTable conversion adds latency and format mismatch risk. Superseded by ADR-010.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-superseded">Superseded</span>
+          <span class="adr-tag">Fabric</span>
+          <span class="adr-tag">OneLake</span>
+          <span class="adr-tag">→ see ADR-010</span>
+          <span class="adr-date">Mar 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card accepted" href="009-ai-data-hub-architecture.md">
+      <div class="adr-num">009</div>
+      <div class="adr-body">
+        <div class="adr-title">AI Data Hub — RAG-Ready Data Serving Layer for the Lakehouse</div>
+        <div class="adr-summary">Gold layer tables exposed to AI consumers via a Python FastAPI trust boundary enforcing certified query patterns. Direct Gold access prohibited for agent workloads — all AI queries must pass through the certified gateway.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-accepted">Accepted</span>
+          <span class="adr-tag">AI hub</span>
+          <span class="adr-tag">FastAPI</span>
+          <span class="adr-tag">trust boundary</span>
+          <span class="adr-date">Mar 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card accepted" href="010-fabric-import-semantic-layer.md">
+      <div class="adr-num">010</div>
+      <div class="adr-body">
+        <div class="adr-title">Microsoft Fabric Import Semantic Model as BI and AI Surface Layer</div>
+        <div class="adr-summary">Fabric Import mode (not DirectLake, not Shortcuts) is the correct BI/AI surface. Gold exists in two representations: Iceberg V2 on-prem (compute plane) and Delta copy in Fabric (BI/AI surface). Import mode is mandatory for PII/PCI tables — DirectLake bypasses T-SQL DDM enforcement.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-accepted">Accepted</span>
+          <span class="adr-tag">Fabric</span>
+          <span class="adr-tag">Import mode</span>
+          <span class="adr-tag">ADR-010</span>
+          <span class="adr-tag">DDM enforced</span>
+          <span class="adr-date">Apr 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Lumina · RBC Enterprise Data · 10 ADRs · ADR-001 → ADR-010</span>
+  <span>George Chilakos, VP Enterprise Data · April 2026</span>
+</div>
+
+</body>
+</html>
