@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Trust3 AI vs Immuta — Deep Dive SWOT</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A1628;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC;--white:#FFFFFF;
+--t3:#7C2D12;--t3-bg:#FFF7ED;--t3-b:#FED7AA;
+--im:#1E4D8C;--im-bg:#EFF6FF;--im-b:#BFDBFE;
+--s:#059669;--s-bg:#D1FAE5;--w:#DC2626;--w-bg:#FEE2E2;--o:#D97706;--o-bg:#FEF3C7;--t:#7C3AED;--t-bg:#EDE9FE;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);padding-bottom:60px;}
+.hero{background:var(--navy);padding:40px 32px 32px;}
+.back{font-size:10px;font-family:'DM Mono',monospace;color:#475569;margin-bottom:14px;}
+.back a{color:#94A3B8;text-decoration:none;}
+.hero h1{font-family:'Lora',serif;font-size:26px;font-weight:600;color:#fff;margin-bottom:8px;}
+.hero p{font-size:12px;color:#94A3B8;max-width:640px;line-height:1.7;}
+.hero-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.hpill{font-size:9px;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:#94A3B8;}
+.hpill.warn{background:rgba(220,38,38,0.15);color:#FCA5A5;border-color:rgba(252,165,165,0.3);}
+
+.tabs{display:flex;gap:6px;max-width:1080px;margin:0 auto;padding:20px 24px 0;flex-wrap:wrap;}
+.tab{padding:7px 18px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:#E0E7EF;color:#64748B;transition:all 0.15s;}
+.tab.active{background:var(--navy);color:#fff;}
+.panel{display:none;}.panel.active{display:block;}
+
+.canvas{max-width:1080px;margin:0 auto;padding:20px 24px 0;}
+.slabel{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin:20px 0 12px;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--line);}
+.note{border-radius:8px;padding:11px 14px;font-size:10px;line-height:1.7;margin-bottom:14px;}
+.note.warn{background:#FFF7ED;border:1.5px solid #FED7AA;color:#7C2D12;}
+.note.info{background:var(--im-bg);border:1.5px solid var(--im-b);color:#1E3A5F;}
+.note.tip{background:#F0FDF4;border:1.5px solid #BBF7D0;color:#065F46;}
+.note.key{background:#0A1628;border:1.5px solid #1E4D8C;color:#E2E8F0;}
+
+/* UNIQUE CAPABILITIES GRID */
+.unique-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+@media(max-width:600px){.unique-grid{grid-template-columns:1fr;}}
+.unique-card{border-radius:10px;border:2px solid;padding:16px 18px;}
+.uc-title{font-size:12px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:7px;}
+.uc-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:8px;font-size:10px;line-height:1.7;}
+.uc-icon{flex-shrink:0;width:18px;height:18px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;color:#fff;margin-top:1px;}
+
+/* SWOT */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+@media(max-width:560px){.swot-grid{grid-template-columns:1fr;}}
+.sq{border-radius:9px;padding:14px 16px;border:1.5px solid;}
+.sq.S{border-color:#86EFAC;background:var(--s-bg);}
+.sq.W{border-color:#FCA5A5;background:var(--w-bg);}
+.sq.O{border-color:#FDE68A;background:var(--o-bg);}
+.sq.T{border-color:#C4B5FD;background:var(--t-bg);}
+.sq-title{font-size:11px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.sq-letter{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0;}
+.S .sq-letter{background:#059669;}.W .sq-letter{background:#DC2626;}.O .sq-letter{background:#D97706;}.T .sq-letter{background:#7C3AED;}
+.sq ul{padding-left:14px;}.sq li{font-size:10px;line-height:1.85;}
+.sq li.highlight{font-weight:600;}
+
+/* COMPARISON TABLE */
+.ctable{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:14px;}
+.ctable th{padding:9px 12px;text-align:left;font-weight:700;}
+.ctable td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6;}
+.ctable tr:nth-child(even) td{background:#F8FAFC;}
+.ctable tr:last-child td{border-bottom:none;}
+.ch{background:var(--navy);color:#fff;}
+.ch-t3{background:var(--t3);color:#fff;}
+.ch-im{background:var(--im);color:#fff;}
+.cat-row td{background:#F1F5F9!important;font-weight:700;font-size:9px;color:var(--muted);padding:5px 12px;letter-spacing:0.5px;text-transform:uppercase;}
+.p{display:inline-block;font-size:8px;font-weight:700;padding:2px 6px;border-radius:4px;}
+.p-yes{background:#D1FAE5;color:#065F46;}.p-no{background:#FEE2E2;color:#991B1B;}.p-part{background:#FEF3C7;color:#92400E;}
+.p-t3{background:#FFF7ED;color:#7C2D12;border:1px solid #FED7AA;}
+.p-im{background:var(--im-bg);color:var(--im);border:1px solid var(--im-b);}
+
+/* VERDICT */
+.verdict{border-radius:10px;padding:20px 22px;border:2px solid;margin-bottom:12px;}
+.verdict-title{font-family:'Lora',serif;font-size:16px;font-weight:600;margin-bottom:8px;}
+.verdict-body{font-size:11px;line-height:1.8;}
+
+.footer{max-width:1080px;margin:24px auto 0;padding:14px 24px 0;border-top:1px solid var(--line);font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div style="max-width:1080px;margin:0 auto"><div class="back"><a href="../">&#8592; Lakehouse Hub</a></div></div>
+  <h1>Trust3 AI vs Immuta &mdash; Deep Dive SWOT</h1>
+  <p>Head-to-head analysis of the two commercial data security candidates for RBC. Goes beyond the three-way summary to surface the genuine capability gaps — things each product does that the other genuinely cannot.</p>
+  <div class="hero-pills">
+    <span class="hpill warn">&#9888; Trust3 AI: rebranded Mar 9 2026 &mdash; AI pivot</span>
+    <span class="hpill">Trust3 AI: Ranger-based &middot; 50+ data sources &middot; field encryption</span>
+    <span class="hpill">Immuta: ABAC-first &middot; v2025.1.10 Jan 2026 &middot; 4.26x Trino speedup</span>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="show('unique',this)">What Each Does Uniquely</button>
+  <button class="tab" style="color:var(--t3)" onclick="show('t3',this)">Trust3 AI SWOT</button>
+  <button class="tab" style="color:var(--im)" onclick="show('im',this)">Immuta SWOT</button>
+  <button class="tab" onclick="show('compare',this)">Head-to-Head</button>
+  <button class="tab" onclick="show('verdict',this)">RBC Verdict</button>
+</div>
+
+<!-- UNIQUE CAPABILITIES -->
+<div class="panel active canvas" id="panel-unique">
+
+  <div class="note key">
+    <strong>The core insight:</strong> These are not equivalent products with different names. They have meaningfully different capability profiles. Immuta wins on policy expressiveness and Trino performance. Trust3 AI wins on breadth, legacy coverage, and encryption depth. The right choice depends on which gaps matter most for RBC.
+  </div>
+
+  <div class="slabel">Things Trust3 AI (Privacera) does that Immuta genuinely cannot</div>
+  <div class="unique-card" style="border-color:var(--t3-b);background:var(--t3-bg);margin-bottom:14px">
+    <div class="uc-title" style="color:var(--t3)">&#128272; Trust3 AI exclusive capabilities</div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--t3)">&#128274;</div>
+      <div><strong>Field-level encryption with integrated KMS (Ranger KMS)</strong><br/>
+      Privacera encrypts at the column, row, field, or attribute level &mdash; not just masking. Authorized users get automatic decryption at query time via protect/unprotect UDFs. Immuta does dynamic masking and anonymization but has no integrated encryption-at-rest with KMS. For RBC&rsquo;s PCI DSS requirements on card data, this is a material gap &mdash; masking satisfies display requirements, encryption satisfies storage requirements. Privacera does both from one platform.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--t3)">&#129518;</div>
+      <div><strong>Legacy Hadoop ecosystem coverage: Hive, HDFS, HBase, Kafka, Knox</strong><br/>
+      Ranger plugins exist for every Hadoop-era service. Immuta has no Hive, HDFS, or HBase integration. If RBC has any remaining Cloudera/Hive data, Trust3 AI provides a single policy plane across legacy AND modern. Immuta requires you to have already migrated off legacy before it covers your estate.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--t3)">&#9875;</div>
+      <div><strong>Kafka topic-level access control</strong><br/>
+      Ranger covers Kafka natively &mdash; topic-level permissions, audit of stream consumers. Immuta has no Kafka integration. For RBC&rsquo;s streaming ingest (Kafka event streams to Raw zone), only Trust3 AI gives unified governance across both the stream and the lake.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--t3)">&#128260;</div>
+      <div><strong>Nested AND/OR policy conditions</strong><br/>
+      Trust3 AI supports nested conditional logic. Immuta Data Access Policies cannot combine AND and OR in a single statement &mdash; a policy like <code style="font-size:9px;background:#FEF3C7;padding:1px 4px;border-radius:3px">Country = CA AND (Classification = PCI OR Classification = PII)</code> cannot be expressed in Immuta. In a Canadian bank with complex jurisdictional rules, this is a real constraint.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--t3)">&#128203;</div>
+      <div><strong>50+ native data source integrations</strong><br/>
+      Immuta focuses on ~10 modern platforms (Snowflake, Databricks, Starburst, Trino, Redshift, BigQuery, Synapse). Trust3 AI covers 50+ including legacy RDBMS, data virtualisation tools like Dremio, streaming (Kafka), and cloud-managed services. Broader estate coverage from a single control plane.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--t3)">&#128736;&#65039;</div>
+      <div><strong>Policy migration from existing Ranger deployments</strong><br/>
+      If RBC has any existing Cloudera/Ranger policies, Trust3 AI can import and extend them. Zero policy rework. Immuta requires rebuilding from scratch in its DSL &mdash; an often underestimated migration cost.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--t3)">&#129302;</div>
+      <div><strong>AI agent governance (PAIG / Trust3 AI platform)</strong><br/>
+      Trust3 AI now uniquely covers LLM guardrails, AI agent access control, Trustscore risk ratings, and EU AI Act compliance tooling. Immuta has no AI governance capability. For RBC Assist AI chatbot governance, only Trust3 AI provides integrated data + AI policy enforcement from a single platform.</div>
+    </div>
+  </div>
+
+  <div class="slabel">Things Immuta does that Trust3 AI genuinely cannot</div>
+  <div class="unique-card" style="border-color:var(--im-b);background:var(--im-bg);margin-bottom:14px">
+    <div class="uc-title" style="color:var(--im)">&#127919; Immuta exclusive capabilities</div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--im)">&#127919;</div>
+      <div><strong>Purpose-based access control (subscription model)</strong><br/>
+      Immuta&rsquo;s subscription model requires users to declare the <em>purpose</em> of data access before being granted it. A policy can say &ldquo;this PII data may be accessed for fraud investigation but not for marketing.&rdquo; When the purpose expires, access is automatically revoked. This is the most differentiated capability Immuta has &mdash; and directly relevant to OSFI B-13 Principle 9 (data usage accountability). Trust3 AI has no equivalent.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--im)">&#128274;</div>
+      <div><strong>Privacy-Enhancing Technologies (PETs): differential privacy, k-anonymisation</strong><br/>
+      Immuta ships differential privacy and k-anonymisation as built-in policy types. You can publish a dataset that is mathematically privacy-preserving rather than masked. Trust3 AI&rsquo;s approach is dynamic masking only &mdash; it does not implement PET-based anonymisation. For RBC&rsquo;s data science teams sharing PII with model training workflows, PETs are a meaningful capability.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--im)">&#9889;</div>
+      <div><strong>4.26&times; faster Trino policy enforcement</strong><br/>
+      Immuta&rsquo;s <code style="font-size:9px;background:#DBEAFE;padding:1px 4px;border-radius:3px">ImmutaSystemAccessControl</code> is purpose-built for Trino. In September 2025 they refactored the evaluation path and cut response times 4.26&times; (7.75&times; at p95). Ranger&rsquo;s Trino plugin was not built specifically for Trino and adds more query overhead. For interactive analytics at RBC scale, this performance gap is observable.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--im)">&#128203;</div>
+      <div><strong>Project-based temporary data access</strong><br/>
+      Immuta&rsquo;s project concept lets you create a temporary, purpose-limited data view for a specific analytical project &mdash; e.g. a 90-day window for a regulatory review project with automatic expiry. This is unique to Immuta. Trust3 AI has time-limited access but not the project-scoped data view abstraction.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--im)">&#128202;</div>
+      <div><strong>Sensitivity classification framework (tags as policy drivers)</strong><br/>
+      Immuta&rsquo;s classification taxonomy feeds directly into policy. A tag of <code style="font-size:9px;background:#DBEAFE;padding:1px 4px;border-radius:3px">Privacy.PCI.CardNumber</code> automatically applies the masking policy without a policy author needing to know which columns are affected. Trust3 AI requires more explicit policy authoring against specific columns/tables even when using tag-based access control.</div>
+    </div>
+
+    <div class="uc-item">
+      <div class="uc-icon" style="background:var(--im)">&#127968;</div>
+      <div><strong>Snowflake Iceberg table support (v2024.3 GA)</strong><br/>
+      Immuta applies fine-grained access controls to Snowflake Iceberg tables directly &mdash; a critical path for RBC&rsquo;s cloud burst to Snowflake Open Catalog. Trust3 AI&rsquo;s Snowflake integration exists but is documented for standard Snowflake tables; Iceberg table support via Polaris REST is unconfirmed.</div>
+    </div>
+  </div>
+
+  <div class="note tip">
+    <strong>The honest summary:</strong> Trust3 AI is broader &mdash; legacy Hadoop, Kafka, field encryption, 50+ sources, AI governance. Immuta is deeper and more modern &mdash; purpose-based access, PETs, faster Trino, project scoping, better Iceberg path. For a bank migrating from a legacy Cloudera estate with Kafka streams and PCI encryption requirements, Trust3 AI&rsquo;s breadth matters. For a modern Iceberg-first lakehouse with sophisticated Trino analytics and data science, Immuta&rsquo;s depth matters. RBC sits in the middle of this &mdash; which is why this decision is genuinely hard.
+  </div>
+
+</div>
+
+<!-- TRUST3 AI SWOT -->
+<div class="panel canvas" id="panel-t3">
+  <div style="background:var(--t3-bg);border:2px solid var(--t3-b);border-radius:10px;padding:14px 18px;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:800;color:var(--t3);margin-bottom:4px">Trust3 AI (formerly Privacera)</div>
+    <div style="font-size:10px;color:#78350F;line-height:1.7">Apache Ranger engine &middot; 50+ data sources &middot; field encryption &middot; AI governance (PAIG) &middot; Rebranded Mar 9 2026 &middot; Last funding: Series B Mar 2021 ($63.5M total)</div>
+  </div>
+  <div class="swot-grid">
+    <div class="sq S">
+      <div class="sq-title" style="color:var(--s)"><div class="sq-letter">S</div>Strengths</div>
+      <ul>
+        <li class="highlight">Field-level encryption via Ranger KMS &mdash; unique, critical for PCI DSS</li>
+        <li class="highlight">50+ native data source integrations &mdash; broadest coverage in the market</li>
+        <li class="highlight">Legacy Hadoop (Hive, HDFS, HBase, Kafka) native coverage &mdash; Immuta cannot do this</li>
+        <li class="highlight">Kafka topic-level access control &mdash; unified streaming + lake governance</li>
+        <li class="highlight">Nested AND/OR policy conditions &mdash; more expressive for complex banking rules</li>
+        <li>Apache Ranger foundation &mdash; open standards, no proprietary lock-in on the engine</li>
+        <li>Policy migration from Cloudera/Ranger &mdash; zero rework for existing Ranger deployments</li>
+        <li>AI governance (PAIG) &mdash; LLM guardrails, AI agent governance, Trustscore, EU AI Act</li>
+        <li>RBAC + ABAC hybrid &mdash; flexible policy model suits mixed org maturity</li>
+        <li>Proven at petabyte scale &mdash; Apple, Amgen, Zillow, Northwestern Mutual in production</li>
+        <li>Self-hosted Kubernetes deployment &mdash; OSFI B-10 resolved on-prem</li>
+      </ul>
+    </div>
+    <div class="sq W">
+      <div class="sq-title" style="color:var(--w)"><div class="sq-letter">W</div>Weaknesses</div>
+      <ul>
+        <li class="highlight">Rebranded to Trust3 AI Mar 2026 &mdash; AI pivot raises data security investment questions</li>
+        <li class="highlight">No new funding since Series B Mar 2021 &mdash; 5-year gap is a procurement risk flag</li>
+        <li class="highlight">Trino performance &mdash; Ranger plugin adds more overhead than Immuta&rsquo;s native SystemAccessControl</li>
+        <li class="highlight">No purpose-based access control &mdash; cannot enforce why data is accessed, only who</li>
+        <li class="highlight">No PETs (differential privacy, k-anonymisation) &mdash; only dynamic masking</li>
+        <li>Polaris REST integration unconfirmed &mdash; critical unknown for RBC architecture</li>
+        <li>Ranger policy complexity at scale &mdash; RBAC-first can require many policies for complex use cases (the GigaOm debate, though disputed by Privacera)</li>
+        <li>Cloud-first documentation &mdash; on-prem Kubernetes path less polished than Immuta&rsquo;s Helm chart</li>
+        <li>Brand confusion &mdash; &ldquo;Trust3 AI&rdquo; messaging is all AI agents; data security capability buried</li>
+      </ul>
+    </div>
+    <div class="sq O">
+      <div class="sq-title" style="color:var(--o)"><div class="sq-letter">O</div>Opportunities</div>
+      <ul>
+        <li>RBC Assist AI chatbot governance &mdash; if PAIG integrates with Azure AI Foundry, Trust3 AI becomes the single platform for data + AI governance. Immuta cannot compete here.</li>
+        <li>Kafka stream governance &mdash; RBC&rsquo;s streaming ingest is a gap only Trust3 AI fills out of the box</li>
+        <li>Cloudera migration bridge &mdash; if RBC still has any Cloudera estate, Trust3 AI smooths the policy migration</li>
+        <li>EU AI Act compliance demand (Aug 2026 deadline) &mdash; Trustscore product directly addresses this; if RBC has AI deployments subject to EU AI Act, Trust3 AI has unique value</li>
+        <li>PCI encryption at field level &mdash; if a CISO audit requires field-level encryption (not just masking) on PAN data, only Trust3 AI delivers this natively</li>
+      </ul>
+    </div>
+    <div class="sq T">
+      <div class="sq-title" style="color:var(--t)"><div class="sq-letter">T</div>Threats</div>
+      <ul>
+        <li class="highlight">AI rebrand may signal data security is in maintenance mode &mdash; engineering focus unclear after Trust3 AI launch</li>
+        <li class="highlight">5-year funding gap &mdash; M&amp;A or acquihire risk. If Datastrato-equivalent concentration happens to Privacera&rsquo;s engineering team, the platform could stall</li>
+        <li class="highlight">Polaris REST integration gap &mdash; if Privacera cannot confirm Polaris schema sync, Trust3 AI is incompatible with RBC&rsquo;s primary catalog</li>
+        <li>Immuta&rsquo;s Trino performance advantage growing &mdash; as RBC&rsquo;s Trino workloads scale, the 4.26&times; difference becomes a real production issue</li>
+        <li>Ranger RBAC scaling debate &mdash; disputed but persistent perception that Ranger policy management gets complex at large scale; enterprise architects may push back</li>
+        <li>OPA in Polaris v1.3 &mdash; if OPA integration matures, the OSS path closes the capability gap on access control and Trust3 AI loses its differentiated middle position</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- IMMUTA SWOT -->
+<div class="panel canvas" id="panel-im">
+  <div style="background:var(--im-bg);border:2px solid var(--im-b);border-radius:10px;padding:14px 18px;margin-bottom:14px">
+    <div style="font-size:12px;font-weight:800;color:var(--im);margin-bottom:4px">Immuta</div>
+    <div style="font-size:10px;color:#1E3A5F;line-height:1.7">ABAC-first &middot; purpose-based access &middot; ImmutaSystemAccessControl for Trino &middot; v2025.1.10 Jan 2026 &middot; Acquired by ABN AMRO Ventures 2021 &middot; ~$5k/user/month</div>
+  </div>
+  <div class="swot-grid">
+    <div class="sq S">
+      <div class="sq-title" style="color:var(--s)"><div class="sq-letter">S</div>Strengths</div>
+      <ul>
+        <li class="highlight">Purpose-based access control &mdash; enforce WHY data is accessed, not just who. Direct OSFI B-13 Principle 9 alignment</li>
+        <li class="highlight">Privacy-Enhancing Technologies (PETs) &mdash; differential privacy, k-anonymisation. No equivalent in Trust3 AI</li>
+        <li class="highlight">4.26&times; faster Trino enforcement (Sep 2025) &mdash; ImmutaSystemAccessControl is purpose-built for Trino, not a Ranger adaptation</li>
+        <li class="highlight">No AI pivot &mdash; engineering focus stays on data security. January 2026 release was a data security patch</li>
+        <li>ABAC-first model &mdash; fewer policies needed for complex access scenarios than Ranger RBAC</li>
+        <li>Project-based temporary data access &mdash; time-limited, purpose-scoped data views with automatic expiry</li>
+        <li>Sensitivity classification framework &mdash; tags drive policies automatically, less manual authoring</li>
+        <li>Snowflake Iceberg table support (v2024.3 GA) &mdash; critical for cloud burst path</li>
+        <li>ABN AMRO Ventures acquisition &mdash; stable commercial backing, no fundraising pressure</li>
+        <li>Helm chart deployment on OCP &mdash; fully resolves OSFI B-10 when self-hosted</li>
+        <li>PII scan runs inside Trino &mdash; data never leaves your environment during classification</li>
+      </ul>
+    </div>
+    <div class="sq W">
+      <div class="sq-title" style="color:var(--w)"><div class="sq-letter">W</div>Weaknesses</div>
+      <ul>
+        <li class="highlight">No field-level encryption / no KMS &mdash; masking only. PCI DSS field encryption requires a separate tool</li>
+        <li class="highlight">No Hive, HDFS, HBase, Kafka coverage &mdash; legacy Hadoop-era services unsupported</li>
+        <li class="highlight">No nested AND/OR policy conditions &mdash; complex conditional logic cannot be expressed</li>
+        <li class="highlight">~$5,000/user/month &mdash; most expensive of the three options. Requires Rex + Joey sign-off before POC</li>
+        <li class="highlight">Cloud-first &mdash; on-prem Helm deployment is supported but not the happy path; on-prem documentation less mature</li>
+        <li>No Kafka integration &mdash; streaming governance requires separate tooling</li>
+        <li>No AI governance &mdash; no LLM guardrails, no AI agent policy enforcement</li>
+        <li>Polaris REST integration unconfirmed &mdash; same critical unknown as Trust3 AI</li>
+        <li>Proprietary DSL &mdash; Immuta policies must be rebuilt from scratch if switching vendors; no migration path from Ranger</li>
+        <li>~10 platform integrations &mdash; breadth is much narrower than Trust3 AI&rsquo;s 50+</li>
+      </ul>
+    </div>
+    <div class="sq O">
+      <div class="sq-title" style="color:var(--o)"><div class="sq-letter">O</div>Opportunities</div>
+      <ul>
+        <li>Polaris Iceberg REST validation &mdash; if Immuta confirms Polaris REST schema sync, it becomes the strongest overall candidate for RBC</li>
+        <li>Data science / ML use case &mdash; PETs (differential privacy) unlock model training on PII data without a data sharing agreement. No other tool in this evaluation can do this</li>
+        <li>BCBS 239 purpose tracking &mdash; subscription model creates an automatic audit trail of what data was accessed for what purpose. Directly satisfies BCBS 239 Principle 6</li>
+        <li>Financial services brand &mdash; Immuta was acquired by ABN AMRO Ventures; its roadmap is influenced by a major European bank. Banking use cases are genuinely first-class</li>
+        <li>Trino performance at scale &mdash; as RBC&rsquo;s Trino cluster grows, the performance advantage compounds</li>
+      </ul>
+    </div>
+    <div class="sq T">
+      <div class="sq-title" style="color:var(--t)"><div class="sq-letter">T</div>Threats</div>
+      <ul>
+        <li class="highlight">Price &mdash; at $5k/user/month the procurement process is long and the business case must be bulletproof. Any delay risks the architecture stalling</li>
+        <li class="highlight">PCI encryption gap &mdash; if CISO audit requires field-level encryption (not masking), Immuta cannot satisfy it. Trust3 AI can. This could be a blocking requirement</li>
+        <li class="highlight">Legacy estate blind spot &mdash; if any RBC data remains in Cloudera/Hive, Immuta leaves it ungoverned. That creates a hybrid-posture OSFI gap</li>
+        <li>Cloud-first posture &mdash; on-prem Kubernetes deployment may hit undocumented edge cases not seen in cloud deployments</li>
+        <li>ABN AMRO acquisition effect on roadmap &mdash; European banking priorities may not perfectly align with Canadian OSFI requirements</li>
+        <li>OPA closing the gap &mdash; as OPA ABAC capabilities mature, the OSS path may satisfy Immuta&rsquo;s key differentiators without the licensing cost</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- HEAD-TO-HEAD -->
+<div class="panel canvas" id="panel-compare">
+  <div class="slabel">Capability Gap Map</div>
+  <div style="overflow-x:auto">
+  <table class="ctable">
+    <thead><tr>
+      <th class="ch" style="min-width:180px">Dimension</th>
+      <th class="ch-t3" style="min-width:190px">Trust3 AI</th>
+      <th class="ch-im" style="min-width:190px">Immuta</th>
+      <th class="ch" style="min-width:90px">Edge</th>
+    </tr></thead>
+    <tbody>
+      <tr class="cat-row"><td colspan="4">CAPABILITIES TRUST3 AI HAS THAT IMMUTA DOES NOT</td></tr>
+      <tr><td><strong>Field-level encryption + KMS</strong></td><td><span class="p p-yes">&#10003; Ranger KMS &mdash; encrypt/decrypt at column/row/field/attribute level</span></td><td><span class="p p-no">&#10007; Masking only &mdash; no integrated encryption</span></td><td><span class="p p-t3">Trust3 AI</span></td></tr>
+      <tr><td><strong>Hive / HDFS / HBase coverage</strong></td><td><span class="p p-yes">&#10003; Native Ranger plugins</span></td><td><span class="p p-no">&#10007; Not supported</span></td><td><span class="p p-t3">Trust3 AI</span></td></tr>
+      <tr><td><strong>Kafka topic governance</strong></td><td><span class="p p-yes">&#10003; Native Ranger plugin</span></td><td><span class="p p-no">&#10007; No Kafka integration</span></td><td><span class="p p-t3">Trust3 AI</span></td></tr>
+      <tr><td><strong>Nested AND/OR policy conditions</strong></td><td><span class="p p-yes">&#10003; Supported</span></td><td><span class="p p-no">&#10007; AND+OR cannot be combined in one policy</span></td><td><span class="p p-t3">Trust3 AI</span></td></tr>
+      <tr><td><strong>Data source breadth</strong></td><td><span class="p p-yes">&#10003; 50+ native sources</span></td><td><span class="p p-part">&#9888; ~10 modern platforms</span></td><td><span class="p p-t3">Trust3 AI</span></td></tr>
+      <tr><td><strong>Policy migration from Ranger/Cloudera</strong></td><td><span class="p p-yes">&#10003; Import existing Ranger policies</span></td><td><span class="p p-no">&#10007; Rebuild from scratch</span></td><td><span class="p p-t3">Trust3 AI</span></td></tr>
+      <tr><td><strong>AI / LLM / Agent governance</strong></td><td><span class="p p-yes">&#10003; PAIG + Trustscore + EU AI Act tooling</span></td><td><span class="p p-no">&#10007; No AI governance capability</span></td><td><span class="p p-t3">Trust3 AI</span></td></tr>
+
+      <tr class="cat-row"><td colspan="4">CAPABILITIES IMMUTA HAS THAT TRUST3 AI DOES NOT</td></tr>
+      <tr><td><strong>Purpose-based access control</strong></td><td><span class="p p-no">&#10007; No equivalent</span></td><td><span class="p p-yes">&#10003; Subscription model &mdash; enforce WHY data is accessed</span></td><td><span class="p p-im">Immuta</span></td></tr>
+      <tr><td><strong>Privacy-Enhancing Technologies (PETs)</strong></td><td><span class="p p-no">&#10007; Dynamic masking only</span></td><td><span class="p p-yes">&#10003; Differential privacy &amp; k-anonymisation built-in</span></td><td><span class="p p-im">Immuta</span></td></tr>
+      <tr><td><strong>Trino query performance</strong></td><td><span class="p p-part">&#9888; Ranger plugin &mdash; higher overhead</span></td><td><span class="p p-yes">&#10003; ImmutaSystemAccessControl &mdash; 4.26&times; faster (Sep 2025)</span></td><td><span class="p p-im">Immuta</span></td></tr>
+      <tr><td><strong>Project-scoped temporary access</strong></td><td><span class="p p-no">&#10007; Time-limited access only, no project abstraction</span></td><td><span class="p p-yes">&#10003; Project concept with automatic expiry</span></td><td><span class="p p-im">Immuta</span></td></tr>
+      <tr><td><strong>Tag-driven automatic policy application</strong></td><td><span class="p p-part">&#9888; Tag-based access control but requires explicit policy per tag</span></td><td><span class="p p-yes">&#10003; Classification framework &mdash; tags automatically trigger policies</span></td><td><span class="p p-im">Immuta</span></td></tr>
+      <tr><td><strong>Snowflake Iceberg tables (GA)</strong></td><td><span class="p p-part">&#9888; Snowflake supported &mdash; Iceberg table support unconfirmed</span></td><td><span class="p p-yes">&#10003; v2024.3 GA &mdash; fine-grained policies on Snowflake Iceberg tables</span></td><td><span class="p p-im">Immuta</span></td></tr>
+      <tr><td><strong>Engineering focus post-2026</strong></td><td><span class="p p-part">&#9888; AI rebrand &mdash; data security investment unclear</span></td><td><span class="p p-yes">&#10003; No AI pivot &mdash; v2025.1.10 Jan 2026 was data security patch</span></td><td><span class="p p-im">Immuta</span></td></tr>
+
+      <tr class="cat-row"><td colspan="4">SHARED GAPS (NEITHER DOES THIS WELL)</td></tr>
+      <tr><td><strong>Polaris REST catalog integration</strong></td><td><span class="p p-part">&#9888; Unconfirmed &mdash; validate before commitment</span></td><td><span class="p p-part">&#9888; Unconfirmed &mdash; validate before commitment</span></td><td><span class="p" style="background:#F1F5F9;color:#64748B">Both need POC</span></td></tr>
+      <tr><td><strong>OSFI B-10 (default deployment)</strong></td><td><span class="p p-part">&#9888; SaaS default &mdash; self-hosted K8s resolves</span></td><td><span class="p p-part">&#9888; Cloud-first default &mdash; Helm on OCP resolves</span></td><td><span class="p" style="background:#F1F5F9;color:#64748B">Both require on-prem config</span></td></tr>
+      <tr><td><strong>Built-in table maintenance</strong></td><td><span class="p p-no">&#10007; Not in scope</span></td><td><span class="p p-no">&#10007; Not in scope</span></td><td><span class="p" style="background:#F1F5F9;color:#64748B">Neither &mdash; separate tool</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- VERDICT -->
+<div class="panel canvas" id="panel-verdict">
+  <div class="slabel">RBC Decision Framework</div>
+
+  <div class="note warn">
+    <strong>The question you raised is correct:</strong> Trust3 AI does things Immuta genuinely cannot. The previous analysis understated this. Field-level encryption for PCI data, Kafka governance, Hive legacy coverage, and AI agent governance are real, material capabilities that Immuta doesn&rsquo;t have. Whether those capabilities matter to RBC&rsquo;s specific architecture determines which product is right.
+  </div>
+
+  <div class="verdict" style="border-color:#FED7AA;background:#FFFBEB;margin-bottom:12px">
+    <div class="verdict-title" style="color:var(--t3)">Choose Trust3 AI if&hellip;</div>
+    <div class="verdict-body" style="color:#78350F">
+      &bull; RBC&rsquo;s CISO requires <strong>field-level encryption</strong> on PAN (card number) data, not just masking &mdash; only Trust3 AI delivers this from a single platform<br/>
+      &bull; Any Kafka streams are in scope for governance &mdash; Trust3 AI is the only option that covers streaming + lake from a single control plane<br/>
+      &bull; Any legacy Cloudera/Hive data remains in the estate &mdash; Trust3 AI bridges legacy + modern without leaving data ungoverned<br/>
+      &bull; RBC Assist AI chatbot governance needs to share a policy engine with data governance &mdash; Trust3 AI&rsquo;s PAIG makes this a unified platform<br/>
+      &bull; Trust3 AI can confirm the Polaris REST integration is tested and supported<br/><br/>
+      <strong>But first validate:</strong> Get a written commitment on the data security engineering roadmap and Polaris REST integration from Trust3 AI before procurement. The rebrand is a real risk signal.
+    </div>
+  </div>
+
+  <div class="verdict" style="border-color:var(--im-b);background:var(--im-bg);margin-bottom:12px">
+    <div class="verdict-title" style="color:var(--im)">Choose Immuta if&hellip;</div>
+    <div class="verdict-body" style="color:#1E3A5F">
+      &bull; RBC is operating a <strong>pure-Iceberg, Polaris-first modern lakehouse</strong> with no material legacy Hadoop estate in scope<br/>
+      &bull; Trino interactive analytics is a primary workload and the 4.26&times; performance difference is architecturally significant at RBC&rsquo;s query volume<br/>
+      &bull; The data science team needs <strong>privacy-preserving model training</strong> on PII data (differential privacy / k-anonymisation)<br/>
+      &bull; OSFI B-13 Principle 9 &ldquo;data usage accountability&rdquo; requires provable purpose-based access trails &mdash; Immuta&rsquo;s subscription model is purpose-built for this<br/>
+      &bull; Field-level encryption is handled separately (HashiCorp Vault + application-layer encryption) and not required from the data security platform<br/><br/>
+      <strong>But first validate:</strong> Price at $5k/user/month needs Rex + Joey budget approval before any POC commitment. And confirm Polaris REST integration is supported.
+    </div>
+  </div>
+
+  <div class="note tip">
+    <strong>The pivot question:</strong> The Trust3 AI rebrand is the elephant in the room. Before the rebrand, the recommendation was leaning Trust3 AI based on breadth + legacy coverage. Post-rebrand, the question is: are the unique Trust3 AI capabilities (encryption, Kafka, legacy Hadoop) <em>actually required for RBC&rsquo;s architecture</em>, or are they &ldquo;nice to have&rdquo; capabilities that don&rsquo;t change the decision? If field-level encryption is required by the PCI compliance team and Kafka governance is in scope, Trust3 AI is defensible despite the rebrand risk. If the architecture is truly Iceberg-first with HashiCorp Vault handling encryption and no Kafka in scope, Immuta&rsquo;s advantages are cleaner and the rebrand risk becomes the deciding factor.
+  </div>
+</div>
+
+<div class="footer">
+  <span>Lumina &middot; RBC Enterprise Data &middot; Trust3 AI vs Immuta SWOT &middot; April 2026</span>
+  <span>George Chilakos, VP Enterprise Data</span>
+</div>
+
+<script>
+function show(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
