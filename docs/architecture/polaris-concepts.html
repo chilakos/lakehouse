@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Polaris: Credential Vending & REST Catalog Explained</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A1628;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC;--white:#FFFFFF;--polaris:#1E4D8C;--polaris-bg:#EFF6FF;--polaris-b:#BFDBFE;--green:#059669;--green-bg:#F0FDF4;--green-b:#BBF7D0;--amber:#D97706;--amber-bg:#FFFBEB;--amber-b:#FDE68A;--red:#DC2626;--red-bg:#FEF2F2;--red-b:#FECACA;--purple:#7C3AED;--purple-bg:#FAF5FF;--purple-b:#DDD6FE;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);padding:0 0 60px;}
+.hero{background:var(--navy);padding:40px 32px 32px;}
+.back{font-size:10px;font-family:'DM Mono',monospace;color:#475569;margin-bottom:14px;}
+.back a{color:#94A3B8;text-decoration:none;}
+.hero h1{font-family:'Lora',serif;font-size:26px;font-weight:600;color:#fff;margin-bottom:8px;}
+.hero p{font-size:12px;color:#94A3B8;max-width:640px;line-height:1.7;}
+.canvas{max-width:1060px;margin:0 auto;padding:28px 24px;}
+.section-title{font-family:'Lora',serif;font-size:20px;font-weight:600;color:var(--navy);margin-bottom:4px;}
+.section-sub{font-size:11px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.slabel{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--line);}
+.divider{border:none;border-top:2px solid var(--line);margin:36px 0;}
+
+/* FLOW DIAGRAM */
+.flow{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-bottom:14px;}
+.fbox{border-radius:8px;border:2px solid;padding:10px 14px;text-align:center;position:relative;}
+.fbox .fb-icon{font-size:20px;margin-bottom:3px;}
+.fbox .fb-name{font-size:11px;font-weight:700;line-height:1.3;}
+.fbox .fb-sub{font-size:8px;color:var(--muted);margin-top:2px;line-height:1.4;}
+.farr{display:flex;flex-direction:column;align-items:center;padding:0 4px;flex-shrink:0;gap:2px;}
+.farr .fa-line{width:28px;height:1px;background:var(--line);}
+.farr .fa-head{font-size:12px;color:#CBD5E1;line-height:1;}
+.farr .fa-label{font-size:8px;font-family:'DM Mono',monospace;color:var(--muted);white-space:nowrap;text-align:center;}
+
+/* PROBLEM/SOLUTION CARDS */
+.ps-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+@media(max-width:600px){.ps-grid{grid-template-columns:1fr;}}
+.ps-card{border-radius:10px;border:2px solid;padding:16px 18px;}
+.ps-title{font-size:12px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.ps-body{font-size:10px;line-height:1.8;}
+.ps-body strong{font-weight:600;}
+
+/* COMPARISON TABLE */
+.ctable{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:14px;}
+.ctable th{padding:9px 12px;text-align:left;font-weight:700;}
+.ctable td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top;}
+.ctable tr:nth-child(even) td{background:#F8FAFC;}
+.ch-dark{background:var(--navy);color:#fff;}
+.ch-native{background:#475569;color:#fff;}
+.ch-polaris{background:var(--polaris);color:#fff;}
+.cat-row td{background:#F1F5F9!important;font-weight:700;font-size:9px;color:var(--muted);padding:5px 12px;letter-spacing:0.5px;text-transform:uppercase;}
+.pill{display:inline-block;font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px;}
+.p-yes{background:#D1FAE5;color:#065F46;}.p-no{background:#FEE2E2;color:#991B1B;}.p-part{background:#FEF3C7;color:#92400E;}.p-pol{background:#DBEAFE;color:#1E40AF;}
+
+/* STEP FLOW */
+.steps{display:flex;flex-direction:column;gap:0;}
+.step-row{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);}
+.step-row:last-child{border-bottom:none;}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:12px;flex-shrink:0;margin-top:1px;}
+.step-body{flex:1;}
+.step-title{font-size:11px;font-weight:700;margin-bottom:3px;}
+.step-detail{font-size:10px;line-height:1.7;color:var(--text);}
+.code{font-family:'DM Mono',monospace;font-size:9px;background:#1E2D3D;color:#E8F8F5;padding:6px 10px;border-radius:5px;margin-top:5px;line-height:1.8;display:block;}
+
+/* COMPARISON SIDE-BY-SIDE */
+.side-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:600px){.side-grid{grid-template-columns:1fr;}}
+.side-card{border-radius:10px;border:2px solid;padding:16px;}
+.side-title{font-size:13px;font-weight:800;margin-bottom:4px;}
+.side-tag{font-size:9px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:8px;display:inline-block;margin-bottom:10px;}
+.side-card ul{padding-left:15px;}
+.side-card li{font-size:10px;line-height:1.85;}
+.side-card li.pro::marker{content:"✅ ";}
+.side-card li.con::marker{content:"❌ ";}
+
+/* CALLOUT */
+.callout{border-radius:10px;padding:14px 18px;border:2px solid;font-size:11px;line-height:1.7;margin-top:10px;}
+.callout.info{background:var(--polaris-bg);border-color:var(--polaris-b);color:var(--polaris);}
+.callout.warn{background:var(--amber-bg);border-color:var(--amber-b);color:#78350F;}
+.callout.tip{background:var(--green-bg);border-color:var(--green-b);color:#065F46;}
+.callout strong{font-weight:700;}
+
+.footer{max-width:1060px;margin:32px auto 0;padding:14px 24px 0;border-top:1px solid var(--line);font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+
+.tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+.tab{padding:7px 18px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:#E0E7EF;color:#64748B;transition:all 0.15s;}
+.tab.active{background:var(--navy);color:#fff;}
+.tab-panel{display:none;}.tab-panel.active{display:block;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div style="max-width:1060px;margin:0 auto">
+    <div class="back"><a href="../">&#8592; Lakehouse Hub</a></div>
+    <h1>Polaris: Credential Vending &amp; Native REST Catalog Explained</h1>
+    <p>Two concepts that often get confused. What credential vending actually does. Why Polaris is not "just" the Iceberg REST spec. What you get with Polaris that you don't get with a bare REST catalog.</p>
+  </div>
+</div>
+
+<div class="canvas">
+
+  <div class="tabs">
+    <button class="tab active" onclick="show('vending',this)">Part 1 — Credential Vending</button>
+    <button class="tab" onclick="show('restdiff',this)">Part 2 — Native REST vs Polaris</button>
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!-- PART 1: CREDENTIAL VENDING         -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="tab-panel active" id="panel-vending">
+
+    <div class="section-title">What is Credential Vending?</div>
+    <div class="section-sub">The short version: instead of giving your engine a permanent storage key, the catalog mints a temporary, scoped token just-in-time for the specific table being queried — and that token expires in minutes.</div>
+
+    <!-- THE PROBLEM -->
+    <div class="slabel">The problem it solves — without credential vending</div>
+    <div class="ps-card" style="border-color:var(--red-b);background:var(--red-bg);margin-bottom:14px">
+      <div class="ps-title" style="color:var(--red)">&#9888; Without credential vending — the dangerous way</div>
+      <div class="ps-body">
+        In a naive setup, every compute engine (Spark, Trino, Databricks) needs to read Parquet files from your object store (MinIO, S3). The only way to do that is to give each engine a <strong>long-lived storage credential</strong> — an AWS Access Key, a MinIO access key, or a storage account key. This means:<br/><br/>
+        &bull; Every Spark node, every Trino worker has a copy of the master storage key in its config<br/>
+        &bull; That key can access <strong>every file in the bucket</strong> — not just the table the user requested<br/>
+        &bull; If the key leaks (config file, log output, memory dump), the entire data lake is exposed<br/>
+        &bull; The key doesn't expire — a leaked key is valid until manually rotated<br/>
+        &bull; You have no way to enforce "this Trino job may only read <code>finance/customers/</code>" at the storage layer<br/><br/>
+        <strong>For PCI and OSFI environments, storing a master storage credential in engine configuration is unacceptable.</strong>
+      </div>
+    </div>
+
+    <!-- THE SOLUTION -->
+    <div class="slabel">How credential vending fixes it</div>
+
+    <!-- Step-by-step flow -->
+    <div style="background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:20px;margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:14px">The credential vending flow — what happens when Trino queries a table</div>
+      <div class="steps">
+
+        <div class="step-row">
+          <div class="step-num" style="background:#1B4F72">1</div>
+          <div class="step-body">
+            <div class="step-title">Engine authenticates to Polaris (OAuth2 JWT)</div>
+            <div class="step-detail">Trino presents its service account JWT token (issued by Keycloak from AD). Polaris validates the token. No storage credentials involved yet — just identity.</div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:var(--polaris)">2</div>
+          <div class="step-body">
+            <div class="step-title">Engine requests table metadata from Polaris REST API</div>
+            <div class="step-detail">Trino calls <code class="code">GET /v1/catalogs/rbc/namespaces/finance/tables/customers</code>
+            Polaris checks: does this service principal have READ privilege on <code>finance.customers</code>? If no → 403. If yes → continue.</div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:var(--polaris)">3</div>
+          <div class="step-body">
+            <div class="step-title">Polaris calls AWS STS / MinIO STS to mint a scoped credential</div>
+            <div class="step-detail">
+              Polaris holds a <strong>single master IAM role</strong> or MinIO service account. It calls the STS (Security Token Service) endpoint and requests a temporary credential scoped to exactly the S3 prefix for this table:
+              <code class="code">sts.assume_role(
+  RoleArn="arn:aws:iam::account:role/polaris-storage",
+  Policy={"Version":"2012-10-17","Statement":[{
+    "Effect":"Allow","Action":["s3:GetObject","s3:ListBucket"],
+    "Resource":["arn:aws:s3:::lakehouse/finance/customers/*"]
+  }]},
+  DurationSeconds=3600  # expires in 1 hour
+)</code>
+              The result is a temporary <code>AccessKeyId</code>, <code>SecretAccessKey</code>, and <code>SessionToken</code> that only works for that one table prefix and expires in 1 hour.
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:var(--polaris)">4</div>
+          <div class="step-body">
+            <div class="step-title">Polaris returns metadata + vended credential to the engine</div>
+            <div class="step-detail">
+              The REST response includes the table's <code>metadata.json</code> location AND the temporary credential:
+              <code class="code">{
+  "metadata-location": "s3://lakehouse/finance/customers/metadata/v23.metadata.json",
+  "config": {
+    "s3.access-key-id": "ASIA...",          // temporary
+    "s3.secret-access-key": "xyz...",       // temporary
+    "s3.session-token": "FwoGZXIvYXdzE...", // temporary
+    "s3.region": "ca-central-1"
+  }
+}</code>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:#059669">5</div>
+          <div class="step-body">
+            <div class="step-title">Engine reads Parquet files using the vended credential</div>
+            <div class="step-detail">Trino uses the temporary key to fetch <code>metadata.json</code>, then manifest files, then Parquet data. MinIO/S3 validates the token on each request. If Trino tries to access any path outside <code>finance/customers/</code>, the request is rejected — the token has no permissions there.</div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num" style="background:#64748B">6</div>
+          <div class="step-body">
+            <div class="step-title">Token expires — no cleanup needed</div>
+            <div class="step-detail">After 1 hour (or whatever TTL was configured), the token automatically becomes invalid. Trino must request a new one for the next query. There is nothing to revoke, nothing to rotate, and no long-lived credential stored anywhere in the engine config.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- WHAT THIS MEANS -->
+    <div class="slabel">What this means in practice</div>
+    <div class="ps-grid">
+      <div class="ps-card" style="border-color:var(--green-b);background:var(--green-bg)">
+        <div class="ps-title" style="color:var(--green)">&#10003; What credential vending gives you</div>
+        <div class="ps-body">
+          &bull; <strong>No master key in engine config</strong> — Trino, Spark, Databricks hold zero long-lived storage credentials<br/>
+          &bull; <strong>Least privilege at storage level</strong> — a vended token for <code>finance/customers</code> literally cannot read <code>risk/trades</code><br/>
+          &bull; <strong>Automatic expiry</strong> — leaked token is useless after TTL (1 hr by default)<br/>
+          &bull; <strong>Auditability</strong> — every STS call is logged. You can see exactly which engine accessed which table path, when<br/>
+          &bull; <strong>Works across clouds</strong> — Polaris vends S3 credentials for AWS, SAS tokens for Azure, OAuth2 for GCS, and STS tokens for MinIO on-prem. Same catalog API regardless of storage backend<br/>
+          &bull; <strong>Blast radius control</strong> — compromise of a Trino worker node exposes one expired table-scoped token, not the entire data lake
+        </div>
+      </div>
+      <div class="ps-card" style="border-color:var(--amber-b);background:var(--amber-bg)">
+        <div class="ps-title" style="color:var(--amber)">&#9888; What you need to set up</div>
+        <div class="ps-body">
+          &bull; <strong>MinIO STS endpoint</strong> must be enabled (MinIO ships this — just needs to be configured)<br/>
+          &bull; <strong>Polaris needs one master role</strong> with broad storage access — this is the credential Polaris holds server-side to call STS with. Polaris should be the only service with this master role<br/>
+          &bull; <strong>HashiCorp Vault</strong> should store Polaris's master credential (not in a config file)<br/>
+          &bull; <strong>Bucket policy</strong> on MinIO should deny access to anyone except the Polaris service account and the STS-generated temporary tokens — this is the storage-level lock that makes the whole model work
+        </div>
+      </div>
+    </div>
+
+    <div class="callout info">
+      <strong>One sentence:</strong> Credential vending means the catalog acts as a credential broker — engines never touch a long-lived storage key. They get a short-lived, table-scoped token minted just for their query and worthless an hour later. It's the difference between giving every employee a master key to the building vs issuing a visitor badge that opens one room and expires at 5pm.
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════ -->
+  <!-- PART 2: NATIVE REST vs POLARIS     -->
+  <!-- ═══════════════════════════════════ -->
+  <div class="tab-panel" id="panel-restdiff">
+
+    <div class="section-title">Native Iceberg REST Catalog vs Apache Polaris</div>
+    <div class="section-sub">The Iceberg REST Catalog is a specification — an API contract that defines how engines talk to catalogs over HTTP. Polaris is one implementation of that spec. The distinction matters because the spec defines the protocol, not the server.</div>
+
+    <!-- WHAT IS THE SPEC -->
+    <div class="slabel">First — what is the Iceberg REST Catalog specification?</div>
+    <div style="background:#fff;border-radius:10px;border:1.5px solid var(--line);padding:16px 18px;margin-bottom:14px">
+      <div style="font-size:11px;line-height:1.8;">
+        The <strong>Iceberg REST Catalog API</strong> (introduced in Iceberg 0.14, July 2022) is an OpenAPI specification that defines exactly which HTTP endpoints a catalog must expose and what they must return. It is the <em>protocol</em> — like TCP/IP is to networking or SQL is to databases.<br/><br/>
+        The spec defines endpoints like:
+        <code class="code">GET  /v1/catalogs/{catalog}/namespaces          → list namespaces
+GET  /v1/catalogs/{catalog}/namespaces/{ns}/tables/{table} → load table + vended credentials
+POST /v1/catalogs/{catalog}/namespaces/{ns}/tables/{table}/snapshots → commit a new snapshot
+POST /v1/oauth/tokens                              → authenticate and get a JWT</code>
+        <strong>Any server that correctly implements these endpoints is a valid Iceberg REST catalog.</strong> Polaris is one. Gravitino is another. Nessie is working on it. You could even write your own in Flask in a weekend — and it would work with Spark, Trino, and Databricks as long as it returns the right JSON.
+      </div>
+    </div>
+
+    <!-- THE DIFFERENCE -->
+    <div class="slabel">What Polaris adds on top of the bare REST spec</div>
+    <div class="side-grid">
+      <div class="side-card" style="border-color:#94A3B8;background:#F8FAFC">
+        <div class="side-title" style="color:#475569">&#128196; Bare Iceberg REST Catalog</div>
+        <div class="side-tag" style="background:#F1F5F9;color:#475569">The specification — just the protocol</div>
+        <ul>
+          <li class="pro">Engines (Spark, Trino) can discover and read/write tables by name</li>
+          <li class="pro">Tables are organised into namespaces/schemas</li>
+          <li class="pro">Atomic commits via CAS (compare-and-swap on metadata pointer)</li>
+          <li class="pro">Schema evolution, snapshot history, time travel all work</li>
+          <li class="pro">Authentication via OAuth2 bearer token</li>
+          <li class="con">No concept of who can access which table — just authn, no authz model</li>
+          <li class="con">No credential vending — you must configure storage credentials in the engine separately</li>
+          <li class="con">No multi-tenancy — no concept of separate catalogs for separate teams</li>
+          <li class="con">No governance — no policy enforcement, no audit trail</li>
+          <li class="con">No catalog federation — only manages what it directly stores</li>
+          <li class="con">No UI, no lineage, no classification</li>
+        </ul>
+        <div style="font-size:9px;font-family:'DM Mono',monospace;color:#64748B;margin-top:10px;background:#E2E8F0;padding:5px 8px;border-radius:4px;">Think: a thin HTTP wrapper around a database table that stores metadata pointers. It speaks the spec but does nothing else.</div>
+      </div>
+
+      <div class="side-card" style="border-color:var(--polaris-b);background:var(--polaris-bg)">
+        <div class="side-title" style="color:var(--polaris)">&#127956;&#65039; Apache Polaris</div>
+        <div class="side-tag" style="background:var(--polaris);color:#fff;">Implements the spec + adds a full platform</div>
+        <ul>
+          <li class="pro">Implements the full Iceberg REST spec — same API, fully compatible</li>
+          <li class="pro"><strong>Credential vending</strong> — mints scoped STS tokens per table access (see Part 1)</li>
+          <li class="pro"><strong>RBAC model</strong> — Catalog Roles and Principal Roles controlling who can access which catalog/namespace/table</li>
+          <li class="pro"><strong>Multi-tenancy via Realms</strong> — hard isolation between business units, each with their own catalog hierarchy</li>
+          <li class="pro"><strong>Internal + external catalogs</strong> — Polaris can sync/proxy external catalogs (Nessie, Gravitino, Lakekeeper) and present them as first-class namespaces</li>
+          <li class="pro"><strong>OPA integration</strong> — externalize authorization decisions to Open Policy Agent for policy-as-code</li>
+          <li class="pro"><strong>Event logging</strong> — catalog-level audit of operations (who loaded which table, when)</li>
+          <li class="pro"><strong>Snowflake Open Catalog compatibility</strong> — zero-config integration with Snowflake's managed Polaris instance for cloud burst</li>
+          <li class="pro"><strong>PostgreSQL persistence</strong> — durable, queryable catalog metadata with HA support</li>
+          <li class="pro"><strong>Quarkus runtime</strong> — lightweight Java 21 server, fast startup, low memory, OCP-friendly</li>
+        </ul>
+        <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--polaris);margin-top:10px;background:rgba(30,77,140,0.08);padding:5px 8px;border-radius:4px;">Think: a full catalog server that speaks the spec AND adds enterprise governance, security, and multi-tenancy on top.</div>
+      </div>
+    </div>
+
+    <!-- THE ANALOGY -->
+    <div class="slabel">The clearest analogy</div>
+    <div style="background:#fff;border-radius:10px;border:1.5px solid var(--line);padding:16px 18px;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;color:#475569;margin-bottom:8px">REST spec is like HTTP</div>
+          <div style="font-size:11px;line-height:1.8;color:var(--text)">
+            HTTP is a protocol specification — it defines how browsers and servers communicate. But "HTTP" alone isn't a web server. You need Apache, Nginx, or Caddy to actually run an HTTP server. They all speak HTTP (the spec), but each adds different things: caching, TLS termination, auth, rate limiting, logging.
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;color:var(--polaris);margin-bottom:8px">Polaris is like Nginx</div>
+          <div style="font-size:11px;line-height:1.8;color:var(--text)">
+            Polaris speaks the Iceberg REST spec (like Nginx speaks HTTP) AND adds access control, credential vending, multi-tenancy, and audit logging. A bare-bones REST catalog implementation is like a minimal Python Flask server — it speaks HTTP but has none of the production-grade features. Any engine that speaks the Iceberg REST spec works with both, but only Polaris gives you the enterprise platform.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FULL COMPARISON TABLE -->
+    <div class="slabel">Feature comparison — bare REST implementation vs Polaris</div>
+    <div style="overflow-x:auto">
+    <table class="ctable">
+      <thead>
+        <tr>
+          <th class="ch-dark" style="min-width:180px">Feature</th>
+          <th class="ch-native" style="min-width:180px">Bare REST Catalog<br/><span style="font-weight:400;font-size:9px">(spec-compliant only)</span></th>
+          <th class="ch-polaris" style="min-width:180px">Apache Polaris<br/><span style="font-weight:400;font-size:9px">(spec + platform)</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="cat-row"><td colspan="3">PROTOCOL COMPLIANCE</td></tr>
+        <tr><td>Iceberg REST spec</td><td><span class="pill p-yes">&#10003; Yes</span></td><td><span class="pill p-yes">&#10003; Yes — reference quality</span></td></tr>
+        <tr><td>Spark / Trino / Databricks compatible</td><td><span class="pill p-yes">&#10003; Yes</span></td><td><span class="pill p-yes">&#10003; Yes</span></td></tr>
+        <tr><td>Atomic commits (CAS)</td><td><span class="pill p-yes">&#10003; Yes</span></td><td><span class="pill p-yes">&#10003; Yes</span></td></tr>
+        <tr><td>Schema evolution, time travel</td><td><span class="pill p-yes">&#10003; Yes</span></td><td><span class="pill p-yes">&#10003; Yes</span></td></tr>
+
+        <tr class="cat-row"><td colspan="3">SECURITY</td></tr>
+        <tr><td>OAuth2 / JWT authentication</td><td><span class="pill p-yes">&#10003; Yes (spec-defined)</span></td><td><span class="pill p-yes">&#10003; Yes + Keycloak / OIDC bridge</span></td></tr>
+        <tr><td>Table-level access control (RBAC)</td><td><span class="pill p-no">&#10007; Not in spec — DIY</span></td><td><span class="pill p-pol">&#10003; Built-in two-tier RBAC</span></td></tr>
+        <tr><td>Credential vending (scoped STS tokens)</td><td><span class="pill p-no">&#10007; Not in spec — engines need own keys</span></td><td><span class="pill p-pol">&#10003; First-class — S3, ADLS, GCS, MinIO</span></td></tr>
+        <tr><td>OPA policy integration</td><td><span class="pill p-no">&#10007; No</span></td><td><span class="pill p-pol">&#10003; Native (v1.3)</span></td></tr>
+
+        <tr class="cat-row"><td colspan="3">MULTI-TENANCY</td></tr>
+        <tr><td>Namespace isolation between teams</td><td><span class="pill p-part">&#9888; Namespace hierarchy only</span></td><td><span class="pill p-pol">&#10003; Realm isolation — hard boundaries</span></td></tr>
+        <tr><td>Separate catalogs per business unit</td><td><span class="pill p-no">&#10007; Single catalog</span></td><td><span class="pill p-pol">&#10003; Multiple catalogs per Realm</span></td></tr>
+
+        <tr class="cat-row"><td colspan="3">FEDERATION &amp; INTEGRATION</td></tr>
+        <tr><td>Proxy external catalogs (Nessie, Gravitino)</td><td><span class="pill p-no">&#10007; No</span></td><td><span class="pill p-pol">&#10003; Catalog federation (v1.3)</span></td></tr>
+        <tr><td>Snowflake Open Catalog integration</td><td><span class="pill p-no">&#10007; No</span></td><td><span class="pill p-pol">&#10003; Same codebase — zero config</span></td></tr>
+
+        <tr class="cat-row"><td colspan="3">OPERATIONS</td></tr>
+        <tr><td>Durable metadata persistence</td><td><span class="pill p-part">&#9888; Depends on implementation</span></td><td><span class="pill p-pol">&#10003; PostgreSQL — HA, queryable</span></td></tr>
+        <tr><td>Catalog event audit logging</td><td><span class="pill p-no">&#10007; Not in spec</span></td><td><span class="pill p-pol">&#10003; Catalog operation events</span></td></tr>
+        <tr><td>Production-grade HA deployment</td><td><span class="pill p-part">&#9888; DIY</span></td><td><span class="pill p-pol">&#10003; Helm chart, 2-replica Kubernetes</span></td></tr>
+        <tr><td>Enterprise support available</td><td><span class="pill p-no">&#10007; Community only</span></td><td><span class="pill p-pol">&#10003; Snowflake + Dremio enterprise SLAs</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <!-- PRACTICAL QUESTION -->
+    <div class="slabel">The practical question — could you just write your own REST catalog?</div>
+    <div style="background:#fff;border-radius:10px;border:1.5px solid var(--line);padding:16px 18px;margin-bottom:10px">
+      <div style="font-size:11px;line-height:1.8;color:var(--text)">
+        <strong>Yes, technically.</strong> The Iceberg project ships <code>CatalogHandlers</code> — a Java class that implements the REST spec logic for you. You wrap it in a thin HTTP server, point it at a JDBC database for persistence, and you have a working Iceberg REST catalog. Netflix and Apple both run custom catalog implementations at massive scale.<br/><br/>
+        <strong>But for RBC, the answer is no.</strong> A custom implementation means:<br/>
+        &bull; You own every line of code that stores and retrieves table metadata<br/>
+        &bull; You build credential vending from scratch or engines carry long-lived keys<br/>
+        &bull; You build RBAC from scratch or have no table-level access control<br/>
+        &bull; You have no enterprise support, no commercial backstop<br/>
+        &bull; Your team needs deep Iceberg internals expertise to maintain it<br/><br/>
+        Polaris gives you all of this, tested, maintained by 100+ contributors, with Snowflake and Dremio as commercial backstops. The build vs buy calculus is not close.
+      </div>
+    </div>
+
+    <div class="callout tip">
+      <strong>Summary:</strong> The Iceberg REST spec is the contract engines use to talk to any catalog. Polaris is an enterprise implementation of that contract — it speaks the same API, so any engine that works with the spec works with Polaris, but Polaris adds the credential vending, access control, multi-tenancy, and operational platform that a bare spec implementation doesn't include. Using "just the REST spec" without Polaris means you have to build or integrate everything else yourself.
+    </div>
+
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>Lumina &middot; RBC Enterprise Data &middot; Polaris Concepts &middot; April 2026</span>
+  <span>George Chilakos, VP Enterprise Data</span>
+</div>
+
+<script>
+function show(id, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
