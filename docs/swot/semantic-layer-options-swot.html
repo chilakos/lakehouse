@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Semantic Layer Options — SWOT Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A1628;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC;--white:#FFFFFF;
+--s:#059669;--s-bg:#D1FAE5;--s-b:#86EFAC;
+--w:#DC2626;--w-bg:#FEE2E2;--w-b:#FCA5A5;
+--o:#D97706;--o-bg:#FEF3C7;--o-b:#FDE68A;
+--t:#7C3AED;--t-bg:#EDE9FE;--t-b:#C4B5FD;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);padding-bottom:60px;}
+.hero{background:var(--navy);padding:40px 32px 32px;}
+.back{font-size:10px;font-family:'DM Mono',monospace;color:#475569;margin-bottom:14px;}
+.back a{color:#94A3B8;text-decoration:none;}
+.hero h1{font-family:'Lora',serif;font-size:26px;font-weight:600;color:#fff;margin-bottom:8px;}
+.hero p{font-size:12px;color:#94A3B8;max-width:680px;line-height:1.7;}
+.hero-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.pill{font-size:9px;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:#94A3B8;}
+.pill.ok{background:rgba(5,150,105,0.15);color:#6EE7B7;border-color:rgba(110,231,183,0.3);}
+.tabs{display:flex;gap:6px;max-width:1100px;margin:0 auto;padding:20px 24px 0;flex-wrap:wrap;}
+.tab{padding:6px 16px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:#E0E7EF;color:#64748B;transition:all 0.15s;}
+.tab.active{background:var(--navy);color:#fff;}
+.panel{display:none;max-width:1100px;margin:0 auto;padding:20px 24px 0;}
+.panel.active{display:block;}
+.slabel{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin-bottom:12px;margin-top:20px;}
+.slabel:first-child{margin-top:0;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--line);}
+.card{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:20px 22px;margin-bottom:14px;}
+.note{border-radius:8px;padding:10px 14px;font-size:10px;line-height:1.7;margin-bottom:14px;}
+.note.info{background:var(--o-bg);border:1.5px solid var(--o-b);color:#78350F;}
+.note.tip{background:var(--s-bg);border:1.5px solid var(--s-b);color:#065F46;}
+.note.warn{background:var(--w-bg);border:1.5px solid var(--w-b);color:#7F1D1D;}
+
+/* Option header */
+.opt-head{border-radius:10px;padding:14px 18px;margin-bottom:14px;border:2px solid;}
+.opt-name{font-size:15px;font-weight:700;margin-bottom:3px;}
+.opt-tag{font-size:9px;font-family:'DM Mono',monospace;opacity:0.8;}
+
+/* SWOT grid */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+@media(max-width:560px){.swot-grid{grid-template-columns:1fr;}}
+.sq{border-radius:9px;padding:14px 16px;border:1.5px solid;}
+.sq.S{border-color:var(--s-b);background:var(--s-bg);}
+.sq.W{border-color:var(--w-b);background:var(--w-bg);}
+.sq.O{border-color:var(--o-b);background:var(--o-bg);}
+.sq.T{border-color:var(--t-b);background:var(--t-bg);}
+.sq-title{font-size:11px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.ltr{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0;}
+.S .ltr{background:#059669;}.W .ltr{background:#DC2626;}.O .ltr{background:#D97706;}.T .ltr{background:#7C3AED;}
+.sq ul{padding-left:14px;}.sq li{font-size:10px;line-height:1.85;}
+.sq li.hl{font-weight:600;}
+
+/* Comparison table */
+.ctable{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:14px;}
+.ctable th{padding:9px 12px;text-align:left;font-weight:700;}
+.ctable td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6;}
+.ctable tr:nth-child(even) td{background:#F8FAFC;}
+.ctable tr:last-child td{border-bottom:none;}
+.ch{background:var(--navy);color:#fff;}
+.cat-row td{background:#F1F5F9!important;font-weight:700;font-size:9px;color:var(--muted);padding:5px 12px;letter-spacing:0.5px;text-transform:uppercase;}
+.p{display:inline-block;font-size:8px;font-weight:700;padding:2px 6px;border-radius:4px;}
+.p-yes{background:#D1FAE5;color:#065F46;}.p-no{background:#FEE2E2;color:#991B1B;}.p-part{background:#FEF3C7;color:#92400E;}.p-na{background:#F1F5F9;color:#64748B;}
+
+/* Verdict */
+.verdict{border-radius:10px;padding:18px 20px;border:2px solid;margin-bottom:10px;}
+.v-title{font-family:'Lora',serif;font-size:15px;font-weight:600;margin-bottom:7px;}
+.v-body{font-size:11px;line-height:1.8;}
+.v-rec{border-color:#1E4D8C;background:#EFF6FF;}
+.v-rec .v-title{color:#1E4D8C;}
+.v-2{border-color:#BBF7D0;background:#F0FDF4;}
+.v-2 .v-title{color:#065F46;}
+.v-3{border-color:#DDD6FE;background:#FAF5FF;}
+.v-3 .v-title{color:#4C1D95;}
+.v-4{border-color:var(--line);background:#F8FAFC;}
+
+.footer{max-width:1100px;margin:28px auto 0;padding:14px 24px 0;border-top:1px solid var(--line);font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div style="max-width:1100px;margin:0 auto"><div class="back"><a href="../">&#8592; Lakehouse Hub</a></div></div>
+  <h1>Semantic Layer Options &mdash; SWOT Analysis</h1>
+  <p>Four options for the programmatic/agent semantic layer alongside Fabric (confirmed as BI/AI surface). Evaluated against RBC&rsquo;s on-prem Trino + Polaris + Iceberg stack, Python transforms (not dbt), Tableau, and OSFI data sovereignty requirements.</p>
+  <div class="hero-pills">
+    <span class="pill ok">&#10003; Fabric confirmed &mdash; BI/AI semantic layer (ADR-010)</span>
+    <span class="pill">Cube.dev retired</span>
+    <span class="pill">Python transforms &middot; no dbt &middot; ADR-005</span>
+    <span class="pill">Trino on-prem OCP &middot; Polaris &middot; MinIO</span>
+    <span class="pill">Research: April 2026</span>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="go('overview',this)">Overview</button>
+  <button class="tab" onclick="go('none',this)">Option A &mdash; No layer</button>
+  <button class="tab" onclick="go('atscale',this)">Option B &mdash; AtScale</button>
+  <button class="tab" onclick="go('starburst',this)">Option C &mdash; Starburst</button>
+  <button class="tab" onclick="go('dbt',this)">Option D &mdash; dbt MetricFlow</button>
+  <button class="tab" onclick="go('compare',this)">Head-to-Head</button>
+  <button class="tab" onclick="go('verdict',this)">Recommendation</button>
+</div>
+
+<!-- OVERVIEW -->
+<div class="panel active" id="panel-overview">
+  <div class="note info">
+    <strong>Context:</strong> Fabric is confirmed as the BI/AI semantic layer (ADR-010). The question is what, if anything, covers the programmatic/agent access path &mdash; Tableau, ML pipelines, AI agents, and any consumer that needs real-time Iceberg access or complex analytical SQL that DAX cannot express. Cube.dev is being retired. These four options replace it or eliminate the need for a replacement.
+  </div>
+  <div class="slabel">Four options evaluated</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
+    <div class="card" style="border-left:4px solid #94A3B8">
+      <div style="font-size:13px;font-weight:700;margin-bottom:5px;color:#475569">Option A &mdash; No secondary layer</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7">Retire Cube. Fabric is the only semantic layer. Tableau connects directly to Trino via JDBC. ML pipelines and agents use parameterised Trino SQL through a certified query pattern. No additional tooling.</div>
+    </div>
+    <div class="card" style="border-left:4px solid #1E4D8C">
+      <div style="font-size:13px;font-weight:700;margin-bottom:5px;color:#1E4D8C">Option B &mdash; AtScale</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7">Universal headless semantic layer. GigaOm 2025 Leader. Works with Trino, Iceberg, Tableau, and Power BI. On-prem deployment supported. Snowflake-led financing. Financial services focus. Presents metrics as OLAP cubes without changing end-user workflows.</div>
+    </div>
+    <div class="card" style="border-left:4px solid #065F46">
+      <div style="font-size:13px;font-weight:700;margin-bottom:5px;color:#065F46">Option C &mdash; Starburst (Trino Enterprise)</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7">Enterprise product built on top of Trino. RBC already runs OSS Trino &mdash; Starburst is an upgrade path, not a new component. Adds semantic views, data products, governance, and a catalog UI on the existing query engine.</div>
+    </div>
+    <div class="card" style="border-left:4px solid #7C3AED">
+      <div style="font-size:13px;font-weight:700;margin-bottom:5px;color:#7C3AED">Option D &mdash; dbt Semantic Layer (MetricFlow)</div>
+      <div style="font-size:11px;color:var(--muted);line-height:1.7">MetricFlow-powered metric definitions in YAML, exposed via REST/GraphQL. Most widely adopted vendor-neutral approach in 2026. Problem: requires dbt Cloud (not Core) and creates a dual-stack with RBC&rsquo;s Python-only transform pipeline (ADR-005).</div>
+    </div>
+  </div>
+</div>
+
+<!-- OPTION A: NO LAYER -->
+<div class="panel" id="panel-none">
+  <div class="opt-head" style="border-color:#CBD5E1;background:#F8FAFC">
+    <div class="opt-name" style="color:#475569">Option A &mdash; No Secondary Semantic Layer</div>
+    <div class="opt-tag" style="color:#64748B">Retire Cube. Fabric only. Tableau and agents use Trino directly.</div>
+  </div>
+  <div class="swot-grid">
+    <div class="sq S">
+      <div class="sq-title" style="color:var(--s)"><div class="ltr">S</div>Strengths</div>
+      <ul>
+        <li class="hl">Lowest complexity &mdash; one less component to operate, secure, and upgrade</li>
+        <li class="hl">No additional vendor contract, licensing, or OSFI third-party risk review</li>
+        <li>Fabric handles all metric governance for BI consumers &mdash; that&rsquo;s where 80% of consumption happens</li>
+        <li>Tableau analysts already write SQL against Teradata today &mdash; Trino JDBC is a natural migration</li>
+        <li>ML pipelines and agents get real-time Iceberg data without refresh lag</li>
+        <li>Certified query pattern (parameterised SQL) through a thin API layer already satisfies OSFI B-13 audit requirements</li>
+        <li>Removes the metric definition maintenance problem &mdash; single source of truth is Fabric DAX</li>
+        <li>Industry precedent: 35% of data teams operate without a dedicated semantic layer</li>
+      </ul>
+    </div>
+    <div class="sq W">
+      <div class="sq-title" style="color:var(--w)"><div class="ltr">W</div>Weaknesses</div>
+      <ul>
+        <li class="hl">Metric drift risk &mdash; Tableau analysts build ad-hoc SQL; same KPI defined differently in Tableau and Power BI</li>
+        <li class="hl">No governed business language for Tableau &mdash; analysts must understand Gold table schemas directly</li>
+        <li>AI agents querying Trino directly must understand raw schema &mdash; no business-meaning layer for NL queries on the Trino path</li>
+        <li>No caching layer &mdash; every Tableau query hits Trino and Iceberg; complex queries at peak times compete with ETL workloads</li>
+        <li>Harder to scale governance &mdash; access control via Privacera/Trino, but no metric-level lineage for BCBS 239</li>
+        <li>If RBC Assist needs to answer complex multi-hop questions that DAX cannot express, there is no governed fallback path</li>
+      </ul>
+    </div>
+    <div class="sq O">
+      <div class="sq-title" style="color:var(--o)"><div class="ltr">O</div>Opportunities</div>
+      <ul>
+        <li>Start simple, add a semantic layer later when the specific gap is validated by usage data &mdash; defer the decision with low cost</li>
+        <li>Polaris v1.3 catalog federation can expose governed views as pseudo-semantic definitions</li>
+        <li>Tableau Semantic Model (Tableau&rsquo;s own published data sources) provides lightweight metric governance within Tableau without a separate tool</li>
+        <li>FastAPI certified query pattern scales well &mdash; add new certified patterns incrementally as agent use cases are validated</li>
+      </ul>
+    </div>
+    <div class="sq T">
+      <div class="sq-title" style="color:var(--t)"><div class="ltr">T</div>Threats</div>
+      <ul>
+        <li class="hl">Metric drift becomes visible in audit &mdash; BCBS 239 examination asks &ldquo;how is this number calculated?&rdquo; and gets different answers from Tableau vs Power BI</li>
+        <li>AI agent failures at scale &mdash; agents writing free SQL against raw Gold tables without semantic context produce wrong answers without a semantic guardrail</li>
+        <li>Technical debt compounds &mdash; the longer there is no governed programmatic semantic layer, the more ad-hoc SQL queries accumulate in Tableau and Python notebooks</li>
+        <li>Eventual re-platforming cost &mdash; if metric drift becomes a problem in 12&ndash;18 months, migrating to AtScale or Starburst requires refactoring all Tableau data sources</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note tip"><strong>When Option A is the right answer:</strong> If Tableau is used primarily for ad-hoc exploration and certified management reporting lives in Power BI, the metric drift risk is low. If any Tableau reports are used in regulatory submissions or executive scorecards, the lack of governed metric definitions is a material BCBS 239 risk.</div>
+</div>
+
+<!-- OPTION B: ATSCALE -->
+<div class="panel" id="panel-atscale">
+  <div class="opt-head" style="border-color:#BFDBFE;background:#EFF6FF">
+    <div class="opt-name" style="color:#1E4D8C">Option B &mdash; AtScale</div>
+    <div class="opt-tag" style="color:#1E4D8C">Universal headless semantic layer &middot; GigaOm 2025 Leader &middot; on-prem supported &middot; Snowflake-led financing</div>
+  </div>
+  <div class="swot-grid">
+    <div class="sq S">
+      <div class="sq-title" style="color:var(--s)"><div class="ltr">S</div>Strengths</div>
+      <ul>
+        <li class="hl">GigaOm 2025 Radar Leader &mdash; recognised for enterprise governance and rapid innovation in the semantic layer category</li>
+        <li class="hl">Financial services focus &mdash; specific FS use cases, MDX/OLAP cube presentation familiar to RBC&rsquo;s existing Excel and SSAS users</li>
+        <li class="hl">On-prem deployment supported &mdash; compliance-heavy environments explicitly called out. OSFI B-10 risk is manageable</li>
+        <li class="hl">Snowflake-led financing &mdash; strategically aligned with RBC&rsquo;s Snowflake cloud burst path via Polaris Open Catalog</li>
+        <li>Works with Trino, Iceberg, Tableau, Power BI, Excel, and Databricks &mdash; covers every consumer in RBC&rsquo;s estate</li>
+        <li>Metrics defined once in AtScale, served to both Fabric (via connector) and Tableau &mdash; eliminates metric drift</li>
+        <li>Universal semantic layer does not replace Fabric &mdash; sits alongside it, serving consumers Fabric doesn&rsquo;t reach cleanly</li>
+        <li>Adaptive aggregates &mdash; AtScale materialises pre-aggregations on Trino/Iceberg, reducing query latency for Tableau dashboards without a full Import copy</li>
+        <li>Forrester Total Economic Impact study: 551% ROI, two-month payback period (2025)</li>
+      </ul>
+    </div>
+    <div class="sq W">
+      <div class="sq-title" style="color:var(--w)"><div class="ltr">W</div>Weaknesses</div>
+      <ul>
+        <li class="hl">Implementation complexity &mdash; user reports flag AtScale as challenging to implement; historically built around Hadoop ecosystem patterns</li>
+        <li class="hl">Another vendor, another OSFI B-10 review, another contract &mdash; adds to procurement and security approval cycle</li>
+        <li>Metric definitions in AtScale + DAX in Fabric = two authoring environments. Requires strict governance to prevent drift between them</li>
+        <li>Snowflake ownership post-financing introduces a commercial dependency &mdash; roadmap may favour Snowflake integration over on-prem Trino</li>
+        <li>MDX/OLAP presentation model adds complexity for teams more comfortable with SQL &mdash; learning curve for RBC&rsquo;s data engineering team</li>
+        <li>Pricing: enterprise licensing, not published. Requires procurement engagement before architecture commitment</li>
+      </ul>
+    </div>
+    <div class="sq O">
+      <div class="sq-title" style="color:var(--o)"><div class="ltr">O</div>Opportunities</div>
+      <ul>
+        <li class="hl">Single metric registry across Fabric and Tableau &mdash; define NII, VaR, LCR once in AtScale; both platforms query the same definition. Directly addresses BCBS 239 consistency requirement</li>
+        <li>AtScale MCP server (2025) &mdash; AI agents connect to AtScale via MCP, consuming governed metrics without writing raw SQL. Directly relevant to RBC Assist complex query path</li>
+        <li>Snowflake alignment &mdash; if Snowflake cloud burst becomes the primary analytics path, AtScale&rsquo;s Snowflake-led roadmap becomes a feature not a concern</li>
+        <li>Excel connectivity &mdash; MDX cube exposure to Excel gives risk and treasury users pivot-table access to governed Gold metrics without BI tool licensing</li>
+        <li>Open Semantic Interchange (OSI) participation &mdash; AtScale is contributing to the OSI standard; metric definitions may become portable across tools in 2026&ndash;2027</li>
+      </ul>
+    </div>
+    <div class="sq T">
+      <div class="sq-title" style="color:var(--t)"><div class="ltr">T</div>Threats</div>
+      <ul>
+        <li class="hl">Snowflake acquisition risk &mdash; Snowflake-led financing may precede full acquisition. If AtScale becomes Snowflake-native only, the on-prem Trino path could be deprioritised</li>
+        <li>Three semantic layers emerges &mdash; if teams bypass AtScale for direct Trino queries anyway, you end up maintaining AtScale, Fabric, and ad-hoc SQL simultaneously</li>
+        <li>Implementation drag &mdash; if AtScale&rsquo;s Hadoop legacy creates friction on a Trino/Iceberg stack, the POC could take longer than expected and delay Tableau migration from Teradata</li>
+        <li>OSI standardisation makes vendor-neutral YAML (MetricFlow) the industry default by 2027 &mdash; AtScale&rsquo;s proprietary model could become less differentiated</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note tip"><strong>Critical pre-commitment validation:</strong> Run a POC against RBC&rsquo;s specific Trino/Polaris/MinIO stack. AtScale&rsquo;s Hadoop origins have caused friction in modern lakehouse deployments. Validate adaptive aggregation performance on Gold Iceberg tables before architectural commitment. Confirm on-prem Kubernetes/OCP deployment is a supported and tested path.</div>
+</div>
+
+<!-- OPTION C: STARBURST -->
+<div class="panel" id="panel-starburst">
+  <div class="opt-head" style="border-color:#BBF7D0;background:#F0FDF4">
+    <div class="opt-name" style="color:#065F46">Option C &mdash; Starburst (Trino Enterprise)</div>
+    <div class="opt-tag" style="color:#065F46">Upgrade path on existing Trino &middot; adds semantic views + data products + governance &middot; no new query engine</div>
+  </div>
+  <div class="swot-grid">
+    <div class="sq S">
+      <div class="sq-title" style="color:var(--s)"><div class="ltr">S</div>Strengths</div>
+      <ul>
+        <li class="hl">Upgrade path, not a new component &mdash; RBC already runs OSS Trino. Starburst is the same query engine with enterprise features added. No new technology adoption risk</li>
+        <li class="hl">Semantic views on existing Gold tables &mdash; define governed virtual datasets directly in Starburst without a separate semantic layer service</li>
+        <li>Data products concept &mdash; Starburst&rsquo;s data product layer creates governed, discoverable data assets that Tableau and agents consume without raw schema knowledge</li>
+        <li>Starburst Enterprise security (SEP) &mdash; enterprise-grade Ranger integration, RBAC, and audit already aligned with Privacera</li>
+        <li>Single vendor for query engine + semantic layer + governance &mdash; reduces the total vendor footprint</li>
+        <li>Tableau connector built-in &mdash; Tableau connects to Starburst via JDBC with built-in column descriptions and semantic metadata</li>
+        <li>Dremio co-created Apache Polaris &mdash; Starburst&rsquo;s Polaris integration is first-class</li>
+        <li>One support contract covers Trino + semantic layer &mdash; operationally simpler than managing Trino OSS + AtScale separately</li>
+      </ul>
+    </div>
+    <div class="sq W">
+      <div class="sq-title" style="color:var(--w)"><div class="ltr">W</div>Weaknesses</div>
+      <ul>
+        <li class="hl">Starburst semantic layer is lighter than AtScale &mdash; semantic views are governed SQL views, not a full OLAP metric modelling environment. No MDX, no adaptive aggregation</li>
+        <li class="hl">Commercial product for something currently free &mdash; RBC runs OSS Trino at no licensing cost. Starburst Enterprise adds significant licensing cost for features that may only be partially used</li>
+        <li>Metric definitions still live in Starburst + DAX in Fabric &mdash; two authoring environments, same drift risk as AtScale</li>
+        <li>No Excel/MDX connectivity &mdash; risk and treasury teams who work in Excel pivot tables need AtScale or a separate SSAS-compatible layer</li>
+        <li>Starburst roadmap driven by Databricks competition &mdash; product investment may prioritise cloud features over on-prem semantic layer depth</li>
+        <li>SEP (Starburst Enterprise Policy) vs Privacera overlap &mdash; RBC already evaluating Privacera/Trust3 AI. Running both creates policy governance complexity</li>
+      </ul>
+    </div>
+    <div class="sq O">
+      <div class="sq-title" style="color:var(--o)"><div class="ltr">O</div>Opportunities</div>
+      <ul>
+        <li class="hl">Consolidate Trino OSS + semantic layer + governance into one supported platform &mdash; Gautam&rsquo;s team gets enterprise SLA, support, and upgrade path for the core query engine</li>
+        <li>Data products as the programmatic trust boundary &mdash; Starburst data products can serve as the certified query registry, replacing the need for a custom FastAPI layer</li>
+        <li>Starburst + Polaris is a validated production combination &mdash; reference architectures exist for this stack</li>
+        <li>Galaxy (Starburst UI) as a data catalog supplement &mdash; provides data discovery and lineage on top of Gold Iceberg without a separate catalog tool</li>
+      </ul>
+    </div>
+    <div class="sq T">
+      <div class="sq-title" style="color:var(--t)"><div class="ltr">T</div>Threats</div>
+      <ul>
+        <li class="hl">Vendor lock-in on the query engine &mdash; migrating from Starburst Enterprise back to OSS Trino or to another engine becomes harder once semantic views and data products are built on Starburst-specific features</li>
+        <li>Price escalation risk &mdash; Starburst is a VC-backed company; enterprise licensing costs have increased as the product matures. RBC&rsquo;s usage at 1.5 PB scale could generate significant licensing cost</li>
+        <li>Privacera/SEP policy conflict &mdash; if both Starburst SEP and Privacera are in play, policy authority becomes ambiguous. One must be the system of record for access control</li>
+        <li>OSS Trino community advancement &mdash; Trino OSS ships features rapidly; Starburst Enterprise features lag OSS by 3&ndash;6 months while adding licensing cost</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note info"><strong>The key question for Starburst:</strong> Is the upgrade justified by the semantic layer feature set, or by the enterprise support SLA on Trino? If the primary motivation is getting enterprise support for Trino (not the semantic layer), that is a separate, more straightforward decision. Don&rsquo;t buy Starburst for the semantic layer if the semantic views capability is not materially better than what OSS Trino provides today.</div>
+</div>
+
+<!-- OPTION D: DBT -->
+<div class="panel" id="panel-dbt">
+  <div class="opt-head" style="border-color:var(--t-b);background:var(--t-bg)">
+    <div class="opt-name" style="color:#4C1D95">Option D &mdash; dbt Semantic Layer (MetricFlow)</div>
+    <div class="opt-tag" style="color:#4C1D95">Most widely adopted vendor-neutral approach &middot; YAML in source control &middot; requires dbt Cloud &middot; conflicts with ADR-005</div>
+  </div>
+  <div class="swot-grid">
+    <div class="sq S">
+      <div class="sq-title" style="color:var(--s)"><div class="ltr">S</div>Strengths</div>
+      <ul>
+        <li class="hl">Most widely adopted vendor-neutral semantic layer in 2026 &mdash; 18% market share, growing rapidly, de facto standard for dbt-native teams</li>
+        <li>Metrics as code in Git &mdash; YAML metric definitions live alongside data models in version control, PR reviewed, CI tested. The governance model RBC already uses for Python pipelines</li>
+        <li>OSI standard leadership &mdash; dbt Labs, Snowflake, and Salesforce are driving the Open Semantic Interchange standard. MetricFlow YAML may become the industry portability format</li>
+        <li>REST/GraphQL API &mdash; programmatic consumers call the dbt Cloud API to query any metric. Serves Tableau, agents, and ML pipelines from one endpoint</li>
+        <li>Apache-licensed MetricFlow engine &mdash; the computation core is open source. No proprietary lock-in on the modelling language</li>
+        <li>Trino adapter exists &mdash; MetricFlow can generate SQL for Trino, so the underlying query engine is compatible</li>
+      </ul>
+    </div>
+    <div class="sq W">
+      <div class="sq-title" style="color:var(--w)"><div class="ltr">W</div>Weaknesses</div>
+      <ul>
+        <li class="hl">Requires dbt Cloud &mdash; the Semantic Layer API that BI tools and agents consume is dbt Cloud-only. Not available in dbt Core. Adds a SaaS dependency RBC doesn&rsquo;t currently have</li>
+        <li class="hl">ADR-005 conflict &mdash; RBC uses Python for all transforms, not dbt. Running dbt only for the semantic layer creates a dual-stack: Python pipelines + dbt YAML metric definitions. Two codebases to maintain for transforms and metrics</li>
+        <li class="hl">No on-prem deployment &mdash; dbt Cloud is SaaS-only for the Semantic Layer API endpoint. MetricFlow OSS can run standalone but without the governed API layer. OSFI B-10 exposure for policy metadata</li>
+        <li>Team skill gap &mdash; RBC&rsquo;s data engineering team is Python-native, not dbt-native. Adopting dbt YAML authoring for metrics only adds a learning curve without the broader dbt ecosystem benefits</li>
+        <li>No caching or pre-aggregation &mdash; MetricFlow generates SQL on demand. No adaptive aggregates like AtScale. Every query hits Trino at full cost</li>
+        <li>Metric definitions in dbt YAML + DAX in Fabric = two authoring environments with different syntax. Same drift risk as other options, but harder to justify given the skill gap</li>
+      </ul>
+    </div>
+    <div class="sq O">
+      <div class="sq-title" style="color:var(--o)"><div class="ltr">O</div>Opportunities</div>
+      <ul>
+        <li>OSI standard convergence &mdash; if MetricFlow YAML becomes the industry standard by 2027, metric definitions written today in dbt format become portable to any consuming platform</li>
+        <li>Community ecosystem &mdash; the dbt community is the largest data engineering community. Tooling, integrations, and best practices are well-documented</li>
+        <li>If RBC ever revisits the Python-only transform decision, dbt adoption for the semantic layer provides a natural migration path to dbt transforms</li>
+      </ul>
+    </div>
+    <div class="sq T">
+      <div class="sq-title" style="color:var(--t)"><div class="ltr">T</div>Threats</div>
+      <ul>
+        <li class="hl">ADR-005 creates direct architectural tension &mdash; introducing dbt for the semantic layer implicitly reopens the Python-vs-dbt decision for transforms. Mission creep is a real risk</li>
+        <li>dbt Cloud SaaS = OSFI B-10 review required &mdash; metric definitions (what is &ldquo;net interest income&rdquo;, which tables it reads) would live in a US-hosted SaaS. Policy metadata exposure, similar to the Privacera concern</li>
+        <li>Version instability &mdash; MetricFlow is at v0.x versioning despite GA status. dbt notes rapid evolution means minor versions may introduce breaking changes</li>
+        <li>Cost at scale &mdash; dbt Cloud Team/Enterprise pricing for a 150-person data org adds meaningful SaaS cost for a tool only used for the semantic layer endpoint</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note warn"><strong>Honest assessment:</strong> dbt Semantic Layer is the right answer for teams already standardised on dbt. It is the wrong answer for RBC. ADR-005 chose Python precisely to avoid dbt dependency. Introducing dbt Cloud for the semantic layer alone contradicts that decision, creates a dual-stack, and adds a SaaS B-10 exposure. Option D should be deprioritised unless ADR-005 is explicitly revisited.</div>
+</div>
+
+<!-- HEAD-TO-HEAD -->
+<div class="panel" id="panel-compare">
+  <div class="slabel">Feature Comparison</div>
+  <div style="overflow-x:auto">
+  <table class="ctable">
+    <thead><tr>
+      <th class="ch" style="min-width:180px">Dimension</th>
+      <th class="ch" style="min-width:130px;background:#475569">A &mdash; None</th>
+      <th class="ch" style="min-width:130px;background:#1E4D8C">B &mdash; AtScale</th>
+      <th class="ch" style="min-width:130px;background:#065F46">C &mdash; Starburst</th>
+      <th class="ch" style="min-width:130px;background:#4C1D95">D &mdash; dbt</th>
+    </tr></thead>
+    <tbody>
+      <tr class="cat-row"><td colspan="5">FIT WITH RBC ARCHITECTURE</td></tr>
+      <tr><td>New component required</td><td><span class="p p-yes">&#10003; None</span></td><td><span class="p p-no">New service</span></td><td><span class="p p-part">Trino upgrade</span></td><td><span class="p p-no">New + dbt Cloud SaaS</span></td></tr>
+      <tr><td>Conflicts with ADR-005 (Python only)</td><td><span class="p p-yes">&#10003; No conflict</span></td><td><span class="p p-yes">&#10003; No conflict</span></td><td><span class="p p-yes">&#10003; No conflict</span></td><td><span class="p p-no">&#10007; Direct conflict</span></td></tr>
+      <tr><td>On-prem / OSFI B-10</td><td><span class="p p-yes">&#10003; 100% on-prem</span></td><td><span class="p p-part">On-prem supported &mdash; validate</span></td><td><span class="p p-yes">&#10003; On-prem</span></td><td><span class="p p-no">&#10007; SaaS only for API</span></td></tr>
+      <tr><td>Trino / Iceberg native</td><td><span class="p p-yes">&#10003; Is Trino</span></td><td><span class="p p-part">Supported &mdash; POC needed</span></td><td><span class="p p-yes">&#10003; Is Trino</span></td><td><span class="p p-part">Adapter exists</span></td></tr>
+
+      <tr class="cat-row"><td colspan="5">CONSUMER COVERAGE</td></tr>
+      <tr><td>Power BI / Fabric</td><td><span class="p p-na">Fabric handles this</span></td><td><span class="p p-yes">&#10003; Connector</span></td><td><span class="p p-part">JDBC</span></td><td><span class="p p-part">API</span></td></tr>
+      <tr><td>Tableau</td><td><span class="p p-part">Raw Trino JDBC</span></td><td><span class="p p-yes">&#10003; Governed metrics</span></td><td><span class="p p-yes">&#10003; JDBC + data products</span></td><td><span class="p p-part">API connector</span></td></tr>
+      <tr><td>Excel (MDX/pivot)</td><td><span class="p p-no">&#10007; No</span></td><td><span class="p p-yes">&#10003; MDX cube</span></td><td><span class="p p-no">&#10007; No MDX</span></td><td><span class="p p-no">&#10007; No MDX</span></td></tr>
+      <tr><td>ML pipelines / agents</td><td><span class="p p-part">Parameterised SQL</span></td><td><span class="p p-yes">&#10003; REST + MCP server</span></td><td><span class="p p-yes">&#10003; Data products API</span></td><td><span class="p p-yes">&#10003; REST/GraphQL API</span></td></tr>
+      <tr><td>Databricks cloud burst</td><td><span class="p p-part">Direct Trino/Iceberg</span></td><td><span class="p p-yes">&#10003; Supported</span></td><td><span class="p p-part">Separate Starburst deployment</span></td><td><span class="p p-part">Adapter</span></td></tr>
+
+      <tr class="cat-row"><td colspan="5">GOVERNANCE &amp; METRICS</td></tr>
+      <tr><td>Metric definition centralised</td><td><span class="p p-no">&#10007; Fabric only (no Tableau)</span></td><td><span class="p p-yes">&#10003; Single registry</span></td><td><span class="p p-part">Starburst views</span></td><td><span class="p p-yes">&#10003; YAML in Git</span></td></tr>
+      <tr><td>BCBS 239 metric consistency</td><td><span class="p p-no">&#10007; Drift risk Tableau vs Fabric</span></td><td><span class="p p-yes">&#10003; One definition everywhere</span></td><td><span class="p p-part">Partial</span></td><td><span class="p p-yes">&#10003; Version-controlled</span></td></tr>
+      <tr><td>Pre-aggregation / caching</td><td><span class="p p-no">&#10007; No</span></td><td><span class="p p-yes">&#10003; Adaptive aggregates</span></td><td><span class="p p-no">&#10007; No</span></td><td><span class="p p-no">&#10007; On-demand SQL only</span></td></tr>
+
+      <tr class="cat-row"><td colspan="5">OPERATIONAL &amp; COMMERCIAL</td></tr>
+      <tr><td>Operational complexity</td><td><span class="p p-yes">&#10003; Lowest</span></td><td><span class="p p-no">Highest (new service)</span></td><td><span class="p p-part">Medium (Trino upgrade)</span></td><td><span class="p p-no">High (dual-stack)</span></td></tr>
+      <tr><td>Financial services track record</td><td><span class="p p-na">N/A</span></td><td><span class="p p-yes">&#10003; Specific FS use cases</span></td><td><span class="p p-part">General enterprise</span></td><td><span class="p p-part">Growing</span></td></tr>
+      <tr><td>Licensing cost</td><td><span class="p p-yes">&#10003; None</span></td><td><span class="p p-no">Enterprise &mdash; unpublished</span></td><td><span class="p p-no">Enterprise &mdash; significant</span></td><td><span class="p p-no">dbt Cloud Team/Enterprise</span></td></tr>
+      <tr><td>RBC recommendation</td><td><span class="p p-part">&#9888; If Tableau is ad-hoc only</span></td><td><span class="p p-yes">&#10003; If governed Tableau metrics required</span></td><td><span class="p p-part">&#9888; If Trino enterprise SLA is the driver</span></td><td><span class="p p-no">&#10007; Conflicts with ADR-005</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</div>
+
+<!-- VERDICT -->
+<div class="panel" id="panel-verdict">
+  <div class="slabel">RBC Recommendation</div>
+  <div class="verdict v-rec">
+    <div class="v-title">Recommended: Start with Option A, evaluate AtScale if Tableau metric governance becomes a validated requirement</div>
+    <div class="v-body">
+      Retire Cube.dev. Make Fabric the only semantic layer. Tableau connects to Trino via JDBC. ML pipelines and agents use parameterised Trino through the certified query pattern (FastAPI or Cube&rsquo;s existing REST endpoint as a thin pass-through while deprecating).<br/><br/>
+      The reason to start here rather than jumping to AtScale is sequencing: <strong>the Tableau use case has not been validated post-Teradata migration.</strong> It is possible that most certified Tableau reporting migrates to Power BI as part of the OBIEE consolidation, leaving Tableau only for ad-hoc exploration. In that case, Option A is the permanent answer and AtScale would be unnecessary cost and complexity.<br/><br/>
+      Revisit in 3&ndash;6 months when the Tableau migration scope is clear.
+    </div>
+  </div>
+  <div class="verdict v-2">
+    <div class="v-title">Trigger for AtScale (Option B): Tableau metric governance at scale</div>
+    <div class="v-body">
+      If Tableau is confirmed as a platform for certified management reporting &mdash; not just ad-hoc exploration &mdash; then the BCBS 239 metric consistency requirement kicks in and AtScale becomes the right answer. One metric definition served to both Fabric and Tableau eliminates the drift risk. The Snowflake alignment and financial services focus are genuine advantages. Run a POC against the Trino/Polaris/MinIO stack before committing.<br/><br/>
+      <strong>Do not evaluate AtScale until the Tableau scope is known.</strong> Procurement and a POC before that is wasted effort.
+    </div>
+  </div>
+  <div class="verdict v-3">
+    <div class="v-title">Trigger for Starburst (Option C): Enterprise Trino SLA is the driver, not the semantic layer</div>
+    <div class="v-body">
+      If Gautam&rsquo;s team needs an enterprise SLA and support contract for Trino &mdash; the query engine that everything routes through &mdash; Starburst makes sense. The semantic layer feature comes along for free in that context. But don&rsquo;t buy Starburst primarily for the semantic layer; its semantic views are lighter than AtScale and the licensing cost is significant for what amounts to governed SQL views.
+    </div>
+  </div>
+  <div class="verdict v-4">
+    <div class="v-title">Option D (dbt): Not recommended</div>
+    <div class="v-body" style="color:var(--muted)">
+      Direct conflict with ADR-005. Requires dbt Cloud SaaS with OSFI B-10 exposure. Dual-stack maintenance burden alongside Python transforms. No on-prem deployment option for the Semantic Layer API. Do not pursue unless ADR-005 is explicitly reopened.
+    </div>
+  </div>
+
+  <div class="note info" style="margin-top:8px"><strong>Open question added to leadership questions list (Q-10):</strong> What is the confirmed scope of Tableau usage post-OBIEE migration &mdash; certified reporting or ad-hoc only? The answer determines whether a secondary semantic layer is required and which option is appropriate.</div>
+</div>
+
+<div class="footer">
+  <span>Lumina &middot; RBC Enterprise Data &middot; Semantic Layer Options SWOT &middot; April 2026</span>
+  <span>George Chilakos, VP Enterprise Data</span>
+</div>
+
+<script>
+function go(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

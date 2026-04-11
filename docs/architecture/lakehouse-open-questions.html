@@ -694,12 +694,51 @@ body {
     </div>
   </div>
 
+  <div style="border-radius:10px;border:1.5px solid #BFDBFE;background:#EFF6FF;padding:20px 24px;margin-top:12px">
+    <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:12px">
+      <div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:#BFDBFE;flex-shrink:0;line-height:1;margin-top:2px">10</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:700;color:#1E3A5F;margin-bottom:4px">What is the confirmed scope of Tableau usage post-OBIEE migration — certified reporting or ad-hoc only?</div>
+        <div style="display:inline-block;font-size:9px;font-weight:700;padding:2px 8px;border-radius:4px;background:#1E4D8C;color:#fff;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:0.5px">Technical</div>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#1E3A5F;line-height:1.8;margin-bottom:12px">
+      <strong>Why this matters now:</strong> Cube.dev is being retired. Fabric (ADR-010) is confirmed as the primary BI/AI semantic layer. The question of whether a secondary semantic layer is needed — and which one — depends entirely on what Tableau is used for post-migration. If Tableau is used for certified management reporting (regulatory submissions, executive scorecards), BCBS 239 metric consistency requires a governed semantic layer across both Fabric and Tableau. If Tableau is ad-hoc exploration only, no secondary semantic layer is needed and Trino JDBC access is sufficient.
+      <br/><br/>
+      <strong>Context:</strong> Four options have been evaluated (see <a href="../swot/semantic-layer-options-swot.html" style="color:#1E4D8C;font-weight:700">Semantic Layer Options SWOT</a>): (A) No secondary layer — Fabric only, Tableau uses raw Trino; (B) AtScale — universal headless semantic layer, GigaOm 2025 Leader, on-prem supported, Snowflake-led financing; (C) Starburst — enterprise upgrade on existing Trino; (D) dbt MetricFlow — conflicts with ADR-005. The recommendation is to start with Option A and re-evaluate AtScale once Tableau scope is confirmed.
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+      <div style="background:rgba(255,255,255,0.7);border-radius:7px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:700;color:#1E3A5F;margin-bottom:5px">If Tableau = certified reporting</div>
+        <ul style="padding-left:14px;font-size:10px;color:#1E3A5F;line-height:1.8">
+          <li>BCBS 239 metric consistency is mandatory</li>
+          <li>AtScale (Option B) — evaluate via POC</li>
+          <li>One metric definition for Fabric + Tableau</li>
+          <li>Requires OSFI B-10 review of AtScale</li>
+        </ul>
+      </div>
+      <div style="background:rgba(255,255,255,0.7);border-radius:7px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:700;color:#1E3A5F;margin-bottom:5px">If Tableau = ad-hoc exploration only</div>
+        <ul style="padding-left:14px;font-size:10px;color:#1E3A5F;line-height:1.8">
+          <li>No secondary semantic layer required</li>
+          <li>Tableau via Trino JDBC is sufficient</li>
+          <li>Simplest architecture — Fabric only</li>
+          <li>Revisit if agent NL query scope expands</li>
+        </ul>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;padding-top:10px;border-top:1px solid #BFDBFE">
+      <div style="font-size:10px;color:#1E3A5F">Owner: VP Enterprise Data + JoAnn (DA Team) + Saurabh (PM)</div>
+      <div style="font-size:10px;font-weight:700;color:#D97706">🟡 Medium — needed before Tableau migration planning begins</div>
+    </div>
+  </div>
+
 </div>
 
 <!-- FOOTER -->
 <div class="doc-footer">
   <p>Lumina · Enterprise Data · VP George Chilakos · April 2026 · Internal — Leadership Working Group</p>
-  <p>9 open questions · 3 high urgency · 3 medium · next review: Architecture Working Group</p>
+  <p>10 open questions · 3 high urgency · 4 medium · next review: Architecture Working Group</p>
 </div>
 
 <script>
