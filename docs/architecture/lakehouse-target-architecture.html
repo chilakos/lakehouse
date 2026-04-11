@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RBC Enterprise Lakehouse — Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+
+:root {
+  --navy:    #0A1628;
+  --navy2:   #112240;
+  --blue:    #1E4D8C;
+  --accent:  #2563EB;
+  --accent2: #3B82F6;
+  --soft:    #EFF4FF;
+  --line:    #CBD5E1;
+  --muted:   #64748B;
+  --text:    #1E293B;
+  --white:   #FFFFFF;
+  --green:   #059669;
+  --amber:   #D97706;
+  --red:     #DC2626;
+  --purple:  #7C3AED;
+  --teal:    #0D9488;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #F8FAFC;
+  color: var(--text);
+  min-height: 100vh;
+  padding: 32px 24px;
+}
+
+/* ── PAGE HEADER ── */
+.page-header {
+  max-width: 1100px;
+  margin: 0 auto 36px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 20px;
+}
+.page-header .brand { display: flex; align-items: center; gap: 14px; }
+.rbc-mark {
+  width: 36px; height: 36px;
+  background: var(--navy);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: white; font-weight: 600; font-size: 14px; letter-spacing: 0.5px;
+}
+.page-header h1 { font-size: 20px; font-weight: 600; color: var(--navy); letter-spacing: -0.3px; }
+.page-header .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.page-header .meta { text-align: right; font-size: 11px; color: var(--muted); line-height: 1.8; font-family: 'DM Mono', monospace; }
+
+/* ── MAIN CANVAS ── */
+.canvas {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── PLANES ── */
+.plane {
+  border-radius: 12px;
+  padding: 20px 22px;
+  position: relative;
+}
+.plane-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.plane-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.2;
+}
+
+.plane-onprem {
+  background: var(--white);
+  border: 1.5px solid var(--line);
+}
+.plane-cloud {
+  background: #F0F7FF;
+  border: 1.5px dashed #93C5FD;
+}
+.plane-fabric {
+  background: #F5F0FF;
+  border: 1.5px dashed #C4B5FD;
+}
+
+/* ── ROWS ── */
+.row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.row:last-child { margin-bottom: 0; }
+
+/* ── NODES ── */
+.node {
+  border-radius: 8px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 120px;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  cursor: default;
+}
+.node:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+.node .n-icon { font-size: 16px; margin-bottom: 2px; line-height: 1; }
+.node .n-name { font-size: 11px; font-weight: 600; line-height: 1.3; }
+.node .n-role { font-size: 9px; opacity: 0.7; line-height: 1.4; }
+.node .n-tag  {
+  font-size: 8px; font-weight: 600; font-family: 'DM Mono', monospace;
+  padding: 1px 5px; border-radius: 4px; margin-top: 4px;
+  display: inline-block; width: fit-content;
+}
+
+/* Node colour schemes */
+.n-engine  { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; }
+.n-engine .n-tag  { background: #DBEAFE; color: #1D4ED8; }
+
+.n-catalog { background: #F0FDF4; border: 1px solid #BBF7D0; color: #065F46; }
+.n-catalog .n-tag { background: #D1FAE5; color: #047857; }
+
+.n-security { background: #FFF7ED; border: 1px solid #FED7AA; color: #92400E; }
+.n-security .n-tag { background: #FFEDD5; color: #C2410C; }
+
+.n-storage { background: #F8FAFC; border: 1px solid #CBD5E1; color: #334155; }
+.n-storage .n-tag { background: #E2E8F0; color: #475569; }
+
+.n-identity { background: #FFFBEB; border: 1px solid #FDE68A; color: #78350F; }
+.n-identity .n-tag { background: #FEF3C7; color: #92400E; }
+
+.n-lineage { background: #F0FDFA; border: 1px solid #99F6E4; color: #134E4A; }
+.n-lineage .n-tag { background: #CCFBF1; color: #0F766E; }
+
+.n-siem { background: #1E293B; border: 1px solid #334155; color: #E2E8F0; }
+.n-siem .n-role { opacity: 0.6; }
+.n-siem .n-tag { background: #334155; color: #94A3B8; }
+
+.n-vault { background: #FDF4FF; border: 1px solid #E9D5FF; color: #581C87; }
+.n-vault .n-tag { background: #F3E8FF; color: #6B21A8; }
+
+.n-cloud-engine { background: #EFF6FF; border: 1px dashed #93C5FD; color: #1E40AF; }
+.n-cloud-engine .n-tag { background: #DBEAFE; color: #1D4ED8; }
+
+.n-fabric-node { background: #FAF5FF; border: 1px dashed #C4B5FD; color: #4C1D95; }
+.n-fabric-node .n-tag { background: #EDE9FE; color: #5B21B6; }
+
+.n-optional {
+  opacity: 0.6;
+  border-style: dashed !important;
+}
+.n-optional::after {
+  content: 'optional';
+  position: absolute;
+  top: 6px; right: 8px;
+  font-size: 7px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── CONNECTORS ── */
+.connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 4px 0;
+}
+.conn-line {
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+  max-width: 80px;
+}
+.conn-label {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  padding: 2px 8px;
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.conn-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 0;
+  color: var(--muted);
+}
+.conn-vertical .cv-line {
+  width: 1px;
+  height: 16px;
+  background: var(--line);
+}
+.conn-vertical .cv-label {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+}
+
+/* ── SECTION DIVIDERS ── */
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0;
+}
+.section-divider span {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+}
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
+/* ── BRIDGE ZONE ── */
+.bridge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  gap: 16px;
+}
+.bridge-line {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.bridge-dots {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+.bridge-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: #93C5FD;
+  animation: pulse 1.8s ease-in-out infinite;
+}
+.bridge-dot:nth-child(2) { animation-delay: 0.3s; }
+.bridge-dot:nth-child(3) { animation-delay: 0.6s; }
+@keyframes pulse { 0%,100%{opacity:0.3} 50%{opacity:1} }
+.bridge-label {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: #60A5FA;
+  text-align: center;
+  letter-spacing: 0.3px;
+}
+
+/* ── LEGEND ── */
+.legend {
+  max-width: 1100px;
+  margin: 20px auto 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.legend-title {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-right: 4px;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  color: var(--muted);
+}
+.legend-swatch {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  border: 1px solid;
+}
+.decision-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  padding: 3px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: white;
+}
+.decision-badge.decided { border-color: #86EFAC; color: #166534; background: #F0FDF4; }
+.decision-badge.open    { border-color: #FCD34D; color: #92400E; background: #FFFBEB; }
+
+/* ── ADR CHIPS ── */
+.adr {
+  font-size: 7px;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: #1E293B;
+  color: #94A3B8;
+  display: inline-block;
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}
+
+/* ── GROUP LABEL ── */
+.group-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  margin-top: 4px;
+}
+
+</style>
+</head>
+<body>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="brand">
+    <div class="rbc-mark">RBC</div>
+    <div>
+      <h1>Enterprise Lakehouse — Target Architecture</h1>
+      <div class="sub">Lumina · Enterprise Data · April 2026</div>
+    </div>
+  </div>
+  <div class="meta">
+    Catalog: Apache Polaris &nbsp;·&nbsp; Security: Privacera<br/>
+    Deployment: OpenShift (on-prem) + Cloud burst<br/>
+    Status: Architecture decisions confirmed
+  </div>
+</div>
+
+<div class="canvas">
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- ON-PREM PLANE                                     -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="plane plane-onprem">
+    <div class="plane-label" style="color: var(--navy)">
+      Canadian Data Centre &nbsp;·&nbsp; OpenShift (OCP) &nbsp;·&nbsp; Primary Plane &nbsp;·&nbsp; OSFI Data Residency
+    </div>
+
+    <!-- IDENTITY -->
+    <div class="group-label">Identity & Authentication</div>
+    <div class="row">
+      <div class="node n-identity" style="flex:0 0 auto; min-width:150px">
+        <div class="n-icon">🪪</div>
+        <div class="n-name">Active Directory</div>
+        <div class="n-role">Users · Groups · Kerberos · Source of truth</div>
+        <div class="n-tag">enterprise SSO</div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 4px;color:var(--muted);font-size:11px">→</div>
+      <div class="node n-identity" style="flex:0 0 auto; min-width:150px">
+        <div class="n-icon">🔑</div>
+        <div class="n-name">Keycloak</div>
+        <div class="n-role">OIDC bridge · AD → OAuth2 tokens · JWT issuance</div>
+        <div class="n-tag">identity bridge</div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 4px;color:var(--muted);font-size:11px">→</div>
+      <div class="node n-vault" style="flex:0 0 auto; min-width:150px">
+        <div class="n-icon">🗝️</div>
+        <div class="n-name">HashiCorp Vault</div>
+        <div class="n-role">Secrets · Encryption keys (KMS) · STS token broker · PAM integration</div>
+        <div class="n-tag">secrets + KMS</div>
+      </div>
+    </div>
+
+    <div class="section-divider"><span>compute engines</span></div>
+
+    <!-- ENGINES -->
+    <div class="row">
+      <div class="node n-engine">
+        <div class="n-icon">⚡</div>
+        <div class="n-name">Spark / Kyuubi</div>
+        <div class="n-role">Primary writer · ETL/ELT · Batch transforms · Python pipelines</div>
+        <div class="n-tag">primary writer</div>
+      </div>
+      <div class="node n-engine">
+        <div class="n-icon">🔍</div>
+        <div class="n-name">Trino</div>
+        <div class="n-role">Interactive analytics · Ad-hoc SQL · Federation queries · Low-latency reads</div>
+        <div class="n-tag">query engine</div>
+      </div>
+      <div class="node n-engine n-optional">
+        <div class="n-icon">🌿</div>
+        <div class="n-name">Nessie</div>
+        <div class="n-role">Write-Audit-Publish branching · Regulatory snapshots · Multi-table atomic commits</div>
+        <div class="n-tag">WAP / branching</div>
+        <div class="adr">future decision</div>
+      </div>
+    </div>
+
+    <div class="section-divider"><span>security & authorization</span></div>
+
+    <!-- PRIVACERA -->
+    <div class="row">
+      <div class="node n-security" style="flex:2; min-width:320px">
+        <div class="n-icon">🔐</div>
+        <div class="n-name">Privacera</div>
+        <div class="n-role">Column masking · Row-level security · ABAC/RBAC · AD/LDAP sync · Unified audit trail · Query-pattern controls · DLP export controls · Schema sync from Polaris · Agents on Spark, Trino, Databricks</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+          <span class="n-tag">authorization</span>
+          <span class="n-tag">masking</span>
+          <span class="n-tag">audit</span>
+          <span class="n-tag">DLP</span>
+        </div>
+      </div>
+      <div class="node n-siem" style="flex:1">
+        <div class="n-icon">📊</div>
+        <div class="n-name">SIEM</div>
+        <div class="n-role">Splunk / Elastic · Privacera audit aggregation · PCI 10.x automated review · 7yr WORM retention · Anomaly alerting</div>
+        <div class="n-tag">compliance audit</div>
+      </div>
+    </div>
+
+    <div class="section-divider"><span>catalog & metadata</span></div>
+
+    <!-- CATALOG -->
+    <div class="row">
+      <div class="node n-catalog" style="flex:2">
+        <div class="n-icon">📋</div>
+        <div class="n-name">Apache Polaris</div>
+        <div class="n-role">Iceberg REST catalog · Table metadata · Snapshot history · Schema evolution · Atomic commits · Credential vending (STS) · Multi-tenant namespaces · PostgreSQL backed</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+          <span class="n-tag">REST catalog</span>
+          <span class="n-tag">credential vending</span>
+          <span class="n-tag">iceberg V2</span>
+          <div class="adr">ADR decided</div>
+        </div>
+      </div>
+      <div class="node n-lineage" style="flex:1">
+        <div class="n-icon">📍</div>
+        <div class="n-name">OpenLineage + Marquez</div>
+        <div class="n-role">Column-level lineage · Spark + Trino emitters · BCBS 239 compliance · Data provenance graph</div>
+        <div class="n-tag">BCBS 239 lineage</div>
+      </div>
+    </div>
+
+    <div class="section-divider"><span>storage</span></div>
+
+    <!-- STORAGE -->
+    <div class="row">
+      <div class="node n-storage" style="flex:2">
+        <div class="n-icon">🪣</div>
+        <div class="n-name">MinIO AIStor</div>
+        <div class="n-role">S3-compatible on-prem object store · Iceberg Parquet/ORC files · AES-256 encryption at rest (SSE-KMS via Vault) · Object Lock (WORM) for audit logs · STS endpoint for credential vending</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+          <span class="n-tag">medallion storage</span>
+          <span class="n-tag">encrypted at rest</span>
+          <span class="n-tag">WORM</span>
+        </div>
+      </div>
+      <div class="node n-storage" style="flex:1; opacity:0.7">
+        <div class="n-icon">🗄️</div>
+        <div class="n-name">PostgreSQL</div>
+        <div class="n-role">Polaris catalog metadata store · HA required · Separate from data plane</div>
+        <div class="n-tag">catalog backend</div>
+      </div>
+    </div>
+
+    <!-- MEDALLION LABELS -->
+    <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
+      <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--muted);background:#F1F5F9;border:1px solid var(--line);border-radius:5px;padding:4px 10px">
+        Bronze → Silver → Gold &nbsp;·&nbsp; Iceberg V2 tables &nbsp;·&nbsp; Python transforms (no dbt, no Spark DAGs)
+      </div>
+      <div style="font-size:9px;font-family:'DM Mono',monospace;color:#059669;background:#F0FDF4;border:1px solid #86EFAC;border-radius:5px;padding:4px 10px">
+        All TLS 1.2+ &nbsp;·&nbsp; mTLS service-to-service &nbsp;·&nbsp; OCP NetworkPolicy egress controls
+      </div>
+    </div>
+
+  </div>
+
+  <!-- BRIDGE -->
+  <div class="bridge">
+    <div style="flex:1;height:1px;background:linear-gradient(to right,transparent,#93C5FD)"></div>
+    <div style="text-align:center">
+      <div class="bridge-dots"><div class="bridge-dot"></div><div class="bridge-dot"></div><div class="bridge-dot"></div></div>
+      <div class="bridge-label">ExpressRoute / AWS PrivateLink &nbsp;·&nbsp; HTTPS :443 &nbsp;·&nbsp; REST catalog &nbsp;·&nbsp; Vended STS credentials &nbsp;·&nbsp; OAuth2 tokens</div>
+    </div>
+    <div style="flex:1;height:1px;background:linear-gradient(to left,transparent,#93C5FD)"></div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- CLOUD BURST PLANE                                 -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="plane plane-cloud">
+    <div class="plane-label" style="color: #1D4ED8">
+      Cloud Burst &nbsp;·&nbsp; Compute only &nbsp;·&nbsp; Data stays in Canadian DC &nbsp;·&nbsp; ca-central-1 / Canada Central
+    </div>
+    <div class="row">
+      <div class="node n-cloud-engine">
+        <div class="n-icon">⚙️</div>
+        <div class="n-name">Databricks (DBR 16.4+)</div>
+        <div class="n-role">REST catalog → Polaris via PrivateLink · Privacera agent for FGAC · Vended STS for MinIO · Cloud burst ML/AI workloads</div>
+        <div class="n-tag">cloud compute</div>
+      </div>
+      <div class="node n-cloud-engine">
+        <div class="n-icon">❄️</div>
+        <div class="n-name">Snowflake</div>
+        <div class="n-role">Open Catalog (managed Polaris) · CATALOG_INTEGRATION → on-prem Polaris · External Iceberg tables · Canadian region only</div>
+        <div class="n-tag">cloud compute</div>
+        <div style="font-size:8px;color:#1D4ED8;margin-top:4px;font-family:'DM Mono',monospace">Open Catalog = managed Polaris</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════ -->
+  <!-- FABRIC PLANE                                      -->
+  <!-- ══════════════════════════════════════════════════ -->
+  <div class="plane plane-fabric">
+    <div class="plane-label" style="color: #5B21B6">
+      Microsoft Fabric &nbsp;·&nbsp; BI / AI Surface Plane &nbsp;·&nbsp; ADR-010 confirmed &nbsp;·&nbsp; Entra ID (AD sync)
+    </div>
+    <div class="row">
+      <div class="node n-fabric-node" style="flex:2">
+        <div class="n-icon">🔷</div>
+        <div class="n-name">Fabric Lakehouse (Delta copy of Gold)</div>
+        <div class="n-role">Delta representation of Gold layer · Import mode only (not DirectLake) · SQL Analytics Endpoint → T-SQL DDM + RLS enforced · Power BI semantic model layer</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:5px">
+          <span class="n-tag">ADR-010</span>
+          <span class="n-tag">import mode</span>
+          <span class="n-tag">DDM enforced</span>
+        </div>
+      </div>
+      <div class="node n-fabric-node">
+        <div class="n-icon">🤖</div>
+        <div class="n-name">RBC Assist (AI Chatbot)</div>
+        <div class="n-role">Azure AI Foundry · NL-to-DAX via Fabric · FastAPI trust boundary · Certified query patterns only · OSFI B-13 guardrails</div>
+        <div class="n-tag">AI surface</div>
+      </div>
+      <div class="node n-fabric-node">
+        <div class="n-icon">📊</div>
+        <div class="n-name">Power BI + Tableau</div>
+        <div class="n-role">Import mode → SQL endpoint → DDM active · Tableau for complex visualization · Power BI for self-service</div>
+        <div class="n-tag">BI surface</div>
+      </div>
+    </div>
+    <div style="font-size:9px;font-family:'DM Mono',monospace;color:#6B21A8;margin-top:8px;background:rgba(109,40,217,0.05);border:1px solid #DDD6FE;border-radius:5px;padding:5px 10px">
+      ⚠️&nbsp; Import mode is mandatory for PII/PCI tables — DirectLake bypasses T-SQL DDM enforcement entirely (ADR-010)
+    </div>
+  </div>
+
+</div>
+
+<!-- LEGEND / STATUS -->
+<div class="legend" style="margin-top:24px">
+  <span class="legend-title">Decisions</span>
+  <span class="decision-badge decided">✓ Catalog: Apache Polaris</span>
+  <span class="decision-badge decided">✓ Security: Privacera</span>
+  <span class="decision-badge decided">✓ Storage: MinIO</span>
+  <span class="decision-badge decided">✓ BI Surface: Fabric Import (ADR-010)</span>
+  <span class="decision-badge decided">✓ Teradata OTF: removed</span>
+  <span class="decision-badge decided">✓ Transform: Python (no dbt)</span>
+  <span class="decision-badge open">? WAP/Nessie: pending</span>
+  <span class="decision-badge open">? Privacera OSFI B-10: review needed</span>
+  <span class="decision-badge open">? Polaris graduation: mid-2026</span>
+</div>
+
+<div style="max-width:1100px;margin:12px auto 0;font-size:9px;font-family:'DM Mono',monospace;color:var(--muted)">
+  Lumina · RBC Enterprise Data · Version 0.4 · April 2026 · Internal — Architecture Working Group
+</div>
+
+</body>
+</html>

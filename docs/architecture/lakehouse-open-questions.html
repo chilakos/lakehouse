@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RBC Lakehouse — Open Questions for Leadership</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+
+:root {
+  --navy:   #0A1628;
+  --navy2:  #112240;
+  --ink:    #1E293B;
+  --muted:  #64748B;
+  --line:   #E2E8F0;
+  --soft:   #F8FAFC;
+  --white:  #FFFFFF;
+
+  --q-strategic: #1E40AF;
+  --q-strategic-bg: #EFF6FF;
+  --q-strategic-border: #BFDBFE;
+
+  --q-technical: #065F46;
+  --q-technical-bg: #F0FDF4;
+  --q-technical-border: #BBF7D0;
+
+  --q-risk: #9A3412;
+  --q-risk-bg: #FFF7ED;
+  --q-risk-border: #FED7AA;
+
+  --q-governance: #4C1D95;
+  --q-governance-bg: #FAF5FF;
+  --q-governance-border: #DDD6FE;
+
+  --q-commercial: #134E4A;
+  --q-commercial-bg: #F0FDFA;
+  --q-commercial-border: #99F6E4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #F8FAFC;
+  color: var(--ink);
+  padding: 40px 24px 60px;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.doc-header {
+  max-width: 860px;
+  margin: 0 auto 48px;
+}
+.doc-eyebrow {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.doc-eyebrow::before {
+  content: '';
+  width: 24px;
+  height: 1px;
+  background: var(--muted);
+}
+.doc-title {
+  font-family: 'Lora', serif;
+  font-size: 34px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  margin-bottom: 16px;
+}
+.doc-subtitle {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 640px;
+  margin-bottom: 24px;
+}
+.doc-meta {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.doc-meta-item {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+}
+.doc-meta-item strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ── CONTEXT BANNER ── */
+.context-banner {
+  max-width: 860px;
+  margin: 0 auto 40px;
+  background: var(--navy);
+  border-radius: 10px;
+  padding: 20px 24px;
+}
+.context-banner p {
+  color: #94A3B8;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.context-banner p strong {
+  color: #E2E8F0;
+}
+.context-decided {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.decided-chip {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.1);
+  color: #86EFAC;
+  border: 1px solid rgba(134,239,172,0.3);
+}
+
+/* ── CATEGORY TABS ── */
+.cat-tabs {
+  max-width: 860px;
+  margin: 0 auto 28px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.cat-tab {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1.5px solid;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  background: white;
+}
+.cat-tab:hover { opacity: 0.8; }
+.cat-tab.all       { border-color: var(--navy); color: var(--navy); }
+.cat-tab.all.active   { background: var(--navy); color: white; }
+.cat-tab.strategic    { border-color: var(--q-strategic); color: var(--q-strategic); }
+.cat-tab.strategic.active { background: var(--q-strategic); color: white; }
+.cat-tab.technical    { border-color: var(--q-technical); color: var(--q-technical); }
+.cat-tab.technical.active { background: var(--q-technical); color: white; }
+.cat-tab.risk         { border-color: var(--q-risk); color: var(--q-risk); }
+.cat-tab.risk.active  { background: var(--q-risk); color: white; }
+.cat-tab.governance   { border-color: var(--q-governance); color: var(--q-governance); }
+.cat-tab.governance.active { background: var(--q-governance); color: white; }
+.cat-tab.commercial   { border-color: var(--q-commercial); color: var(--q-commercial); }
+.cat-tab.commercial.active { background: var(--q-commercial); color: white; }
+
+/* ── QUESTION CARDS ── */
+.questions {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.q-card {
+  background: white;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  overflow: hidden;
+  transition: box-shadow 0.15s ease;
+}
+.q-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+
+.q-card.strategic  { border-left: 4px solid var(--q-strategic); }
+.q-card.technical  { border-left: 4px solid var(--q-technical); }
+.q-card.risk       { border-left: 4px solid var(--q-risk); }
+.q-card.governance { border-left: 4px solid var(--q-governance); }
+.q-card.commercial { border-left: 4px solid var(--q-commercial); }
+
+.q-header {
+  padding: 16px 20px 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.q-number {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.q-title {
+  font-family: 'Lora', serif;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--navy);
+  flex: 1;
+}
+.q-badge {
+  font-size: 8px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.badge-strategic  { background: var(--q-strategic-bg); color: var(--q-strategic); border: 1px solid var(--q-strategic-border); }
+.badge-technical  { background: var(--q-technical-bg); color: var(--q-technical); border: 1px solid var(--q-technical-border); }
+.badge-risk       { background: var(--q-risk-bg); color: var(--q-risk); border: 1px solid var(--q-risk-border); }
+.badge-governance { background: var(--q-governance-bg); color: var(--q-governance); border: 1px solid var(--q-governance-border); }
+.badge-commercial { background: var(--q-commercial-bg); color: var(--q-commercial); border: 1px solid var(--q-commercial-border); }
+
+.q-body { padding: 10px 20px 18px; }
+
+.q-context {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+
+.q-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+@media(max-width:560px){ .q-sections{ grid-template-columns:1fr; } }
+
+.q-section {
+  border-radius: 7px;
+  padding: 10px 12px;
+  font-size: 11px;
+}
+.q-section .qs-title {
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+.q-section ul { padding-left: 14px; }
+.q-section li { line-height: 1.8; }
+
+.q-section.options { background: #F8FAFC; border: 1px solid var(--line); }
+.q-section.implications { background: #FFFBEB; border: 1px solid #FDE68A; }
+
+.q-question-text {
+  background: var(--soft);
+  border-left: 3px solid var(--line);
+  padding: 10px 14px;
+  border-radius: 0 6px 6px 0;
+  font-size: 12px;
+  font-style: italic;
+  color: var(--ink);
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.q-footer {
+  padding: 10px 20px;
+  background: var(--soft);
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.q-owner {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+}
+.q-urgency {
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-family: 'DM Mono', monospace;
+}
+.urgency-high   { background: #FEE2E2; color: #991B1B; }
+.urgency-medium { background: #FEF3C7; color: #92400E; }
+.urgency-low    { background: #DBEAFE; color: #1E40AF; }
+
+/* ── FOOTER ── */
+.doc-footer {
+  max-width: 860px;
+  margin: 48px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.doc-footer p {
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+}
+
+.q-card.hidden-q { display: none; }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="doc-eyebrow">Lumina · Enterprise Data · April 2026</div>
+  <h1 class="doc-title">Open Questions for Leadership Discussion</h1>
+  <p class="doc-subtitle">The following questions represent architecture decisions still requiring alignment, commercial commitments, or risk acceptance from the leadership team. Key decisions have been made — what follows is what we need to resolve next.</p>
+  <div class="doc-meta">
+    <div class="doc-meta-item"><strong>Prepared by</strong> VP Enterprise Data</div>
+    <div class="doc-meta-item"><strong>Audience</strong> Rex Davis (CDO) · Vinh Tran · Architecture Working Group</div>
+    <div class="doc-meta-item"><strong>Date</strong> April 2026</div>
+    <div class="doc-meta-item"><strong>Questions</strong> 9 open · 6 decided</div>
+  </div>
+</div>
+
+<!-- CONTEXT BANNER -->
+<div class="context-banner">
+  <p><strong>Where we are.</strong> The enterprise lakehouse architecture is confirmed — Apache Polaris as the Iceberg REST catalog, Privacera for access control and audit, Spark/Trino/Databricks/Snowflake as compute consumers, MinIO on-prem as primary storage on OpenShift, and Microsoft Fabric (Import mode) as the BI/AI surface. Teradata OTF has been removed from the catalog dependency. The following decisions are <strong>locked</strong>:</p>
+  <div class="context-decided">
+    <span class="decided-chip">✓ Catalog: Apache Polaris</span>
+    <span class="decided-chip">✓ Security: Privacera</span>
+    <span class="decided-chip">✓ Storage: MinIO (on-prem)</span>
+    <span class="decided-chip">✓ Fabric: Import mode (ADR-010)</span>
+    <span class="decided-chip">✓ Transforms: Python (no dbt)</span>
+    <span class="decided-chip">✓ Teradata OTF: removed from catalog</span>
+  </div>
+</div>
+
+<!-- FILTER TABS -->
+<div class="cat-tabs">
+  <button class="cat-tab all active" onclick="filterCards('all', this)">All Questions (9)</button>
+  <button class="cat-tab strategic" onclick="filterCards('strategic', this)">Strategic (3)</button>
+  <button class="cat-tab risk" onclick="filterCards('risk', this)">Risk &amp; Compliance (2)</button>
+  <button class="cat-tab commercial" onclick="filterCards('commercial', this)">Commercial (2)</button>
+  <button class="cat-tab technical" onclick="filterCards('technical', this)">Technical (1)</button>
+  <button class="cat-tab governance" onclick="filterCards('governance', this)">Governance (1)</button>
+</div>
+
+<!-- QUESTIONS -->
+<div class="questions">
+
+  <!-- Q1 -->
+  <div class="q-card risk" data-cat="risk">
+    <div class="q-header">
+      <div class="q-number">01</div>
+      <div class="q-title">Does Privacera's SaaS control plane pass OSFI B-10 third-party risk review?</div>
+      <div class="q-badge badge-risk">Risk &amp; Compliance</div>
+    </div>
+    <div class="q-body">
+      <p class="q-context">Privacera's policy management control plane is SaaS-hosted in the US. Under OSFI Guideline B-10, all material technology arrangements with foreign service providers require documented assessment of jurisdictional risk, right-to-audit provisions, and exit/portability arrangements. This review must be completed before Privacera is used with production PII or PCI data.</p>
+      <div class="q-question-text">"Does RBC's Third-Party Risk Management (TPRM) team assess Privacera's US-hosted control plane as acceptable under B-10, and on what timeline can that review be completed?"</div>
+      <div class="q-sections">
+        <div class="q-section options">
+          <div class="qs-title">If B-10 review passes</div>
+          <ul>
+            <li>Proceed with Privacera as planned</li>
+            <li>Ensure contract includes audit rights, OSFI access, exit clause, subcontractor transparency</li>
+            <li>Data plane (engine agents) remains on-prem — only policy metadata crosses border</li>
+          </ul>
+        </div>
+        <div class="q-section implications">
+          <div class="qs-title">If B-10 review fails or is delayed</div>
+          <ul>
+            <li>Fallback: OPA (Trino) + Kyuubi (Spark) — 100% on-prem, OSS</li>
+            <li>Adds operational complexity (two policy engines) but zero sovereignty risk</li>
+            <li>Databricks FGAC would need separate solution (Unity Catalog + engine-native)</li>
+            <li>Timeline impact: 4–6 weeks if fallback needed</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="q-footer">
+      <div class="q-owner">Owner: CISO + TPRM + VP Enterprise Data</div>
+      <div class="q-urgency urgency-high">🔴 High — blocks Privacera production deployment</div>
+    </div>
+  </div>
+
+  <!-- Q2 -->
+  <div class="q-card strategic" data-cat="strategic">
+    <div class="q-header">
+      <div class="q-number">02</div>
+      <div class="q-title">Do we commit to Polaris now, or wait for ASF graduation?</div>
+      <div class="q-badge badge-strategic">Strategic</div>
+    </div>
+    <div class="q-body">
+      <p class="q-context">Apache Polaris is the strongest Iceberg REST catalog available — but it remains ASF Incubating with approximately 18 months of release history. The project is on the graduation track for mid-2026. Two options exist: deploy now with enterprise support (Dremio or Snowflake Open Catalog) accepting incubating status, or wait for graduation and delay the lakehouse production launch by 3–6 months.</p>
+      <div class="q-question-text">"Is RBC's architecture governance board comfortable with an ASF Incubating project as a mission-critical catalog, given enterprise support from Dremio or Snowflake is available? Or do we require ASF TLP graduation before production commitment?"</div>
+      <div class="q-sections">
+        <div class="q-section options">
+          <div class="qs-title">Option A — Deploy now with enterprise support</div>
+          <ul>
+            <li>Dremio Enterprise or Snowflake Open Catalog provide SLA-backed support</li>
+            <li>Snowflake Open Catalog = managed Polaris — zero operational overhead for cloud burst</li>
+            <li>Accept incubating risk in exchange for 3–6 month earlier production</li>
+            <li>Precedent: many regulated enterprises run incubating Apache projects</li>
+          </ul>
+        </div>
+        <div class="q-section implications">
+          <div class="qs-title">Option B — Wait for graduation</div>
+          <ul>
+            <li>Use Gravitino (ASF TLP) as interim catalog — graduated June 2025</li>
+            <li>Gravitino handles federation + HMS bridge if any legacy migration overlap</li>
+            <li>Migrate to Polaris post-graduation — catalog swap is configuration change, not data migration</li>
+            <li>3–6 month production delay</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="q-footer">
+      <div class="q-owner">Owner: Chief Architect + VP Enterprise Data + Rex Davis</div>
+      <div class="q-urgency urgency-high">🔴 High — determines production timeline</div>
+    </div>
+  </div>
+
+  <!-- Q3 -->
+  <div class="q-card commercial" data-cat="commercial">
+    <div class="q-header">
+      <div class="q-number">03</div>
+      <div class="q-title">What is the commercial model for Privacera and Starburst (SEP)?</div>
+      <div class="q-badge badge-commercial">Commercial</div>
+    </div>
+    <div class="q-body">
+      <p class="q-context">Two commercial licenses are required that are not yet procured: Privacera (data access control and masking platform) and Starburst Enterprise (SEP) for the Trino Ranger plugin — or Privacera's native Trino agent as an alternative. Both have per-engine, per-user, or capacity-based pricing models. Budget approval and procurement lead time must be understood before architecture commitment.</p>
+      <div class="q-question-text">"Has the business case been approved for Privacera licensing at enterprise scale (Spark + Trino + Databricks agents)? And has Starburst Enterprise been evaluated against OSS Trino + OPA as a cost alternative for the Trino FGAC layer?"</div>
+      <div class="q-sections">
+        <div class="q-section options">
+          <div class="qs-title">Privacera licensing considerations</div>
+          <ul>
+            <li>Pricing: typically per data source / engine agent + platform fee</li>
+            <li>Confirm Databricks agent is included in base license vs. add-on</li>
+            <li>Confirm Fabric integration scope (Lakehouse vs. SQL endpoint)</li>
+            <li>Negotiate OSFI audit rights and data residency commitments in contract</li>
+          </ul>
+        </div>
+        <div class="q-section implications">
+          <div class="qs-title">OSS alternative if budget is a constraint</div>
+          <ul>
+            <li>OPA (OSS) replaces SEP for Trino FGAC — zero licensing cost</li>
+            <li>Kyuubi (OSS) covers Spark FGAC — zero licensing cost</li>
+            <li>Tradeoff: two policy engines vs. one unified Privacera plane</li>
+            <li>Databricks coverage still requires Unity Catalog or Privacera</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="q-footer">
+      <div class="q-owner">Owner: Joey (CFO peer) + VP Enterprise Data + Procurement</div>
+      <div class="q-urgency urgency-high">🔴 High — required before architecture sign-off</div>
+    </div>
+  </div>
+
+  <!-- Q4 -->
+  <div class="q-card strategic" data-cat="strategic">
+    <div class="q-header">
+      <div class="q-number">04</div>
+      <div class="q-title">Is Write-Audit-Publish (WAP) branching a firm requirement for the Gold layer?</div>
+      <div class="q-badge badge-strategic">Strategic</div>
+    </div>
+    <div class="q-body">
+      <p class="q-context">Nessie's Git-for-data branching model enables Write-Audit-Publish workflows — writing to a branch, validating against compliance rules (Soda, Great Expectations), then atomically merging to the main production Gold layer. This directly addresses BCBS 239 data accuracy requirements and eliminates the risk of bad pipeline runs reaching consumers. However, it adds operational complexity and requires a second catalog service alongside Polaris.</p>
+      <div class="q-question-text">"Does the data quality and risk management team require WAP-style atomic publish gates before data reaches the Gold layer? Is this a BCBS 239 must-have, or a nice-to-have we can address with Soda quality gates without branching?"</div>
+      <div class="q-sections">
+        <div class="q-section options">
+          <div class="qs-title">If WAP is required — add Nessie</div>
+          <ul>
+            <li>Deploy Nessie alongside Polaris (write/validate on Nessie branch, merge to Polaris main)</li>
+            <li>Full multi-table atomic commits, regulatory snapshot tags, instant rollback</li>
+            <li>Nessie pre-1.0, Dremio-led — governance risk to acknowledge</li>
+            <li>Validate Privacera schema sync against Nessie REST before committing</li>
+          </ul>
+        </div>
+        <div class="q-section implications">
+          <div class="qs-title">If WAP is not required — Polaris alone</div>
+          <ul>
+            <li>Use Soda / Great Expectations quality gates at pipeline level (not catalog level)</li>
+            <li>Iceberg snapshot isolation provides point-in-time reads without branching</li>
+            <li>Simpler stack — one catalog service, one policy to maintain</li>
+            <li>BCBS 239 data accuracy addressed via lineage + quality gates, not WAP</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="q-footer">
+      <div class="q-owner">Owner: VP Enterprise Data + Risk Data Management + BCBS 239 owner</div>
+      <div class="q-urgency urgency-medium">🟡 Medium — can be a Phase 2 decision</div>
+    </div>
+  </div>
+
+  <!-- Q5 -->
+  <div class="q-card risk" data-cat="risk">
+    <div class="q-header">
+      <div class="q-number">05</div>
+      <div class="q-title">What is the exit strategy if Polaris fails to graduate from ASF Incubation?</div>
+      <div class="q-badge badge-risk">Risk &amp; Compliance</div>
+    </div>
+    <div class="q-body">
+      <p class="q-context">Apache incubating projects have a small but non-zero probability of failing to graduate — due to governance failures, community fragmentation, or commercial capture. If Polaris is abandoned, we need a catalog migration path that doesn't require moving data files (Iceberg tables are self-describing — only the catalog pointer changes). The risk is not catastrophic but requires a documented contingency.</p>
+      <div class="q-question-text">"What is architecture's view on the Polaris abandonment risk, and is a documented fallback catalog (Gravitino or custom HMS) sufficient for the risk management team to approve production deployment?"</div>
+      <div class="q-sections">
+        <div class="q-section options">
+          <div class="qs-title">Mitigating factors</div>
+          <ul>
+            <li>Iceberg REST spec is catalog-agnostic — switching catalogs is a config change, not data migration</li>
+            <li>Snowflake and Dremio both have commercial managed versions — commercial continuity exists</li>
+            <li>Gravitino (ASF TLP) is a viable fallback — can federate Polaris today, replace it tomorrow</li>
+            <li>AWS Glue and HMS are always available as regression fallbacks</li>
+          </ul>
+        </div>
+        <div class="q-section implications">
+          <div class="qs-title">Residual risk</div>
+          <ul>
+            <li>Catalog migration would take 2–4 weeks of platform engineering effort</li>
+            <li>No data loss — Iceberg data files are unaffected by catalog changes</li>
+            <li>Privacera schema sync would need to be re-pointed to new catalog REST API</li>
+            <li>Net risk assessment: low impact, low probability — manageable</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="q-footer">
+      <div class="q-owner">Owner: Chief Architect + Enterprise Risk</div>
+      <div class="q-urgency urgency-medium">🟡 Medium — document and accept, or require formal risk approval</div>
+    </div>
+  </div>
+
+  <!-- Q6 -->
+  <div class="q-card commercial" data-cat="commercial">
+    <div class="q-header">
+      <div class="q-number">06</div>
+      <div class="q-title">Cloud burst priority — Snowflake or Databricks first, and on what timeline?</div>
+      <div class="q-badge badge-commercial">Commercial</div>
+    </div>
+    <div class="q-body">
+      <p class="q-context">Both Snowflake and Databricks are in the target architecture as cloud burst compute engines. Both connect to Polaris via REST catalog. Snowflake integration is technically simpler (Open Catalog = managed Polaris, near-zero config). Databricks offers stronger ML/AI workloads. Budget and implementation effort exists for both — but which do we activate first, and is the existing Snowflake relationship with Sam (Teradata contact) still in play?</p>
+      <div class="q-question-text">"Given existing vendor relationships and workload priorities, does leadership want to activate Snowflake cloud burst (simpler, existing relationship) or Databricks (AI/ML workloads) as the first cloud burst use case?"</div>
+      <div class="q-sections">
+        <div class="q-section options">
+          <div class="qs-title">Snowflake first</div>
+          <ul>
+            <li>Open Catalog = zero-config Polaris integration</li>
+            <li>Existing Sam relationship may accelerate commercial terms</li>
+            <li>Best for SQL analytics and reporting workloads</li>
+            <li>Fastest time-to-value for cloud burst</li>
+          </ul>
+        </div>
+        <div class="q-section implications">
+          <div class="qs-title">Databricks first</div>
+          <ul>
+            <li>DBR 16.4+ REST catalog support is production-ready</li>
+            <li>Enables ML/AI workloads — aligns with RBC Assist roadmap</li>
+            <li>Privacera agent available for Databricks FGAC</li>
+            <li>More complex initial setup but higher strategic value for AI</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="q-footer">
+      <div class="q-owner">Owner: VP Enterprise Data + Vinh Tran + Procurement</div>
+      <div class="q-urgency urgency-medium">🟡 Medium — Phase 2 planning decision</div>
+    </div>
+  </div>
+
+  <!-- Q7 -->
+  <div class="q-card governance" data-cat="governance">
+    <div class="q-header">
+      <div class="q-number">07</div>
+      <div class="q-title">How do we enforce Import mode as a governance constraint in Fabric?</div>
+      <div class="q-badge badge-governance">Governance</div>
+    </div>
+    <div class="q-body">
+      <p class="q-context">ADR-010 establishes that Fabric Import mode (not DirectLake) is mandatory for any table containing PII or PCI data — because DirectLake bypasses T-SQL Dynamic Data Masking entirely. This decision must be operationalized: enforced at the workspace provisioning level, communicated to Fabric developers and data consumers, and audited to prevent accidental DirectLake use on sensitive datasets. Without enforcement, this architectural decision becomes a policy recommendation that can be silently violated.</p>
+      <div class="q-question-text">"Who owns enforcement of the Import mode mandate in Fabric, and what controls prevent a developer from accidentally enabling DirectLake on a PII-tagged Lakehouse item?"</div>
+      <div class="q-sections">
+        <div class="q-section options">
+          <div class="qs-title">Technical enforcement options</div>
+          <ul>
+            <li>Fabric workspace governance policy — restrict DirectLake on tagged items</li>
+            <li>Purview sensitivity labels trigger DLP alert on DirectLake activation for PCI/PII items</li>
+            <li>CI/CD pipeline check — validate Import mode in semantic model deployment</li>
+            <li>Quarterly Fabric workspace audit — detect DirectLake on classified tables</li>
+          </ul>
+        </div>
+        <div class="q-section implications">
+          <div class="qs-title">If not enforced</div>
+          <ul>
+            <li>A developer enables DirectLake on a PII table → DDM bypassed → PCI data exposed in Power BI reports without masking</li>
+            <li>OSFI B-13 / PCI-DSS control failure — potential regulatory finding</li>
+            <li>JoAnn's DA team and Saurabh's PM team need to be trained on this constraint</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="q-footer">
+      <div class="q-owner">Owner: VP Enterprise Data + JoAnn (DA Lead) + Fabric workspace admin</div>
+      <div class="q-urgency urgency-high">🔴 High — must be in place before any PII data lands in Fabric</div>
+    </div>
+  </div>
+
+  <!-- Q8 -->
+  <div class="q-card strategic" data-cat="strategic">
+    <div class="q-header">
+      <div class="q-number">08</div>
+      <div class="q-title">What is the role of Teradata in the target state — full exit or hybrid co-existence?</div>
+      <div class="q-badge badge-strategic">Strategic</div>
+    </div>
+    <div class="q-body">
+      <p class="q-context">We have removed Teradata OTF from the catalog architecture — the catalog no longer needs to serve Teradata. However, the Teradata FSDM (Financial Services Data Model) with 35 years of institutional history remains in active production. The Teradata vendor dispute (8 contracts, backbilling) is unresolved. The DataModernization programme (DW00/N500) is running. What is the agreed exit posture and timeline?</p>
+      <div class="q-question-text">"Does leadership have a firm target date for Teradata exit, or is this a multi-year co-existence? And how does the resolution of the vendor dispute affect the migration timeline and commercial posture?"</div>
+      <div class="q-sections">
+        <div class="q-section options">
+          <div class="qs-title">Exit scenarios</div>
+          <ul>
+            <li><strong>Full exit (2–3 years):</strong> FSDM migrated to Iceberg FSDM on MinIO, Trino replaces Teradata SQL, DataModernization completes DW00/N500</li>
+            <li><strong>Hybrid co-existence:</strong> Teradata retained for FSDM workloads, Iceberg for new workloads, no catalog dependency between the two</li>
+            <li><strong>Teradata OTF retained for read:</strong> Teradata reads Iceberg via OTF — no catalog integration required, just storage access</li>
+          </ul>
+        </div>
+        <div class="q-section implications">
+          <div class="qs-title">Vendor dispute impact</div>
+          <ul>
+            <li>Backbilling dispute across 8 contracts creates leverage for renegotiation</li>
+            <li>Resolution may accelerate or delay migration commitment</li>
+            <li>Sam (Teradata contact) relationship — what's the current status?</li>
+            <li>Architecture should not wait for vendor dispute — proceed with Iceberg regardless</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="q-footer">
+      <div class="q-owner">Owner: VP Enterprise Data + Rex Davis + Vendor Management</div>
+      <div class="q-urgency urgency-medium">🟡 Medium — architecture is independent of this decision</div>
+    </div>
+  </div>
+
+  <!-- Q9 -->
+  <div class="q-card technical" data-cat="technical">
+    <div class="q-header">
+      <div class="q-number">09</div>
+      <div class="q-title">Who owns the Privacera schema sync and policy authoring process at scale?</div>
+      <div class="q-badge badge-technical">Technical</div>
+    </div>
+    <div class="q-body">
+      <p class="q-context">Privacera syncs table/column schema from Polaris to build its policy model. For tens of thousands of tables, automated PII/PCI discovery (Privacera classifiers + Atlas) must classify columns, and someone must own the Privacera policy authoring process. Without a clear owner and governance process, policies will either be too permissive (security risk) or require manual intervention for every new table (operational bottleneck).</p>
+      <div class="q-question-text">"Who owns the Privacera policy lifecycle — initial classification, policy authoring, change management, and periodic access reviews? Is this Gautam's Lakehouse team, Irene's QA function, the CISO team, or a new data governance role?"</div>
+      <div class="q-sections">
+        <div class="q-section options">
+          <div class="qs-title">Recommended operating model</div>
+          <ul>
+            <li><strong>Automated baseline:</strong> Privacera classifiers auto-classify new tables on schema sync; default-deny for PII/PCI columns until policy is approved</li>
+            <li><strong>Data owner approval:</strong> Table owner approves access policy before any analyst group can access the table</li>
+            <li><strong>Quarterly access review:</strong> Nabi (Data Modeller) / JoAnn's team review role-to-table assignments</li>
+            <li><strong>CISO oversight:</strong> PCI-classified tables require CISO sign-off before any new role grants</li>
+          </ul>
+        </div>
+        <div class="q-section implications">
+          <div class="qs-title">Without clear ownership</div>
+          <ul>
+            <li>New tables default to open access — PII exposed to unauthorized roles</li>
+            <li>Policy drift — stale role assignments accumulate over time</li>
+            <li>PCI DSS Requirement 7 violation — access not reviewed periodically</li>
+            <li>Bottleneck — data consumers blocked waiting for policy approvals</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="q-footer">
+      <div class="q-owner">Owner: VP Enterprise Data + Gautam + Nabi + CISO</div>
+      <div class="q-urgency urgency-high">🔴 High — must be defined before Privacera goes to production</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <p>Lumina · Enterprise Data · VP George Chilakos · April 2026 · Internal — Leadership Working Group</p>
+  <p>9 open questions · 3 high urgency · 3 medium · next review: Architecture Working Group</p>
+</div>
+
+<script>
+function filterCards(cat, btn) {
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.q-card').forEach(card => {
+    if (cat === 'all' || card.dataset.cat === cat) {
+      card.classList.remove('hidden-q');
+    } else {
+      card.classList.add('hidden-q');
+    }
+  });
+}
+</script>
+
+</body>
+</html>
