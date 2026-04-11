@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RBC Lakehouse — Outstanding Questions · Leadership Discussion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Lora:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:       #0D0D0D;
+    --ink-mid:   #444444;
+    --ink-light: #888888;
+    --rule:      #D4D4D0;
+    --bg:        #F6F6F2;
+    --card:      #FFFFFF;
+    --blue:      #1A4FCC;
+    --blue-bg:   #EEF3FF;
+    --red:       #B91C1C;
+    --red-bg:    #FEF2F2;
+    --amber:     #92400E;
+    --amber-bg:  #FFFBEB;
+    --green:     #15803D;
+    --green-bg:  #F0FDF4;
+    --purple:    #6B21A8;
+    --purple-bg: #FAF5FF;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 48px 40px;
+    max-width: 980px;
+    margin: 0 auto;
+  }
+
+  /* ── HEADER ── */
+  .doc-header {
+    margin-bottom: 48px;
+  }
+  .doc-header .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 12px;
+  }
+  .doc-header h1 {
+    font-family: 'Lora', serif;
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+  .doc-header .intro {
+    font-size: 14px;
+    line-height: 1.75;
+    color: var(--ink-mid);
+    max-width: 700px;
+    border-left: 3px solid var(--ink);
+    padding-left: 16px;
+    font-style: italic;
+  }
+  .doc-meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  .doc-meta-item {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-light);
+    letter-spacing: 0.5px;
+  }
+  .doc-meta-item strong {
+    color: var(--ink);
+    display: block;
+    font-size: 10px;
+    margin-bottom: 1px;
+  }
+
+  /* ── CONFIRMED BANNER ── */
+  .confirmed-banner {
+    background: var(--ink);
+    color: #fff;
+    padding: 16px 20px;
+    margin-bottom: 40px;
+    display: flex;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .confirmed-banner .cb-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    opacity: 0.6;
+    margin-bottom: 8px;
+  }
+  .confirmed-banner .cb-items {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .cb-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 3px 9px;
+    color: #fff;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── SECTION HEADING ── */
+  .section-heading {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 20px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* ── QUESTION CARD ── */
+  .q-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 40px;
+  }
+  @media(max-width:640px){ .q-grid{ grid-template-columns:1fr; } }
+
+  .q-card {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 20px;
+    position: relative;
+    transition: border-color 0.15s;
+  }
+  .q-card:hover { border-color: var(--ink); }
+
+  .q-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-light);
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .q-priority {
+    font-size: 8px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 2px;
+    letter-spacing: 0.5px;
+  }
+  .pri-budget  { background: var(--red-bg);    color: var(--red);    border: 1px solid #FCA5A5; }
+  .pri-risk    { background: var(--amber-bg);  color: var(--amber);  border: 1px solid #FCD34D; }
+  .pri-arch    { background: var(--blue-bg);   color: var(--blue);   border: 1px solid var(--blue); }
+  .pri-strategy{ background: var(--purple-bg); color: var(--purple); border: 1px solid #D8B4FE; }
+  .pri-ops     { background: var(--green-bg);  color: var(--green);  border: 1px solid #86EFAC; }
+
+  .q-title {
+    font-family: 'Lora', serif;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 10px;
+    letter-spacing: -0.2px;
+  }
+  .q-body {
+    font-size: 11px;
+    line-height: 1.75;
+    color: var(--ink-mid);
+    margin-bottom: 12px;
+  }
+
+  .q-options {
+    margin-top: 10px;
+    border-top: 1px solid var(--rule);
+    padding-top: 10px;
+  }
+  .q-options-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+  }
+  .q-option {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    margin-bottom: 5px;
+  }
+  .q-option-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    min-width: 20px;
+    color: var(--blue);
+  }
+  .q-option-text {
+    font-size: 10px;
+    line-height: 1.6;
+    color: var(--ink-mid);
+  }
+
+  .q-stakes {
+    margin-top: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--red);
+    line-height: 1.6;
+    padding: 6px 10px;
+    background: var(--red-bg);
+    border-left: 2px solid var(--red);
+  }
+
+  .q-recommendation {
+    margin-top: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--green);
+    line-height: 1.6;
+    padding: 6px 10px;
+    background: var(--green-bg);
+    border-left: 2px solid var(--green);
+  }
+
+  /* ── TIMELINE ── */
+  .timeline {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    padding: 20px;
+    margin-bottom: 40px;
+  }
+  .tl-row {
+    display: grid;
+    grid-template-columns: 100px 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .tl-row:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+  .tl-period {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink);
+    padding-top: 2px;
+  }
+  .tl-content { font-size: 11px; color: var(--ink-mid); line-height: 1.7; }
+  .tl-content strong { color: var(--ink); }
+
+  /* ── DECISION LOG ── */
+  .decision-log {
+    background: var(--card);
+    border: 1px solid var(--rule);
+    overflow: hidden;
+    margin-bottom: 40px;
+  }
+  .dl-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 120px;
+    gap: 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .dl-row:last-child { border-bottom: none; }
+  .dl-row.header { background: var(--ink); }
+  .dl-cell {
+    padding: 10px 14px;
+    font-size: 10px;
+    border-right: 1px solid var(--rule);
+    line-height: 1.6;
+  }
+  .dl-cell:last-child { border-right: none; }
+  .dl-row.header .dl-cell {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: rgba(255,255,255,0.7);
+    text-transform: uppercase;
+    border-right-color: rgba(255,255,255,0.1);
+  }
+  .status-confirmed { color: var(--green); font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 600; }
+  .status-open      { color: var(--amber); font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 600; }
+  .status-removed   { color: var(--ink-light); font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 600; text-decoration: line-through; }
+
+  /* ── FOOTER ── */
+  .doc-footer {
+    padding-top: 24px;
+    border-top: 2px solid var(--ink);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .doc-footer .left {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-light);
+    line-height: 1.9;
+  }
+  .doc-footer .right {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--ink-light);
+    text-align: right;
+    line-height: 1.9;
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div class="eyebrow">Lumina · Enterprise Data · Leadership Discussion</div>
+  <h1>Outstanding Questions<br/>for Stakeholder Decision</h1>
+  <div class="intro">
+    The lakehouse architecture core is confirmed. The items below require executive input — each carries budget, governance, or strategic implications that cannot be resolved at the architecture team level alone.
+  </div>
+  <div class="doc-meta">
+    <div class="doc-meta-item"><strong>Date</strong>April 2026</div>
+    <div class="doc-meta-item"><strong>Author</strong>George Chilakos, VP Enterprise Data</div>
+    <div class="doc-meta-item"><strong>Audience</strong>Vinh Tran · Rex Davis · Joey (CFO peer)</div>
+    <div class="doc-meta-item"><strong>Questions</strong>11 items across 5 domains</div>
+    <div class="doc-meta-item"><strong>Format</strong>Discussion document — not a status report</div>
+  </div>
+</div>
+
+<!-- CONFIRMED BANNER -->
+<div class="confirmed-banner">
+  <div>
+    <div class="cb-title">Already decided — not up for discussion</div>
+    <div class="cb-items">
+      <span class="cb-chip">Privacera for security</span>
+      <span class="cb-chip">Polaris as catalog</span>
+      <span class="cb-chip">Fabric Import mode (ADR-010)</span>
+      <span class="cb-chip">OpenShift deployment</span>
+      <span class="cb-chip">MinIO storage</span>
+      <span class="cb-chip">OpenLineage for BCBS 239</span>
+      <span class="cb-chip">Teradata OTF removed</span>
+      <span class="cb-chip">Spark/Kyuubi primary writer</span>
+      <span class="cb-chip">Trino interactive analytics</span>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTIONS: BUDGET -->
+<div class="section-heading">Budget &amp; Commercial Decisions</div>
+<div class="q-grid">
+
+  <div class="q-card">
+    <div class="q-num">01 <span class="q-priority pri-budget">BUDGET</span></div>
+    <div class="q-title">Do we commit to Privacera commercial licensing?</div>
+    <div class="q-body">Privacera is our recommended authorization and masking platform covering Spark, Trino, and Databricks. The alternative is a fully open-source stack (OPA for Trino + Kyuubi for Spark) at no license cost, but with two policy languages and more operational complexity.</div>
+    <div class="q-options">
+      <div class="q-options-label">Options</div>
+      <div class="q-option"><span class="q-option-label">A</span><span class="q-option-text">Commit to Privacera commercial — single policy UI, Databricks coverage, managed control plane. Budget approval needed.</span></div>
+      <div class="q-option"><span class="q-option-label">B</span><span class="q-option-text">OSS-first (OPA + Kyuubi) — no license cost, full on-prem, but two policy engines to operate.</span></div>
+      <div class="q-option"><span class="q-option-label">C</span><span class="q-option-text">90-day Privacera POC before commit — validate integration with Polaris schema sync and RBC AD before licensing.</span></div>
+    </div>
+    <div class="q-stakes">Risk if deferred: Security architecture cannot be finalized without this decision. It blocks the POC start date.</div>
+  </div>
+
+  <div class="q-card">
+    <div class="q-num">02 <span class="q-priority pri-budget">BUDGET</span></div>
+    <div class="q-title">Databricks vs Snowflake: which cloud burst gets funded first?</div>
+    <div class="q-body">Both Databricks and Snowflake are in the architecture as cloud burst compute options. Both require separate commercial agreements and have different value propositions — Databricks for ML/AI workloads, Snowflake for SQL analytics with zero-config Polaris integration via Open Catalog.</div>
+    <div class="q-options">
+      <div class="q-options-label">Options</div>
+      <div class="q-option"><span class="q-option-label">A</span><span class="q-option-text">Snowflake first — lower integration risk, Open Catalog = native Polaris, SQL-native consumers already exist.</span></div>
+      <div class="q-option"><span class="q-option-label">B</span><span class="q-option-text">Databricks first — AI/ML workloads are the priority; RBC Assist roadmap drives this decision.</span></div>
+      <div class="q-option"><span class="q-option-label">C</span><span class="q-option-text">Neither yet — prove the on-prem lakehouse first before cloud burst spend.</span></div>
+    </div>
+    <div class="q-recommendation">Recommendation: Snowflake first, given zero-config Polaris integration and existing SQL consumer base.</div>
+  </div>
+
+  <div class="q-card">
+    <div class="q-num">03 <span class="q-priority pri-budget">BUDGET</span></div>
+    <div class="q-title">PCI scope reduction via tokenization — is it a priority?</div>
+    <div class="q-body">Tokenizing PANs (payment card numbers) removes the majority of data from PCI DSS scope, significantly reducing audit and compliance overhead. It requires either a Privacera tokenization add-on or a separate tool (Protegrity, Voltage). The savings in audit cost may exceed the tooling cost, but it requires a business case.</div>
+    <div class="q-options">
+      <div class="q-options-label">Options</div>
+      <div class="q-option"><span class="q-option-label">A</span><span class="q-option-text">Build business case — quantify audit cost reduction vs tooling investment. Present at next QBR.</span></div>
+      <div class="q-option"><span class="q-option-label">B</span><span class="q-option-text">Defer — use DDM masking as the primary PCI control. Tokenization is a year-2 initiative.</span></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- QUESTIONS: GOVERNANCE RISK -->
+<div class="section-heading">Governance &amp; Risk Decisions</div>
+<div class="q-grid">
+
+  <div class="q-card">
+    <div class="q-num">04 <span class="q-priority pri-risk">RISK</span></div>
+    <div class="q-title">Is Apache Polaris's incubating status an acceptable risk?</div>
+    <div class="q-body">Polaris is our selected Iceberg catalog. It is still ASF Incubating — not yet a graduated top-level project. It has approximately 18 months of release history outside Snowflake's managed service. Graduation is targeted for mid-2026. The alternative is Gravitino (ASF TLP, graduated June 2025) which carries more operational complexity but stronger governance credentials.</div>
+    <div class="q-options">
+      <div class="q-options-label">Options</div>
+      <div class="q-option"><span class="q-option-label">A</span><span class="q-option-text">Accept the risk — proceed with Polaris under Dremio or Snowflake enterprise support contract as mitigation.</span></div>
+      <div class="q-option"><span class="q-option-label">B</span><span class="q-option-text">Wait for graduation — delay production until Polaris graduates (est. mid-2026). Run POC in parallel.</span></div>
+      <div class="q-option"><span class="q-option-label">C</span><span class="q-option-text">Use Gravitino — ASF TLP governance removes the risk, at the cost of a more complex deployment.</span></div>
+    </div>
+    <div class="q-stakes">Risk: Architecture board may require ASF TLP status for a production catalog. This needs a documented risk acceptance if Option A is chosen.</div>
+  </div>
+
+  <div class="q-card">
+    <div class="q-num">05 <span class="q-priority pri-risk">RISK</span></div>
+    <div class="q-title">Privacera SaaS control plane — does it satisfy OSFI B-10?</div>
+    <div class="q-body">Privacera's control plane is US-hosted SaaS. Under OSFI Guideline B-10, any material technology service arrangement with a foreign provider requires a jurisdictional risk assessment, right-to-audit clauses, data portability, and exit assistance provisions. The data itself stays on-prem — only policy metadata touches the SaaS plane.</div>
+    <div class="q-options">
+      <div class="q-options-label">Options</div>
+      <div class="q-option"><span class="q-option-label">A</span><span class="q-option-text">Proceed — policy metadata is not sensitive data; B-10 review is manageable. Legal/compliance sign-off needed.</span></div>
+      <div class="q-option"><span class="q-option-label">B</span><span class="q-option-text">Request Privacera on-prem/VPC deployment — some vendors offer private control plane. Validate with Privacera sales.</span></div>
+      <div class="q-option"><span class="q-option-label">C</span><span class="q-option-text">Switch to OSS (OPA + Kyuubi) — fully on-prem, no B-10 exposure, at cost of operational complexity.</span></div>
+    </div>
+    <div class="q-stakes">This needs Legal and Compliance input before contracting. Do not sign Privacera without B-10 assessment.</div>
+  </div>
+
+</div>
+
+<!-- QUESTIONS: ARCHITECTURE -->
+<div class="section-heading">Architecture Decisions</div>
+<div class="q-grid">
+
+  <div class="q-card">
+    <div class="q-num">06 <span class="q-priority pri-arch">ARCHITECTURE</span></div>
+    <div class="q-title">Do we have a concrete requirement for WAP branching (Nessie)?</div>
+    <div class="q-body">The Write-Audit-Publish pattern — write data to a branch, validate quality and compliance, then atomically publish to production — is architecturally compelling for regulated data. It requires adding Nessie to the stack. Nessie should not be added speculatively; it adds operational complexity and has pre-1.0 stability caveats.</div>
+    <div class="q-options">
+      <div class="q-options-label">Options</div>
+      <div class="q-option"><span class="q-option-label">A</span><span class="q-option-text">Yes — specific Gold layer pipelines require it. Scope which tables and add Nessie to Phase 1.</span></div>
+      <div class="q-option"><span class="q-option-label">B</span><span class="q-option-text">Not yet — defer until a concrete pipeline requirement emerges. Polaris alone for Phase 1.</span></div>
+    </div>
+    <div class="q-recommendation">Recommendation: Defer unless a specific pipeline team can articulate the WAP requirement today.</div>
+  </div>
+
+  <div class="q-card">
+    <div class="q-num">07 <span class="q-priority pri-arch">ARCHITECTURE</span></div>
+    <div class="q-title">Microsoft Purview vs Apache Atlas — or both?</div>
+    <div class="q-body">Atlas handles PII/PCI classification for the on-prem catalog (tags feed into Privacera policies). Purview handles Fabric-side governance and auto-labelling within the M365 estate. Both are in the architecture, but there is overlap. Given RBC's existing M365/Fabric investment, should Purview expand to replace Atlas on-prem, or do they serve distinct domains?</div>
+    <div class="q-options">
+      <div class="q-options-label">Options</div>
+      <div class="q-option"><span class="q-option-label">A</span><span class="q-option-text">Both — Atlas for on-prem Iceberg classification (feeds Privacera), Purview for Fabric/M365 surface. Distinct domains.</span></div>
+      <div class="q-option"><span class="q-option-label">B</span><span class="q-option-text">Purview only — consolidate on Purview if RBC already has M365 E5. Purview can scan on-prem via IR connector.</span></div>
+      <div class="q-option"><span class="q-option-label">C</span><span class="q-option-text">Atlas only — lighter footprint, fully on-prem, native Privacera TagSync integration. Purview for Fabric only.</span></div>
+    </div>
+  </div>
+
+  <div class="q-card">
+    <div class="q-num">08 <span class="q-priority pri-arch">ARCHITECTURE</span></div>
+    <div class="q-title">DirectLake access from Fabric Spark — how do we handle it?</div>
+    <div class="q-body">ADR-010 confirms Import mode for BI consumers — DDM applies. But data scientists using Fabric Spark notebooks to read from the Gold Delta tables bypass the SQL endpoint and DDM entirely. There is currently no column masking for Fabric Spark notebook consumers of PII/PCI data.</div>
+    <div class="q-options">
+      <div class="q-options-label">Options</div>
+      <div class="q-option"><span class="q-option-label">A</span><span class="q-option-text">Restrict Fabric Spark access — data scientists must use the SQL endpoint or use pre-masked Gold views. Workspace policy enforced.</span></div>
+      <div class="q-option"><span class="q-option-label">B</span><span class="q-option-text">Create a separate anonymised Gold layer for Fabric Spark consumers — PII stripped at pipeline time, not query time.</span></div>
+      <div class="q-option"><span class="q-option-label">C</span><span class="q-option-text">Expand Privacera to Fabric Spark — evaluate Privacera's Lakehouse integration for Fabric. Not confirmed as supported today.</span></div>
+    </div>
+    <div class="q-stakes">This must be resolved before data scientists get Fabric Spark access to any Gold tables containing PII or PCI data.</div>
+  </div>
+
+</div>
+
+<!-- QUESTIONS: STRATEGY -->
+<div class="section-heading">Strategic &amp; Platform Decisions</div>
+<div class="q-grid">
+
+  <div class="q-card">
+    <div class="q-num">09 <span class="q-priority pri-strategy">STRATEGY</span></div>
+    <div class="q-title">SIEM platform: Splunk, Elastic, or Microsoft Sentinel?</div>
+    <div class="q-body">The architecture requires a SIEM for Privacera audit aggregation, automated PCI DSS 10.4.1 review, and OSFI B-13 forensics. RBC may already have one of these. Sentinel has a natural fit with the Fabric/M365 investment. Splunk is the most proven for regulated financial services. This is likely already decided at the enterprise level — we need the answer to confirm our audit forwarding design.</div>
+    <div class="q-options">
+      <div class="q-options-label">Options / Clarification needed</div>
+      <div class="q-option"><span class="q-option-label">→</span><span class="q-option-text">What SIEM is currently deployed at RBC for enterprise security events? Use that.</span></div>
+      <div class="q-option"><span class="q-option-label">→</span><span class="q-option-text">If no enterprise SIEM exists for data access audit: Splunk Enterprise Security is the recommended choice for PCI-regulated environments.</span></div>
+    </div>
+  </div>
+
+  <div class="q-card">
+    <div class="q-num">10 <span class="q-priority pri-strategy">STRATEGY</span></div>
+    <div class="q-title">HashiCorp Vault vs CyberArk for secrets and PAM?</div>
+    <div class="q-body">The architecture requires secrets management (service credentials, encryption keys) and privileged access management (break-glass, admin session recording). HashiCorp Vault is the OSS-native choice for Kubernetes/OCP environments. CyberArk is the enterprise PAM leader and may already be deployed at RBC for other systems.</div>
+    <div class="q-options">
+      <div class="q-options-label">Options</div>
+      <div class="q-option"><span class="q-option-label">A</span><span class="q-option-text">Use existing CyberArk deployment if available — integrate lakehouse service accounts into the existing PAM programme.</span></div>
+      <div class="q-option"><span class="q-option-label">B</span><span class="q-option-text">HashiCorp Vault — native OCP integration, dynamic secrets, lower operational overhead for the lakehouse team.</span></div>
+      <div class="q-option"><span class="q-option-label">C</span><span class="q-option-text">Both — Vault for dynamic secrets and KMS, CyberArk for PAM (admin session recording, break-glass). Non-overlapping roles.</span></div>
+    </div>
+  </div>
+
+  <div class="q-card">
+    <div class="q-num">11 <span class="q-priority pri-ops">OPERATIONS</span></div>
+    <div class="q-title">Non-production environments: when do we need synthetic data?</div>
+    <div class="q-body">Under OSFI B-13, non-production environments (dev, test, UAT) should not contain production PII. The current state is unknown — if prod data is being used in non-prod today, this is a compliance gap. Synthetic data generation (Gretel.ai, Mostly AI, or a custom pipeline) eliminates this risk and unblocks developer access to realistic data.</div>
+    <div class="q-options">
+      <div class="q-options-label">Options</div>
+      <div class="q-option"><span class="q-option-label">A</span><span class="q-option-text">Immediate audit — confirm whether prod PII exists in any non-prod lakehouse environment today. If yes, this is Tier 1 remediation.</span></div>
+      <div class="q-option"><span class="q-option-label">B</span><span class="q-option-text">Plan synthetic data pipeline as part of lakehouse Phase 2 — required before developer self-serve access goes live.</span></div>
+    </div>
+    <div class="q-stakes">If production data is in dev/test today this is an active OSFI B-13 gap. Needs immediate answer.</div>
+  </div>
+
+</div>
+
+<!-- DECISION LOG -->
+<div class="section-heading">Decision Log — Current State</div>
+<div class="decision-log">
+  <div class="dl-row header">
+    <div class="dl-cell">Decision Area</div>
+    <div class="dl-cell">Decision Made</div>
+    <div class="dl-cell">Status</div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">Authorization &amp; Masking</div>
+    <div class="dl-cell">Privacera selected (pending budget + B-10 sign-off)</div>
+    <div class="dl-cell"><span class="status-open">PENDING</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">Iceberg Catalog</div>
+    <div class="dl-cell">Apache Polaris — primary REST catalog</div>
+    <div class="dl-cell"><span class="status-confirmed">CONFIRMED</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">BI/AI Surface</div>
+    <div class="dl-cell">Fabric Import mode — SQL endpoint — DDM enforced (ADR-010)</div>
+    <div class="dl-cell"><span class="status-confirmed">CONFIRMED</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">Storage</div>
+    <div class="dl-cell">MinIO AIStor — on-prem S3-compatible, SSE-KMS</div>
+    <div class="dl-cell"><span class="status-confirmed">CONFIRMED</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">Lineage</div>
+    <div class="dl-cell">OpenLineage + Marquez — BCBS 239 compliance</div>
+    <div class="dl-cell"><span class="status-confirmed">CONFIRMED</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">Teradata OTF</div>
+    <div class="dl-cell">Removed from architecture scope</div>
+    <div class="dl-cell"><span class="status-removed">REMOVED</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">WAP Branching (Nessie)</div>
+    <div class="dl-cell">Optional — deferred pending concrete pipeline requirement</div>
+    <div class="dl-cell"><span class="status-open">DEFERRED</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">Cloud Burst Priority</div>
+    <div class="dl-cell">Snowflake vs Databricks sequencing — pending</div>
+    <div class="dl-cell"><span class="status-open">PENDING</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">SIEM Platform</div>
+    <div class="dl-cell">Pending enterprise platform confirmation</div>
+    <div class="dl-cell"><span class="status-open">PENDING</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">Secrets / PAM</div>
+    <div class="dl-cell">HashiCorp Vault preferred — align with existing CyberArk if present</div>
+    <div class="dl-cell"><span class="status-open">PENDING</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">Classification (Atlas vs Purview)</div>
+    <div class="dl-cell">Pending M365 licensing clarity</div>
+    <div class="dl-cell"><span class="status-open">PENDING</span></div>
+  </div>
+  <div class="dl-row">
+    <div class="dl-cell" style="font-weight:600">Polaris Incubating Risk</div>
+    <div class="dl-cell">Requires documented risk acceptance or enterprise support contract</div>
+    <div class="dl-cell"><span class="status-open">NEEDS SIGN-OFF</span></div>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<div class="section-heading">Suggested Decision Timeline</div>
+<div class="timeline">
+  <div class="tl-row">
+    <div class="tl-period">This week</div>
+    <div class="tl-content"><strong>Non-prod PII audit (Q11)</strong> — confirm whether production data exists in any non-prod environment. If yes, immediate remediation plan required. Also: confirm which enterprise SIEM is in place at RBC.</div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-period">Month 1</div>
+    <div class="tl-content"><strong>Privacera B-10 review (Q05)</strong> + <strong>budget approval (Q01)</strong> — engage Legal and Compliance on the B-10 assessment. Initiate procurement discussion. Decision gate: proceed with Privacera or commit to OSS path. Also: cloud burst sequencing decision (Q02).</div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-period">Month 2</div>
+    <div class="tl-content"><strong>Polaris risk acceptance (Q04)</strong> — architecture board sign-off on incubating status, or decision to use enterprise support contract. Also: Atlas vs Purview decision (Q07) once M365 licensing is confirmed.</div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-period">Month 3</div>
+    <div class="tl-content"><strong>Fabric Spark access model (Q08)</strong> — finalize before any data scientist gets Fabric Spark access to Gold tables. Also: Nessie WAP decision (Q06) — confirm with pipeline leads whether branching is required in Phase 1.</div>
+  </div>
+  <div class="tl-row">
+    <div class="tl-period">Year 2</div>
+    <div class="tl-content"><strong>Tokenization business case (Q03)</strong> + <strong>synthetic data pipeline (Q11B)</strong> + <strong>Vault vs CyberArk PAM (Q10)</strong>. These do not block Phase 1 production but should be on the roadmap.</div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div class="left">
+    Lumina · Enterprise Data · George Chilakos, VP Enterprise Data<br/>
+    For discussion with Vinh Tran, Rex Davis, and Joey (CFO peer)<br/>
+    Companion document: RBC Lakehouse Architecture — Confirmed Decisions
+  </div>
+  <div class="right">
+    11 open questions<br/>
+    5 decision domains<br/>
+    April 2026
+  </div>
+</div>
+
+</body>
+</html>

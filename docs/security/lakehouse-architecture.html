@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RBC Lakehouse Architecture — Confirmed Decisions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:       #0D0D0D;
+    --ink-mid:   #444444;
+    --ink-light: #888888;
+    --rule:      #D0D0CC;
+    --bg:        #F4F4F0;
+    --zone:      #EBEBЕ7;
+    --zone-alt:  #FFFFFF;
+    --blue:      #1A4FCC;
+    --blue-bg:   #EEF3FF;
+    --blue-rule: #9AB3F5;
+    --red:       #B91C1C;
+    --red-bg:    #FEF2F2;
+    --red-rule:  #FECACA;
+    --green:     #15803D;
+    --green-bg:  #F0FDF4;
+    --amber:     #92400E;
+    --amber-bg:  #FFFBEB;
+    --cloud-bg:  #F0F6FF;
+    --cloud-rule:#C7D9F8;
+    --fabric-bg: #F0F4FF;
+    --fabric-rule:#B8C7F5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    padding: 40px 32px;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .doc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--ink);
+  }
+  .doc-header h1 {
+    font-size: 22px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    line-height: 1.2;
+  }
+  .doc-header .meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--ink-light);
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+    padding: 12px 16px;
+    background: var(--zone-alt);
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--ink-mid);
+  }
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── PLANES ── */
+  .plane {
+    border: 1px solid var(--rule);
+    margin-bottom: 4px;
+    background: var(--zone-alt);
+    position: relative;
+  }
+  .plane.onprem {
+    border: 2px solid var(--ink);
+    margin-bottom: 0;
+  }
+  .plane-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    padding: 10px 16px 6px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .plane-content {
+    padding: 14px 16px;
+  }
+
+  /* ── NODE BOXES ── */
+  .nodes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .node {
+    border: 1.5px solid var(--ink);
+    padding: 8px 14px;
+    background: var(--zone-alt);
+    min-width: 110px;
+    position: relative;
+  }
+  .node .n-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+    line-height: 1.3;
+  }
+  .node .n-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: var(--ink-light);
+    margin-top: 3px;
+    line-height: 1.5;
+  }
+  .node .n-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 2px;
+    display: inline-block;
+    margin-top: 4px;
+  }
+
+  /* Blue — catalog/polaris */
+  .node.blue {
+    border-color: var(--blue);
+    background: var(--blue-bg);
+  }
+  .node.blue .n-title { color: var(--blue); }
+
+  /* Red — security/privacera */
+  .node.red {
+    border-color: var(--red);
+    background: var(--red-bg);
+  }
+  .node.red .n-title { color: var(--red); }
+
+  /* Optional — dashed */
+  .node.optional {
+    border-style: dashed;
+    border-color: var(--ink-light);
+    background: var(--bg);
+  }
+  .node.optional .n-title { color: var(--ink-mid); }
+
+  /* ── CONNECTOR ── */
+  .connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 0;
+    gap: 10px;
+  }
+  .connector-line {
+    flex: 1;
+    height: 1px;
+    background: var(--rule);
+    max-width: 60px;
+  }
+  .connector-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: var(--ink-light);
+    padding: 2px 8px;
+    border: 1px solid var(--rule);
+    background: var(--zone-alt);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .v-connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px 0;
+    gap: 2px;
+  }
+  .v-line {
+    width: 1px;
+    height: 16px;
+    background: var(--rule);
+  }
+  .v-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: var(--ink-light);
+    padding: 2px 8px;
+    border: 1px solid var(--rule);
+    background: var(--zone-alt);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  /* ── ONPREM WRAPPER ── */
+  .onprem-wrapper {
+    border: 2px solid var(--ink);
+    margin-bottom: 2px;
+  }
+  .onprem-header {
+    background: var(--ink);
+    color: #fff;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .onprem-header .oh-right {
+    font-size: 8px;
+    font-weight: 400;
+    letter-spacing: 0.5px;
+    opacity: 0.7;
+  }
+
+  /* ── CLOUD WRAPPER ── */
+  .cloud-wrapper {
+    border: 1.5px dashed var(--cloud-rule);
+    background: var(--cloud-bg);
+    margin-bottom: 2px;
+  }
+  .cloud-header {
+    background: transparent;
+    border-bottom: 1px dashed var(--cloud-rule);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #2563AB;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* ── FABRIC WRAPPER ── */
+  .fabric-wrapper {
+    border: 1.5px solid var(--fabric-rule);
+    background: var(--fabric-bg);
+    margin-bottom: 2px;
+  }
+  .fabric-header {
+    background: transparent;
+    border-bottom: 1px solid var(--fabric-rule);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #1E3A8A;
+    padding: 8px 16px;
+    display: flex;
+    justify-content: space-between;
+  }
+  .fabric-header .fh-right {
+    font-size: 8px;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+
+  /* ── INNER PLANE ── */
+  .inner-plane {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .inner-plane:last-child { border-bottom: none; }
+  .inner-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 10px;
+  }
+
+  /* ── DIVIDER ── */
+  .tunnel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+    margin: 2px 0;
+  }
+  .tunnel-line {
+    flex: 1;
+    border-top: 1px dashed #AAAAAA;
+  }
+  .tunnel-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: var(--ink-light);
+    padding: 3px 10px;
+    border: 1px dashed #AAAAAA;
+    background: var(--bg);
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  /* ── FLOW ARROW ── */
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    color: var(--ink-light);
+    padding: 0 4px;
+  }
+
+  /* ── SIDE BY SIDE LAYOUT ── */
+  .side-by-side {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+  @media(max-width:640px){
+    .side-by-side, .three-col { grid-template-columns: 1fr; }
+  }
+
+  /* ── CONFIRMED BADGE ── */
+  .confirmed { font-size: 8px; font-family: 'IBM Plex Mono', monospace; font-weight: 600; color: var(--green); }
+  .optional-tag { font-size: 8px; font-family: 'IBM Plex Mono', monospace; color: var(--ink-light); }
+
+  /* ── FOOTNOTES ── */
+  .footnotes {
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--rule);
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+  }
+  @media(max-width:640px){ .footnotes { grid-template-columns: 1fr; } }
+  .footnote-group h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 8px;
+  }
+  .footnote-group ul { padding-left: 12px; }
+  .footnote-group li {
+    font-size: 9px;
+    line-height: 1.9;
+    color: var(--ink-mid);
+  }
+  .footnote-group li span {
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--blue);
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="doc-header">
+  <div>
+    <h1>RBC Enterprise Lakehouse<br/>Architecture — Confirmed Decisions</h1>
+    <div style="font-size:11px;color:var(--ink-light);margin-top:6px;font-family:'IBM Plex Mono',monospace">Lumina · Enterprise Data · April 2026</div>
+  </div>
+  <div class="meta">
+    Version 1.0<br/>
+    Status: CONFIRMED<br/>
+    Teradata OTF: REMOVED<br/>
+    Privacera: SELECTED
+  </div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-bg);border:1.5px solid var(--blue)"></div>Catalog layer</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--red-bg);border:1.5px solid var(--red)"></div>Security / Privacera</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:#fff;border:1.5px solid var(--ink)"></div>Confirmed component</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--bg);border:1.5px dashed var(--ink-light)"></div>Optional / if needed</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--cloud-bg);border:1.5px dashed var(--cloud-rule)"></div>Cloud burst</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--fabric-bg);border:1.5px solid var(--fabric-rule)"></div>BI / AI surface</div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     ON-PREM PLANE
+══════════════════════════════════════════════ -->
+<div class="onprem-wrapper">
+  <div class="onprem-header">
+    <span>Canadian Data Centre · OpenShift (OCP)</span>
+    <span class="oh-right">OSFI Data Residency · All primary workloads</span>
+  </div>
+
+  <!-- IDENTITY -->
+  <div class="inner-plane">
+    <div class="inner-label">Identity &amp; Authentication</div>
+    <div class="nodes">
+      <div class="node">
+        <div class="n-title">Active Directory</div>
+        <div class="n-sub">Users · Groups · Kerberos<br/>Source of truth</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node">
+        <div class="n-title">Keycloak</div>
+        <div class="n-sub">OIDC bridge to AD<br/>OAuth2 JWT issuance</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node red">
+        <div class="n-title">Privacera UserSync</div>
+        <div class="n-sub">AD groups → policy engine<br/>Continuous sync</div>
+      </div>
+      <div style="flex:1"></div>
+      <div class="node">
+        <div class="n-title">HashiCorp Vault</div>
+        <div class="n-sub">Secrets · KMS · STS<br/>No hardcoded credentials</div>
+        <div class="n-badge" style="background:var(--green-bg);color:var(--green)">MUST · Tier 1</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMPUTE -->
+  <div class="inner-plane">
+    <div class="inner-label">Compute Engines</div>
+    <div class="nodes">
+      <div class="node">
+        <div class="n-title">Spark / Kyuubi</div>
+        <div class="n-sub">Primary writer · ETL<br/>Kyuubi SQL gateway</div>
+        <div class="n-badge" style="background:var(--green-bg);color:var(--green)">Primary Write Engine</div>
+      </div>
+      <div class="node">
+        <div class="n-title">Trino</div>
+        <div class="n-sub">Interactive analytics<br/>Ad-hoc SQL · Federated</div>
+        <div class="n-badge" style="background:var(--green-bg);color:var(--green)">Primary Query Engine</div>
+      </div>
+      <div class="flow-arrow" style="font-size:16px;color:var(--ink-light)">↔</div>
+      <div class="node red" style="min-width:160px">
+        <div class="n-title">Privacera</div>
+        <div class="n-sub">Column masking · Row filtering<br/>ABAC · Export controls<br/>Unified audit → SIEM</div>
+        <div class="n-badge" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red)">SECURITY PLANE</div>
+      </div>
+      <div class="flow-arrow" style="font-size:16px;color:var(--ink-light)">↕</div>
+      <div class="node">
+        <div class="n-title">Apache Atlas</div>
+        <div class="n-sub">PII · PCI · CONF tags<br/>Auto-classification<br/>Tag → Privacera policies</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CATALOG -->
+  <div class="inner-plane">
+    <div class="inner-label">Catalog Plane</div>
+    <div class="nodes">
+      <div class="node blue" style="min-width:200px">
+        <div class="n-title">Apache Polaris</div>
+        <div class="n-sub">Iceberg REST catalog (primary)<br/>Credential vending · RBAC<br/>PostgreSQL backed · HA on OCP</div>
+        <div class="n-badge" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue)">REST CATALOG — CONFIRMED</div>
+      </div>
+      <div class="flow-arrow">+</div>
+      <div class="node optional" style="min-width:160px">
+        <div class="n-title">Nessie</div>
+        <div class="n-sub">Git-for-data · Branching<br/>WAP workflows · Regulatory tags<br/>Multi-table atomic commits</div>
+        <div class="n-badge" style="background:var(--amber-bg);color:var(--amber)">OPTIONAL — if WAP needed</div>
+      </div>
+      <div style="flex:1"></div>
+      <div class="node blue">
+        <div class="n-title">Privacera ← Polaris</div>
+        <div class="n-sub">Schema sync (periodic)<br/>Column hierarchy discovery<br/>Policy model built from catalog</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GOVERNANCE -->
+  <div class="inner-plane">
+    <div class="inner-label">Governance &amp; Lineage</div>
+    <div class="nodes">
+      <div class="node">
+        <div class="n-title">OpenLineage</div>
+        <div class="n-sub">Spark + Trino emitters<br/>Column-level lineage</div>
+        <div class="n-badge" style="background:var(--blue-bg);color:var(--blue)">BCBS 239</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node">
+        <div class="n-title">Marquez / DataHub</div>
+        <div class="n-sub">Lineage backend<br/>End-to-end provenance</div>
+      </div>
+      <div style="width:24px"></div>
+      <div class="node">
+        <div class="n-title">Privacera Audit</div>
+        <div class="n-sub">All engines → JSON audit<br/>Who · What · When · Allow/Deny</div>
+      </div>
+      <div class="flow-arrow">→</div>
+      <div class="node">
+        <div class="n-title">SIEM (Splunk)</div>
+        <div class="n-sub">WORM retention · 7yr<br/>Automated review · PCI 10.4.1</div>
+        <div class="n-badge" style="background:var(--red-bg);color:var(--red)">PCI Req 10 · OSFI B-13</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STORAGE -->
+  <div class="inner-plane" style="border-bottom:none">
+    <div class="inner-label">Storage — Iceberg V2 · Parquet</div>
+    <div class="nodes">
+      <div class="node" style="min-width:220px">
+        <div class="n-title">MinIO AIStor</div>
+        <div class="n-sub">S3-compatible · On-prem · OCP<br/>SSE-KMS encryption at rest<br/>STS endpoint for credential vending<br/>Object Lock (WORM) for audit logs</div>
+        <div class="n-badge" style="background:var(--green-bg);color:var(--green)">Bronze → Silver → Gold (Iceberg V2)</div>
+      </div>
+      <div style="padding:8px 12px;border:1px solid var(--rule);background:var(--bg);font-size:9px;font-family:'IBM Plex Mono',monospace;color:var(--ink-light);line-height:2">
+        Raw landing → Bronze (Iceberg)<br/>
+        Bronze → Silver (FSDM aligned)<br/>
+        Silver → Gold (aggregated)<br/>
+        Gold → Fabric Delta copy (BI surface)
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TUNNEL -->
+<div class="tunnel">
+  <div class="tunnel-line"></div>
+  <div class="tunnel-label">ExpressRoute / AWS PrivateLink · HTTPS:443 · Polaris REST · Vended STS credentials</div>
+  <div class="tunnel-line"></div>
+</div>
+
+<!-- CLOUD BURST -->
+<div class="cloud-wrapper">
+  <div class="cloud-header">
+    <span>Cloud Burst — Compute Only · Data stays in Canada</span>
+    <span style="font-size:8px;opacity:0.7">ca-central-1 / Canada Central regions</span>
+  </div>
+  <div style="padding:14px 16px">
+    <div class="side-by-side">
+      <div class="node" style="border-color:var(--cloud-rule);background:#fff">
+        <div class="n-title">Databricks (DBR 16.4+)</div>
+        <div class="n-sub">REST catalog → Polaris via PrivateLink<br/>Privacera agent for column masking<br/>Vended STS credentials for MinIO</div>
+        <div class="n-badge" style="background:var(--cloud-bg);color:#2563AB">CLOUD BURST COMPUTE</div>
+      </div>
+      <div class="node" style="border-color:var(--cloud-rule);background:#fff">
+        <div class="n-title">Snowflake (Open Catalog)</div>
+        <div class="n-sub">Snowflake Open Catalog = managed Polaris<br/>CATALOG_INTEGRATION → on-prem Polaris<br/>Zero-config REST catalog integration</div>
+        <div class="n-badge" style="background:var(--cloud-bg);color:#2563AB">CLOUD BURST COMPUTE</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TUNNEL -->
+<div class="tunnel">
+  <div class="tunnel-line"></div>
+  <div class="tunnel-label">Gold Delta copy synced to Fabric OneLake · Import mode only (ADR-010)</div>
+  <div class="tunnel-line"></div>
+</div>
+
+<!-- FABRIC SURFACE -->
+<div class="fabric-wrapper">
+  <div class="fabric-header">
+    <span>Microsoft Fabric — BI / AI Surface (ADR-010 Confirmed)</span>
+    <span class="fh-right">Import mode enforced · DirectLake prohibited for PII/PCI data</span>
+  </div>
+  <div style="padding:14px 16px">
+    <div class="three-col">
+      <div class="node" style="border-color:var(--fabric-rule);background:#fff">
+        <div class="n-title">SQL Analytics Endpoint</div>
+        <div class="n-sub">T-SQL DDM · Row-Level Security<br/>Enforced on Import mode queries<br/>Entra ID native (maps from AD)</div>
+        <div class="n-badge" style="background:var(--green-bg);color:var(--green)">DDM ENFORCED</div>
+      </div>
+      <div class="node" style="border-color:var(--fabric-rule);background:#fff">
+        <div class="n-title">Power BI (Import)</div>
+        <div class="n-sub">Reports &amp; dashboards<br/>Routes through SQL endpoint<br/>DDM + RLS applies</div>
+        <div class="n-badge" style="background:var(--green-bg);color:var(--green)">SECURE PATH</div>
+      </div>
+      <div class="node" style="border-color:var(--fabric-rule);background:#fff">
+        <div class="n-title">RBC Assist (AI)</div>
+        <div class="n-sub">FastAPI certified query gateway<br/>Whitelisted query patterns only<br/>No ad-hoc SQL for agents</div>
+        <div class="n-badge" style="background:var(--amber-bg);color:var(--amber)">TRUST BOUNDARY</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTNOTES -->
+<div class="footnotes">
+  <div class="footnote-group">
+    <h4>Confirmed decisions</h4>
+    <ul>
+      <li><span>Privacera</span> — authorization, masking, audit</li>
+      <li><span>Polaris</span> — primary Iceberg REST catalog</li>
+      <li><span>Fabric Import</span> — BI/AI surface (ADR-010)</li>
+      <li><span>MinIO</span> — on-prem S3-compatible storage</li>
+      <li><span>OpenLineage</span> — BCBS 239 lineage</li>
+      <li><span>OCP</span> — deployment platform</li>
+      <li><span>Teradata OTF</span> — removed from scope</li>
+    </ul>
+  </div>
+  <div class="footnote-group">
+    <h4>Open questions</h4>
+    <ul>
+      <li>Nessie WAP — do we have concrete requirements?</li>
+      <li>SIEM — Splunk vs Elastic vs Sentinel?</li>
+      <li>Vault — HashiCorp vs CyberArk?</li>
+      <li>Atlas vs Purview for classification?</li>
+      <li>Privacera licensing — budget approved?</li>
+      <li>Polaris incubating risk — acceptable?</li>
+      <li>Tokenization for PCI scope reduction?</li>
+    </ul>
+  </div>
+  <div class="footnote-group">
+    <h4>Compliance coverage</h4>
+    <ul>
+      <li><span>OSFI B-13</span> — Privacera + Vault + SIEM</li>
+      <li><span>PCI DSS 4.0</span> — DDM + audit + WORM</li>
+      <li><span>BCBS 239</span> — OpenLineage + snapshots</li>
+      <li><span>PIPEDA</span> — Anonymization + retention</li>
+      <li>Data residency — all primary data on-prem CA</li>
+      <li>Fabric DDM — enforced via Import mode only</li>
+    </ul>
+  </div>
+</div>
+
+</body>
+</html>
