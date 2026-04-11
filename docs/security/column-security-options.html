@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Column Security — All Options incl. Microsoft Fabric</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Inter, system-ui, sans-serif; background: #F0F4F8; padding: 16px; font-size: 12px; color: #2C3E50; }
+
+.header { background: #1A1A2E; border-radius: 10px; padding: 14px 20px; margin-bottom: 14px; display:flex; justify-content:space-between; align-items:center; }
+.header-text h1 { color: #fff; font-size: 15px; font-weight: 800; }
+.header-text p  { color: #9BA4B5; font-size: 10px; margin-top: 3px; }
+.header-badge { background: #0078D4; border-radius: 8px; padding: 6px 10px; text-align:center; }
+.header-badge div { color:#fff; font-size:9px; font-weight:700; }
+
+.tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.tab { padding: 6px 16px; border-radius: 20px; border: none; cursor: pointer; font-size: 11px; font-weight: 600; background: #E0E7EF; color: #7F8C8D; }
+.tab.active { background: #1A1A2E; color: #fff; }
+
+.card { background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.hidden { display: none; }
+
+.note { border-radius: 8px; padding: 10px 14px; font-size: 10px; line-height: 1.6; margin-top: 10px; }
+.warn   { background: #FFF3CD; border: 2px solid #F0AD00; color: #856404; }
+.info   { background: #D6EAF8; border: 2px solid #2E86C1; color: #1A5276; }
+.tip    { background: #D5F5E3; border: 2px solid #1E8449; color: #1E5631; }
+.danger { background: #FADBD8; border: 2px solid #C0392B; color: #7B241C; }
+.fabric-note { background: #E8F4FD; border: 2px solid #0078D4; color: #004578; }
+
+.mtable { width: 100%; border-collapse: collapse; font-size: 10px; }
+.mtable th { padding: 9px 10px; text-align: left; font-weight: 700; }
+.mtable td { padding: 8px 10px; border-bottom: 1px solid #E8ECF0; vertical-align: top; }
+.mtable tr:nth-child(even) td { background: #F8F9FA; }
+.mtable tr:hover td { background: #EBF5FB; }
+.c-head { background: #1A1A2E; color: #fff; }
+.fabric-row td { background: #E8F4FD !important; border-left: 3px solid #0078D4; }
+.fabric-row:hover td { background: #CCE7F8 !important; }
+
+.pill { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px; white-space: nowrap; }
+.p-yes    { background: #D5F5E3; color: #1E5631; }
+.p-no     { background: #FADBD8; color: #7B241C; }
+.p-part   { background: #FDEBD0; color: #784212; }
+.p-comm   { background: #E8DAEF; color: #4A235A; }
+.p-hard   { background: #EBF5FB; color: #1A5276; }
+.p-fabric { background: #E8F4FD; color: #004578; border: 1px solid #0078D4; }
+
+.score { font-size: 11px; font-weight: 800; }
+.s5 { color: #1E8449; }
+.s4 { color: #2E86C1; }
+.s3 { color: #E67E22; }
+.s2 { color: #C0392B; }
+.s1 { color: #922B21; }
+
+.section-header td { background: #1A1A2E !important; color: #fff; font-weight: 800; font-size: 10px; padding: 6px 10px; }
+.fabric-section td { background: #004578 !important; color: #fff; font-weight: 800; font-size: 10px; padding: 6px 10px; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media(max-width:580px){ .grid2,.grid3{ grid-template-columns:1fr; } }
+
+.opt-card { border-radius: 10px; border: 2px solid; padding: 14px; margin-bottom: 12px; }
+.opt-title { font-size: 13px; font-weight: 800; margin-bottom: 4px; }
+.opt-sub   { font-size: 10px; color: #7F8C8D; margin-bottom: 10px; }
+
+.mini { border-radius: 6px; border: 1px solid; padding: 8px 10px; font-size: 10px; }
+.mini strong { display: block; font-size: 10px; margin-bottom: 3px; }
+.mini ul { padding-left: 12px; }
+.mini li { line-height: 1.7; }
+
+.code { font-family: 'Courier New', monospace; font-size: 9px; background: #1E2D3D; color: #E8F8F5; padding: 8px 12px; border-radius: 6px; margin-top: 6px; line-height: 1.8; white-space: pre; overflow-x: auto; }
+
+table.verdict-table { width:100%; border-collapse:collapse; font-size:10px; }
+table.verdict-table th { background:#1A1A2E; color:#fff; padding:8px 10px; text-align:left; }
+table.verdict-table td { padding:7px 10px; border-bottom:1px solid #E8ECF0; }
+table.verdict-table tr:nth-child(even) td { background:#F8F9FA; }
+
+.v-cards { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+.v-card { flex:1; min-width:150px; border-radius:8px; border:2px solid; padding:12px; }
+.v-card .rank { font-size:20px; font-weight:900; margin-bottom:4px; }
+.v-card .vname { font-size:11px; font-weight:800; margin-bottom:4px; }
+.v-card .vdesc { font-size:9px; line-height:1.6; color:#2C3E50; }
+
+.fabric-block { border-radius:10px; border:2px solid #0078D4; background:#E8F4FD; padding:14px; margin-bottom:14px; }
+.fabric-title { font-size:13px; font-weight:800; color:#0078D4; margin-bottom:4px; display:flex; align-items:center; gap:8px; }
+.fabric-subtitle { font-size:10px; color:#004578; margin-bottom:12px; }
+
+.engine-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.engine-box { flex:1; min-width:160px; border-radius:8px; border:2px solid #0078D4; background:#fff; padding:10px; }
+.engine-box .etitle { font-weight:800; font-size:11px; color:#0078D4; margin-bottom:6px; }
+.engine-box ul { padding-left:13px; }
+.engine-box li { font-size:9px; line-height:1.7; }
+.engine-box .gap { font-size:9px; color:#C0392B; margin-top:4px; background:#FADBD8; padding:3px 6px; border-radius:4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-text">
+    <h1>Column-Level Security & Masking — All Options</h1>
+    <p>Updated with Microsoft Fabric (OneLake · Spark · SQL) · 14 options · Spark · Trino · Databricks · Teradata OTF · Fabric · On-prem + Cloud · OSFI/PCI</p>
+  </div>
+  <div class="header-badge">
+    <div>🆕 Fabric</div>
+    <div>Added</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('chart',this)">Full Comparison Chart</button>
+  <button class="tab" onclick="showTab('fabric',this)">Fabric Deep Dive</button>
+  <button class="tab" onclick="showTab('deep',this)">All Options Deep Dive</button>
+  <button class="tab" onclick="showTab('verdict',this)">Verdict for RBC</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- FULL CHART                                                  -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="tab-chart" class="card">
+  <div style="font-size:11px;color:#7F8C8D;margin-bottom:12px">14 options · 11 criteria · 🆕 Microsoft Fabric rows highlighted in blue. Scroll right on small screens.</div>
+  <div style="overflow-x:auto">
+  <table class="mtable">
+    <thead>
+      <tr>
+        <th class="c-head" style="min-width:155px">Option</th>
+        <th class="c-head" style="min-width:65px">Column<br/>Masking</th>
+        <th class="c-head" style="min-width:60px">Row<br/>Filtering</th>
+        <th class="c-head" style="min-width:65px">Spark<br/>Support</th>
+        <th class="c-head" style="min-width:65px">Trino<br/>Support</th>
+        <th class="c-head" style="min-width:75px">Databricks<br/>Support</th>
+        <th class="c-head" style="min-width:80px">Fabric<br/>OneLake/SQL/Spark</th>
+        <th class="c-head" style="min-width:75px">Teradata<br/>OTF</th>
+        <th class="c-head" style="min-width:65px">AD/LDAP<br/>/ Entra ID</th>
+        <th class="c-head" style="min-width:60px">Audit<br/>Trail</th>
+        <th class="c-head" style="min-width:65px">OSS /<br/>Cost</th>
+        <th class="c-head" style="min-width:65px">On-prem<br/>Deploy</th>
+        <th class="c-head" style="min-width:90px">Overall Fit<br/>(RBC)</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- OPEN SOURCE -->
+      <tr class="section-header"><td colspan="13">── OPEN SOURCE OPTIONS ──</td></tr>
+
+      <tr>
+        <td><strong>1. OPA (Open Policy Agent)</strong><br/><span style="font-size:9px;color:#7F8C8D">Bloomberg/CNCF · Rego policies</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-no">❌ No plugin</span></td>
+        <td><span class="pill p-yes">✅ Native v438+</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-part">⚠️ Manual</span></td>
+        <td><span class="pill p-part">⚠️ Decision logs</span></td>
+        <td><span class="pill p-yes">✅ Free</span></td>
+        <td><span class="pill p-yes">✅ Yes</span></td>
+        <td><span class="score s3">★★★☆☆</span><br/><span style="font-size:9px">Trino only</span></td>
+      </tr>
+
+      <tr>
+        <td><strong>2. Apache Kyuubi + Spark FGAC</strong><br/><span style="font-size:9px;color:#7F8C8D">Apache project · Spark SQL gateway</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-yes">✅ Native</span></td>
+        <td><span class="pill p-no">❌ Spark only</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-yes">✅ Kerberos+LDAP</span></td>
+        <td><span class="pill p-yes">✅ Structured</span></td>
+        <td><span class="pill p-yes">✅ Free</span></td>
+        <td><span class="pill p-yes">✅ Yes</span></td>
+        <td><span class="score s3">★★★☆☆</span><br/><span style="font-size:9px">Spark only</span></td>
+      </tr>
+
+      <tr>
+        <td><strong>3. Trino Built-in Access Control</strong><br/><span style="font-size:9px;color:#7F8C8D">File-based · OSS Trino</span></td>
+        <td><span class="pill p-part">⚠️ Basic</span></td>
+        <td><span class="pill p-part">⚠️ Basic</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-yes">✅ Native</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-part">⚠️ Auth only</span></td>
+        <td><span class="pill p-part">⚠️ Event logs</span></td>
+        <td><span class="pill p-yes">✅ Free</span></td>
+        <td><span class="pill p-yes">✅ Yes</span></td>
+        <td><span class="score s2">★★☆☆☆</span><br/><span style="font-size:9px">No dynamic masking</span></td>
+      </tr>
+
+      <tr>
+        <td><strong>4. Iceberg REST FGAC Spec</strong><br/><span style="font-size:9px;color:#7F8C8D">Iceberg V2 catalog-native · In progress</span></td>
+        <td><span class="pill p-hard">🔜 Spec PR open</span></td>
+        <td><span class="pill p-hard">🔜 Spec PR open</span></td>
+        <td><span class="pill p-hard">🔜 Not yet</span></td>
+        <td><span class="pill p-hard">🔜 Not yet</span></td>
+        <td><span class="pill p-hard">🔜 Not yet</span></td>
+        <td><span class="pill p-hard">🔜 Not yet</span></td>
+        <td><span class="pill p-hard">🔜 Not yet</span></td>
+        <td><span class="pill p-hard">🔜 Catalog RBAC</span></td>
+        <td><span class="pill p-hard">🔜 Catalog events</span></td>
+        <td><span class="pill p-yes">✅ Free</span></td>
+        <td><span class="pill p-yes">✅ Catalog-native</span></td>
+        <td><span class="score s2">★★☆☆☆</span><br/><span style="font-size:9px">Not ready 2026</span></td>
+      </tr>
+
+      <tr>
+        <td><strong>5. dbt Column Masking</strong><br/><span style="font-size:9px;color:#7F8C8D">Transform-time masking · Not query-time</span></td>
+        <td><span class="pill p-part">⚠️ Transform only</span></td>
+        <td><span class="pill p-part">⚠️ Transform only</span></td>
+        <td><span class="pill p-yes">✅ Via pipeline</span></td>
+        <td><span class="pill p-yes">✅ Via pipeline</span></td>
+        <td><span class="pill p-yes">✅ Via pipeline</span></td>
+        <td><span class="pill p-yes">✅ Via pipeline</span></td>
+        <td><span class="pill p-yes">✅ Via pipeline</span></td>
+        <td><span class="pill p-part">⚠️ Not enforcement</span></td>
+        <td><span class="pill p-no">❌ No query audit</span></td>
+        <td><span class="pill p-yes">✅ OSS core free</span></td>
+        <td><span class="pill p-yes">✅ Yes</span></td>
+        <td><span class="score s2">★★☆☆☆</span><br/><span style="font-size:9px">Supplement only — not a security control</span></td>
+      </tr>
+
+      <!-- COMMERCIAL -->
+      <tr class="section-header"><td colspan="13">── COMMERCIAL OPTIONS ──</td></tr>
+
+      <tr>
+        <td><strong>6. Apache Ranger</strong><br/><span style="font-size:9px;color:#7F8C8D">Apache 2.0 · OSS self-hosted (reference point)</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-yes">✅ via Kyuubi</span></td>
+        <td><span class="pill p-part">⚠️ SEP (commercial)</span></td>
+        <td><span class="pill p-part">⚠️ Privacera add-on</span></td>
+        <td><span class="pill p-no">❌ No plugin</span></td>
+        <td><span class="pill p-no">❌ No plugin</span></td>
+        <td><span class="pill p-yes">✅ Native UserSync</span></td>
+        <td><span class="pill p-yes">✅ Solr + SIEM</span></td>
+        <td><span class="pill p-part">⚠️ OSS + commercial gaps</span></td>
+        <td><span class="pill p-yes">✅ Yes</span></td>
+        <td><span class="score s4">★★★★☆</span><br/><span style="font-size:9px">Best overall but Fabric gap</span></td>
+      </tr>
+
+      <tr>
+        <td><strong>7. Privacera</strong><br/><span style="font-size:9px;color:#7F8C8D">Commercial · Ranger-compatible SaaS</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-yes">✅ Yes</span></td>
+        <td><span class="pill p-yes">✅ Yes</span></td>
+        <td><span class="pill p-yes">✅ Best coverage</span></td>
+        <td><span class="pill p-part">⚠️ Partial (Lakehouse)</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-yes">✅ Native</span></td>
+        <td><span class="pill p-yes">✅ Unified</span></td>
+        <td><span class="pill p-comm">💰 Commercial</span></td>
+        <td><span class="pill p-part">⚠️ Cloud-primary</span></td>
+        <td><span class="score s4">★★★★☆</span><br/><span style="font-size:9px">Strong but limited Fabric</span></td>
+      </tr>
+
+      <tr>
+        <td><strong>8. Immuta</strong><br/><span style="font-size:9px;color:#7F8C8D">Commercial · ABAC · regulated industries</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-yes">✅ Yes</span></td>
+        <td><span class="pill p-yes">✅ Yes</span></td>
+        <td><span class="pill p-yes">✅ Yes</span></td>
+        <td><span class="pill p-part">⚠️ Lakehouse only</span></td>
+        <td><span class="pill p-part">⚠️ Limited</span></td>
+        <td><span class="pill p-yes">✅ LDAP + SSO</span></td>
+        <td><span class="pill p-yes">✅ Full</span></td>
+        <td><span class="pill p-comm">💰 Commercial</span></td>
+        <td><span class="pill p-part">⚠️ Hybrid</span></td>
+        <td><span class="score s4">★★★★☆</span><br/><span style="font-size:9px">Best ABAC. Fabric gap.</span></td>
+      </tr>
+
+      <tr>
+        <td><strong>9. Databricks Unity Catalog</strong><br/><span style="font-size:9px;color:#7F8C8D">Databricks-native · cloud only</span></td>
+        <td><span class="pill p-yes">✅ Full (Databricks)</span></td>
+        <td><span class="pill p-yes">✅ Full (Databricks)</span></td>
+        <td><span class="pill p-part">⚠️ Databricks Spark</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-yes">✅ Native</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-yes">✅ Entra ID / SCIM</span></td>
+        <td><span class="pill p-yes">✅ Databricks audit</span></td>
+        <td><span class="pill p-comm">💰 DBX Premium</span></td>
+        <td><span class="pill p-no">❌ Cloud only</span></td>
+        <td><span class="score s3">★★★☆☆</span><br/><span style="font-size:9px">Databricks silo only</span></td>
+      </tr>
+
+      <tr>
+        <td><strong>10. Snowflake Native RBAC</strong><br/><span style="font-size:9px;color:#7F8C8D">Snowflake-only · mature masking</span></td>
+        <td><span class="pill p-yes">✅ Full (Snowflake)</span></td>
+        <td><span class="pill p-yes">✅ Row Access Policies</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-yes">✅ Entra ID / SSO</span></td>
+        <td><span class="pill p-yes">✅ Snowflake audit</span></td>
+        <td><span class="pill p-comm">💰 Snowflake license</span></td>
+        <td><span class="pill p-no">❌ Cloud only</span></td>
+        <td><span class="score s2">★★☆☆☆</span><br/><span style="font-size:9px">Cloud burst only</span></td>
+      </tr>
+
+      <!-- FABRIC -->
+      <tr class="fabric-section"><td colspan="13">── 🆕 MICROSOFT FABRIC OPTIONS (OneLake · Spark · SQL) ──</td></tr>
+
+      <tr class="fabric-row">
+        <td><strong>11. Fabric OneLake — Workspace RBAC</strong><br/><span style="font-size:9px;color:#004578">Entra ID · Workspace + item-level · no column masking</span></td>
+        <td><span class="pill p-no">❌ None</span></td>
+        <td><span class="pill p-no">❌ None</span></td>
+        <td><span class="pill p-fabric">🔵 Fabric Spark only</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-fabric">🔵 OneLake items</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-fabric">🔵 Native Entra ID</span></td>
+        <td><span class="pill p-part">⚠️ Purview audit</span></td>
+        <td><span class="pill p-comm">💰 Fabric license</span></td>
+        <td><span class="pill p-no">❌ Cloud only</span></td>
+        <td><span class="score s2">★★☆☆☆</span><br/><span style="font-size:9px">No column masking at all</span></td>
+      </tr>
+
+      <tr class="fabric-row">
+        <td><strong>12. Fabric SQL Analytics Endpoint</strong><br/><span style="font-size:9px;color:#004578">T-SQL DDM · Row-level Security · column masking via SQL</span></td>
+        <td><span class="pill p-fabric">🔵 T-SQL DDM</span></td>
+        <td><span class="pill p-fabric">🔵 RLS predicates</span></td>
+        <td><span class="pill p-no">❌ SQL endpoint only</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-fabric">🔵 Fabric SQL only</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-fabric">🔵 Entra ID native</span></td>
+        <td><span class="pill p-fabric">🔵 Purview + Fabric audit</span></td>
+        <td><span class="pill p-comm">💰 Fabric license</span></td>
+        <td><span class="pill p-no">❌ Cloud only</span></td>
+        <td><span class="score s3">★★★☆☆</span><br/><span style="font-size:9px">SQL endpoint only. No Spark coverage.</span></td>
+      </tr>
+
+      <tr class="fabric-row">
+        <td><strong>13. Fabric + Microsoft Purview</strong><br/><span style="font-size:9px;color:#004578">Purview sensitivity labels + Fabric DLP policies</span></td>
+        <td><span class="pill p-part">⚠️ Label-driven only</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-fabric">🔵 Fabric Spark (partial)</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-fabric">🔵 Full Fabric coverage</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-fabric">🔵 Entra ID + M365</span></td>
+        <td><span class="pill p-fabric">🔵 Purview Compliance</span></td>
+        <td><span class="pill p-comm">💰 M365 E5 / Purview license</span></td>
+        <td><span class="pill p-no">❌ Cloud only</span></td>
+        <td><span class="score s3">★★★☆☆</span><br/><span style="font-size:9px">Good governance layer. Not a masking engine.</span></td>
+      </tr>
+
+      <!-- HYBRID -->
+      <tr class="section-header"><td colspan="13">── HYBRID / COMBINED APPROACHES ──</td></tr>
+
+      <tr>
+        <td><strong>OPA + Kyuubi (OSS only)</strong><br/><span style="font-size:9px;color:#7F8C8D">Best OSS-only pairing</span></td>
+        <td><span class="pill p-yes">✅ Both engines</span></td>
+        <td><span class="pill p-yes">✅ Both engines</span></td>
+        <td><span class="pill p-yes">✅ Kyuubi</span></td>
+        <td><span class="pill p-yes">✅ OPA</span></td>
+        <td><span class="pill p-no">❌ Separate needed</span></td>
+        <td><span class="pill p-no">❌ No</span></td>
+        <td><span class="pill p-no">❌ Gap remains</span></td>
+        <td><span class="pill p-yes">✅ Both support LDAP</span></td>
+        <td><span class="pill p-part">⚠️ Two streams</span></td>
+        <td><span class="pill p-yes">✅ 100% Free</span></td>
+        <td><span class="pill p-yes">✅ Full on-prem</span></td>
+        <td><span class="score s4">★★★★☆</span><br/><span style="font-size:9px">Best Ranger-free OSS</span></td>
+      </tr>
+
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note warn" style="margin-top:14px">
+    <strong>The inconvenient truth (unchanged):</strong> No single tool gives you unified column masking across Spark + Trino + Databricks + Teradata OTF + Fabric in one package. Microsoft Fabric's native security (DDM in SQL endpoint, RLS) only applies within Fabric's own query surface — it does not protect the same underlying Iceberg/Delta files when read by Trino, Spark, or Teradata OTF directly.
+  </div>
+  <div class="note fabric-note" style="margin-top:8px">
+    <strong>🔵 Key Fabric finding:</strong> Fabric has strong column masking via T-SQL Dynamic Data Masking (DDM) and Row-Level Security — but only through the <strong>SQL Analytics Endpoint</strong>. If your Fabric consumers are SQL-based (Power BI, T-SQL, DirectLake), this is mature and production-ready. If consumers are Fabric Spark notebooks reading Delta/Iceberg directly, DDM does not apply — you need OneLake RBAC (item-level only, no column masking) or an external tool like Purview DLP.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- FABRIC DEEP DIVE                                            -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="tab-fabric" class="card hidden">
+
+  <div class="fabric-block">
+    <div class="fabric-title">🔵 Microsoft Fabric — Column Security Deep Dive</div>
+    <div class="fabric-subtitle">Three distinct security surfaces inside Fabric — each works differently. Understanding which surface your consumer uses is critical.</div>
+
+    <div class="engine-row">
+
+      <div class="engine-box">
+        <div class="etitle">Surface 1: SQL Analytics Endpoint</div>
+        <ul>
+          <li><strong>Column masking:</strong> T-SQL Dynamic Data Masking (DDM) — full, production-ready</li>
+          <li><strong>Row filtering:</strong> Row-Level Security (RLS) via inline table-valued functions — full</li>
+          <li><strong>Who uses it:</strong> Power BI (Import mode via SQL), T-SQL clients, DirectQuery via SQL</li>
+          <li><strong>How to apply DDM:</strong> <code>ALTER TABLE customers ALTER COLUMN sin_number ADD MASKED WITH (FUNCTION = 'partial(0,"XXX-XXX-",4)')</code></li>
+          <li><strong>Identity:</strong> Entra ID (AAD) — maps directly from AD via Entra Connect</li>
+          <li><strong>Audit:</strong> All SQL queries logged to Fabric audit log → forwarded to Purview Compliance portal</li>
+          <li><strong>Limitation:</strong> DDM only enforced when data is queried via this SQL endpoint — NOT when Spark reads the same underlying Delta table directly</li>
+        </ul>
+        <div class="gap">⚠️ DDM does NOT protect Delta files read by Spark notebooks or external Trino/Iceberg readers</div>
+      </div>
+
+      <div class="engine-box">
+        <div class="etitle">Surface 2: Fabric Spark (Notebooks / Pipelines)</div>
+        <ul>
+          <li><strong>Column masking:</strong> ❌ Not natively supported via Spark in Fabric</li>
+          <li><strong>Row filtering:</strong> ❌ Not natively supported</li>
+          <li><strong>Access control:</strong> OneLake RBAC — workspace-level and item-level only (no column granularity)</li>
+          <li><strong>What this means:</strong> A Spark notebook in Fabric with access to a Lakehouse can read ALL columns of ALL tables in that Lakehouse — DDM does not intercept Spark reads</li>
+          <li><strong>Mitigation options:</strong></li>
+          <li>→ Use Fabric Workspace roles to restrict who can run notebooks</li>
+          <li>→ Serve sensitive data only via SQL endpoint (not raw Lakehouse)</li>
+          <li>→ Pre-mask columns at Gold layer via pipeline transformation</li>
+          <li>→ Use Purview sensitivity labels to trigger DLP blocking rules</li>
+        </ul>
+        <div class="gap">⚠️ This is the most significant gap in Fabric's column security story for regulated data</div>
+      </div>
+
+      <div class="engine-box">
+        <div class="etitle">Surface 3: OneLake (Shortcut / Direct access)</div>
+        <ul>
+          <li><strong>Column masking:</strong> ❌ None — OneLake is object storage, not a query engine</li>
+          <li><strong>Row filtering:</strong> ❌ None at storage level</li>
+          <li><strong>Access control:</strong> OneLake RBAC — Workspace Member/Contributor/Viewer + item-level permissions</li>
+          <li><strong>Shortcuts:</strong> OneLake shortcuts to your on-prem Iceberg (via ADLS/S3 bridge) inherit OneLake RBAC — no column security from the shortcut itself</li>
+          <li><strong>Entra ID:</strong> ✅ Native — all OneLake access governed by Entra ID identities</li>
+          <li><strong>ADR-010 relevance:</strong> Your established architecture (Gold in Delta/Fabric for BI surface) means Fabric consumers hit the SQL endpoint → DDM applies ✅</li>
+        </ul>
+        <div class="gap">⚠️ Import mode (ADR-010) routes through SQL endpoint — DDM applies. DirectLake reads Delta files directly — DDM does NOT apply.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Fabric vs Purview -->
+  <div style="font-size:12px;font-weight:800;color:#0078D4;margin-bottom:10px">Microsoft Purview + Fabric — What it adds</div>
+  <div class="grid2">
+    <div class="mini" style="border-color:#0078D4;background:#E8F4FD">
+      <strong style="color:#0078D4">What Purview adds to Fabric security</strong>
+      <ul>
+        <li>Sensitivity labels (PII, PCI, CONFIDENTIAL) applied to Fabric items</li>
+        <li>DLP policies — block/alert when PII data is exported outside Fabric</li>
+        <li>Data Map — catalog and lineage for Fabric assets</li>
+        <li>Compliance audit — unified audit logs across M365 + Fabric</li>
+        <li>Auto-classification of columns via built-in classifiers (SIN, credit card patterns)</li>
+      </ul>
+    </div>
+    <div class="mini" style="border-color:#C0392B;background:#FADBD8">
+      <strong style="color:#C0392B">What Purview does NOT do</strong>
+      <ul>
+        <li>Purview does NOT enforce column masking at query time</li>
+        <li>Sensitivity labels do not automatically mask data — they trigger DLP policies (block/allow), not masking functions</li>
+        <li>Purview cannot push masking rules to Trino, Spark on-prem, or Teradata OTF</li>
+        <li>Purview is a governance/classification tool — not a query-time enforcement engine</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Fabric + your stack -->
+  <div style="font-size:12px;font-weight:800;color:#0078D4;margin:14px 0 10px">How Fabric fits into your RBC lakehouse stack (ADR-010 context)</div>
+  <div style="background:#E8F4FD;border:2px solid #0078D4;border-radius:10px;padding:14px">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start">
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:10px;font-weight:800;color:#004578;margin-bottom:6px">Your established ADR-010 path</div>
+        <div style="font-size:10px;line-height:1.7;color:#2C3E50">
+          Gold in two representations:<br/>
+          • <strong>Iceberg V2 on-prem</strong> → compute plane (Spark, Trino, Teradata OTF)<br/>
+          • <strong>Delta copy in Fabric</strong> → BI/AI surface plane (Power BI, RBC Assist)<br/><br/>
+          Fabric consumers hit data via <strong>Import mode → SQL endpoint</strong><br/>
+          → <strong>DDM + RLS applies ✅</strong><br/>
+          This is the safest Fabric architecture for regulated data.
+        </div>
+      </div>
+      <div style="flex:1;min-width:160px">
+        <div style="font-size:10px;font-weight:800;color:#004578;margin-bottom:6px">Column security per Fabric access path</div>
+        <table style="width:100%;border-collapse:collapse;font-size:9px">
+          <tr style="background:#004578;color:#fff"><th style="padding:4px 6px">Access Path</th><th style="padding:4px 6px">DDM?</th><th style="padding:4px 6px">RLS?</th></tr>
+          <tr><td style="padding:4px 6px;border-bottom:1px solid #BDC3C7">Power BI Import → SQL Endpoint</td><td style="padding:4px 6px;color:#1E8449;border-bottom:1px solid #BDC3C7">✅ Yes</td><td style="padding:4px 6px;color:#1E8449;border-bottom:1px solid #BDC3C7">✅ Yes</td></tr>
+          <tr style="background:#F0F4F8"><td style="padding:4px 6px;border-bottom:1px solid #BDC3C7">T-SQL via SQL Endpoint</td><td style="padding:4px 6px;color:#1E8449;border-bottom:1px solid #BDC3C7">✅ Yes</td><td style="padding:4px 6px;color:#1E8449;border-bottom:1px solid #BDC3C7">✅ Yes</td></tr>
+          <tr><td style="padding:4px 6px;border-bottom:1px solid #BDC3C7">DirectLake (Power BI reads Delta direct)</td><td style="padding:4px 6px;color:#C0392B;border-bottom:1px solid #BDC3C7">❌ No</td><td style="padding:4px 6px;color:#C0392B;border-bottom:1px solid #BDC3C7">❌ No</td></tr>
+          <tr style="background:#F0F4F8"><td style="padding:4px 6px;border-bottom:1px solid #BDC3C7">Fabric Spark Notebook</td><td style="padding:4px 6px;color:#C0392B;border-bottom:1px solid #BDC3C7">❌ No</td><td style="padding:4px 6px;color:#C0392B;border-bottom:1px solid #BDC3C7">❌ No</td></tr>
+          <tr><td style="padding:4px 6px">OneLake Shortcut (external)</td><td style="padding:4px 6px;color:#C0392B">❌ No</td><td style="padding:4px 6px;color:#C0392B">❌ No</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="note fabric-note" style="margin-top:12px">
+    <strong>🔵 ADR-010 validation:</strong> Your decision to use <strong>Import mode</strong> (not DirectLake) as the Fabric BI surface is the architecturally correct choice for column security. Import mode routes all queries through the SQL Analytics Endpoint where DDM and RLS are enforced. DirectLake bypasses these controls entirely. This is a strong compliance argument for maintaining Import mode for any dataset containing PII or PCI data.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- DEEP DIVE ALL                                               -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="tab-deep" class="card hidden">
+
+  <div class="opt-card" style="border-color:#2E86C1;background:#EBF5FB">
+    <div class="opt-title" style="color:#2E86C1">1. OPA — Open Policy Agent (Trino)</div>
+    <div class="opt-sub">Best OSS option for Trino. No Spark or Fabric coverage natively.</div>
+    <div class="grid2">
+      <div class="mini" style="border-color:#1E8449;background:#D5F5E3"><strong>✅ Strengths</strong><ul><li>100% OSS, Apache 2.0, free</li><li>Production-proven at Bloomberg, US DoD</li><li>Policy-as-code in Git — auditable</li><li>Built into Trino since v438 — no extra JAR</li><li>Runs cleanly on OCP as a sidecar pod</li></ul></div>
+      <div class="mini" style="border-color:#C0392B;background:#FADBD8"><strong>❌ Weaknesses</strong><ul><li>No native Spark, Databricks, Fabric, or Teradata coverage</li><li>No AD/LDAP group sync — must resolve groups in Rego manually</li><li>Decision logs only — not a compliance-grade audit trail alone</li><li>Rego language learning curve for policy authors</li></ul></div>
+    </div>
+  </div>
+
+  <div class="opt-card" style="border-color:#1E8449;background:#D5F5E3">
+    <div class="opt-title" style="color:#1E8449">2. Apache Kyuubi (Spark)</div>
+    <div class="opt-sub">Best OSS option for Spark. Pairs with OPA for Trino.</div>
+    <div class="grid2">
+      <div class="mini" style="border-color:#1E8449;background:#fff"><strong>✅ Strengths</strong><ul><li>Apache project — open governance</li><li>Native Kerberos + LDAP authentication</li><li>Column masking + row filtering in Spark SQL</li><li>Structured audit logs — better than OPA alone</li><li>Multi-tenant Spark session isolation</li></ul></div>
+      <div class="mini" style="border-color:#C0392B;background:#FADBD8"><strong>❌ Weaknesses</strong><ul><li>Spark-only — no Trino, Databricks, Fabric, or Teradata</li><li>No tag-based policies without Atlas+Ranger</li><li>Built-in policy UI less mature than Ranger Admin</li></ul></div>
+    </div>
+  </div>
+
+  <div class="opt-card" style="border-color:#6C3483;background:#E8DAEF">
+    <div class="opt-title" style="color:#6C3483">7. Privacera</div>
+    <div class="opt-sub">Best commercial multi-engine option. Covers most engines but Fabric coverage is partial.</div>
+    <div class="grid2">
+      <div class="mini" style="border-color:#1E8449;background:#D5F5E3"><strong>✅ Strengths</strong><ul><li>Ranger-compatible policy model — single UI</li><li>Agents for Spark, Trino, Databricks, S3, ADLS</li><li>Databricks column masking works natively</li><li>Managed control plane reduces ops burden</li><li>Unified audit across all supported engines</li></ul></div>
+      <div class="mini" style="border-color:#C0392B;background:#FADBD8"><strong>❌ Weaknesses</strong><ul><li>SaaS control plane — OSFI B-10 data sovereignty review required</li><li>Fabric coverage is Lakehouse-level only — no Fabric SQL DDM integration</li><li>No Teradata OTF coverage</li><li>Commercial licensing cost</li></ul></div>
+    </div>
+  </div>
+
+  <div class="opt-card" style="border-color:#E67E22;background:#FDEBD0">
+    <div class="opt-title" style="color:#E67E22">8. Immuta</div>
+    <div class="opt-sub">Most purpose-built for regulated financial services. ABAC-first model.</div>
+    <div class="grid2">
+      <div class="mini" style="border-color:#1E8449;background:#D5F5E3"><strong>✅ Strengths</strong><ul><li>ABAC model more expressive than Ranger RBAC</li><li>Built-in PII discovery — no Atlas needed</li><li>Financial services customer base (banks deployed)</li><li>Covers Spark, Trino, Databricks, Snowflake</li><li>Unified policy UI and audit trail</li></ul></div>
+      <div class="mini" style="border-color:#C0392B;background:#FADBD8"><strong>❌ Weaknesses</strong><ul><li>Expensive commercial licensing</li><li>US-headquartered — OSFI B-10 vendor review required</li><li>Fabric integration is Lakehouse-level only</li><li>Limited Teradata OTF coverage</li></ul></div>
+    </div>
+  </div>
+
+  <div class="opt-card" style="border-color:#0078D4;background:#E8F4FD">
+    <div class="opt-title" style="color:#0078D4">11–13. Microsoft Fabric (all three surfaces)</div>
+    <div class="opt-sub">Native column security exists — but only via the SQL Analytics Endpoint. Spark and OneLake access paths have no column masking.</div>
+    <div class="grid3">
+      <div class="mini" style="border-color:#0078D4;background:#fff"><strong style="color:#0078D4">SQL Endpoint ✅</strong><ul><li>T-SQL Dynamic Data Masking (DDM)</li><li>Row-Level Security via inline TVF</li><li>Entra ID native — maps from AD</li><li>Full Purview audit</li><li>Applies to Power BI Import, T-SQL clients</li></ul></div>
+      <div class="mini" style="border-color:#C0392B;background:#FADBD8"><strong style="color:#C0392B">Fabric Spark ❌</strong><ul><li>No column masking for Spark reads</li><li>OneLake RBAC = workspace/item level only</li><li>Mitigation: pre-mask at Gold pipeline layer</li><li>Or restrict Spark notebook access via workspace roles</li></ul></div>
+      <div class="mini" style="border-color:#6C3483;background:#E8DAEF"><strong style="color:#6C3483">Purview (governance layer)</strong><ul><li>Sensitivity labels trigger DLP — not masking</li><li>Auto-classification of PII/PCI columns</li><li>Compliance audit logs</li><li>Does NOT enforce column masking at query time</li></ul></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- VERDICT                                                     -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div id="tab-verdict" class="card hidden">
+  <div style="font-size:12px;font-weight:800;color:#1A1A2E;margin-bottom:14px">Verdict for RBC — Ranked by Fit (with Fabric included)</div>
+
+  <div class="v-cards">
+    <div class="v-card" style="border-color:#1E8449;background:#D5F5E3">
+      <div class="rank" style="color:#1E8449">🥇</div>
+      <div class="vname" style="color:#1E8449">OPA (Trino) + Kyuubi (Spark) + Fabric DDM (SQL endpoint)</div>
+      <div class="vdesc">Best Ranger-free OSS stack for on-prem engines + Fabric BI surface. OPA covers Trino. Kyuubi covers Spark. Fabric's SQL endpoint DDM covers your BI consumers via ADR-010 Import mode. 100% self-hosted for the on-prem plane. Two policy languages is the main operational cost.</div>
+    </div>
+    <div class="v-card" style="border-color:#2E86C1;background:#D6EAF8">
+      <div class="rank" style="color:#2E86C1">🥈</div>
+      <div class="vname" style="color:#2E86C1">Privacera + Fabric DDM</div>
+      <div class="vdesc">Best commercial multi-engine option. Privacera handles Spark + Trino + Databricks with one policy UI. Fabric SQL endpoint DDM handles BI consumers. Main concerns: Privacera SaaS control plane (OSFI B-10 review) and licensing cost. Closes more gaps than the OSS stack with less operational complexity.</div>
+    </div>
+    <div class="v-card" style="border-color:#E67E22;background:#FDEBD0">
+      <div class="rank" style="color:#E67E22">🥉</div>
+      <div class="vname" style="color:#E67E22">Immuta + Fabric DDM</div>
+      <div class="vdesc">Most expressive ABAC policy model for complex banking access rules. Built-in PII discovery removes Atlas dependency. Fabric SQL endpoint DDM covers BI surface. Expensive and US-based. Worth a POC conversation if Privacera doesn't fit the OSFI B-10 review.</div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;font-weight:800;color:#1A1A2E;margin-bottom:8px">Decision guide — which path based on your constraints</div>
+  <table class="verdict-table">
+    <thead><tr><th>Priority</th><th>Recommendation</th><th>Fabric role</th></tr></thead>
+    <tbody>
+      <tr><td>100% OSS, on-prem, no licensing</td><td><strong>OPA + Kyuubi</strong></td><td>Fabric SQL endpoint DDM for BI consumers</td></tr>
+      <tr><td>Minimum operational complexity</td><td><strong>Privacera</strong></td><td>Fabric SQL endpoint DDM (Privacera doesn't cover Fabric SQL)</td></tr>
+      <tr><td>Best Databricks + Fabric coverage</td><td><strong>Unity Catalog + Privacera + Fabric DDM</strong></td><td>Fabric DDM for SQL, Unity Catalog for Databricks-side</td></tr>
+      <tr><td>ABAC / complex banking policies</td><td><strong>Immuta</strong></td><td>Fabric SQL endpoint DDM (Immuta covers Lakehouse not Fabric SQL)</td></tr>
+      <tr><td>Already using Ranger</td><td><strong>Ranger + Fabric DDM</strong></td><td>Ranger has no Fabric plugin — DDM handles Fabric SQL surface independently</td></tr>
+      <tr><td>Fabric Spark notebook users need masking</td><td><strong>Pre-mask at Gold pipeline layer</strong></td><td>No tool currently enforces column masking in Fabric Spark at query time</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note danger" style="margin-top:12px">
+    <strong>Teradata OTF gap (unchanged):</strong> No tool in this chart enforces column masking for Teradata OTF consumers. The mitigation remains: serve Teradata from pre-masked Gold views, or use Teradata Dynamic Data Masking (licensed separately). Engage Teradata product management on REST catalog + masking roadmap.
+  </div>
+
+  <div class="note fabric-note" style="margin-top:8px">
+    <strong>🔵 ADR-010 is your column security architecture for Fabric:</strong> Your established decision to use Import mode (not DirectLake) for the Fabric BI/AI surface is the correct call for column security. Import mode → SQL endpoint → DDM + RLS enforced. DirectLake bypasses all of this. For any table containing PII or PCI data, Import mode is mandatory to maintain DDM enforcement. This should be a formal constraint in your Fabric governance policy.
+  </div>
+
+  <div class="note info" style="margin-top:8px">
+    <strong>Practical recommendation:</strong> Start with <strong>OPA + Kyuubi</strong> on OCP for on-prem Spark + Trino. Apply <strong>Fabric DDM + RLS</strong> on the SQL Analytics Endpoint for your BI/AI surface (aligns with ADR-010). Use <strong>pre-masked Gold views</strong> for Teradata OTF and Fabric Spark notebook consumers. Run Privacera as a parallel commercial POC if you want unified policy management. This gives you column security across every engine in your stack today without waiting for Ranger, Polaris FGAC spec, or any unproven roadmap item.
+  </div>
+</div>
+
+<script>
+function showTab(id, btn) {
+  ['chart','fabric','deep','verdict'].forEach(t => {
+    document.getElementById('tab-' + t).classList.add('hidden');
+  });
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.remove('hidden');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

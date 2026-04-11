@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Catalog Comparison — No Teradata OTF</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Inter, system-ui, sans-serif; background: #F0F4F8; padding: 16px; font-size: 12px; color: #2C3E50; }
+.header { background: #1A1A2E; border-radius: 10px; padding: 14px 20px; margin-bottom: 14px; display:flex; justify-content:space-between; align-items:center; }
+.header-text h1 { color: #fff; font-size: 15px; font-weight: 800; }
+.header-text p  { color: #9BA4B5; font-size: 10px; margin-top: 3px; }
+.updated-badge { background: #1E8449; border-radius: 8px; padding: 6px 12px; color:#fff; font-size:10px; font-weight:800; }
+.tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.tab { padding: 6px 16px; border-radius: 20px; border: none; cursor: pointer; font-size: 11px; font-weight: 600; background: #E0E7EF; color: #7F8C8D; }
+.tab.active { background: #1A1A2E; color: #fff; }
+.card { background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.hidden { display: none; }
+.note { border-radius: 8px; padding: 10px 14px; font-size: 10px; line-height: 1.6; margin-top: 10px; }
+.warn   { background: #FFF3CD; border: 2px solid #F0AD00; color: #856404; }
+.info   { background: #D6EAF8; border: 2px solid #2E86C1; color: #1A5276; }
+.tip    { background: #D5F5E3; border: 2px solid #1E8449; color: #1E5631; }
+.danger { background: #FADBD8; border: 2px solid #C0392B; color: #7B241C; }
+
+.scope { background: linear-gradient(135deg, #1A1A2E, #2E4057); border-radius: 10px; padding: 14px 18px; margin-bottom: 16px; }
+.scope-title { color: #fff; font-size: 12px; font-weight: 800; margin-bottom: 8px; }
+.scope-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media(max-width:500px){ .scope-grid{ grid-template-columns:1fr; } }
+.scope-box { border-radius: 8px; padding: 8px 12px; }
+.scope-box .st { font-size: 10px; font-weight: 800; margin-bottom: 4px; }
+
+.mtable { width: 100%; border-collapse: collapse; font-size: 10px; }
+.mtable th { padding: 9px 10px; text-align: left; font-weight: 700; }
+.mtable td { padding: 8px 10px; border-bottom: 1px solid #E8ECF0; vertical-align: top; }
+.mtable tr:nth-child(even) td { background: #F8F9FA; }
+.mtable tr:hover td { background: #EBF5FB; }
+.c-head { background: #1A1A2E; color: #fff; }
+.winner-row td { background: #EBF8F0 !important; border-left: 4px solid #1E8449; }
+.winner-row:hover td { background: #D5F5E3 !important; }
+.strong-winner td { background: #D5F5E3 !important; border-left: 4px solid #1E8449; }
+.strong-winner:hover td { background: #ABEBC6 !important; }
+.dropped-row td { background: #F8F9FA !important; opacity: 0.6; border-left: 4px solid #BDC3C7; }
+
+.pill { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 8px; white-space: nowrap; margin: 1px 0; }
+.p-yes  { background: #D5F5E3; color: #1E5631; }
+.p-no   { background: #FADBD8; color: #7B241C; }
+.p-part { background: #FDEBD0; color: #784212; }
+.p-soon { background: #EBF5FB; color: #1A5276; }
+.p-rec  { background: #D6EAF8; color: #1A5276; border: 1px solid #2E86C1; }
+.p-win  { background: #D5F5E3; color: #1E5631; border: 1px solid #1E8449; font-size:10px; }
+.p-drop { background: #F2F3F4; color: #7F8C8D; }
+
+.score { font-size: 12px; font-weight: 900; }
+.s5 { color: #1E8449; }
+.s4 { color: #2E86C1; }
+.s3 { color: #E67E22; }
+.s2 { color: #C0392B; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media(max-width:560px){ .grid2,.grid3{ grid-template-columns:1fr; } }
+.cat-card { border-radius: 10px; border: 2px solid; padding: 16px; margin-bottom: 14px; }
+.cat-title { font-size: 14px; font-weight: 900; margin-bottom: 2px; }
+.cat-tag   { font-size: 9px; font-weight: 600; padding: 2px 8px; border-radius: 8px; display: inline-block; margin-bottom: 10px; }
+.mini { border-radius: 6px; border: 1px solid; padding: 8px 10px; font-size: 10px; }
+.mini strong { display: block; font-size: 10px; margin-bottom: 3px; }
+.mini ul { padding-left: 12px; }
+.mini li { line-height: 1.8; }
+.code { font-family: monospace; font-size: 9px; background: #1E2D3D; color: #E8F8F5; padding: 8px 10px; border-radius: 5px; margin-top: 5px; line-height: 1.8; white-space: pre; overflow-x: auto; }
+
+.v-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+@media(max-width:560px){ .v-grid{ grid-template-columns:1fr; } }
+.v-card { border-radius: 10px; border: 2px solid; padding: 14px; }
+.v-rank { font-size: 22px; font-weight: 900; margin-bottom: 4px; }
+.v-name { font-size: 12px; font-weight: 800; margin-bottom: 6px; }
+.v-body { font-size: 9px; line-height: 1.7; }
+
+table.dt { width:100%; border-collapse:collapse; font-size:10px; }
+table.dt th { background:#1A1A2E; color:#fff; padding:8px 10px; text-align:left; }
+table.dt td { padding:7px 10px; border-bottom:1px solid #E8ECF0; vertical-align:top; }
+table.dt tr:nth-child(even) td { background:#F8F9FA; }
+
+.change-banner { background:#FFF3CD; border:2px solid #F0AD00; border-radius:8px; padding:10px 14px; margin-bottom:14px; font-size:10px; color:#856404; }
+.change-banner strong { font-size:11px; display:block; margin-bottom:4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-text">
+    <h1>Catalog Evaluation — Privacera Owns Security · No Teradata OTF</h1>
+    <p>Updated: Teradata OTF removed as constraint · HMS bridge requirement dropped · Polaris becomes clear winner</p>
+  </div>
+  <div class="updated-badge">Updated</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('chart',this)">Comparison Chart</button>
+  <button class="tab" onclick="showTab('detail',this)">Deep Dive</button>
+  <button class="tab" onclick="showTab('verdict',this)">Verdict</button>
+</div>
+
+<!-- SCOPE BANNER -->
+<div class="scope">
+  <div class="scope-title">Scope — what changed and what we're evaluating</div>
+  <div class="scope-grid">
+    <div class="scope-box" style="background:rgba(30,132,73,0.2)">
+      <div class="st" style="color:#58D68D">✅ Catalog criteria (unchanged)</div>
+      <ul style="padding-left:14px">
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">Iceberg REST spec compliance</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">Multi-engine: Spark, Trino, Databricks</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">Credential vending (on-prem + cloud burst)</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">Atomic commits · Schema evolution · Time-travel</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">Branching / WAP workflows</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">Scale · HA · On-prem / OCP deploy</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">Privacera schema sync compatibility</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">Governance maturity</li>
+      </ul>
+    </div>
+    <div class="scope-box" style="background:rgba(192,57,43,0.25)">
+      <div class="st" style="color:#F1948A">🔄 What changed this iteration</div>
+      <ul style="padding-left:14px">
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">❌ Teradata OTF removed — no HMS bridge needed</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">❌ Gravitino's primary value (HMS bridge) no longer required</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">❌ HMS dropped — no longer relevant without Teradata</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">✅ Polaris emerges as clear standalone winner</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">✅ Nessie re-evaluated — branching becomes differentiator</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">✅ Gravitino still relevant for federation use cases</li>
+        <li style="color:#BDC3C7;font-size:9px;line-height:1.8">✅ Stack simplified: Polaris or Polaris+Nessie</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- CHART -->
+<div id="tab-chart" class="card">
+
+  <div class="change-banner">
+    <strong>🔄 What removing Teradata OTF does to the catalog decision</strong>
+    Without Teradata OTF, you no longer need an HMS bridge or a federation layer. This eliminates Gravitino's primary justification and drops HMS entirely. The decision simplifies to: Polaris (pure Iceberg REST, credential vending, cloud burst) vs Polaris+Nessie (add branching for WAP workflows) vs Gravitino (if you still want federation for legacy HMS during migration).
+  </div>
+
+  <div style="overflow-x:auto">
+  <table class="mtable">
+    <thead>
+      <tr>
+        <th class="c-head" style="min-width:155px">Catalog</th>
+        <th class="c-head" style="min-width:85px">Iceberg REST<br/>Spec</th>
+        <th class="c-head" style="min-width:90px">Credential<br/>Vending</th>
+        <th class="c-head" style="min-width:75px">Atomic<br/>Commits</th>
+        <th class="c-head" style="min-width:65px">Spark</th>
+        <th class="c-head" style="min-width:65px">Trino</th>
+        <th class="c-head" style="min-width:80px">Databricks<br/>Cloud Burst</th>
+        <th class="c-head" style="min-width:80px">Snowflake<br/>Cloud Burst</th>
+        <th class="c-head" style="min-width:80px">Branching /<br/>WAP</th>
+        <th class="c-head" style="min-width:75px">Scale<br/>10k+ tables</th>
+        <th class="c-head" style="min-width:75px">HA +<br/>On-prem/OCP</th>
+        <th class="c-head" style="min-width:85px">Privacera<br/>Schema Sync</th>
+        <th class="c-head" style="min-width:80px">Governance<br/>Maturity</th>
+        <th class="c-head" style="min-width:90px">Score<br/>(No OTF)</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- POLARIS — CLEAR WINNER -->
+      <tr class="strong-winner">
+        <td>
+          <strong>Apache Polaris</strong><br/>
+          <span style="font-size:9px;color:#566573">v1.3.0-incubating · ASF Incubating</span><br/>
+          <span class="pill p-win">⭐ Clear Winner</span>
+        </td>
+        <td><span class="pill p-yes">✅ Best — reference implementation</span></td>
+        <td><span class="pill p-yes">✅ Best — S3, ADLS, GCS, MinIO STS</span></td>
+        <td><span class="pill p-yes">✅ Optimistic CAS — production proven</span></td>
+        <td><span class="pill p-yes">✅ REST client</span></td>
+        <td><span class="pill p-yes">✅ Native v475+</span></td>
+        <td><span class="pill p-yes">✅ REST client DBR 16.4+</span></td>
+        <td><span class="pill p-yes">✅ Snowflake Open Catalog = managed Polaris</span></td>
+        <td><span class="pill p-no">❌ No branching</span></td>
+        <td><span class="pill p-yes">✅ PostgreSQL HA · unlimited tables</span></td>
+        <td><span class="pill p-yes">✅ Kubernetes / OCP · 2 replicas</span></td>
+        <td><span class="pill p-yes">✅ REST API · cleanest Privacera sync path</span></td>
+        <td><span class="pill p-part">⚠️ Incubating · ~18 months old</span></td>
+        <td><span class="score s5">★★★★★</span><br/><span style="font-size:9px">Dominant without OTF constraint</span></td>
+      </tr>
+
+      <!-- POLARIS + NESSIE -->
+      <tr class="winner-row">
+        <td>
+          <strong>Polaris + Nessie</strong><br/>
+          <span style="font-size:9px;color:#566573">Add WAP branching on top of Polaris</span><br/>
+          <span class="pill p-rec">⭐ If WAP required</span>
+        </td>
+        <td><span class="pill p-yes">✅ Polaris handles REST</span></td>
+        <td><span class="pill p-yes">✅ Via Polaris</span></td>
+        <td><span class="pill p-yes">✅ Multi-table via Nessie branch merge</span></td>
+        <td><span class="pill p-yes">✅ Both supported</span></td>
+        <td><span class="pill p-yes">✅ Both supported</span></td>
+        <td><span class="pill p-yes">✅ Via Polaris REST</span></td>
+        <td><span class="pill p-yes">✅ Via Polaris / Open Catalog</span></td>
+        <td><span class="pill p-yes">✅ Best-in-class via Nessie</span></td>
+        <td><span class="pill p-yes">✅ Both scale independently</span></td>
+        <td><span class="pill p-yes">✅ Both OCP deployable</span></td>
+        <td><span class="pill p-yes">✅ Privacera syncs from Polaris REST</span></td>
+        <td><span class="pill p-part">⚠️ Polaris incubating · Nessie pre-1.0</span></td>
+        <td><span class="score s4">★★★★☆</span><br/><span style="font-size:9px">Best if WAP/branching is a requirement</span></td>
+      </tr>
+
+      <!-- GRAVITINO -->
+      <tr>
+        <td>
+          <strong>Apache Gravitino</strong><br/>
+          <span style="font-size:9px;color:#566573">v1.2.0 · ASF TLP · Graduated June 2025</span>
+        </td>
+        <td><span class="pill p-yes">✅ REST catalog service built-in</span></td>
+        <td><span class="pill p-part">⚠️ Less mature than Polaris</span></td>
+        <td><span class="pill p-yes">✅ Optimistic CAS</span></td>
+        <td><span class="pill p-yes">✅ Dedicated Spark connector</span></td>
+        <td><span class="pill p-yes">✅ Dedicated Trino connector</span></td>
+        <td><span class="pill p-part">⚠️ REST client — less tested</span></td>
+        <td><span class="pill p-part">⚠️ REST client — less tested</span></td>
+        <td><span class="pill p-no">❌ No branching</span></td>
+        <td><span class="pill p-yes">✅ Metalake scales well</span></td>
+        <td><span class="pill p-yes">✅ OCP deployable</span></td>
+        <td><span class="pill p-yes">✅ REST API · clean sync</span></td>
+        <td><span class="pill p-yes">✅ ASF TLP — strongest governance</span></td>
+        <td><span class="score s3">★★★☆☆</span><br/><span style="font-size:9px">Best governance but main value (federation) less needed</span></td>
+      </tr>
+
+      <!-- NESSIE STANDALONE -->
+      <tr>
+        <td>
+          <strong>Nessie (standalone)</strong><br/>
+          <span style="font-size:9px;color:#566573">v0.107.x · Dremio-led · Pre-1.0</span>
+        </td>
+        <td><span class="pill p-part">⚠️ Experimental REST support</span></td>
+        <td><span class="pill p-part">⚠️ Less mature</span></td>
+        <td><span class="pill p-yes">✅ Multi-table via branch merge</span></td>
+        <td><span class="pill p-yes">✅ NessieCatalog client</span></td>
+        <td><span class="pill p-yes">✅ NessieCatalog client</span></td>
+        <td><span class="pill p-part">⚠️ No documented path</span></td>
+        <td><span class="pill p-part">⚠️ No documented path</span></td>
+        <td><span class="pill p-yes">✅ Best-in-class branching</span></td>
+        <td><span class="pill p-yes">✅ Multiple DB backends</span></td>
+        <td><span class="pill p-yes">✅ On-prem / OCP</span></td>
+        <td><span class="pill p-part">⚠️ Custom Privacera sync — needs validation</span></td>
+        <td><span class="pill p-no">❌ Dremio-only governance · pre-1.0</span></td>
+        <td><span class="score s3">★★★☆☆</span><br/><span style="font-size:9px">Branching unique but REST gap + governance concern</span></td>
+      </tr>
+
+      <!-- HMS — DROPPED -->
+      <tr class="dropped-row">
+        <td>
+          <strong>Hive Metastore (HMS)</strong><br/>
+          <span style="font-size:9px;color:#7F8C8D">Legacy · Dropped — no Teradata OTF need</span>
+        </td>
+        <td><span class="pill p-drop">n/a — Thrift only</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="pill p-drop">n/a</span></td>
+        <td><span class="score s1" style="opacity:0.4">Dropped</span><br/><span style="font-size:9px;opacity:0.5">No longer relevant without Teradata OTF</span></td>
+      </tr>
+
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note tip" style="margin-top:12px">
+    <strong>How removing Teradata OTF changes the landscape:</strong> With OTF gone, the HMS bridge requirement disappears entirely. Gravitino's primary differentiator was that HMS bridge — without it, Gravitino is a capable but overengineered choice for a pure Iceberg workload. Polaris becomes the dominant answer: it has the most complete REST spec, the best credential vending for hybrid on-prem + cloud burst, and the cleanest Privacera integration. The only remaining question is whether you need Nessie's branching capability for WAP workflows.
+  </div>
+
+</div>
+
+<!-- DETAIL -->
+<div id="tab-detail" class="card hidden">
+
+  <div class="cat-card" style="border-color:#1E8449;background:#F0FBF4">
+    <div class="cat-title" style="color:#1E8449">🏔️ Apache Polaris — The Dominant Choice Without OTF</div>
+    <div class="cat-tag" style="background:#D5F5E3;color:#1E5631;border:1px solid #1E8449">ASF Incubating · v1.3.0 · Recommended for all RBC engines</div>
+    <div class="grid3">
+      <div class="mini" style="border-color:#1A5276;background:#fff">
+        <strong style="color:#1A5276">Why it wins cleanly now</strong>
+        <ul>
+          <li>The OTF constraint was Polaris's only gap</li>
+          <li>Without OTF: Polaris serves Spark, Trino, Databricks, and Snowflake via the same REST endpoint</li>
+          <li>Credential vending is Polaris's standout feature — scoped STS tokens for MinIO on-prem AND Snowflake/Databricks cloud burst over PrivateLink</li>
+          <li>Snowflake Open Catalog = managed Polaris in Snowflake — cloud burst is literally zero config</li>
+          <li>Single service, single PostgreSQL backend, Kubernetes HA</li>
+        </ul>
+      </div>
+      <div class="mini" style="border-color:#E67E22;background:#fff">
+        <strong style="color:#E67E22">What to watch</strong>
+        <ul>
+          <li>Still ASF Incubating — target graduation mid-2026</li>
+          <li>No row/column security (Privacera owns this — not a gap in your design)</li>
+          <li>PostgreSQL only backend — ensure your PostgreSQL HA meets RBC DR requirements</li>
+          <li>Audit logging is catalog events only — Privacera owns the compliance audit</li>
+          <li>No branching — if WAP becomes a requirement, layer Nessie on top</li>
+        </ul>
+      </div>
+      <div class="mini" style="border-color:#6C3483;background:#fff">
+        <strong style="color:#6C3483">Privacera integration (cleanest path)</strong>
+        <ul>
+          <li>Privacera calls Polaris REST API to sync schema: catalogs → namespaces → tables → columns</li>
+          <li>Sync is pull-based on a schedule — no push from Polaris needed</li>
+          <li>Polaris service account granted read-only access by Privacera's sync agent</li>
+          <li>Column hierarchy maps cleanly to Privacera's policy model</li>
+          <li>Single REST endpoint covers all tables — one sync covers the full lakehouse</li>
+        </ul>
+      </div>
+    </div>
+    <div class="code" style="margin-top:10px"># Spark config pointing to Polaris — Privacera agent loaded independently
+spark.sql.catalog.rbc = org.apache.iceberg.spark.SparkCatalog
+spark.sql.catalog.rbc.type = rest
+spark.sql.catalog.rbc.uri = https://polaris.rbc.corp/api/catalog
+spark.sql.catalog.rbc.credential = client_id:client_secret
+spark.sql.catalog.rbc.warehouse = rbc_warehouse
+
+# Trino config (config.properties)
+connector.name=iceberg
+iceberg.catalog.type=rest
+iceberg.rest-catalog.uri=https://polaris.rbc.corp/api/catalog
+
+# Databricks (cloud burst — DBR 16.4+)
+spark.sql.catalog.rbc.type = rest
+spark.sql.catalog.rbc.uri = https://polaris.rbc.corp/api/catalog  # via PrivateLink</div>
+  </div>
+
+  <div class="cat-card" style="border-color:#2E86C1">
+    <div class="cat-title" style="color:#2E86C1">🏔️ + 🌿 Polaris + Nessie — If You Need WAP Branching</div>
+    <div class="cat-tag" style="background:#D6EAF8;color:#1A5276;border:1px solid #2E86C1">Polaris = operational catalog · Nessie = branching layer for regulated data workflows</div>
+    <div class="grid2">
+      <div class="mini" style="border-color:#2E86C1;background:#EBF5FB">
+        <strong style="color:#2E86C1">When this combination makes sense</strong>
+        <ul>
+          <li><strong>Write-Audit-Publish (WAP):</strong> Write to a Nessie branch, run data quality / compliance checks (Soda, Great Expectations), merge to main only if passing — atomic, no consumers see partial data</li>
+          <li><strong>Regulatory snapshots:</strong> Tag Nessie at month-end for BCBS 239 point-in-time reproduction</li>
+          <li><strong>Multi-table atomic commits:</strong> Update 3 related Gold tables atomically via a single branch merge — impossible with Polaris alone</li>
+          <li><strong>Rollback:</strong> Bad pipeline run? Reset to prior tag in seconds across all affected tables</li>
+        </ul>
+      </div>
+      <div class="mini" style="border-color:#C0392B;background:#FADBD8">
+        <strong style="color:#C0392B">Complexity cost</strong>
+        <ul>
+          <li>Two catalog services to run and operate</li>
+          <li>Engines need NessieCatalog client for branching workflows</li>
+          <li>REST catalog on Nessie is still experimental — validate Privacera sync works against Nessie REST before committing</li>
+          <li>Alternatively: use Polaris for all engines, Nessie only for the pipeline branching workflow, with tables promoted to Polaris at merge time</li>
+          <li>Nessie pre-1.0 stability risk</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-card" style="border-color:#8E44AD">
+    <div class="cat-title" style="color:#8E44AD">🔗 Apache Gravitino — Reduced Role Without OTF</div>
+    <div class="cat-tag" style="background:#E8DAEF;color:#4A235A;border:1px solid #8E44AD">Still useful if HMS legacy migration is a multi-year journey · ASF TLP is strongest governance</div>
+    <div class="grid2">
+      <div class="mini" style="border-color:#1E8449;background:#D5F5E3">
+        <strong style="color:#1E8449">Still relevant because</strong>
+        <ul>
+          <li>You almost certainly have HMS today with existing tables — Gravitino can federate HMS + Polaris during migration</li>
+          <li>ASF TLP governance is the strongest of any catalog here — if Polaris fails to graduate, Gravitino is a safe fallback</li>
+          <li>Single service manages the entire catalog surface for Privacera sync</li>
+          <li>Dedicated Trino and Spark connectors are better tested than generic REST clients in some edge cases</li>
+        </ul>
+      </div>
+      <div class="mini" style="border-color:#C0392B;background:#FADBD8">
+        <strong style="color:#C0392B">Less compelling now</strong>
+        <ul>
+          <li>Without Teradata OTF, the HMS bridge is no longer required</li>
+          <li>Federation adds operational complexity for a pure Iceberg stack</li>
+          <li>Credential vending is less mature than Polaris — cloud burst is harder</li>
+          <li>Polaris is simpler, lighter, and more Iceberg-focused</li>
+          <li>Databricks cloud burst less tested through Gravitino than Polaris</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- VERDICT -->
+<div id="tab-verdict" class="card hidden">
+
+  <div style="font-size:12px;font-weight:800;color:#1A1A2E;margin-bottom:14px">Verdict — Teradata OTF removed</div>
+
+  <div class="v-grid">
+    <div class="v-card" style="border-color:#1E8449;background:#D5F5E3">
+      <div class="v-rank" style="color:#1E8449">🥇</div>
+      <div class="v-name" style="color:#1E8449">Apache Polaris (standalone)</div>
+      <div class="v-body">
+        Without Teradata OTF, Polaris is the clear winner. Best REST spec compliance, best credential vending for hybrid on-prem + cloud burst, cleanest Privacera schema sync, and zero-config Snowflake integration via Open Catalog. Runs as 2 Kubernetes replicas on OCP backed by PostgreSQL. Simple to operate. The only caveat is ASF Incubating status — target production deployment after graduation (mid-2026 roadmap) or run it now with Cloudera or Dremio enterprise support.
+      </div>
+    </div>
+    <div class="v-card" style="border-color:#2E86C1;background:#D6EAF8">
+      <div class="v-rank" style="color:#2E86C1">🥈</div>
+      <div class="v-name" style="color:#2E86C1">Polaris + Nessie</div>
+      <div class="v-body">
+        Add Nessie if Write-Audit-Publish workflows are a firm requirement for your Gold layer. Nessie's branching model directly addresses BCBS 239 data accuracy validation (write, validate, publish atomically). The extra operational complexity is justified only if you have concrete WAP requirements — don't add it speculatively. Validate Privacera schema sync against Nessie REST before committing.
+      </div>
+    </div>
+    <div class="v-card" style="border-color:#8E44AD;background:#E8DAEF">
+      <div class="v-rank" style="color:#8E44AD">🥉</div>
+      <div class="v-name" style="color:#8E44AD">Gravitino (if Polaris governance risk is a concern)</div>
+      <div class="v-body">
+        If Polaris's incubating status is unacceptable to your risk/architecture governance, Gravitino is the only ASF TLP-graduated alternative. It's a capable catalog, handles Spark and Trino well, and gives Privacera a clean REST sync endpoint. The tradeoff is less mature credential vending and a more complex operational footprint for a pure Iceberg workload.
+      </div>
+    </div>
+  </div>
+
+  <div style="font-size:11px;font-weight:800;color:#1A1A2E;margin-bottom:8px">Decision guide</div>
+  <table class="dt">
+    <thead><tr><th>Constraint / Priority</th><th>Best choice</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr><td>Pure Iceberg, no legacy baggage, cloud burst to Snowflake + Databricks</td><td><strong>Polaris alone</strong></td><td>Designed exactly for this. Best credential vending. Zero-config Snowflake via Open Catalog.</td></tr>
+      <tr><td>Need Write-Audit-Publish or multi-table atomic commits</td><td><strong>Polaris + Nessie</strong></td><td>Nessie's branching closes this gap. Polaris handles all other catalog operations.</td></tr>
+      <tr><td>Existing HMS tables to migrate, multi-year migration horizon</td><td><strong>Gravitino → Polaris</strong></td><td>Gravitino federates HMS + Polaris during migration. Remove Gravitino when migration complete.</td></tr>
+      <tr><td>ASF TLP governance required by architecture board</td><td><strong>Gravitino</strong></td><td>Only graduated ASF TLP in the set. Polaris should graduate mid-2026.</td></tr>
+      <tr><td>Snowflake cloud burst is primary</td><td><strong>Polaris</strong></td><td>Snowflake Open Catalog = managed Polaris. Same REST API, native integration.</td></tr>
+      <tr><td>Databricks cloud burst is primary</td><td><strong>Polaris</strong></td><td>DBR 16.4+ REST catalog client connects directly. Tested and documented.</td></tr>
+      <tr><td>Minimum operational complexity</td><td><strong>Polaris alone</strong></td><td>One service, one PostgreSQL database. Smallest possible footprint.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note tip" style="margin-top:12px">
+    <strong>Bottom line:</strong> Without Teradata OTF, this is a straightforward call. <strong>Deploy Polaris.</strong> It was always the best pure Iceberg catalog — the only reason to consider anything else was the OTF gap. That gap is gone. Run Polaris on OCP (2 replicas, PostgreSQL HA). Point all engines at it via REST. Point Privacera's schema sync at it. Add Nessie later if and when WAP branching becomes a concrete pipeline requirement.
+  </div>
+
+</div>
+
+<script>
+function showTab(id, btn) {
+  ['chart','detail','verdict'].forEach(t => document.getElementById('tab-' + t).classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.remove('hidden');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Full Data Security Capability Map — Privacera + Lakehouse</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: Inter, system-ui, sans-serif; background: #F0F4F8; padding: 16px; font-size: 12px; color: #2C3E50; }
+.header { background: #1A1A2E; border-radius: 10px; padding: 14px 20px; margin-bottom: 14px; display:flex; justify-content:space-between; align-items:center; }
+.header-text h1 { color: #fff; font-size: 15px; font-weight: 800; }
+.header-text p  { color: #9BA4B5; font-size: 10px; margin-top: 3px; }
+.badge { background: #1A5276; border-radius: 8px; padding: 6px 12px; color:#fff; font-size:9px; font-weight:800; text-align:center; }
+
+.tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.tab { padding: 6px 16px; border-radius: 20px; border: none; cursor: pointer; font-size: 11px; font-weight: 600; background: #E0E7EF; color: #7F8C8D; }
+.tab.active { background: #1A1A2E; color: #fff; }
+.card { background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.hidden { display: none; }
+.note { border-radius: 8px; padding: 10px 14px; font-size: 10px; line-height: 1.6; margin-top: 10px; }
+.warn   { background: #FFF3CD; border: 2px solid #F0AD00; color: #856404; }
+.info   { background: #D6EAF8; border: 2px solid #2E86C1; color: #1A5276; }
+.tip    { background: #D5F5E3; border: 2px solid #1E8449; color: #1E5631; }
+.danger { background: #FADBD8; border: 2px solid #C0392B; color: #7B241C; }
+
+/* Domain sections */
+.domain { border-radius: 10px; border: 2px solid; padding: 14px; margin-bottom: 14px; }
+.domain-title { font-size: 13px; font-weight: 900; margin-bottom: 4px; display:flex; align-items:center; gap:8px; }
+.domain-sub { font-size: 10px; margin-bottom: 12px; }
+
+/* Feature rows */
+.feat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.feat-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+@media(max-width:580px){ .feat-grid,.feat-grid-3{ grid-template-columns:1fr; } }
+
+.feat { border-radius: 8px; border: 1px solid; padding: 10px 12px; background:#fff; }
+.feat-name { font-weight: 800; font-size: 11px; margin-bottom: 3px; display:flex; align-items:center; gap:6px; }
+.feat-desc { font-size: 9px; line-height: 1.7; color: #2C3E50; }
+.feat-tool { font-size: 9px; margin-top: 5px; font-style: italic; color: #7F8C8D; }
+.feat-reg  { font-size: 9px; margin-top: 3px; }
+
+.pill { display: inline-block; font-size: 8px; font-weight: 700; padding: 1px 6px; border-radius: 6px; white-space: nowrap; }
+.p-yes  { background: #D5F5E3; color: #1E5631; }
+.p-no   { background: #FADBD8; color: #7B241C; }
+.p-part { background: #FDEBD0; color: #784212; }
+.p-priv { background: #E8DAEF; color: #4A235A; }
+.p-osfi { background: #FADBD8; color: #7B241C; border:1px solid #C0392B; }
+.p-pci  { background: #FDEBD0; color: #784212; border:1px solid #E67E22; }
+.p-bcbs { background: #D6EAF8; color: #1A5276; border:1px solid #2E86C1; }
+.p-req  { background: #D5F5E3; color: #1E5631; border:1px solid #1E8449; }
+
+/* Matrix table */
+.mtable { width: 100%; border-collapse: collapse; font-size: 10px; }
+.mtable th { padding: 8px 10px; text-align: left; font-weight: 700; }
+.mtable td { padding: 7px 10px; border-bottom: 1px solid #E8ECF0; vertical-align: top; }
+.mtable tr:nth-child(even) td { background: #F8F9FA; }
+.c-head { background: #1A1A2E; color: #fff; }
+.sec-row td { background: #2E4057 !important; color:#fff; font-weight:800; font-size:9px; padding:5px 10px; }
+
+/* Priority indicators */
+.pri { display:inline-flex; align-items:center; gap:3px; font-size:9px; font-weight:700; padding:2px 7px; border-radius:6px; }
+.pri-must   { background:#FADBD8; color:#7B241C; }
+.pri-should { background:#FFF3CD; color:#856404; }
+.pri-could  { background:#D6EAF8; color:#1A5276; }
+.pri-wont   { background:#F2F3F4; color:#7F8C8D; }
+
+.section-break { font-size:11px; font-weight:800; color:#1A1A2E; margin: 16px 0 8px; border-bottom:2px solid #E8ECF0; padding-bottom:4px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-text">
+    <h1>Full Data Security Capability Map</h1>
+    <p>Every security control relevant to your lakehouse — beyond column masking · Privacera coverage · OSFI B-13 · BCBS 239 · PCI-DSS 4.0 · Teradata OTF removed</p>
+  </div>
+  <div class="badge">14 Security<br/>Domains</div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="showTab('map',this)">Capability Map</button>
+  <button class="tab" onclick="showTab('matrix',this)">Tool Coverage Matrix</button>
+  <button class="tab" onclick="showTab('priority',this)">Priority & Gaps</button>
+</div>
+
+<!-- ═══ CAPABILITY MAP ═══ -->
+<div id="tab-map" class="card">
+
+  <div style="font-size:11px;color:#7F8C8D;margin-bottom:14px">
+    14 security domains · Features you listed in <span style="background:#D5F5E3;border:1px solid #1E8449;border-radius:4px;padding:1px 5px;color:#1E5631;font-weight:700">green</span> · New additions in <span style="background:#D6EAF8;border:1px solid #2E86C1;border-radius:4px;padding:1px 5px;color:#1A5276;font-weight:700">blue</span>
+  </div>
+
+  <!-- DOMAIN 1: Access Control -->
+  <div class="domain" style="border-color:#C0392B;background:#FDF5F5">
+    <div class="domain-title" style="color:#C0392B">🔐 Domain 1 — Access Control (Table, Column, Row)</div>
+    <div class="domain-sub" style="color:#C0392B">Who can see which data at what granularity. Privacera owns all of these.</div>
+    <div class="feat-grid-3">
+      <div class="feat" style="border-color:#1E8449">
+        <div class="feat-name" style="color:#1E8449"><span style="background:#D5F5E3;border-radius:4px;padding:1px 5px;font-size:8px">Your list</span> RBAC — Role-Based Access Control</div>
+        <div class="feat-desc">Grant table access by role (ANALYTICS_TEAM can SELECT on finance.*). Baseline access control — who can see which tables and schemas.</div>
+        <div class="feat-tool">Privacera · Polaris catalog RBAC (service accounts)</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13</span> <span class="p-pci pill">PCI Req 7</span></div>
+      </div>
+      <div class="feat" style="border-color:#1E8449">
+        <div class="feat-name" style="color:#1E8449"><span style="background:#D5F5E3;border-radius:4px;padding:1px 5px;font-size:8px">Your list</span> Column-Level Security</div>
+        <div class="feat-desc">Block or restrict access to specific columns entirely. Certain roles cannot even select sensitive columns.</div>
+        <div class="feat-tool">Privacera (Spark via Kyuubi, Trino via SEP, Databricks via Privacera agent)</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13</span> <span class="p-pci pill">PCI Req 3,7</span></div>
+      </div>
+      <div class="feat" style="border-color:#1E8449">
+        <div class="feat-name" style="color:#1E8449"><span style="background:#D5F5E3;border-radius:4px;padding:1px 5px;font-size:8px">Your list</span> Row-Level Security</div>
+        <div class="feat-desc">Transparently inject WHERE clause predicates. CANADA_OPS only sees Canadian rows. Invisible to the user — query appears to return all data.</div>
+        <div class="feat-tool">Privacera row filter policies</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13</span> <span class="p-bcbs pill">BCBS 239</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> ABAC — Attribute-Based Access Control</div>
+        <div class="feat-desc">Policies driven by user attributes (department, clearance level, jurisdiction) rather than explicit role assignment. More expressive than RBAC — policies like "employees in RISK_MGMT can see all PCI data where their cost_centre matches the data owner."</div>
+        <div class="feat-tool">Privacera (tag + attribute policies) · Immuta (purpose-built ABAC)</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13</span> <span class="p-req pill">Recommended for banking</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Purpose Limitation Enforcement</div>
+        <div class="feat-desc">Enforce that data is only accessed for its declared purpose. A model training job cannot access live customer PII — it must use a synthetic or anonymised dataset. Policy: "ml_training role can only access anonymized tables, never raw PII tables."</div>
+        <div class="feat-tool">Privacera tag-based policies · Immuta purpose-based access</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13 Principle 8</span> <span class="p-req pill">PIPEDA</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Time-Based / Temporal Access</div>
+        <div class="feat-desc">Restrict access to time windows. Month-end finance data locked after regulatory submission. Intraday trading data access restricted to market hours. Emergency access grants auto-expire after N hours.</div>
+        <div class="feat-tool">Privacera scheduled policies · Custom policy conditions</div>
+        <div class="feat-reg"><span class="p-bcbs pill">BCBS 239</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOMAIN 2: Data Masking & Transformation -->
+  <div class="domain" style="border-color:#E67E22;background:#FDF6F0">
+    <div class="domain-title" style="color:#E67E22">🎭 Domain 2 — Data Masking & Transformation</div>
+    <div class="domain-sub" style="color:#E67E22">Transform sensitive values at query time without blocking access. User sees data — but not the real data.</div>
+    <div class="feat-grid-3">
+      <div class="feat" style="border-color:#1E8449">
+        <div class="feat-name" style="color:#1E8449"><span style="background:#D5F5E3;border-radius:4px;padding:1px 5px;font-size:8px">Your list</span> Dynamic Data Masking (DDM)</div>
+        <div class="feat-desc">Mask column values at query execution time. SIN → XXX-XXX-6789. Credit card → **** **** **** 4321. Partial reveal, full mask, or hash — policy-driven per role.</div>
+        <div class="feat-tool">Privacera · Fabric SQL DDM (T-SQL) · Databricks Unity Catalog</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 3.5</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Format-Preserving Masking</div>
+        <div class="feat-desc">Masked value looks structurally identical to real value — same length, same character types. A masked SIN still looks like a valid SIN. Critical for downstream systems that validate format without needing real values (analytics pipelines, model training).</div>
+        <div class="feat-tool">Privacera FPE masking functions · Voltage SecureData (commercial)</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 3</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Data Tokenization</div>
+        <div class="feat-desc">Replace sensitive values with non-sensitive surrogate tokens. Unlike masking (one-way), tokenization is reversible by authorized systems. PAN → TKN_4829af3c. The token is meaningless outside your vault. Detokenization requires explicit authorization and is logged.</div>
+        <div class="feat-tool">Privacera Tokenization · Protegrity · Voltage (Micro Focus)</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI DSS — removes data from scope</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Data Anonymization / Pseudonymization</div>
+        <div class="feat-desc">Irreversibly remove identifying information (anonymization) or replace with pseudonyms (pseudonymization). Used for model training datasets and analytics where real identity is not needed. Anonymized data is outside PIPEDA scope.</div>
+        <div class="feat-tool">Privacera anonymization policies · Dedicated pipeline step at Gold layer</div>
+        <div class="feat-reg"><span class="p-req pill">PIPEDA</span> <span class="p-osfi pill">OSFI B-13 Principle 8</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Differential Privacy</div>
+        <div class="feat-desc">Add calibrated statistical noise to query results so individual records cannot be inferred. Useful for aggregate analytics on sensitive data where exact counts would reveal individuals. Used by Apple, Google for telemetry.</div>
+        <div class="feat-tool">Google DP Library (OSS) · Custom query layer · Not in Privacera today</div>
+        <div class="feat-reg"><span class="p-req pill">Emerging — OSFI AI guidelines</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Data Subsetting / Synthetic Data</div>
+        <div class="feat-desc">Generate structurally identical but fictitious datasets for non-prod environments. Dev and test never touch real PII. Synthetic data preserves statistical distributions for model training without exposing real customer data.</div>
+        <div class="feat-tool">Databricks DBRX Synthetic · Mostly AI · Gretel.ai · MDM synthetic generators</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13 non-prod environments</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOMAIN 3: Encryption -->
+  <div class="domain" style="border-color:#1A5276;background:#EBF5FB">
+    <div class="domain-title" style="color:#1A5276">🔒 Domain 3 — Encryption</div>
+    <div class="domain-sub" style="color:#1A5276">Protect data at rest, in transit, and at the column level. Defense if storage is compromised.</div>
+    <div class="feat-grid-3">
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Encryption at Rest (TDE)</div>
+        <div class="feat-desc">Encrypt all Parquet/ORC files on MinIO storage. AES-256 via MinIO Server-Side Encryption (SSE). Even if an attacker gets raw storage access, they get ciphertext. Keys managed separately from data.</div>
+        <div class="feat-tool">MinIO SSE-KMS · HashiCorp Vault (key management) · AWS KMS via PrivateLink</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 3.5</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Encryption in Transit (TLS)</div>
+        <div class="feat-desc">TLS 1.2+ on all network paths: engine ↔ Polaris REST, engine ↔ MinIO, engine ↔ Privacera, Privacera ↔ AD/LDAP (LDAPS), engine ↔ SIEM. Mutual TLS (mTLS) for service-to-service communication inside OCP.</div>
+        <div class="feat-tool">OCP cert-manager · Polaris TLS config · MinIO TLS · Istio service mesh (mTLS)</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 4</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Column-Level Encryption (CLE)</div>
+        <div class="feat-desc">Encrypt individual sensitive columns within Parquet files (e.g. Parquet Modular Encryption — PME). Column is stored encrypted; only engines with the column key can decrypt. Masking is at query time; CLE is at storage level — defense in depth for the most sensitive fields (PAN, SIN).</div>
+        <div class="feat-tool">Apache Iceberg + Parquet Modular Encryption (PME) · Key management via Vault or AWS KMS</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 3 — strongest control for PAN</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOMAIN 4: Audit & Lineage -->
+  <div class="domain" style="border-color:#6C3483;background:#F5EEF8">
+    <div class="domain-title" style="color:#6C3483">📋 Domain 4 — Audit Trail & Data Lineage</div>
+    <div class="domain-sub" style="color:#6C3483">Who accessed what, when, from where — and how data flowed from source to consumer.</div>
+    <div class="feat-grid-3">
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Query-Level Audit Logging</div>
+        <div class="feat-desc">Log every query: user, engine, tables accessed, columns projected, row filters applied, allow/deny decision, timestamp, client IP, query duration, rows returned. The full who-what-when-how record.</div>
+        <div class="feat-tool">Privacera unified audit · Ranger Solr audit · Engine-native logs normalized to SIEM</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 10</span> <span class="p-osfi pill">OSFI B-13 Principle 10</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Column-Level Lineage</div>
+        <div class="feat-desc">Track transformation history of every column from source system to Gold layer. Column X in the risk report traces back through Silver → Bronze → mainframe source. Mandatory for BCBS 239 data accuracy validation.</div>
+        <div class="feat-tool">OpenLineage (Spark + Trino emitters) · Marquez or DataHub backend</div>
+        <div class="feat-reg"><span class="p-bcbs pill">BCBS 239 Principles 2,3,4,6</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Audit Log Integrity (WORM)</div>
+        <div class="feat-desc">Audit logs must be tamper-proof — an attacker who gains access should not be able to delete their tracks. Write-Once-Read-Many (WORM) storage for audit logs. File integrity monitoring alerts on modification attempts.</div>
+        <div class="feat-tool">MinIO WORM (Object Lock) · S3 Object Lock · Splunk immutable indexing</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI 10.5.5</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Automated Audit Review (SIEM Alerting)</div>
+        <div class="feat-desc">Automated rules detecting anomalous patterns: user accessing 10x normal data volume, access outside business hours, first-time access to PCI tables, failed access attempts, bulk exports. PCI 4.0 now mandates automated review — manual log review is not sufficient.</div>
+        <div class="feat-tool">Splunk Enterprise Security · Elastic SIEM · Microsoft Sentinel</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI 10.4.1 — mandatory in 4.0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOMAIN 5: DLP -->
+  <div class="domain" style="border-color:#E74C3C;background:#FDF2F2">
+    <div class="domain-title" style="color:#E74C3C">🚨 Domain 5 — Data Loss Prevention (DLP)</div>
+    <div class="domain-sub" style="color:#E74C3C">Prevent sensitive data from leaving controlled environments — through exports, downloads, email, or API calls.</div>
+    <div class="feat-grid">
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Query Result Export Controls</div>
+        <div class="feat-desc">Restrict or block export of query results above a threshold. Prevent SELECT * on PII tables being exported to CSV or downloaded via JDBC. Alert on unusually large result sets (potential data exfiltration). Privacera can block certain query patterns (e.g., full table scans on PII tables without a WHERE clause).</div>
+        <div class="feat-tool">Privacera query-pattern policies · Fabric DLP policies · Network egress controls</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13 Principle 8</span> <span class="p-pci pill">PCI Req 3,7</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Data Watermarking</div>
+        <div class="feat-desc">Embed invisible, user-specific identifiers in query results. If data leaks externally, the watermark identifies which user or system the data came from. Useful for detecting insider threats and accidental disclosure from analytical outputs.</div>
+        <div class="feat-tool">Privacera Watermarking (commercial feature) · Specialized DLP tools</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13 incident investigation</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Sensitivity Label Propagation</div>
+        <div class="feat-desc">When a new table is derived from a PII-tagged source, the derived table automatically inherits the PII label. Prevents accidental label loss during transformations. A Gold aggregation of a PII source should stay labelled even if individual records are anonymised — until explicitly declassified.</div>
+        <div class="feat-tool">Microsoft Purview auto-labelling · Privacera tag inheritance · Apache Atlas classification propagation</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13 Principle 8</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Network-Level Egress Controls</div>
+        <div class="feat-desc">OCP NetworkPolicy and firewall rules preventing data exfiltration at the network layer — independent of application-level controls. Even if an engine is compromised, raw Parquet data cannot be exfiltrated to unknown external IPs.</div>
+        <div class="feat-tool">OCP NetworkPolicy · Firewall · MinIO bucket policies (deny cross-region)</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13</span> <span class="p-pci pill">PCI Req 1</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOMAIN 6: Classification -->
+  <div class="domain" style="border-color:#B7950B;background:#FEFDF0">
+    <div class="domain-title" style="color:#B7950B">🏷️ Domain 6 — Data Classification & Discovery</div>
+    <div class="domain-sub" style="color:#B7950B">Know what sensitive data you have before you can protect it. Classification drives all other controls.</div>
+    <div class="feat-grid">
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Automated PII/PCI Discovery</div>
+        <div class="feat-desc">Scan Iceberg tables for PII and PCI patterns (SIN, credit card PANs, dates of birth, addresses) using regex and ML classifiers. At tens of thousands of tables, manual classification is impossible — auto-discovery is mandatory.</div>
+        <div class="feat-tool">Microsoft Purview data scanning · Privacera built-in classifiers · Apache Atlas classifiers · BigID</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13 Principle 8</span> <span class="p-pci pill">PCI Req 3 — know where PAN lives</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Data Classification Taxonomy</div>
+        <div class="feat-desc">Formal tiered classification: PUBLIC · INTERNAL · CONFIDENTIAL · RESTRICTED · PCI · PII. Each tier has mandatory controls (encryption, masking, access restrictions). Classification is the metadata that drives Privacera's tag-based policies.</div>
+        <div class="feat-tool">Apache Atlas classification types · Privacera sensitivity levels · Purview sensitivity labels</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13 Principle 8</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Data Inventory & Catalogue Governance</div>
+        <div class="feat-desc">Know every table, its owner, its classification, its retention period, its upstream sources. Without a data inventory you cannot demonstrate OSFI compliance — you cannot protect what you don't know exists.</div>
+        <div class="feat-tool">Apache Atlas · DataHub · Collibra · Alation</div>
+        <div class="feat-reg"><span class="p-bcbs pill">BCBS 239 Principle 2</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Data Retention & Deletion</div>
+        <div class="feat-desc">Enforce retention periods on Iceberg tables — automatically expire old snapshots, delete expired partitions. Support right-to-erasure (RTBF) requests for individual records via Iceberg V2 row-level deletes. Retention tied to classification tier.</div>
+        <div class="feat-tool">Iceberg V2 row-level deletes · Iceberg snapshot expiry · Custom retention pipeline · Collibra policy enforcement</div>
+        <div class="feat-reg"><span class="p-req pill">PIPEDA RTBF</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOMAIN 7: Credentials & Secrets -->
+  <div class="domain" style="border-color:#1E8449;background:#EEF9F2">
+    <div class="domain-title" style="color:#1E8449">🗝️ Domain 7 — Credentials, Secrets & Key Management</div>
+    <div class="domain-sub" style="color:#1E8449">Secure management of service credentials, API keys, encryption keys, and short-lived tokens.</div>
+    <div class="feat-grid">
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Secrets Management (Vault)</div>
+        <div class="feat-desc">Centralized secret store for all service credentials: Polaris DB passwords, Privacera LDAP bind credentials, MinIO access keys, TLS certificates. Secrets injected into OCP pods at runtime via CSI driver — never baked into container images or ConfigMaps.</div>
+        <div class="feat-tool">HashiCorp Vault · OCP Secrets Store CSI Driver · CyberArk Conjur</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 3,8</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Credential Vending (Short-lived STS tokens)</div>
+        <div class="feat-desc">Polaris vends temporary, scoped storage credentials to engines at query time (15–60 min TTL). No long-lived credentials in engine configs. Scope is limited to the specific S3 prefix for the requested table. If credentials leak, they expire quickly and have minimal blast radius.</div>
+        <div class="feat-tool">Apache Polaris credential vending · MinIO STS · AWS AssumeRole</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 3,7</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Encryption Key Management (KMS)</div>
+        <div class="feat-desc">Separate key management from encrypted data. MinIO encryption keys stored in Vault KMS (not on MinIO itself). Key rotation on schedule. Key access logged. Envelope encryption: data encrypted with DEK, DEK encrypted with KEK stored in Vault.</div>
+        <div class="feat-tool">HashiCorp Vault KMS · Thales Luna HSM · AWS KMS (cloud burst)</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 3.7</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Break-Glass / Emergency Access</div>
+        <div class="feat-desc">Controlled procedure for emergency elevated access that bypasses normal RBAC. Every break-glass access is: pre-approved by defined authority, time-limited, fully logged, and generates a SIEM alert. Required for incident response without creating a permanent security backdoor.</div>
+        <div class="feat-tool">Privacera temporary policy grants · CyberArk PAM · HashiCorp Vault dynamic secrets</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13 incident response</span> <span class="p-pci pill">PCI Req 8</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOMAIN 8: Identity -->
+  <div class="domain" style="border-color:#8E44AD;background:#F5EEF8">
+    <div class="domain-title" style="color:#8E44AD">🪪 Domain 8 — Identity, Authentication & MFA</div>
+    <div class="domain-sub" style="color:#8E44AD">Verify that users and services are who they claim to be before granting any access.</div>
+    <div class="feat-grid-3">
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> MFA for Privileged Access</div>
+        <div class="feat-desc">Multi-factor authentication for Privacera admin, Polaris admin, SIEM admin, and any break-glass access. Standard AD SSO for regular analyst queries. MFA required for any administrative action that changes security policies.</div>
+        <div class="feat-tool">RBC AD MFA · Keycloak MFA flows · CyberArk PAM</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 8.4 — mandatory for admin</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Service Account Governance</div>
+        <div class="feat-desc">Every engine service account (Spark, Trino, Databricks) has a dedicated identity, minimum-privilege Polaris catalog role, and periodic access review. No shared service accounts. Service account credentials rotated on schedule via Vault. Stale accounts auto-disabled.</div>
+        <div class="feat-tool">Polaris principal management · HashiCorp Vault dynamic credentials · CyberArk</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 8</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Privileged Access Management (PAM)</div>
+        <div class="feat-desc">All administrative access to Polaris, Privacera, MinIO, and PostgreSQL goes through a PAM vault. Admins never have direct credentials — they check out a session through PAM with full session recording. PAM sessions are a key audit control for change management.</div>
+        <div class="feat-tool">CyberArk PAM · BeyondTrust · HashiCorp Vault</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 8,10</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOMAIN 9: Query Controls -->
+  <div class="domain" style="border-color:#2E86C1;background:#EBF5FB">
+    <div class="domain-title" style="color:#2E86C1">🔍 Domain 9 — Query-Level Controls</div>
+    <div class="domain-sub" style="color:#2E86C1">Control not just what data users see, but how they can query it — preventing dangerous patterns.</div>
+    <div class="feat-grid">
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Query Pattern Restrictions</div>
+        <div class="feat-desc">Block dangerous query patterns regardless of data sensitivity: SELECT * without WHERE on PII tables, full table scans on tables above a size threshold, JOINs that combine PII from two different classification tiers, downloads of more than N rows. Privacera can enforce these as policy rules.</div>
+        <div class="feat-tool">Privacera query-level policies · Trino resource groups · Kyuubi query rate limiting</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Query Rate Limiting & Anomaly Detection</div>
+        <div class="feat-desc">Detect and throttle abnormal query behaviour: a user running 10,000 queries in 5 minutes, an account suddenly accessing tables it has never touched, or queries returning 100x normal result size. Both a DLP control and an insider threat signal.</div>
+        <div class="feat-tool">Privacera behaviour analytics · SIEM correlation rules · Trino resource groups</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI 10.4.1</span> <span class="p-osfi pill">OSFI B-13 Principle 10</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Data Aggregation Minimum (k-Anonymity)</div>
+        <div class="feat-desc">Enforce minimum group sizes in aggregation queries to prevent individual re-identification. A query returning COUNT=1 for a sensitive group reveals the individual. Policy: suppress any aggregate result where COUNT &lt; k (e.g., k=5). Required when analytics consumers are external or semi-trusted.</div>
+        <div class="feat-tool">Custom query post-processing · Trino query rewrite · Privacera result-set policies</div>
+        <div class="feat-reg"><span class="p-req pill">PIPEDA</span> <span class="p-osfi pill">Privacy by design</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Approved Query Patterns (Certified Queries)</div>
+        <div class="feat-desc">For AI/agent consumers (RBC Assist), restrict access to a whitelist of pre-approved, certified query patterns via a FastAPI gateway. No ad-hoc SQL against Gold layer from agents — only certified parameterized queries. The trust boundary you described in your ADR architecture.</div>
+        <div class="feat-tool">Python FastAPI middle layer (your existing ADR) · Privacera service account with narrow policy</div>
+        <div class="feat-reg"><span class="p-osfi pill">OSFI B-13</span> <span class="p-bcbs pill">BCBS 239</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DOMAIN 10: Change Management -->
+  <div class="domain" style="border-color:#784212;background:#FEF9F0">
+    <div class="domain-title" style="color:#784212">📝 Domain 10 — Data Change Management & Integrity</div>
+    <div class="domain-sub" style="color:#784212">Ensure data changes are controlled, auditable, and reversible — especially for regulated datasets.</div>
+    <div class="feat-grid">
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Write-Audit-Publish (WAP) Workflow</div>
+        <div class="feat-desc">No data goes directly to the production Gold layer without passing a validation gate. Write to staging/branch, run data quality checks (Soda, Great Expectations), compliance validation, then atomically publish to main. Enforces "four-eyes" principle on data changes.</div>
+        <div class="feat-tool">Nessie branching · Iceberg snapshot isolation · Soda / Great Expectations quality gates</div>
+        <div class="feat-reg"><span class="p-bcbs pill">BCBS 239 Principle 3 — data accuracy</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Immutable Audit Snapshots</div>
+        <div class="feat-desc">Tag Iceberg snapshots at regulatory reporting dates. The state of Gold layer on Dec 31 is preserved forever — any regulator inquiry can reproduce the exact dataset used for that reporting period. Iceberg time-travel makes this free operationally.</div>
+        <div class="feat-tool">Iceberg snapshot tagging · Nessie tags · Polaris snapshot management</div>
+        <div class="feat-reg"><span class="p-bcbs pill">BCBS 239</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+      <div class="feat" style="border-color:#2E86C1">
+        <div class="feat-name" style="color:#2E86C1"><span style="background:#D6EAF8;border-radius:4px;padding:1px 5px;font-size:8px">New</span> Schema Change Governance</div>
+        <div class="feat-desc">Schema changes (adding columns, altering types) in Iceberg are atomic and logged as metadata commits. But you need a governance gate: schema changes to PCI-classified tables require a security review before being applied to production catalog. Automated CI/CD check before schema evolution.</div>
+        <div class="feat-tool">Polaris schema evolution API · GitHub PR gate · Privacera schema sync re-run after change</div>
+        <div class="feat-reg"><span class="p-pci pill">PCI Req 6</span> <span class="p-osfi pill">OSFI B-13</span></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ MATRIX ═══ -->
+<div id="tab-matrix" class="card hidden">
+
+  <div style="font-size:11px;color:#7F8C8D;margin-bottom:12px">Which tool covers which security capability — in your Privacera + Polaris stack</div>
+  <div style="overflow-x:auto">
+  <table class="mtable">
+    <thead>
+      <tr>
+        <th class="c-head" style="min-width:180px">Security Capability</th>
+        <th class="c-head" style="min-width:90px">Privacera</th>
+        <th class="c-head" style="min-width:80px">Polaris</th>
+        <th class="c-head" style="min-width:80px">OpenLineage /<br/>Marquez</th>
+        <th class="c-head" style="min-width:80px">MinIO</th>
+        <th class="c-head" style="min-width:80px">HashiCorp<br/>Vault</th>
+        <th class="c-head" style="min-width:80px">Purview /<br/>Atlas</th>
+        <th class="c-head" style="min-width:80px">SIEM<br/>(Splunk)</th>
+        <th class="c-head" style="min-width:80px">OCP /<br/>Infra</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="sec-row"><td colspan="9">ACCESS CONTROL</td></tr>
+      <tr><td>RBAC — table/schema access</td><td><span class="pill p-yes">✅ Primary</span></td><td><span class="pill p-yes">✅ Service accounts</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Column-Level Security</td><td><span class="pill p-yes">✅ Primary</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Row-Level Security</td><td><span class="pill p-yes">✅ Primary</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>ABAC</td><td><span class="pill p-yes">✅ Tag+attribute policies</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-part">⚠️ Tags source</span></td><td>—</td><td>—</td></tr>
+      <tr><td>Purpose Limitation</td><td><span class="pill p-yes">✅ Tag-based rules</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-part">⚠️ Classification source</span></td><td>—</td><td>—</td></tr>
+      <tr><td>Time-Based Access</td><td><span class="pill p-part">⚠️ Scheduled policies</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+
+      <tr class="sec-row"><td colspan="9">DATA MASKING & TRANSFORMATION</td></tr>
+      <tr><td>Dynamic Data Masking (DDM)</td><td><span class="pill p-yes">✅ Primary</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Format-Preserving Masking</td><td><span class="pill p-yes">✅ FPE functions</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Tokenization</td><td><span class="pill p-part">⚠️ Commercial add-on</span></td><td>—</td><td>—</td><td>—</td><td><span class="pill p-part">⚠️ Token vault option</span></td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Anonymization / Pseudonymization</td><td><span class="pill p-part">⚠️ Policy-driven</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Differential Privacy</td><td><span class="pill p-no">❌ Not in Privacera</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Synthetic Data</td><td><span class="pill p-no">❌ Separate tooling</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+
+      <tr class="sec-row"><td colspan="9">ENCRYPTION</td></tr>
+      <tr><td>Encryption at Rest (TDE)</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ SSE-KMS</span></td><td><span class="pill p-yes">✅ Key management</span></td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Encryption in Transit (TLS)</td><td>—</td><td><span class="pill p-yes">✅ TLS on REST API</span></td><td>—</td><td><span class="pill p-yes">✅ TLS</span></td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ cert-manager / Istio</span></td></tr>
+      <tr><td>Column-Level Encryption (PME)</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-part">⚠️ Parquet PME support</span></td><td><span class="pill p-yes">✅ Column key management</span></td><td>—</td><td>—</td><td>—</td></tr>
+
+      <tr class="sec-row"><td colspan="9">AUDIT TRAIL & LINEAGE</td></tr>
+      <tr><td>Query-Level Audit Logging</td><td><span class="pill p-yes">✅ Primary</span></td><td><span class="pill p-part">⚠️ Catalog events</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Aggregation</span></td><td>—</td></tr>
+      <tr><td>Column-Level Lineage</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Primary</span></td><td>—</td><td>—</td><td><span class="pill p-part">⚠️ Atlas lineage</span></td><td>—</td><td>—</td></tr>
+      <tr><td>Audit Log WORM / Integrity</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Object Lock</span></td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Immutable index</span></td><td>—</td></tr>
+      <tr><td>Automated Audit Review (SIEM)</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Primary</span></td><td>—</td></tr>
+
+      <tr class="sec-row"><td colspan="9">DATA LOSS PREVENTION</td></tr>
+      <tr><td>Query Result Export Controls</td><td><span class="pill p-yes">✅ Query-pattern policies</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Data Watermarking</td><td><span class="pill p-part">⚠️ Commercial add-on</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Sensitivity Label Propagation</td><td><span class="pill p-part">⚠️ Tag inheritance</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Atlas propagation</span></td><td>—</td><td>—</td></tr>
+      <tr><td>Network Egress Controls</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-part">⚠️ Bucket policies</span></td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ NetworkPolicy</span></td></tr>
+
+      <tr class="sec-row"><td colspan="9">CLASSIFICATION & DISCOVERY</td></tr>
+      <tr><td>Automated PII/PCI Discovery</td><td><span class="pill p-yes">✅ Built-in classifiers</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Atlas / Purview</span></td><td>—</td><td>—</td></tr>
+      <tr><td>Classification Taxonomy</td><td><span class="pill p-yes">✅ Sensitivity levels</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Primary</span></td><td>—</td><td>—</td></tr>
+      <tr><td>Data Inventory & Governance</td><td>—</td><td>—</td><td><span class="pill p-part">⚠️ Lineage only</span></td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Primary</span></td><td>—</td><td>—</td></tr>
+      <tr><td>Retention & Deletion</td><td>—</td><td><span class="pill p-yes">✅ Snapshot mgmt</span></td><td>—</td><td>—</td><td>—</td><td><span class="pill p-part">⚠️ Policy source</span></td><td>—</td><td>—</td></tr>
+
+      <tr class="sec-row"><td colspan="9">CREDENTIALS & IDENTITY</td></tr>
+      <tr><td>Secrets Management</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Primary</span></td><td>—</td><td>—</td><td><span class="pill p-part">⚠️ CSI driver</span></td></tr>
+      <tr><td>Credential Vending (STS)</td><td>—</td><td><span class="pill p-yes">✅ Primary</span></td><td>—</td><td><span class="pill p-yes">✅ STS endpoint</span></td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>MFA for Privileged Access</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ AD MFA / Keycloak</span></td></tr>
+      <tr><td>Break-Glass / Emergency Access</td><td><span class="pill p-part">⚠️ Temp policy grants</span></td><td>—</td><td>—</td><td>—</td><td><span class="pill p-yes">✅ Dynamic secrets</span></td><td>—</td><td><span class="pill p-yes">✅ Alert + log</span></td><td>—</td></tr>
+
+      <tr class="sec-row"><td colspan="9">QUERY CONTROLS & CHANGE MANAGEMENT</td></tr>
+      <tr><td>Query Pattern Restrictions</td><td><span class="pill p-yes">✅ Primary</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>WAP Workflow</td><td>—</td><td><span class="pill p-part">⚠️ Snapshot isolation</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Immutable Regulatory Snapshots</td><td>—</td><td><span class="pill p-yes">✅ Snapshot tagging</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+      <tr><td>Certified Queries (AI trust boundary)</td><td><span class="pill p-part">⚠️ Service account policy</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note warn" style="margin-top:12px">
+    <strong>Gaps not covered by Privacera + Polaris alone:</strong> Differential privacy, synthetic data generation, tokenization (partial), column-level encryption (PME), WORM audit storage, SIEM automated review, secrets management, MFA, PAM, network egress controls, and data inventory/catalogue governance all require additional tooling. These are not Privacera gaps — they are separate security domains that no single tool covers.
+  </div>
+</div>
+
+<!-- ═══ PRIORITY ═══ -->
+<div id="tab-priority" class="card hidden">
+  <div style="font-size:12px;font-weight:800;color:#1A1A2E;margin-bottom:12px">Priority Tiers — What to implement and in what order</div>
+
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+    <span class="pri pri-must">🔴 MUST — Regulatory minimum</span>
+    <span class="pri pri-should">🟡 SHOULD — Strong security practice</span>
+    <span class="pri pri-could">🔵 COULD — Defence in depth</span>
+    <span class="pri pri-wont">⚪ CONSIDER — Emerging / future</span>
+  </div>
+
+  <table class="mtable">
+    <thead>
+      <tr>
+        <th class="c-head">Capability</th>
+        <th class="c-head" style="min-width:80px">Priority</th>
+        <th class="c-head" style="min-width:100px">Regulatory driver</th>
+        <th class="c-head">Owner tool</th>
+        <th class="c-head">Key note</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="sec-row"><td colspan="5">TIER 1 — IMPLEMENT BEFORE PRODUCTION</td></tr>
+      <tr><td>RBAC + Column + Row Level Security</td><td><span class="pri pri-must">🔴 MUST</span></td><td>OSFI B-13 · PCI Req 7</td><td>Privacera</td><td>Core access control — foundational to everything else</td></tr>
+      <tr><td>Dynamic Data Masking (DDM)</td><td><span class="pri pri-must">🔴 MUST</span></td><td>PCI Req 3.5 · OSFI B-13</td><td>Privacera</td><td>PAN and SIN must never be visible in plain text to non-PCI roles</td></tr>
+      <tr><td>Encryption at Rest</td><td><span class="pri pri-must">🔴 MUST</span></td><td>PCI Req 3.5 · OSFI</td><td>MinIO SSE-KMS + Vault</td><td>All Parquet files encrypted at rest — non-negotiable for PCI</td></tr>
+      <tr><td>Encryption in Transit (TLS)</td><td><span class="pri pri-must">🔴 MUST</span></td><td>PCI Req 4</td><td>OCP cert-manager</td><td>All inter-service communication TLS 1.2+</td></tr>
+      <tr><td>Query-Level Audit Logging → SIEM</td><td><span class="pri pri-must">🔴 MUST</span></td><td>PCI Req 10 · OSFI B-13 P10</td><td>Privacera → Splunk</td><td>12 months hot, 7 years WORM — non-negotiable</td></tr>
+      <tr><td>Automated Audit Review (SIEM rules)</td><td><span class="pri pri-must">🔴 MUST</span></td><td>PCI 10.4.1 mandatory in 4.0</td><td>Splunk / Elastic SIEM</td><td>Manual log review is no longer sufficient under PCI DSS 4.0</td></tr>
+      <tr><td>Secrets Management (Vault)</td><td><span class="pri pri-must">🔴 MUST</span></td><td>PCI Req 3,8 · OSFI</td><td>HashiCorp Vault</td><td>No hardcoded credentials anywhere in the stack</td></tr>
+      <tr><td>Automated PII/PCI Discovery</td><td><span class="pri pri-must">🔴 MUST</span></td><td>PCI Req 3 · OSFI B-13 P8</td><td>Privacera + Atlas/Purview</td><td>Can't protect PII you don't know exists — run discovery before go-live</td></tr>
+      <tr><td>Credential Vending (STS)</td><td><span class="pri pri-must">🔴 MUST</span></td><td>PCI Req 3,7</td><td>Polaris + MinIO STS</td><td>No long-lived storage credentials in engine configs</td></tr>
+      <tr><td>MFA for privileged access</td><td><span class="pri pri-must">🔴 MUST</span></td><td>PCI Req 8.4</td><td>AD MFA / Keycloak</td><td>All admin access to Privacera, Polaris, SIEM requires MFA</td></tr>
+
+      <tr class="sec-row"><td colspan="5">TIER 2 — IMPLEMENT IN FIRST 6 MONTHS</td></tr>
+      <tr><td>ABAC (attribute-based policies)</td><td><span class="pri pri-should">🟡 SHOULD</span></td><td>OSFI B-13 · Banking best practice</td><td>Privacera</td><td>RBAC alone is insufficient for complex banking jurisdictional access rules</td></tr>
+      <tr><td>Column-Level Lineage</td><td><span class="pri pri-should">🟡 SHOULD</span></td><td>BCBS 239 Principles 2,3,4,6</td><td>OpenLineage + Marquez</td><td>BCBS 239 explicitly requires end-to-end column lineage</td></tr>
+      <tr><td>Audit Log WORM Storage</td><td><span class="pri pri-should">🟡 SHOULD</span></td><td>PCI 10.5.5 · OSFI</td><td>MinIO Object Lock / Splunk</td><td>Audit logs must be tamper-proof</td></tr>
+      <tr><td>Break-Glass / Emergency Access</td><td><span class="pri pri-should">🟡 SHOULD</span></td><td>OSFI B-13 incident response</td><td>CyberArk / Vault + Privacera</td><td>Must have a documented procedure before production go-live</td></tr>
+      <tr><td>Network Egress Controls</td><td><span class="pri pri-should">🟡 SHOULD</span></td><td>PCI Req 1 · OSFI B-13</td><td>OCP NetworkPolicy + Firewall</td><td>Defence in depth — application controls are not sufficient alone</td></tr>
+      <tr><td>Query Pattern Restrictions</td><td><span class="pri pri-should">🟡 SHOULD</span></td><td>OSFI B-13 P8</td><td>Privacera</td><td>Block SELECT * on PII tables, full table scans, bulk exports</td></tr>
+      <tr><td>Immutable Regulatory Snapshots</td><td><span class="pri pri-should">🟡 SHOULD</span></td><td>BCBS 239</td><td>Polaris / Iceberg snapshot tags</td><td>Month-end Gold snapshots preserved forever — free in Iceberg</td></tr>
+      <tr><td>Sensitivity Label Propagation</td><td><span class="pri pri-should">🟡 SHOULD</span></td><td>OSFI B-13 P8</td><td>Atlas + Privacera tag inheritance</td><td>Derived tables must not silently lose PII classification</td></tr>
+      <tr><td>Service Account Governance</td><td><span class="pri pri-should">🟡 SHOULD</span></td><td>PCI Req 8</td><td>Polaris RBAC + Vault rotation</td><td>Every engine has its own minimum-privilege identity</td></tr>
+
+      <tr class="sec-row"><td colspan="5">TIER 3 — STRONG DEFENCE IN DEPTH</td></tr>
+      <tr><td>Format-Preserving Masking</td><td><span class="pri pri-could">🔵 COULD</span></td><td>PCI Req 3</td><td>Privacera FPE</td><td>Required if downstream systems validate PAN format</td></tr>
+      <tr><td>Tokenization</td><td><span class="pri pri-could">🔵 COULD</span></td><td>PCI Req 3 — removes from scope</td><td>Privacera / Protegrity</td><td>Tokenizing PANs removes most data from PCI scope — significant compliance simplification</td></tr>
+      <tr><td>Column-Level Encryption (PME)</td><td><span class="pri pri-could">🔵 COULD</span></td><td>PCI Req 3</td><td>Parquet PME + Vault</td><td>Strongest protection for PAN — encrypted in file, not just at rest</td></tr>
+      <tr><td>Data Watermarking</td><td><span class="pri pri-could">🔵 COULD</span></td><td>OSFI B-13 insider threat</td><td>Privacera (commercial)</td><td>Detect source of data leaks from analytical outputs</td></tr>
+      <tr><td>Anonymization / Pseudonymization pipeline</td><td><span class="pri pri-could">🔵 COULD</span></td><td>PIPEDA · Model training</td><td>Gold layer pipeline step</td><td>Required before exposing data to ML training workloads</td></tr>
+      <tr><td>Purpose Limitation Enforcement</td><td><span class="pri pri-could">🔵 COULD</span></td><td>PIPEDA · Privacy by design</td><td>Privacera tag policies</td><td>Enforce declared data use — prevents scope creep on sensitive data</td></tr>
+      <tr><td>Certified Query Gateway (AI)</td><td><span class="pri pri-could">🔵 COULD</span></td><td>OSFI B-13 · BCBS 239</td><td>FastAPI trust boundary (your ADR)</td><td>Critical before RBC Assist goes to production against Gold layer</td></tr>
+      <tr><td>PAM (Privileged Access Mgmt)</td><td><span class="pri pri-could">🔵 COULD</span></td><td>PCI Req 8,10</td><td>CyberArk / BeyondTrust</td><td>Session recording for all admin access — strong OSFI control</td></tr>
+      <tr><td>k-Anonymity enforcement</td><td><span class="pri pri-could">🔵 COULD</span></td><td>PIPEDA</td><td>Custom query post-processing</td><td>Required if analytics results are shared externally</td></tr>
+
+      <tr class="sec-row"><td colspan="5">TIER 4 — EMERGING / FUTURE CONSIDERATION</td></tr>
+      <tr><td>Differential Privacy</td><td><span class="pri pri-wont">⚪ CONSIDER</span></td><td>Emerging AI / analytics regulations</td><td>Google DP Library</td><td>Not in Privacera today — requires custom query layer. Watch OSFI AI guidelines.</td></tr>
+      <tr><td>Synthetic Data Generation</td><td><span class="pri pri-wont">⚪ CONSIDER</span></td><td>OSFI non-prod environments</td><td>Gretel.ai · Mostly AI</td><td>Ideal for dev/test to eliminate PII entirely from non-prod. Not urgent if dev environments are already isolated.</td></tr>
+      <tr><td>Query Rate Anomaly Detection (ML)</td><td><span class="pri pri-wont">⚪ CONSIDER</span></td><td>Insider threat</td><td>Privacera behaviour analytics</td><td>Layer on top of SIEM rules once baseline behaviour is established</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note tip" style="margin-top:12px">
+    <strong>Practical sequencing:</strong> Tier 1 must be in place before any production data is loaded. Tier 2 should be your first 6-month roadmap post-launch. Tier 3 items align with your second year. Tier 4 items should appear on your 3-year security roadmap. The Tier 1 list alone will satisfy initial OSFI B-13, PCI DSS 4.0, and BCBS 239 examination questions.
+  </div>
+</div>
+
+<script>
+function showTab(id, btn) {
+  ['map','matrix','priority'].forEach(t => document.getElementById('tab-' + t).classList.add('hidden'));
+  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + id).classList.remove('hidden');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
