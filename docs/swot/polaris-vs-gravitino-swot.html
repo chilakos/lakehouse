@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Apache Polaris vs Apache Gravitino — Deep Dive SWOT</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A1628;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC;--white:#FFFFFF;--polaris:#1E4D8C;--polaris-bg:#EFF6FF;--polaris-b:#BFDBFE;--gravitino:#065F46;--gravitino-bg:#F0FDF4;--gravitino-b:#BBF7D0;--s:#059669;--s-bg:#D1FAE5;--w:#DC2626;--w-bg:#FEE2E2;--o:#D97706;--o-bg:#FEF3C7;--t:#7C3AED;--t-bg:#EDE9FE;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);}
+.hero{background:var(--navy);padding:48px 32px 40px;text-align:center;}
+.hero-eyebrow{font-size:10px;font-family:'DM Mono',monospace;letter-spacing:2px;text-transform:uppercase;color:#64748B;margin-bottom:12px;}
+.hero h1{font-family:'Lora',serif;font-size:30px;font-weight:600;color:#fff;letter-spacing:-0.3px;margin-bottom:10px;}
+.hero p{font-size:12px;color:#94A3B8;max-width:600px;margin:0 auto 20px;line-height:1.7;}
+.hero-meta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.hmeta{font-size:9px;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.08);color:#94A3B8;border:1px solid rgba(255,255,255,0.12);}
+.hmeta.alert{background:rgba(5,150,105,0.15);color:#6EE7B7;border-color:rgba(110,231,183,0.3);}
+.back{font-size:10px;font-family:'DM Mono',monospace;color:#475569;margin-bottom:16px;text-align:left;}
+.back a{color:#94A3B8;text-decoration:none;}
+.tabs{display:flex;gap:6px;max-width:1100px;margin:0 auto;padding:24px 24px 0;flex-wrap:wrap;}
+.tab{padding:7px 18px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:#E0E7EF;color:#64748B;transition:all 0.15s;}
+.tab.active{background:var(--navy);color:#fff;}
+.canvas{max-width:1100px;margin:0 auto;padding:20px 24px 60px;}
+.card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,0.05);margin-bottom:16px;}
+.hidden{display:none;}
+.slabel{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--line);}
+.snapshot-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+@media(max-width:620px){.snapshot-grid{grid-template-columns:1fr;}}
+.snapshot{border-radius:10px;padding:18px 20px;border:2px solid;}
+.snapshot.polaris{border-color:var(--polaris-b);background:var(--polaris-bg);}
+.snapshot.gravitino{border-color:var(--gravitino-b);background:var(--gravitino-bg);}
+.snapshot-name{font-size:16px;font-weight:800;margin-bottom:4px;}
+.snapshot-tag{font-size:9px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:10px;display:inline-block;margin-bottom:10px;}
+.p-tag{background:var(--polaris);color:#fff;}.g-tag{background:var(--gravitino);color:#fff;}
+.stat-row{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:10px;}
+.stat{text-align:center;background:rgba(255,255,255,0.7);border-radius:8px;padding:8px 12px;flex:1;min-width:80px;}
+.stat-val{font-size:16px;font-weight:800;line-height:1;}
+.stat-lbl{font-size:8px;font-family:'DM Mono',monospace;color:var(--muted);margin-top:3px;}
+.snapshot ul{padding-left:15px;}.snapshot li{font-size:10px;line-height:1.9;}
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+@media(max-width:560px){.swot-grid{grid-template-columns:1fr;}}
+.swot-quad{border-radius:9px;padding:14px 16px;border:1.5px solid;}
+.swot-quad.S{border-color:#86EFAC;background:var(--s-bg);}.swot-quad.W{border-color:#FCA5A5;background:var(--w-bg);}.swot-quad.O{border-color:#FDE68A;background:var(--o-bg);}.swot-quad.T{border-color:#C4B5FD;background:var(--t-bg);}
+.sq-title{font-size:11px;font-weight:800;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.sq-title .letter{width:22px;height:22px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#fff;flex-shrink:0;}
+.S .letter{background:#059669;}.W .letter{background:#DC2626;}.O .letter{background:#D97706;}.T .letter{background:#7C3AED;}
+.swot-quad ul{padding-left:14px;}.swot-quad li{font-size:10px;line-height:1.85;}
+table.ctable{width:100%;border-collapse:collapse;font-size:10px;}
+table.ctable th{padding:9px 12px;text-align:left;font-weight:700;}
+table.ctable td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top;}
+table.ctable tr:nth-child(even) td{background:#F8FAFC;}
+table.ctable .ch{background:var(--navy);color:#fff;}
+table.ctable .ch-p{background:var(--polaris);color:#fff;}
+table.ctable .ch-g{background:var(--gravitino);color:#fff;}
+.pill{display:inline-block;font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px;}
+.p-yes{background:#D1FAE5;color:#065F46;}.p-no{background:#FEE2E2;color:#991B1B;}.p-part{background:#FEF3C7;color:#92400E;}.p-edge{background:#DBEAFE;color:#1E40AF;border:1px solid #93C5FD;}
+.cat-row td{background:#F1F5F9!important;font-weight:700;font-size:9px;color:var(--muted);padding:5px 12px;letter-spacing:0.5px;text-transform:uppercase;}
+.timeline{position:relative;padding-left:28px;}
+.timeline::before{content:'';position:absolute;left:8px;top:0;bottom:0;width:2px;background:var(--line);}
+.tl-item{position:relative;margin-bottom:14px;}
+.tl-dot{position:absolute;left:-24px;width:12px;height:12px;border-radius:50%;border:2px solid #fff;top:3px;}
+.tl-dot.p{background:var(--polaris);}.tl-dot.g{background:var(--gravitino);}
+.tl-date{font-size:9px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:2px;}
+.tl-text{font-size:11px;line-height:1.5;}
+.tl-label{font-size:8px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:4px;margin-left:6px;}
+.lbl-p{background:var(--polaris-bg);color:var(--polaris);}.lbl-g{background:var(--gravitino-bg);color:var(--gravitino);}
+.verdict-box{border-radius:12px;padding:22px 24px;border:2.5px solid;margin-bottom:14px;}
+.verdict-title{font-family:'Lora',serif;font-size:18px;font-weight:600;margin-bottom:8px;}
+.verdict-body{font-size:11px;line-height:1.8;}
+.market-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+@media(max-width:580px){.market-grid{grid-template-columns:1fr;}}
+.market-box{border-radius:8px;border:1.5px solid;padding:12px 14px;}
+.market-box .mb-title{font-size:11px;font-weight:700;margin-bottom:6px;}
+.market-box .mb-body{font-size:10px;line-height:1.7;}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.bar-label{font-size:10px;font-weight:600;min-width:100px;}
+.bar-track{flex:1;height:8px;background:#E2E8F0;border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;}
+.bar-val{font-size:9px;font-family:'DM Mono',monospace;color:var(--muted);min-width:40px;text-align:right;}
+.note{border-radius:8px;padding:10px 14px;font-size:10px;line-height:1.6;margin-top:10px;}
+.note.info{background:#D6EAF8;border:1.5px solid #93C5FD;color:#1A5276;}
+.note.warn{background:#FFF3CD;border:1.5px solid #FCD34D;color:#92400E;}
+.note.tip{background:#D5F5E3;border:1.5px solid #6EE7B7;color:#065F46;}
+.note.alert{background:#FADBD8;border:1.5px solid #FCA5A5;color:#7B241C;}
+.footer{max-width:1100px;margin:0 auto;padding:16px 24px;border-top:1px solid var(--line);font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div style="max-width:1100px;margin:0 auto;"><div class="back"><a href="../">&#8592; Lakehouse Hub</a></div></div>
+  <div class="hero-eyebrow">Lumina &middot; Enterprise Data &middot; April 2026 &middot; Deep Dive Research</div>
+  <h1>Apache Polaris vs Apache Gravitino</h1>
+  <p>Full SWOT analysis, architecture comparison, open source posture, market position, governance, and RBC recommendation. Both projects are now ASF Top-Level Projects as of 2026.</p>
+  <div class="hero-meta">
+    <span class="hmeta alert">&#10003; Polaris: ASF TLP Feb 2026</span>
+    <span class="hmeta alert">&#10003; Gravitino: ASF TLP Jun 2025</span>
+    <span class="hmeta">Polaris: 1.8k stars &middot; 100+ contributors &middot; v1.3</span>
+    <span class="hmeta">Gravitino: 2,600+ stars &middot; 130% growth 2025 &middot; v1.2</span>
+  </div>
+</div>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" onclick="showTab('overview',this)">Overview</button>
+  <button class="tab" onclick="showTab('polaris',this)" style="color:var(--polaris)">Polaris SWOT</button>
+  <button class="tab" onclick="showTab('gravitino',this)" style="color:var(--gravitino)">Gravitino SWOT</button>
+  <button class="tab" onclick="showTab('compare',this)">Head-to-Head</button>
+  <button class="tab" onclick="showTab('market',this)">Market &amp; Open Source</button>
+  <button class="tab" onclick="showTab('verdict',this)">RBC Verdict</button>
+</div>
+
+<!-- OVERVIEW -->
+<div class="canvas" id="tab-overview">
+  <div class="slabel">Project Snapshots &mdash; April 2026</div>
+  <div class="snapshot-grid">
+    <div class="snapshot polaris">
+      <div class="snapshot-name" style="color:var(--polaris)">Apache Polaris</div>
+      <div class="snapshot-tag p-tag">ASF Top-Level Project &middot; Feb 2026</div>
+      <div class="stat-row">
+        <div class="stat"><div class="stat-val" style="color:var(--polaris)">1.8k</div><div class="stat-lbl">GitHub stars</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--polaris)">100+</div><div class="stat-lbl">contributors</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--polaris)">2,800+</div><div class="stat-lbl">PRs closed</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--polaris)">v1.3</div><div class="stat-lbl">latest</div></div>
+      </div>
+      <ul>
+        <li><strong>Origin:</strong> Snowflake (Jun 2024) &rarr; ASF Aug 2024 &rarr; TLP Feb 2026</li>
+        <li><strong>Language:</strong> Java 21 (Quarkus runtime)</li>
+        <li><strong>Focus:</strong> Purpose-built Iceberg REST catalog &mdash; narrow, deep</li>
+        <li><strong>Table formats:</strong> Iceberg only (by design)</li>
+        <li><strong>Backend:</strong> PostgreSQL (only)</li>
+        <li><strong>Managed services:</strong> Snowflake Open Catalog &middot; Dremio Open Catalog</li>
+        <li><strong>PMC:</strong> Snowflake, Dremio, Google, Microsoft, Confluent, LanceDB, Bloomberg, Starburst</li>
+        <li><strong>Credential vending:</strong> S3, ADLS, GCS, MinIO STS &mdash; best-in-class</li>
+      </ul>
+    </div>
+    <div class="snapshot gravitino">
+      <div class="snapshot-name" style="color:var(--gravitino)">Apache Gravitino</div>
+      <div class="snapshot-tag g-tag">ASF Top-Level Project &middot; Jun 2025</div>
+      <div class="stat-row">
+        <div class="stat"><div class="stat-val" style="color:var(--gravitino)">2,600+</div><div class="stat-lbl">GitHub stars</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--gravitino)">40+</div><div class="stat-lbl">devs per release</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--gravitino)">3,300+</div><div class="stat-lbl">commits</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--gravitino)">v1.2</div><div class="stat-lbl">latest</div></div>
+      </div>
+      <ul>
+        <li><strong>Origin:</strong> Datastrato (China) &rarr; ASF incubating 2024 &rarr; TLP Jun 2025</li>
+        <li><strong>Language:</strong> Java (Gradle build)</li>
+        <li><strong>Focus:</strong> Unified metadata lake &mdash; broad federation, AI-native</li>
+        <li><strong>Table formats:</strong> Iceberg, Hudi, Delta Lake (ext.), Paimon, Lance</li>
+        <li><strong>Backend:</strong> MySQL, PostgreSQL, H2 &mdash; multi-backend</li>
+        <li><strong>v1.2.0 (Mar 2026):</strong> Table Maintenance Service, ClickHouse, Delta external tables, scan planning offload, redesigned Web UI</li>
+        <li><strong>Unique:</strong> MCP server, Model Catalog, Lance REST, Hive 3 bridge, Marquez lineage</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="slabel">Fundamental Philosophy Difference</div>
+  <div class="card" style="border-left:4px solid var(--navy)">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div>
+        <div style="font-size:12px;font-weight:800;color:var(--polaris);margin-bottom:8px">&#127956;&#65039; Polaris &mdash; The Specialist</div>
+        <div style="font-size:11px;line-height:1.8;">Polaris does one thing: Iceberg REST catalog. Stores table pointers, manages snapshots, enforces RBAC, vends credentials, handles atomic commits. Zero ambiguity. Narrowness is a feature. Every line of code serves the Iceberg use case. Think of it as a <strong>precision scalpel</strong>.</div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:800;color:var(--gravitino);margin-bottom:8px">&#127758; Gravitino &mdash; The Generalist</div>
+        <div style="font-size:11px;line-height:1.8;">Gravitino is a unified metadata control plane for your entire data and AI estate. Federates Iceberg, Hive, MySQL, Kafka, HDFS, Delta, Paimon, ML models, and vector stores under one namespace. Has a Table Maintenance Service, MCP server for AI agents, audit logging, lineage. Think of it as a <strong>Swiss Army knife</strong>.</div>
+      </div>
+    </div>
+    <div class="note info" style="margin-top:12px"><strong>The core question for RBC:</strong> Laser-focused Iceberg catalog that does one thing perfectly (Polaris), or federation layer that unifies legacy and modern metadata during a multi-year migration (Gravitino)? Removing Teradata OTF from the architecture has largely answered this in Polaris's favour.</div>
+  </div>
+
+  <div class="slabel" style="margin-top:20px">Project History</div>
+  <div class="card"><div class="timeline">
+    <div class="tl-item"><div class="tl-dot g"></div><div class="tl-date">2023 Q4</div><div class="tl-text">Datastrato publishes Gravitino v0.1 <span class="tl-label lbl-g">Gravitino</span></div></div>
+    <div class="tl-item"><div class="tl-dot g"></div><div class="tl-date">2024 Q1</div><div class="tl-text">Gravitino enters Apache Incubator <span class="tl-label lbl-g">Gravitino</span></div></div>
+    <div class="tl-item"><div class="tl-dot p"></div><div class="tl-date">Jun 2024</div><div class="tl-text">Snowflake announces Polaris Catalog at Data Cloud Summit <span class="tl-label lbl-p">Polaris</span></div></div>
+    <div class="tl-item"><div class="tl-dot p"></div><div class="tl-date">Jul 2024</div><div class="tl-text">Polaris open-sourced (Apache 2.0). Dremio announces Nessie merge into Polaris <span class="tl-label lbl-p">Polaris</span></div></div>
+    <div class="tl-item"><div class="tl-dot p"></div><div class="tl-date">Aug 2024</div><div class="tl-text">Polaris enters ASF incubation. PMC seeded with Snowflake, Dremio, Google, Microsoft, Confluent <span class="tl-label lbl-p">Polaris</span></div></div>
+    <div class="tl-item"><div class="tl-dot g"></div><div class="tl-date">2025 Q1&ndash;Q2</div><div class="tl-text">Gravitino v0.8 &rarr; v0.9: model catalog, credential vending, Iceberg REST standalone service <span class="tl-label lbl-g">Gravitino</span></div></div>
+    <div class="tl-item"><div class="tl-dot g"></div><div class="tl-date">Jun 3, 2025</div><div class="tl-text"><strong>Gravitino graduates to ASF Top-Level Project &mdash; first to TLP</strong> <span class="tl-label lbl-g">Gravitino</span></div></div>
+    <div class="tl-item"><div class="tl-dot g"></div><div class="tl-date">2025 Q3&ndash;Q4</div><div class="tl-text">Gravitino v1.0.0: RBAC enforcement, MCP server, Marquez lineage, Azure AD OAuth2, Iceberg 1.9. v1.1: Lance REST, Hive 3 <span class="tl-label lbl-g">Gravitino</span></div></div>
+    <div class="tl-item"><div class="tl-dot p"></div><div class="tl-date">Feb 2026</div><div class="tl-text"><strong>Polaris graduates to ASF Top-Level Project &mdash; both projects now TLP</strong> <span class="tl-label lbl-p">Polaris</span></div></div>
+    <div class="tl-item"><div class="tl-dot g"></div><div class="tl-date">Mar 13, 2026</div><div class="tl-text">Gravitino v1.2.0: Table Maintenance Service, ClickHouse catalog, Delta Lake external tables, scan planning offload, redesigned web UI <span class="tl-label lbl-g">Gravitino</span></div></div>
+    <div class="tl-item"><div class="tl-dot p"></div><div class="tl-date">Apr 2026</div><div class="tl-text">Dremio announces Iceberg V3 GA with Polaris-powered Open Catalog. Polaris at v1.3 with OPA integration <span class="tl-label lbl-p">Polaris</span></div></div>
+  </div></div>
+</div>
+
+<!-- POLARIS SWOT -->
+<div class="canvas hidden" id="tab-polaris">
+  <div class="slabel">Apache Polaris &mdash; Full SWOT</div>
+  <div class="swot-grid">
+    <div class="swot-quad S">
+      <div class="sq-title" style="color:var(--s)"><div class="letter">S</div>Strengths</div>
+      <ul>
+        <li><strong>Most complete Iceberg REST spec</strong> &mdash; reference-quality implementation, designed alongside spec authors at Snowflake + Iceberg community</li>
+        <li><strong>Best credential vending</strong> &mdash; S3 (AssumeRole), ADLS (SAS), GCS (OAuth2), MinIO STS. Scoped, short-lived tokens per table. Battle-tested via Snowflake production</li>
+        <li><strong>ASF TLP (Feb 2026)</strong> &mdash; graduated, vendor-neutral governance. Not Snowflake&rsquo;s project anymore</li>
+        <li><strong>Diverse, high-quality PMC</strong> &mdash; Snowflake, Dremio, Google, Microsoft, Confluent, LanceDB, Bloomberg, Starburst across 13 members</li>
+        <li><strong>Snowflake Open Catalog</strong> &mdash; managed Polaris with zero config for Snowflake cloud burst. Polaris IS Snowflake&rsquo;s catalog</li>
+        <li><strong>Dremio Open Catalog</strong> &mdash; commercial enterprise offering with SLA, table maintenance, lineage, governance on top of OSS Polaris</li>
+        <li><strong>Quarkus runtime</strong> &mdash; lightweight, fast startup, native compilation support, low memory overhead</li>
+        <li><strong>OPA integration (v1.3)</strong> &mdash; externalize authorization to Open Policy Agent; policy-as-code via Rego</li>
+        <li><strong>Realm-based multi-tenancy</strong> &mdash; hard isolation for business unit separation</li>
+        <li><strong>2,800+ PRs, 100+ contributors</strong> &mdash; fastest contributor growth of any Iceberg catalog in 2024&ndash;2025</li>
+        <li><strong>Clean, focused codebase</strong> &mdash; narrow scope means fewer bugs, easier to audit, lower operational complexity</li>
+        <li><strong>Iceberg V3 aligned</strong> &mdash; Dremio/Snowflake are dominant V3 contributors; Polaris will be first-mover on new spec features</li>
+        <li><strong>Bloomberg on PMC</strong> &mdash; implies financial services production use at scale</li>
+      </ul>
+    </div>
+    <div class="swot-quad W">
+      <div class="sq-title" style="color:var(--w)"><div class="letter">W</div>Weaknesses</div>
+      <ul>
+        <li><strong>Iceberg-only</strong> &mdash; cannot federate HMS, Hive, MySQL, Kafka, or non-Iceberg metadata. Requires Gravitino for legacy migration federation</li>
+        <li><strong>PostgreSQL-only backend</strong> &mdash; no MySQL, MongoDB, H2. Limits deployment flexibility in some enterprise environments</li>
+        <li><strong>No row/column-level security</strong> &mdash; RBAC is table/namespace level. Iceberg REST FGAC spec is in active PR but not ratified. Privacera fills this gap</li>
+        <li><strong>No branching / WAP workflows</strong> &mdash; no Git-for-data versioning natively. Write-Audit-Publish requires Nessie or external mechanism</li>
+        <li><strong>No native AD/LDAP integration</strong> &mdash; requires external OIDC bridge (Keycloak) for Active Directory. Extra infrastructure component vs Gravitino&rsquo;s native Kerberos</li>
+        <li><strong>No UI / governance portal</strong> &mdash; purely API-driven. No built-in data catalog browser or lineage viewer</li>
+        <li><strong>No built-in table maintenance</strong> &mdash; compaction, snapshot expiry, cleanup only in Dremio commercial offering</li>
+        <li><strong>Snowflake/Dremio concentration</strong> &mdash; despite TLP, ~80% of core commits from these two vendors. Community diversity improving but not balanced</li>
+        <li><strong>Limited self-hosted bank-scale evidence</strong> &mdash; production evidence is Snowflake managed, not self-hosted enterprise deployments</li>
+        <li><strong>No multi-format support</strong> &mdash; Delta Lake, Hudi, Paimon cannot be managed by Polaris</li>
+      </ul>
+    </div>
+    <div class="swot-quad O">
+      <div class="sq-title" style="color:var(--o)"><div class="letter">O</div>Opportunities</div>
+      <ul>
+        <li><strong>Iceberg REST FGAC spec</strong> &mdash; when ratified, Polaris implements catalog-native row/column security, reducing engine-side enforcement dependency</li>
+        <li><strong>Polaris federation (v1.3)</strong> &mdash; ability to sync and proxy external catalogs (Nessie, Gravitino, Lakekeeper) creates unified namespace without migration</li>
+        <li><strong>Nessie merge roadmap</strong> &mdash; Dremio announced Nessie capabilities (branching, WAP) would flow into Polaris natively</li>
+        <li><strong>Iceberg V3 first-mover</strong> &mdash; Polaris will be first to implement V3 catalog features (VARIANT, deletion vectors, row-level lineage)</li>
+        <li><strong>Financial services traction</strong> &mdash; Bloomberg and Starburst on PMC signal regulated industry adoption growing</li>
+        <li><strong>Growing managed service options</strong> &mdash; both Snowflake and Dremio offer enterprise SLA managed Polaris, reducing operational risk</li>
+      </ul>
+    </div>
+    <div class="swot-quad T">
+      <div class="sq-title" style="color:var(--t)"><div class="letter">T</div>Threats</div>
+      <ul>
+        <li><strong>Vendor concentration risk</strong> &mdash; Snowflake and Dremio co-govern roadmap. Commercial interests could diverge from community needs even under TLP</li>
+        <li><strong>Gravitino closing the gap</strong> &mdash; Gravitino v1.2 has credential vending, RBAC, and Iceberg REST. If Gravitino matures its Iceberg REST service, Polaris&rsquo; advantage narrows</li>
+        <li><strong>Lakekeeper as lightweight challenger</strong> &mdash; Rust-based, single-binary, same REST spec. Niche but growing</li>
+        <li><strong>Unity Catalog convergence</strong> &mdash; Databricks moving toward full REST catalog compliance could reduce need for Polaris in Databricks shops</li>
+        <li><strong>Iceberg-only bet</strong> &mdash; if Delta or Hudi gains market share vs Iceberg, Polaris&rsquo; single-format focus becomes a constraint</li>
+        <li><strong>FGAC spec delay</strong> &mdash; REST FGAC spec has been in discussion 12+ months. If it stalls, column/row security dependency on external tools continues indefinitely</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note tip" style="margin-top:14px"><strong>Polaris in one sentence:</strong> The most technically complete Iceberg REST catalog available &mdash; narrow focus, best credential vending, best spec compliance, now fully ASF-governed &mdash; the right choice for any pure-Iceberg estate where legacy federation is not required.</div>
+</div>
+
+<!-- GRAVITINO SWOT -->
+<div class="canvas hidden" id="tab-gravitino">
+  <div class="slabel">Apache Gravitino &mdash; Full SWOT</div>
+  <div class="swot-grid">
+    <div class="swot-quad S">
+      <div class="sq-title" style="color:var(--s)"><div class="letter">S</div>Strengths</div>
+      <ul>
+        <li><strong>ASF TLP (Jun 2025)</strong> &mdash; 9 months ahead of Polaris. First to demonstrate governance maturity</li>
+        <li><strong>Multi-format federation</strong> &mdash; Iceberg, Hudi, Delta Lake (external v1.2), Paimon, Lance under one namespace. Unique in the catalog landscape</li>
+        <li><strong>Catalog-of-catalogs (metalake)</strong> &mdash; federates HMS, MySQL, Kafka, HDFS, S3 alongside Iceberg. Critical for enterprises migrating from legacy systems</li>
+        <li><strong>Kerberos native</strong> &mdash; best-fit for on-prem AD/Kerberos environments. No Keycloak bridge needed</li>
+        <li><strong>Azure AD OAuth2 login (v1.0)</strong> &mdash; direct Entra ID integration</li>
+        <li><strong>Hive 3 catalog support (v1.1)</strong> &mdash; register Hive 3 metastores directly; legacy data governed without migration</li>
+        <li><strong>Table Maintenance Service (v1.2)</strong> &mdash; automatic compaction, snapshot expiry, cleanup built-in. No external tooling needed</li>
+        <li><strong>Marquez lineage integration (v1.0)</strong> &mdash; built-in lineage without separate OpenLineage pipeline</li>
+        <li><strong>2,600+ GitHub stars, 130% growth</strong> &mdash; fastest community growth of any catalog in 2025</li>
+        <li><strong>Multi-backend (MySQL/PostgreSQL/H2)</strong> &mdash; flexible persistence</li>
+        <li><strong>AI-native roadmap</strong> &mdash; MCP server, Lance REST, Model Catalog. Positions Gravitino as metadata layer for AI data stacks</li>
+        <li><strong>Scan planning offload (v1.2)</strong> &mdash; reduces client-side query latency for Spark/DuckDB</li>
+        <li><strong>Redesigned Web UI (v1.2)</strong> &mdash; Polaris has no UI; Gravitino ships a full governance portal</li>
+        <li><strong>More OSS features</strong> &mdash; table maintenance, lineage, UI all in open source; Polaris reserves these for commercial tier</li>
+      </ul>
+    </div>
+    <div class="swot-quad W">
+      <div class="sq-title" style="color:var(--w)"><div class="letter">W</div>Weaknesses</div>
+      <ul>
+        <li><strong>Datastrato concentration</strong> &mdash; despite TLP, Datastrato employees remain dominant contributors. PMC diversity less broad than Polaris (no Google, Microsoft, Confluent equivalents)</li>
+        <li><strong>China-origin perception risk</strong> &mdash; Datastrato&rsquo;s Chinese origins may trigger additional scrutiny under OSFI B-10 third-party risk. Not a technical issue, but a procurement reality at Canadian banks</li>
+        <li><strong>Credential vending less mature</strong> &mdash; added later than Polaris; production validation at scale is more limited</li>
+        <li><strong>Iceberg REST service is a wrapper</strong> &mdash; wraps the standard Iceberg library rather than native implementation. May lag on leading-edge spec features</li>
+        <li><strong>Ambitious scope = complexity</strong> &mdash; TMS, MCP, Lance, ClickHouse, Delta, Paimon, vector stores &mdash; every feature is a maintenance surface</li>
+        <li><strong>No managed SaaS equivalent to Snowflake Open Catalog</strong> &mdash; Datastrato commercial offering has limited enterprise reach</li>
+        <li><strong>Databricks cloud burst less proven</strong> &mdash; less community testing and documentation vs Polaris path</li>
+        <li><strong>Trino connector lacks CTAS</strong> &mdash; CREATE TABLE AS SELECT not yet supported in Gravitino Trino connector</li>
+        <li><strong>No catalog-level column masking</strong> &mdash; view-level permissions in v1.2 but no column masking or row filtering. Privacera still required</li>
+        <li><strong>Rapid release pace</strong> &mdash; v0.8 to v1.2 in 12 months. Velocity is positive, but banks need predictable, stable releases</li>
+      </ul>
+    </div>
+    <div class="swot-quad O">
+      <div class="sq-title" style="color:var(--o)"><div class="letter">O</div>Opportunities</div>
+      <ul>
+        <li><strong>Legacy migration bridge</strong> &mdash; for enterprises with HMS/Hive 3/MySQL metadata, Gravitino is the only open-source catalog that federates these alongside Iceberg without rip-and-replace</li>
+        <li><strong>AI-native positioning</strong> &mdash; MCP server + Model Catalog + Lance REST uniquely positions Gravitino for enterprises building AI data stacks. No other open catalog has this combination</li>
+        <li><strong>ABAC roadmap</strong> &mdash; attribute-based access control planned; when implemented, applies across all federated catalogs simultaneously via unified namespace</li>
+        <li><strong>Delta Lake bridge from Unity Catalog</strong> &mdash; Delta external tables make Gravitino the natural cross-format governance layer for Databricks + on-prem Iceberg shops</li>
+        <li><strong>Polaris federation mode</strong> &mdash; Gravitino can sit in front of Polaris, combining Polaris&rsquo; superior Iceberg REST with Gravitino&rsquo;s federation. This is the RBC architecture</li>
+      </ul>
+    </div>
+    <div class="swot-quad T">
+      <div class="sq-title" style="color:var(--t)"><div class="letter">T</div>Threats</div>
+      <ul>
+        <li><strong>Datastrato commercial risk</strong> &mdash; if Datastrato faces financial difficulty, the contributor base could fragment. Less backstop than Polaris&rsquo; dual-vendor Snowflake/Dremio model</li>
+        <li><strong>Scope fragmentation</strong> &mdash; trying to be the catalog for AI models, vector data, Delta, Hudi, Kafka, and Iceberg risks delivering nothing great vs Polaris delivering one thing exceptionally</li>
+        <li><strong>Polaris federation feature</strong> &mdash; Polaris v1.3 introduced catalog federation. If Polaris can federate Gravitino, the need to run Gravitino standalone diminishes</li>
+        <li><strong>Security team perception</strong> &mdash; Datastrato origins + rapid release cadence + broad scope may trigger caution from enterprise security reviewers</li>
+        <li><strong>HMS bridge becomes commoditised</strong> &mdash; as enterprises complete Iceberg migrations, the HMS federation differentiator erodes</li>
+        <li><strong>Iceberg FGAC spec</strong> &mdash; if Polaris implements catalog-native column security first (as likely given spec co-authorship), Gravitino&rsquo;s feature gap in this area widens</li>
+      </ul>
+    </div>
+  </div>
+  <div class="note info" style="margin-top:14px"><strong>Gravitino in one sentence:</strong> The most capable multi-format federation layer in the open catalog landscape &mdash; uniquely qualified for enterprises governing Iceberg alongside legacy Hive, Delta, Kafka, and AI models &mdash; but that breadth comes with complexity, a concentrated contributor base, and an ambitious roadmap that may outpace operational maturity.</div>
+</div>
+
+<!-- HEAD-TO-HEAD -->
+<div class="canvas hidden" id="tab-compare">
+  <div class="slabel">Head-to-Head Comparison</div>
+  <div style="overflow-x:auto">
+  <table class="ctable">
+    <thead><tr><th class="ch" style="min-width:170px">Dimension</th><th class="ch-p" style="min-width:190px">Apache Polaris</th><th class="ch-g" style="min-width:190px">Apache Gravitino</th><th class="ch" style="min-width:90px">Edge</th></tr></thead>
+    <tbody>
+      <tr class="cat-row"><td colspan="4">GOVERNANCE &amp; OPEN SOURCE</td></tr>
+      <tr><td><strong>ASF TLP status</strong></td><td>TLP Feb 2026</td><td>TLP Jun 2025</td><td><span class="pill p-part">&#8776; both TLP</span></td></tr>
+      <tr><td><strong>Time as TLP</strong></td><td>2 months (Apr 2026)</td><td>10 months</td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr><td><strong>PMC diversity</strong></td><td>Snowflake, Dremio, Google, Microsoft, Confluent, LanceDB, Bloomberg, Starburst</td><td>Datastrato-heavy; diversifying</td><td><span class="pill p-edge">Polaris</span></td></tr>
+      <tr><td><strong>Primary commercial backer</strong></td><td>Snowflake + Dremio (dual)</td><td>Datastrato (single)</td><td><span class="pill p-edge">Polaris</span></td></tr>
+      <tr><td><strong>GitHub stars</strong></td><td>1.8k</td><td>2,600+</td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr class="cat-row"><td colspan="4">ICEBERG REST CATALOG</td></tr>
+      <tr><td><strong>Iceberg REST spec compliance</strong></td><td><span class="pill p-yes">&#10003; Reference implementation</span></td><td><span class="pill p-part">&#9888; Library wrapper</span></td><td><span class="pill p-edge">Polaris</span></td></tr>
+      <tr><td><strong>Credential vending</strong></td><td><span class="pill p-yes">&#10003; Best: S3, ADLS, GCS, MinIO</span></td><td><span class="pill p-part">&#9888; Added v1.0 &mdash; less battle-tested</span></td><td><span class="pill p-edge">Polaris</span></td></tr>
+      <tr><td><strong>Atomic commits</strong></td><td><span class="pill p-yes">&#10003; Optimistic CAS</span></td><td><span class="pill p-yes">&#10003; Optimistic CAS</span></td><td><span class="pill p-part">&#8276; tie</span></td></tr>
+      <tr class="cat-row"><td colspan="4">TABLE FORMAT SUPPORT</td></tr>
+      <tr><td>Apache Iceberg</td><td><span class="pill p-yes">&#10003; Primary</span></td><td><span class="pill p-yes">&#10003; Primary</span></td><td><span class="pill p-part">&#8276; tie</span></td></tr>
+      <tr><td>Delta Lake</td><td><span class="pill p-no">&#10007; Not supported</span></td><td><span class="pill p-part">&#9888; External tables v1.2</span></td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr><td>Apache Hudi</td><td><span class="pill p-no">&#10007; No</span></td><td><span class="pill p-yes">&#10003; Yes</span></td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr><td>HMS / Hive 3</td><td><span class="pill p-no">&#10007; No federation</span></td><td><span class="pill p-yes">&#10003; Native bridge</span></td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr><td>Kafka / Streaming metadata</td><td><span class="pill p-no">&#10007; No</span></td><td><span class="pill p-yes">&#10003; Yes</span></td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr class="cat-row"><td colspan="4">ENGINE INTEGRATIONS</td></tr>
+      <tr><td>Apache Spark</td><td><span class="pill p-yes">&#10003; REST client</span></td><td><span class="pill p-yes">&#10003; Dedicated connector</span></td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino (dedicated)</span></td></tr>
+      <tr><td>Trino</td><td><span class="pill p-yes">&#10003; REST client v475+</span></td><td><span class="pill p-part">&#9888; Dedicated (no CTAS)</span></td><td><span class="pill p-part">&#8276; comparable</span></td></tr>
+      <tr><td>Databricks cloud burst</td><td><span class="pill p-yes">&#10003; DBR 16.4+ REST client</span></td><td><span class="pill p-part">&#9888; Less tested</span></td><td><span class="pill p-edge">Polaris</span></td></tr>
+      <tr><td>Snowflake</td><td><span class="pill p-yes">&#10003; Open Catalog = managed Polaris</span></td><td><span class="pill p-no">&#10007; No path</span></td><td><span class="pill p-edge">Polaris</span></td></tr>
+      <tr class="cat-row"><td colspan="4">SECURITY &amp; GOVERNANCE</td></tr>
+      <tr><td>Table-level RBAC</td><td><span class="pill p-yes">&#10003; Two-tier role model</span></td><td><span class="pill p-yes">&#10003; Metalake hierarchy</span></td><td><span class="pill p-part">&#8276; comparable</span></td></tr>
+      <tr><td>Column masking / row security</td><td><span class="pill p-no">&#10007; FGAC spec pending</span></td><td><span class="pill p-no">&#10007; View-level only (v1.2)</span></td><td><span class="pill p-part">&#8276; both need Privacera</span></td></tr>
+      <tr><td>OPA integration</td><td><span class="pill p-yes">&#10003; Native (v1.3)</span></td><td><span class="pill p-part">&#9888; Via plugin</span></td><td><span class="pill p-edge">Polaris</span></td></tr>
+      <tr><td>AD/LDAP / Kerberos</td><td><span class="pill p-part">&#9888; Requires Keycloak bridge</span></td><td><span class="pill p-yes">&#10003; Kerberos native + Azure AD</span></td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr><td>Audit logging</td><td><span class="pill p-part">&#9888; Catalog events (basic)</span></td><td><span class="pill p-yes">&#10003; Full audit log (v1.0)</span></td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr class="cat-row"><td colspan="4">OPERATIONS</td></tr>
+      <tr><td>Metadata backend</td><td>PostgreSQL only</td><td>MySQL, PostgreSQL, H2</td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr><td>Table maintenance (compaction)</td><td><span class="pill p-no">&#10007; Dremio commercial only</span></td><td><span class="pill p-yes">&#10003; TMS built-in (v1.2)</span></td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr><td>Web UI</td><td><span class="pill p-no">&#10007; None</span></td><td><span class="pill p-yes">&#10003; Redesigned (v1.2)</span></td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr><td>Lineage built-in</td><td><span class="pill p-no">&#10007; Not built-in</span></td><td><span class="pill p-yes">&#10003; Marquez integration (v1.0)</span></td><td><span class="pill" style="background:#D5F5E3;color:#065F46">Gravitino</span></td></tr>
+      <tr><td>Operational complexity</td><td>Low &mdash; single service, one DB</td><td>Medium-High &mdash; many subsystems</td><td><span class="pill p-edge">Polaris</span></td></tr>
+      <tr class="cat-row"><td colspan="4">COMMERCIAL &amp; MARKET</td></tr>
+      <tr><td>Managed SaaS</td><td>Snowflake Open Catalog (global) + Dremio</td><td>Datastrato (limited reach)</td><td><span class="pill p-edge">Polaris</span></td></tr>
+      <tr><td>Enterprise support SLA</td><td>Snowflake or Dremio enterprise</td><td>Datastrato (limited)</td><td><span class="pill p-edge">Polaris</span></td></tr>
+      <tr><td><strong>RBC primary catalog</strong></td><td><span class="pill p-yes">&#10003; Yes</span></td><td><span class="pill p-part">&#9888; Federation bridge if needed</span></td><td><span class="pill p-edge">Polaris primary</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note tip" style="margin-top:12px"><strong>Score summary:</strong> Polaris wins on Iceberg purity, credential vending, cloud burst (especially Snowflake), OPA, and enterprise support. Gravitino wins on multi-format breadth, legacy federation, native AD/Kerberos, table maintenance, audit logging, and web UI. For RBC&rsquo;s pure-Iceberg cloud-burst-to-Snowflake architecture, Polaris dominates.</div>
+</div>
+
+<!-- MARKET -->
+<div class="canvas hidden" id="tab-market">
+  <div class="slabel">Market Position</div>
+  <div class="card" style="margin-bottom:14px">
+    <div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:14px">Open Source Iceberg Catalog Landscape &mdash; Estimated Share, April 2026</div>
+    <div class="bar-row"><div class="bar-label" style="color:var(--polaris)">Polaris</div><div class="bar-track"><div class="bar-fill" style="width:45%;background:var(--polaris)"></div></div><div class="bar-val">~45% (Iceberg-only shops)</div></div>
+    <div class="bar-row"><div class="bar-label" style="color:var(--gravitino)">Gravitino</div><div class="bar-track"><div class="bar-fill" style="width:20%;background:var(--gravitino)"></div></div><div class="bar-val">~20% (growing in multi-format)</div></div>
+    <div class="bar-row"><div class="bar-label" style="color:#7C3AED">Nessie</div><div class="bar-track"><div class="bar-fill" style="width:15%;background:#7C3AED"></div></div><div class="bar-val">~15% (Dremio ecosystem)</div></div>
+    <div class="bar-row"><div class="bar-label" style="color:#94A3B8">HMS (legacy)</div><div class="bar-track"><div class="bar-fill" style="width:12%;background:#CBD5E1"></div></div><div class="bar-val">~12% (declining enterprise Hadoop)</div></div>
+    <div class="bar-row"><div class="bar-label" style="color:#7F8C8D">Others</div><div class="bar-track"><div class="bar-fill" style="width:8%;background:#E2E8F0"></div></div><div class="bar-val">~8%</div></div>
+    <div style="font-size:9px;font-family:'DM Mono',monospace;color:var(--muted);margin-top:8px">Estimates only &mdash; no authoritative data. AWS Glue dominates cloud-managed catalog (~39%) but is cloud-only and excluded here. These reflect open-source self-hosted adoption among Iceberg practitioners.</div>
+  </div>
+  <div class="market-grid">
+    <div class="market-box" style="border-color:var(--polaris-b);background:var(--polaris-bg)">
+      <div class="mb-title" style="color:var(--polaris)">Who uses Polaris?</div>
+      <div class="mb-body">Snowflake customers (Open Catalog) &middot; Dremio customers &middot; Bloomberg (financial services production) &middot; Starburst (Trino enterprise) &middot; Pure Iceberg shops wanting simple ops &middot; Cloud-native startups on Iceberg + Snowflake</div>
+    </div>
+    <div class="market-box" style="border-color:var(--gravitino-b);background:var(--gravitino-bg)">
+      <div class="mb-title" style="color:var(--gravitino)">Who uses Gravitino?</div>
+      <div class="mb-body">Chinese hyperscalers (Alibaba, ByteDance ecosystem) &middot; Enterprises with Hive 3 + Iceberg mixed estates &middot; Teams needing multi-format governance &middot; AI/ML platforms using the model catalog &middot; Organizations migrating from Cloudera HMS</div>
+    </div>
+    <div class="market-box" style="border-color:#DDD6FE;background:#FAF5FF">
+      <div class="mb-title" style="color:#4C1D95">Broader catalog war</div>
+      <div class="mb-body">Databricks Unity Catalog (enterprise, Databricks-native) &middot; AWS Glue (cloud, 39% market share) &middot; Lakekeeper (Rust, lightweight OSS) &middot; DuckLake (emerging, SQL-database backed) &middot; All moving toward Iceberg REST API compliance</div>
+    </div>
+  </div>
+  <div class="slabel">Are They Truly Open Source?</div>
+  <div class="card">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+      <div>
+        <div style="font-size:11px;font-weight:800;color:var(--polaris);margin-bottom:8px">Polaris Open Source Assessment</div>
+        <div style="font-size:10px;line-height:1.9;">
+          <strong style="color:#059669">&#10003; Apache 2.0</strong> &mdash; fully permissive, can fork freely<br/>
+          <strong style="color:#059669">&#10003; ASF TLP</strong> &mdash; vendor cannot unilaterally change license or direction<br/>
+          <strong style="color:#059669">&#10003; IP donated to ASF</strong> &mdash; Snowflake donated the trademark<br/>
+          <strong style="color:#D97706">&#9888; Open core risk</strong> &mdash; key enterprise features (compaction, lineage, governance) only in Dremio/Snowflake commercial products. OSS Polaris is the engine; enterprise features are the commercial moat<br/>
+          <strong style="color:#059669">&#10003; ASF graduation process</strong> &mdash; demonstrated community health, vendor neutrality, release independence
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:800;color:var(--gravitino);margin-bottom:8px">Gravitino Open Source Assessment</div>
+        <div style="font-size:10px;line-height:1.9;">
+          <strong style="color:#059669">&#10003; Apache 2.0</strong> &mdash; fully permissive<br/>
+          <strong style="color:#059669">&#10003; ASF TLP</strong> &mdash; graduated June 2025<br/>
+          <strong style="color:#D97706">&#9888; Datastrato concentration</strong> &mdash; single commercial entity drives most commits<br/>
+          <strong style="color:#059669">&#10003; More features in OSS</strong> &mdash; table maintenance, lineage, web UI all in the open-source release; not reserved for a commercial tier like Polaris<br/>
+          <strong style="color:#D97706">&#9888; China-origin perception</strong> &mdash; not a legal issue (Apache 2.0 is Apache 2.0) but may require additional procurement scrutiny under OSFI B-10 at RBC specifically
+        </div>
+      </div>
+    </div>
+    <div class="note warn" style="margin-top:12px"><strong>Both carry "open source theatre" risk:</strong> Polaris&rsquo;s most production-ready deployments (Snowflake Open Catalog, Dremio Open Catalog) are commercial with proprietary add-ons. Gravitino&rsquo;s main backer (Datastrato) has limited enterprise reach. Under Apache 2.0, both projects give RBC the right to self-host, audit code, and avoid vendor lock-in &mdash; the risk is commercial concentration, not license terms.</div>
+  </div>
+</div>
+
+<!-- VERDICT -->
+<div class="canvas hidden" id="tab-verdict">
+  <div class="slabel">RBC Recommendation</div>
+  <div class="verdict-box" style="border-color:var(--polaris-b);background:var(--polaris-bg)">
+    <div class="verdict-title" style="color:var(--polaris)">Primary Recommendation: Apache Polaris</div>
+    <div class="verdict-body">For RBC&rsquo;s architecture &mdash; pure Iceberg V2, no Teradata OTF dependency, cloud burst to Snowflake and Databricks, Privacera for security &mdash; <strong>Apache Polaris is the correct primary catalog</strong>. Removing OTF eliminated the only meaningful gap Polaris had. What remains is the most complete Iceberg REST implementation available, with the best credential vending, the best cloud burst story (Snowflake Open Catalog = zero-config), and now ASF TLP governance.<br/><br/>The February 2026 graduation resolves the biggest concern from earlier in this research cycle. Polaris is no longer incubating. It is a full Apache project with Snowflake, Dremio, Google, Microsoft, and Confluent on the PMC. Bloomberg is a committer, implying financial services production use. This is now a defensible enterprise architectural commitment.</div>
+  </div>
+  <div class="verdict-box" style="border-color:var(--gravitino-b);background:var(--gravitino-bg)">
+    <div class="verdict-title" style="color:var(--gravitino)">Secondary Role: Gravitino as Migration Bridge (if needed)</div>
+    <div class="verdict-body">Gravitino remains relevant for RBC in one specific scenario: if the HMS migration from legacy Cloudera/Hive tables is a multi-year programme, Gravitino as a federation layer presents a unified Polaris+HMS namespace to engines and Privacera without requiring migration to complete before production go-live.<br/><br/>Once the migration is complete, Gravitino can be removed &mdash; Polaris stands alone. <strong>If there is no meaningful HMS migration</strong>, Gravitino adds complexity without value. Deploy Polaris only.</div>
+  </div>
+  <div class="slabel">Decision Guide</div>
+  <div style="overflow-x:auto"><table class="ctable">
+    <thead><tr><th class="ch">Situation</th><th class="ch-p">Use Polaris</th><th class="ch-g">Use Gravitino</th></tr></thead>
+    <tbody>
+      <tr><td>Pure Iceberg, no legacy HMS</td><td><span class="pill p-yes">&#10003; Primary choice</span></td><td><span class="pill p-no">Not needed</span></td></tr>
+      <tr><td>Cloud burst to Snowflake</td><td><span class="pill p-yes">&#10003; Open Catalog = zero config</span></td><td><span class="pill p-no">No path</span></td></tr>
+      <tr><td>Cloud burst to Databricks</td><td><span class="pill p-yes">&#10003; DBR 16.4+ REST</span></td><td><span class="pill p-part">&#9888; Less tested</span></td></tr>
+      <tr><td>Existing Hive/HMS migration (2+ years)</td><td><span class="pill p-no">Cannot federate</span></td><td><span class="pill p-yes">&#10003; HMS bridge is unique value</span></td></tr>
+      <tr><td>Delta Lake tables alongside Iceberg</td><td><span class="pill p-no">Iceberg only</span></td><td><span class="pill p-yes">&#10003; Delta external (v1.2)</span></td></tr>
+      <tr><td>Built-in table maintenance needed</td><td><span class="pill p-no">Dremio commercial only</span></td><td><span class="pill p-yes">&#10003; TMS built-in</span></td></tr>
+      <tr><td>Web UI for data stewards</td><td><span class="pill p-no">No UI</span></td><td><span class="pill p-yes">&#10003; Redesigned UI (v1.2)</span></td></tr>
+      <tr><td>Minimum operational complexity</td><td><span class="pill p-yes">&#10003; One service, one DB</span></td><td><span class="pill p-part">&#9888; Multiple subsystems</span></td></tr>
+      <tr><td>Enterprise support SLA required</td><td><span class="pill p-yes">&#10003; Snowflake or Dremio</span></td><td><span class="pill p-part">&#9888; Datastrato limited</span></td></tr>
+      <tr><td>ASF TLP governance</td><td><span class="pill p-yes">&#10003; TLP Feb 2026</span></td><td><span class="pill p-yes">&#10003; TLP Jun 2025</span></td></tr>
+      <tr><td>AI/ML model catalog needed</td><td><span class="pill p-no">Not in scope</span></td><td><span class="pill p-yes">&#10003; Model catalog (v1.0)</span></td></tr>
+      <tr><td>Kerberos native (no Keycloak bridge)</td><td><span class="pill p-no">Requires OIDC bridge</span></td><td><span class="pill p-yes">&#10003; Native</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="note alert" style="margin-top:14px"><strong>&#9888; Critical pre-commitment validation:</strong> Confirm with Privacera that schema sync via Polaris REST API is a tested, supported integration in their current production release. Privacera&rsquo;s most mature catalog integrations are HMS (Thrift) and AWS Glue. Polaris REST sync is newer territory. Run a POC against your AD/LDAP + Polaris + Privacera stack before architectural lock-in.</div>
+  <div class="note tip" style="margin-top:8px"><strong>&#128077; Updated vs earlier analysis:</strong> In earlier sessions, we flagged Polaris&rsquo;s &ldquo;ASF Incubating&rdquo; status as the primary concern. That concern is resolved as of February 2026. The recommendation is strengthened: Polaris is the right choice, and you can now make that commitment with governance confidence as well as technical confidence.</div>
+</div>
+
+<div class="footer">
+  <span>Lumina &middot; RBC Enterprise Data &middot; Polaris vs Gravitino Deep Dive SWOT &middot; April 2026</span>
+  <span>George Chilakos, VP Enterprise Data</span>
+</div>
+<script>
+const tabIds=['overview','polaris','gravitino','compare','market','verdict'];
+function showTab(id,btn){tabIds.forEach(t=>document.getElementById('tab-'+t).classList.add('hidden'));document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.remove('hidden');btn.classList.add('active');}
+</script>
+</body>
+</html>
