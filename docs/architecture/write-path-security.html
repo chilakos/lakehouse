@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lakehouse Write Path — Raw to Gold with Security Enforcement</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A1628;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);padding-bottom:60px;}
+.hero{background:var(--navy);padding:40px 32px 32px;}
+.back{font-size:10px;font-family:'DM Mono',monospace;color:#475569;margin-bottom:14px;}
+.back a{color:#94A3B8;text-decoration:none;}
+.hero h1{font-family:'Lora',serif;font-size:26px;font-weight:600;color:#fff;margin-bottom:8px;}
+.hero p{font-size:12px;color:#94A3B8;max-width:680px;line-height:1.7;}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.pill{font-size:9px;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:#94A3B8;}
+
+.tabs{display:flex;gap:6px;max-width:1080px;margin:0 auto;padding:20px 24px 0;flex-wrap:wrap;}
+.tab{padding:6px 16px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:#E0E7EF;color:#64748B;transition:all 0.15s;}
+.tab.active{background:var(--navy);color:#fff;}
+.panel{display:none;max-width:1080px;margin:0 auto;padding:20px 24px 0;}
+.panel.active{display:block;}
+
+.slabel{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin:20px 0 12px;}
+.slabel:first-child{margin-top:0;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--line);}
+
+/* step cards */
+.step{background:#fff;border-radius:10px;border:1.5px solid var(--line);padding:16px 18px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start;}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#fff;flex-shrink:0;margin-top:1px;}
+.step-body{flex:1;}
+.step-title{font-size:12px;font-weight:700;margin-bottom:4px;}
+.step-detail{font-size:11px;color:var(--muted);line-height:1.7;}
+pre{font-family:'DM Mono',monospace;font-size:10px;background:#0F172A;color:#E2E8F0;padding:10px 14px;border-radius:7px;margin-top:8px;overflow-x:auto;line-height:1.7;}
+.kw{color:#93C5FD;}
+.fn{color:#6EE7B7;}
+.st{color:#FDE68A;}
+.cm{color:#64748B;}
+.sec-badge{display:inline-block;font-size:9px;font-family:'DM Mono',monospace;padding:2px 8px;border-radius:4px;margin-top:6px;font-weight:600;}
+
+.note{border-radius:8px;padding:10px 14px;font-size:11px;line-height:1.7;margin:10px 0;}
+.note.key{background:#0A1628;border:1.5px solid #1E4D8C;color:#E2E8F0;}
+.note.tip{background:#F0FDF4;border:1.5px solid #BBF7D0;color:#065F46;}
+.note.warn{background:#FFF7ED;border:1.5px solid #FED7AA;color:#78350F;}
+.note.info{background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1E3A5F;}
+
+/* layer flow */
+.layer-flow{display:flex;flex-direction:column;gap:0;}
+.lf-item{display:flex;gap:12px;align-items:stretch;}
+.lf-spine{display:flex;flex-direction:column;align-items:center;width:36px;flex-shrink:0;}
+.lf-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;margin-top:18px;}
+.lf-line{width:2px;flex:1;background:var(--line);}
+.lf-card{flex:1;background:#fff;border-radius:10px;border:1.5px solid var(--line);padding:14px 16px;margin-bottom:10px;}
+.lf-layer{font-size:11px;font-weight:700;margin-bottom:3px;}
+.lf-sub{font-size:10px;color:var(--muted);margin-bottom:8px;}
+.lf-rows{display:flex;flex-direction:column;gap:4px;}
+.lf-row{font-size:10px;line-height:1.6;display:flex;gap:6px;align-items:flex-start;}
+.lf-icon{flex-shrink:0;width:16px;text-align:center;}
+
+/* security overlay */
+.sec-rail{background:#FFF7ED;border:1.5px dashed #FED7AA;border-radius:10px;padding:12px 16px;margin:10px 0;}
+.sec-rail-title{font-size:10px;font-weight:700;color:#78350F;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+.sec-point{font-size:10px;color:#92400E;line-height:1.7;padding:3px 0;border-bottom:1px solid #FDE68A;}
+.sec-point:last-child{border-bottom:none;}
+
+.ctable{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:10px;}
+.ctable th{padding:8px 11px;text-align:left;font-weight:700;background:var(--navy);color:#fff;}
+.ctable td{padding:7px 11px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6;}
+.ctable tr:nth-child(even) td{background:#F8FAFC;}
+
+.footer{max-width:1080px;margin:28px auto 0;padding:14px 24px 0;border-top:1px solid var(--line);font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div style="max-width:1080px;margin:0 auto"><div class="back"><a href="../">&#8592; Lakehouse Hub</a></div></div>
+  <h1>Write Path: Raw &rarr; Bronze &rarr; Silver &rarr; Gold</h1>
+  <p>How Python pipelines write data through the medallion layers, how Polaris credential vending controls storage access, and how Trust3 AI or Immuta enforce access policies at every query boundary. Written against the actual pipeline code in this repo.</p>
+  <div class="pills">
+    <span class="pill">Python pipelines &middot; ADR-005</span>
+    <span class="pill">Polaris REST catalog</span>
+    <span class="pill">MinIO STS credential vending</span>
+    <span class="pill">Trust3 AI or Immuta enforcement</span>
+    <span class="pill">Iceberg V2 &middot; Parquet on MinIO</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="go('write',this)">Write path</button>
+  <button class="tab" onclick="go('security',this)">Security enforcement</button>
+  <button class="tab" onclick="go('code',this)">Code walk-through</button>
+  <button class="tab" onclick="go('diff',this)">Trust3 AI vs Immuta</button>
+</div>
+
+<!-- WRITE PATH -->
+<div class="panel active" id="panel-write">
+
+  <div class="note key"><strong>The key insight:</strong> Security tools (Trust3 AI / Immuta) do NOT sit in the write path. They enforce at query time when someone reads data. The write path is controlled by Polaris credential vending &mdash; the pipeline service account has write permission to specific Iceberg table prefixes and nothing else. This is a deliberate separation: governance enforces who can read; credential vending controls what can be written to.</div>
+
+  <div class="slabel">Full write path &mdash; Raw to Gold</div>
+
+  <div class="layer-flow">
+
+    <div class="lf-item">
+      <div class="lf-spine"><div class="lf-dot" style="background:#78350F"></div><div class="lf-line"></div></div>
+      <div class="lf-card" style="border-color:#FDE68A;background:#FFFBEB">
+        <div class="lf-layer" style="color:#78350F">Step 1 &mdash; Source file lands in staging</div>
+        <div class="lf-sub">Mainframe SFTP / Connect:Direct drop zone &rarr; local staging directory on the ingestion pod</div>
+        <div class="lf-rows">
+          <div class="lf-row"><div class="lf-icon">&#128196;</div><div>Raw binary file arrives: <code style="font-size:9px;background:#FEF3C7;padding:1px 3px;border-radius:2px">accounts_20260411.dat</code> (EBCDIC-encoded mainframe extract)</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128204;</div><div>No transformation at this stage. File is stored exactly as received.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lf-item">
+      <div class="lf-spine"><div class="lf-dot" style="background:#1E3A5F"></div><div class="lf-line"></div></div>
+      <div class="lf-card" style="border-color:#BFDBFE;background:#EFF6FF">
+        <div class="lf-layer" style="color:#1E3A5F">Step 2 &mdash; RawZoneManager uploads to MinIO (no Polaris, no Iceberg)</div>
+        <div class="lf-sub">Python: <code style="font-size:9px;background:#DBEAFE;padding:1px 3px;border-radius:2px">etl/src/ingestion/raw_zone.py</code></div>
+        <div class="lf-rows">
+          <div class="lf-row"><div class="lf-icon">&#128272;</div><div><strong>Auth:</strong> Pipeline service account JWT &rarr; HashiCorp Vault &rarr; retrieves MinIO access key for the <code style="font-size:9px;background:#DBEAFE;padding:1px 3px;border-radius:2px">s3://lakehouse-raw/</code> bucket</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128230;</div><div><strong>Write:</strong> <code style="font-size:9px;background:#DBEAFE;padding:1px 3px;border-radius:2px">s3://lakehouse-raw/raw/mainframe/core-banking/2026-04-11/accounts_20260411.dat</code></div></div>
+          <div class="lf-row"><div class="lf-icon">&#9989;</div><div><strong>Metadata:</strong> MD5 checksum, file size, arrival timestamp written to manifest. This is the OSFI forensic anchor.</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128196;</div><div><strong>WORM lock:</strong> MinIO Object Lock applied &mdash; file cannot be modified or deleted for 7 years</div></div>
+        </div>
+        <div style="margin-top:8px;font-size:9px;font-family:'DM Mono',monospace;background:#1E2D3D;color:#94A3B8;padding:6px 10px;border-radius:5px">Note: Raw zone is plain S3 files &mdash; NOT Iceberg tables. Polaris is not involved here. No catalog registration yet.</div>
+      </div>
+    </div>
+
+    <div class="lf-item">
+      <div class="lf-spine"><div class="lf-dot" style="background:#7C2D12"></div><div class="lf-line"></div></div>
+      <div class="lf-card" style="border-color:#FED7AA;background:#FFF7ED">
+        <div class="lf-layer" style="color:#7C2D12">Step 3 &mdash; Bronze pipeline reads Raw, writes Iceberg V2 (first Polaris involvement)</div>
+        <div class="lf-sub">Python + PySpark: <code style="font-size:9px;background:#FFEDD5;padding:1px 3px;border-radius:2px">etl/src/pipelines/bronze/trades_ingest.py</code> extending <code style="font-size:9px;background:#FFEDD5;padding:1px 3px;border-radius:2px">BasePipeline</code></div>
+        <div class="lf-rows">
+          <div class="lf-row"><div class="lf-icon">&#128272;</div><div><strong>Auth:</strong> SparkSession presents JWT to Polaris REST API. Polaris validates the service account has WRITE privilege on <code style="font-size:9px;background:#FFEDD5;padding:1px 3px;border-radius:2px">lakehouse.bronze.trades</code></div></div>
+          <div class="lf-row"><div class="lf-icon">&#128179;</div><div><strong>Credential vending:</strong> Polaris calls MinIO STS &rarr; mints scoped temporary token for <code style="font-size:9px;background:#FFEDD5;padding:1px 3px;border-radius:2px">s3://lakehouse/bronze/trades/</code> prefix only. 1hr TTL. Spark never holds a master key.</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128260;</div><div><strong>Transform:</strong> EBCDIC decode, type normalisation, null handling, dedup. Adds <code style="font-size:9px;background:#FFEDD5;padding:1px 3px;border-radius:2px">source_system</code>, <code style="font-size:9px;background:#FFEDD5;padding:1px 3px;border-radius:2px">ingestion_ts</code>, <code style="font-size:9px;background:#FFEDD5;padding:1px 3px;border-radius:2px">batch_id</code> metadata columns</div></div>
+          <div class="lf-row"><div class="lf-icon">&#9989;</div><div><strong>Schema validation:</strong> BasePipeline enforces StructType match. Hard fail if schema drifts &mdash; cannot be bypassed</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128202;</div><div><strong>Quality gate:</strong> Soda checks (completeness, PK uniqueness, freshness). Critical check failure blocks write &mdash; Bronze table is not updated</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128230;</div><div><strong>Write:</strong> Spark writes Parquet files to MinIO using vended credential. Polaris registers the new Iceberg snapshot atomically (CAS commit). If commit fails, no partial state.</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128205;</div><div><strong>Lineage:</strong> OpenLineage Spark listener emits a run event to Marquez &mdash; column-level lineage from raw file to Bronze table recorded</div></div>
+        </div>
+        <div class="sec-badge" style="background:#FFF7ED;color:#7C2D12;border:1px solid #FED7AA">&#128272; This is the first point where Trust3 AI / Immuta becomes relevant &mdash; classification scan on newly written Bronze columns</div>
+      </div>
+    </div>
+
+    <div class="lf-item">
+      <div class="lf-spine"><div class="lf-dot" style="background:#1E4D8C"></div><div class="lf-line"></div></div>
+      <div class="lf-card" style="border-color:#93C5FD;background:#EFF6FF">
+        <div class="lf-layer" style="color:#1E4D8C">Step 4 &mdash; Silver pipeline reads Bronze, applies FSDM conformance</div>
+        <div class="lf-sub">Python + PySpark: <code style="font-size:9px;background:#DBEAFE;padding:1px 3px;border-radius:2px">etl/src/pipelines/silver/trades_clean.py</code></div>
+        <div class="lf-rows">
+          <div class="lf-row"><div class="lf-icon">&#128272;</div><div><strong>Auth:</strong> Silver pipeline service account. Polaris grants READ on <code style="font-size:9px;background:#DBEAFE;padding:1px 3px;border-radius:2px">lakehouse.bronze.trades</code> and WRITE on <code style="font-size:9px;background:#DBEAFE;padding:1px 3px;border-radius:2px">lakehouse.silver.fsdm_financial_transaction</code>. Two separate credential vends &mdash; one for each table prefix.</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128260;</div><div><strong>Transform:</strong> Map Bronze columns to FSDM canonical schema. SCD Type 2 history management. Entity resolution (unified customer key). Business rule filters.</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128272;</div><div><strong>Read enforcement:</strong> When Spark reads Bronze via Trino, Trust3 AI / Immuta Spark plugin intercepts the query. If the Silver pipeline service account has PII access cleared, columns are unmasked. Otherwise masked &mdash; even in the transform layer.</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128205;</div><div><strong>Lineage:</strong> OpenLineage records Bronze &rarr; Silver column mapping. Regulators can trace any Silver number back to its Bronze source row.</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lf-item">
+      <div class="lf-spine"><div class="lf-dot" style="background:#713F12"></div><div class="lf-line"></div></div>
+      <div class="lf-card" style="border-color:#FEF08A;background:#FEFCE8">
+        <div class="lf-layer" style="color:#713F12">Step 5 &mdash; Gold pipeline reads Silver, writes domain aggregates</div>
+        <div class="lf-sub">Python + PySpark or Trino SQL: <code style="font-size:9px;background:#FEF9C3;padding:1px 3px;border-radius:2px">etl/src/pipelines/gold/</code></div>
+        <div class="lf-rows">
+          <div class="lf-row"><div class="lf-icon">&#128230;</div><div><strong>Write targets:</strong> <code style="font-size:9px;background:#FEF9C3;padding:1px 3px;border-radius:2px">lakehouse.gold.trading_metrics</code>, <code style="font-size:9px;background:#FEF9C3;padding:1px 3px;border-radius:2px">gold.risk_exposure</code>, <code style="font-size:9px;background:#FEF9C3;padding:1px 3px;border-radius:2px">gold.customer_360</code></div></div>
+          <div class="lf-row"><div class="lf-icon">&#128272;</div><div><strong>Credential vend:</strong> Polaris mints separate scoped tokens for each Gold table prefix. The Gold pipeline cannot write to <code style="font-size:9px;background:#FEF9C3;padding:1px 3px;border-radius:2px">silver/</code> &mdash; token is scoped to <code style="font-size:9px;background:#FEF9C3;padding:1px 3px;border-radius:2px">gold/trading_metrics/</code> only.</div></div>
+          <div class="lf-row"><div class="lf-icon">&#9201;</div><div><strong>Snapshot tags:</strong> Month-end snapshots tagged in Polaris with <code style="font-size:9px;background:#FEF9C3;padding:1px 3px;border-radius:2px">regulatory_snapshot=2026-03-31</code>. Immutable. Reproducible for OSFI examinations.</div></div>
+          <div class="lf-row"><div class="lf-icon">&#128260;</div><div><strong>Delta copy to Fabric:</strong> After Gold write succeeds, a separate pipeline job copies the Gold Delta representation to Fabric OneLake for the BI surface (ADR-010). The Iceberg V2 table on MinIO is the authoritative write target &mdash; the Delta copy is a read-only projection.</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SECURITY ENFORCEMENT -->
+<div class="panel" id="panel-security">
+
+  <div class="note key"><strong>Core principle:</strong> Security tools enforce at <em>query time</em> (reads), not write time. Polaris credential vending controls writes. Trust3 AI or Immuta Ranger/SystemAccessControl plugins intercept queries and apply column masking and row filters before data reaches the caller.</div>
+
+  <div class="slabel">Where Trust3 AI / Immuta actually sit</div>
+
+  <table class="ctable">
+    <thead><tr><th>Stage</th><th>Security control</th><th>What enforces it</th><th>Trust3 AI path</th><th>Immuta path</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Raw file upload</strong></td><td>Write to MinIO raw bucket</td><td>Polaris credential vending + Vault</td><td>Neither &mdash; Polaris controls this</td><td>Neither &mdash; Polaris controls this</td></tr>
+      <tr><td><strong>Bronze write</strong></td><td>Spark writes Iceberg Parquet</td><td>Polaris scoped STS token (bronze/ prefix only)</td><td>Neither at write time</td><td>Neither at write time</td></tr>
+      <tr><td><strong>Bronze post-write scan</strong></td><td>PII/PCI classification of new columns</td><td>Trust3 AI or Immuta auto-scanner</td><td>Ranger-based classifier scans Bronze columns, applies PII/PCI tags, triggers default-deny policy</td><td>Immuta Identification scans inside Trino &mdash; data never leaves engine</td></tr>
+      <tr><td><strong>Silver pipeline reads Bronze</strong></td><td>Column masking during ETL</td><td>Spark plugin</td><td>Trust3 AI Ranger plugin in Spark Driver &mdash; inline at logical plan evaluation</td><td>Immuta Spark cluster policy via bootstrap &mdash; inline enforcement</td></tr>
+      <tr><td><strong>Analyst reads Bronze/Silver via Trino</strong></td><td>Column masking + row filter</td><td>Trino plugin</td><td>Trust3 AI Ranger plugin on Trino coordinator</td><td>ImmutaSystemAccessControl on Trino coordinator &mdash; view expressions pushed to engine</td></tr>
+      <tr><td><strong>Gold read (Tableau / Power BI)</strong></td><td>Column masking + row filter</td><td>Trino plugin</td><td>Same Ranger plugin &mdash; policies auto-propagated from classification tags</td><td>Same ImmutaSystemAccessControl &mdash; subscription + purpose enforcement</td></tr>
+      <tr><td><strong>Fabric (Power BI Import)</strong></td><td>Column masking</td><td>T-SQL DDM at SQL Analytics Endpoint</td><td>Neither &mdash; DDM enforces on Fabric side</td><td>Neither &mdash; DDM enforces on Fabric side</td></tr>
+      <tr><td><strong>Databricks cloud burst</strong></td><td>Column masking + row filter</td><td>Databricks plugin</td><td>Trust3 AI native Databricks plugin</td><td>Immuta Unity Catalog integration</td></tr>
+    </tbody>
+  </table>
+
+  <div class="slabel">The classification scan — automatic policy creation</div>
+  <div style="background:#fff;border-radius:10px;border:1.5px solid var(--line);padding:16px 18px;margin-bottom:12px">
+    <div style="font-size:11px;line-height:1.8;">
+      When the Bronze pipeline writes new data, a post-write trigger fires a classification job:<br/><br/>
+      <strong>Trust3 AI path:</strong> The Privacera scanner samples column values from the new Bronze table. It matches against 50+ built-in identifiers (SIN, PAN card numbers, account numbers, email, etc.). Matching columns are tagged <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">pii=true</code> or <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">pci=true</code> in the Ranger policy engine. A default-deny masking policy is automatically applied &mdash; the column is masked for all users until a policy author explicitly grants clear-text access to specific roles.<br/><br/>
+      <strong>Immuta path:</strong> Immuta Identification runs inside Trino using <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">TABLESAMPLE</code> &mdash; data never leaves the engine. Tags applied via Immuta&rsquo;s classification framework automatically trigger subscription policies. The column becomes a governed data source in Immuta &mdash; users must subscribe (declare purpose) to access it.<br/><br/>
+      <strong>In both cases:</strong> The data engineer who wrote the Bronze table does not need to manually author any security policy. Classification and default protection is automatic.
+    </div>
+  </div>
+
+  <div class="sec-rail">
+    <div class="sec-rail-title">&#128272; What neither tool does &mdash; common misconceptions</div>
+    <div class="sec-point">They do not encrypt data at write time (that is MinIO AES-256 SSE-KMS, configured at the storage layer). Trust3 AI adds field-level encryption separately via Ranger KMS UDFs.</div>
+    <div class="sec-point">They do not control which pipeline can write to which table &mdash; that is Polaris RBAC + credential vending scoping the STS token to a specific S3 prefix.</div>
+    <div class="sec-point">They do not audit Parquet file reads at the storage layer &mdash; they audit at the query layer (Trino, Spark). Direct MinIO bucket access bypassing Trino would bypass Trust3 AI and Immuta enforcement. This is why the architecture disallows direct storage access &mdash; all reads must go through Trino (ADR-002).</div>
+  </div>
+</div>
+
+<!-- CODE WALK-THROUGH -->
+<div class="panel" id="panel-code">
+  <div class="slabel">Step 1 — Raw zone upload (no catalog, no Iceberg)</div>
+  <div class="step">
+    <div class="step-num" style="background:#1E3A5F">1</div>
+    <div class="step-body">
+      <div class="step-title">RawZoneManager.upload() &mdash; etl/src/ingestion/raw_zone.py</div>
+      <div class="step-detail">The pipeline authenticates to MinIO using a credential from Vault. No Polaris, no Iceberg. This is a plain S3 PUT operation against the raw bucket. The key is structured to be immutable and partition-friendly.</div>
+<pre><span class="cm"># Authenticate via Vault &mdash; pipeline service account</span>
+vault_client = hvac.Client(url=VAULT_ADDR, token=VAULT_TOKEN)
+minio_creds = vault_client.secrets.kv.read_secret(<span class="st">"lakehouse/minio/raw-writer"</span>)
+
+<span class="cm"># Upload binary-exact file &mdash; no transformation</span>
+s3 = boto3.client(<span class="st">"s3"</span>,
+    endpoint_url=<span class="st">"https://minio.rbc.internal"</span>,
+    aws_access_key_id=minio_creds[<span class="st">"access_key"</span>],
+    aws_secret_access_key=minio_creds[<span class="st">"secret_key"</span>],
+)
+key = <span class="fn">f</span><span class="st">"raw/mainframe/{source_system}/{business_date}/{filename}"</span>
+s3.upload_file(local_path, bucket=<span class="st">"lakehouse-raw"</span>, key=key,
+    ExtraArgs={<span class="st">"ObjectLockMode"</span>: <span class="st">"COMPLIANCE"</span>,
+               <span class="st">"ObjectLockRetainUntilDate"</span>: retain_until})
+
+<span class="cm"># Record manifest &mdash; forensic anchor for OSFI</span>
+manifest = RawZoneFile(
+    raw_path=<span class="fn">f</span><span class="st">"s3://lakehouse-raw/{key}"</span>,
+    md5_checksum=<span class="fn">md5</span>(file_bytes),
+    arrival_ts=<span class="fn">datetime.now</span>(UTC).isoformat(),
+    ...
+)</pre>
+    </div>
+  </div>
+
+  <div class="slabel">Step 2 — Bronze pipeline: Polaris credential vend + Spark write</div>
+  <div class="step">
+    <div class="step-num" style="background:#7C2D12">2</div>
+    <div class="step-body">
+      <div class="step-title">TradesBronzePipeline.execute() &mdash; via BasePipeline</div>
+      <div class="step-detail">SparkSession is pre-configured with the Iceberg REST catalog pointing at Polaris. When Spark touches a table, Polaris validates the JWT and vends a scoped MinIO STS token automatically. The application code just writes SQL &mdash; credential vending is transparent.</div>
+<pre><span class="cm"># SparkSession configuration (set once at cluster startup)</span>
+spark = SparkSession.builder \
+    .config(<span class="st">"spark.sql.catalog.lakehouse"</span>, <span class="st">"org.apache.iceberg.spark.SparkCatalog"</span>) \
+    .config(<span class="st">"spark.sql.catalog.lakehouse.type"</span>, <span class="st">"rest"</span>) \
+    .config(<span class="st">"spark.sql.catalog.lakehouse.uri"</span>, <span class="st">"https://polaris.rbc.internal"</span>) \
+    .config(<span class="st">"spark.sql.catalog.lakehouse.credential"</span>, <span class="kw">jwt_token</span>) \
+    .getOrCreate()
+
+<span class="cm"># BasePipeline.execute() enforces: extract &rarr; transform &rarr; validate &rarr; write</span>
+<span class="cm"># validate_schema() raises SchemaValidationError if schema drifts</span>
+<span class="cm"># quality_check() raises QualityGateError if critical Soda checks fail</span>
+
+<span class="cm"># The actual write &mdash; Polaris vends MinIO STS token behind the scenes</span>
+df.writeTo(<span class="st">"lakehouse.bronze.trades"</span>) \
+  .option(<span class="st">"write.format.default"</span>, <span class="st">"parquet"</span>) \
+  .option(<span class="st">"write.parquet.compression-codec"</span>, <span class="st">"zstd"</span>) \
+  .append()
+
+<span class="cm"># Polaris atomically commits the new snapshot (CAS on metadata pointer)</span>
+<span class="cm"># If this fails, no Parquet files are orphaned &mdash; Iceberg guarantees atomicity</span></pre>
+    </div>
+  </div>
+
+  <div class="slabel">Step 3 — Silver pipeline: read Bronze (security enforced), write Silver</div>
+  <div class="step">
+    <div class="step-num" style="background:#1E4D8C">3</div>
+    <div class="step-body">
+      <div class="step-title">TradesCleanPipeline &mdash; etl/src/pipelines/silver/trades_clean.py</div>
+      <div class="step-detail">When the Silver pipeline reads Bronze via Spark, the Trust3 AI Ranger plugin (or Immuta Spark policy) intercepts the read. If the ETL service account has PII access, columns are clear. If not, PAN numbers are masked even in the transform layer.</div>
+<pre><span class="cm"># READ Bronze &mdash; security plugin intercepts here</span>
+<span class="cm"># Trust3 AI: Ranger plugin embedded in Spark Driver evaluates policy</span>
+<span class="cm"># Immuta: Spark cluster bootstrap policy applies masking UDFs</span>
+bronze_df = spark.table(<span class="st">"lakehouse.bronze.trades"</span>)
+<span class="cm"># If ETL service account lacks PII clearance:</span>
+<span class="cm"># bronze_df["account_number"] &rarr; "XXXX-XXXX-XXXX-1234" (masked)</span>
+<span class="cm"># bronze_df["account_number"] &rarr; actual value (if cleared)</span>
+
+<span class="cm"># FSDM conformance transform</span>
+silver_df = bronze_df \
+    .withColumnRenamed(<span class="st">"trade_id"</span>, <span class="st">"financial_transaction_id"</span>) \
+    .withColumn(<span class="st">"party_id"</span>, <span class="fn">resolve_party_id</span>(<span class="st">"account_number"</span>)) \
+    .withColumn(<span class="st">"effective_date"</span>, <span class="fn">to_date</span>(<span class="st">"trade_date"</span>)) \
+    .withColumn(<span class="st">"row_hash"</span>, <span class="fn">sha2</span>(<span class="fn">concat_ws</span>(<span class="st">"|"</span>, *key_cols), 256)) \
+    .filter(<span class="fn">col</span>(<span class="st">"status"</span>) != <span class="st">"CANCELLED"</span>)
+
+<span class="cm"># SCD Type 2 &mdash; mark superseded rows</span>
+silver_df = <span class="fn">apply_scd2</span>(spark, silver_df, <span class="st">"lakehouse.silver.fsdm_financial_transaction"</span>)
+
+<span class="cm"># WRITE Silver &mdash; Polaris vends new scoped token for silver/ prefix</span>
+silver_df.writeTo(<span class="st">"lakehouse.silver.fsdm_financial_transaction"</span>).merge()</pre>
+    </div>
+  </div>
+
+  <div class="slabel">Step 4 — Gold pipeline: Trino SQL aggregation</div>
+  <div class="step">
+    <div class="step-num" style="background:#713F12">4</div>
+    <div class="step-body">
+      <div class="step-title">Gold aggregation &mdash; Trino SQL (not Spark)</div>
+      <div class="step-detail">Gold pipelines can use Trino directly (ADR-002 / ADR-005). Trino reads Silver Iceberg tables, applies FGAC enforcement at the coordinator, then inserts into Gold. The Gold pipeline service account has SELECT on Silver and INSERT on Gold only.</div>
+<pre><span class="cm">-- Trino query executed by Gold pipeline service account</span>
+<span class="cm">-- Trust3 AI Ranger plugin on Trino coordinator enforces FGAC</span>
+<span class="cm">-- Immuta ImmutaSystemAccessControl on coordinator does the same</span>
+
+INSERT INTO lakehouse.gold.trading_metrics
+<span class="kw">SELECT</span>
+    account_id,
+    <span class="fn">DATE_TRUNC</span>(<span class="st">'month'</span>, trade_date) <span class="kw">AS</span> month,
+    <span class="fn">SUM</span>(notional_amount) <span class="kw">AS</span> total_notional,
+    <span class="fn">COUNT</span>(*) <span class="kw">AS</span> trade_count,
+    <span class="fn">SUM</span>(pnl) <span class="kw">AS</span> total_pnl
+<span class="kw">FROM</span> lakehouse.silver.fsdm_financial_transaction
+<span class="kw">WHERE</span> effective_date >= <span class="fn">CURRENT_DATE</span> - INTERVAL <span class="st">'1'</span> MONTH
+  <span class="kw">AND</span> is_current = true
+<span class="kw">GROUP BY</span> 1, 2;
+
+<span class="cm">-- Polaris atomically commits Gold snapshot</span>
+<span class="cm">-- Month-end: tag snapshot for regulatory retention</span>
+<span class="cm">-- ALTER TABLE lakehouse.gold.trading_metrics</span>
+<span class="cm">--   SET TBLPROPERTIES ('regulatory_snapshot'='2026-03-31')</span></pre>
+    </div>
+  </div>
+
+</div>
+
+<!-- TRUST3 AI vs IMMUTA DIFF -->
+<div class="panel" id="panel-diff">
+  <div class="note info"><strong>The difference in the write/transform path is subtle but important.</strong> Both products enforce at query time. The difference is <em>how</em> and <em>where</em> they intercept, which affects how ETL pipelines experience the enforcement.</div>
+
+  <div class="slabel">Side-by-side: how each enforces during the write path</div>
+
+  <table class="ctable">
+    <thead><tr><th style="min-width:150px">Stage</th><th>Trust3 AI (Ranger engine)</th><th>Immuta (ABAC engine)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Bronze classification scan</strong></td><td>Privacera scanner samples columns, tags PII/PCI in Ranger policy store. Default-deny masking applied automatically via tag-based policy.</td><td>Immuta Identification runs inside Trino using TABLESAMPLE. Data never leaves engine. Tags applied via classification framework, trigger subscription policies automatically.</td></tr>
+      <tr><td><strong>Spark ETL reads Bronze</strong></td><td>Ranger plugin is a JAR loaded into the Spark Driver at startup. It evaluates access control once the logical plan is created, before physical execution. Column masking applied as UDFs injected into the query plan.</td><td>Immuta Spark cluster bootstrap script installs policy enforcement. Masking expressions pushed into the Spark query plan as native DataFrame transformations. No separate JAR in driver.</td></tr>
+      <tr><td><strong>Trino reads Silver/Gold</strong></td><td>Ranger plugin on Trino coordinator. Evaluated after SQL parsing, before execution. Row filters added as WHERE clause injections. Column masks added as expression substitutions.</td><td>ImmutaSystemAccessControl plugin on coordinator. For each column, Trino requests a view expression from Immuta. Policies translated to Trino rules and applied directly to tables. 4.26x faster than Ranger (Sep 2025 optimisation).</td></tr>
+      <tr><td><strong>ETL service account PII access</strong></td><td>Ranger RBAC: grant the ETL service account a role that has "unmasked" privilege on PII columns. Tag-based policy propagates automatically to new Bronze tables.</td><td>Immuta subscription model: ETL service account subscribes to the Bronze data source with purpose "ETL pipeline" &mdash; purpose-based access logged for OSFI B-13 audit trail.</td></tr>
+      <tr><td><strong>What the pipeline code sees</strong></td><td>Transparent. <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">spark.table("lakehouse.bronze.trades")</code> returns masked or unmasked data based on the service account's Ranger policy. No code change needed.</td><td>Transparent. Same call returns masked or unmasked data based on subscription and purpose. No code change needed.</td></tr>
+      <tr><td><strong>Policy propagation to new tables</strong></td><td>Automatic via tag-based policy. New Bronze table tagged PII &rarr; masking policy applied automatically. Pipeline author does not write any policy.</td><td>Automatic via classification framework. New column tagged &rarr; subscription policy triggered. Same automatic propagation.</td></tr>
+      <tr><td><strong>Audit trail for ETL reads</strong></td><td>Ranger audit log: who (service account), what (table/column), when. Centralised audit dashboard. Forwarded to Splunk SIEM.</td><td>Immuta audit: who, what table, what purpose declared, when. Purpose field directly satisfies BCBS 239 Principle 9 (data usage accountability).</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note tip"><strong>For the write path specifically:</strong> both products behave identically &mdash; they do not interfere with writes at all. The difference is entirely in how reads and queries are enforced. The choice between Trust3 AI and Immuta does not change any pipeline write code. It changes how policies are authored and how queries are intercepted at read time.</div>
+</div>
+
+<div class="footer">
+  <span>Lumina &middot; RBC Enterprise Data &middot; Write Path + Security Enforcement &middot; April 2026</span>
+  <span>George Chilakos, VP Enterprise Data</span>
+</div>
+<script>function go(id,btn){document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));document.getElementById('panel-'+id).classList.add('active');btn.classList.add('active');}</script>
+</body>
+</html>
