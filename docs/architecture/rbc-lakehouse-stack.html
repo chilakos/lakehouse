@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RBC Lakehouse — Full Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0A0F1A;
+  --bg2: #0F1624;
+  --card: #131D2E;
+  --border: #1E2D45;
+  --border2: #263548;
+  --text: #C8D8F0;
+  --muted: #4A6080;
+  --dim: #2A3F5A;
+
+  --raw:      #C2853A;
+  --raw-dim:  #3D2510;
+  --bronze:   #C47B44;
+  --brz-dim:  #3A1E0A;
+  --silver:   #4A90C4;
+  --slv-dim:  #0D2035;
+  --gold:     #C4A43A;
+  --gld-dim:  #2E2400;
+  --sem:      #7B5FC4;
+  --sem-dim:  #1A0E35;
+  --bi:       #3AAA72;
+  --bi-dim:   #082418;
+
+  --polaris:  #2E6BC4;
+  --privacera:#C43A3A;
+  --olineage: #3AAA72;
+  --vault:    #C4843A;
+  --minio:    #4A90C4;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', sans-serif;
+  min-height: 100vh;
+  padding: 32px 24px 60px;
+}
+
+h1 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.subtitle {
+  font-size: 11px;
+  color: var(--dim);
+  font-family: 'IBM Plex Mono', monospace;
+  margin-bottom: 32px;
+}
+.subtitle span { color: var(--muted); }
+
+/* LAYOUT: two-column — layers left, cross-cutting right */
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 220px;
+  gap: 16px;
+  max-width: 1060px;
+  margin: 0 auto;
+}
+@media(max-width:780px){ .layout { grid-template-columns: 1fr; } }
+
+/* LAYER STACK */
+.stack { display: flex; flex-direction: column; gap: 3px; }
+
+.layer {
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+  position: relative;
+}
+.layer-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.layer-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+.layer-name {
+  font-size: 11px;
+  font-weight: 600;
+  flex: 1;
+}
+.layer-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  padding: 2px 7px;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+.layer-body {
+  padding: 10px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* chips */
+.chip {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  padding: 3px 9px;
+  border-radius: 3px;
+  border: 1px solid;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.chip .sub {
+  opacity: 0.55;
+  font-size: 8px;
+  display: block;
+  margin-top: 1px;
+}
+
+/* confirmed/pending badges */
+.confirmed {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 7px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(58,170,114,0.15);
+  color: #3AAA72;
+  border: 1px solid rgba(58,170,114,0.25);
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+}
+.pending {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 7px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(196,164,58,0.12);
+  color: #C4A43A;
+  border: 1px solid rgba(196,164,58,0.25);
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+}
+.adr {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 7px;
+  padding: 1px 5px;
+  border-radius: 2px;
+  background: rgba(74,144,196,0.12);
+  color: #4A90C4;
+  border: 1px solid rgba(74,144,196,0.25);
+  letter-spacing: 0.5px;
+  margin-left: 4px;
+}
+
+/* arrow between layers */
+.arr {
+  text-align: center;
+  color: var(--dim);
+  font-size: 11px;
+  padding: 1px 0;
+  font-family: 'IBM Plex Mono', monospace;
+}
+.arr-label {
+  font-size: 8px;
+  color: var(--muted);
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* CROSS-CUTTING RAIL */
+.rail { display: flex; flex-direction: column; gap: 10px; }
+.rail-section {
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+.rail-head {
+  padding: 7px 12px;
+  font-size: 9px;
+  font-family: 'IBM Plex Mono', monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.rail-body { padding: 8px 12px; display: flex; flex-direction: column; gap: 5px; }
+.rail-item {
+  font-size: 10px;
+  line-height: 1.6;
+  color: var(--text);
+  opacity: 0.8;
+}
+.rail-item strong { opacity: 1; font-weight: 500; }
+
+/* colour themes per layer */
+.l-sources .layer-head { background: rgba(194,133,58,0.08); }
+.l-sources .layer-name { color: var(--raw); }
+.l-sources .layer-tag { background: var(--raw-dim); color: var(--raw); border-color: rgba(194,133,58,0.3); }
+.l-sources .chip { background: var(--raw-dim); color: #E8A050; border-color: rgba(194,133,58,0.25); }
+
+.l-raw .layer-head { background: rgba(74,144,196,0.07); }
+.l-raw .layer-name { color: #6AABDC; }
+.l-raw .layer-tag { background: #0D1F35; color: #6AABDC; border-color: rgba(74,144,196,0.3); }
+.l-raw .chip { background: #0D1F35; color: #6AABDC; border-color: rgba(74,144,196,0.2); }
+
+.l-bronze .layer-head { background: rgba(196,123,68,0.08); }
+.l-bronze .layer-name { color: #E0925A; }
+.l-bronze .layer-tag { background: var(--brz-dim); color: #E0925A; border-color: rgba(196,123,68,0.3); }
+.l-bronze .chip { background: var(--brz-dim); color: #E0925A; border-color: rgba(196,123,68,0.2); }
+
+.l-silver .layer-head { background: rgba(74,144,196,0.08); }
+.l-silver .layer-name { color: var(--silver); }
+.l-silver .layer-tag { background: var(--slv-dim); color: var(--silver); border-color: rgba(74,144,196,0.3); }
+.l-silver .chip { background: var(--slv-dim); color: var(--silver); border-color: rgba(74,144,196,0.2); }
+
+.l-gold .layer-head { background: rgba(196,164,58,0.08); }
+.l-gold .layer-name { color: #E0C450; }
+.l-gold .layer-tag { background: var(--gld-dim); color: #E0C450; border-color: rgba(196,164,58,0.3); }
+.l-gold .chip { background: var(--gld-dim); color: #E0C450; border-color: rgba(196,164,58,0.2); }
+
+.l-sem .layer-head { background: rgba(123,95,196,0.1); }
+.l-sem .layer-name { color: #A080E0; }
+.l-sem .layer-tag { background: var(--sem-dim); color: #A080E0; border-color: rgba(123,95,196,0.3); }
+.l-sem .chip { background: var(--sem-dim); color: #A080E0; border-color: rgba(123,95,196,0.2); }
+
+.l-bi .layer-head { background: rgba(58,170,114,0.08); }
+.l-bi .layer-name { color: #50C888; }
+.l-bi .layer-tag { background: var(--bi-dim); color: #50C888; border-color: rgba(58,170,114,0.3); }
+.l-bi .chip { background: var(--bi-dim); color: #50C888; border-color: rgba(58,170,114,0.2); }
+
+/* rail colour themes */
+.r-storage .rail-head { background: rgba(74,144,196,0.08); color: #6AABDC; border-bottom-color: rgba(74,144,196,0.2); }
+.r-catalog .rail-head { background: rgba(46,107,196,0.1); color: #6A9CDC; border-bottom-color: rgba(46,107,196,0.2); }
+.r-security .rail-head { background: rgba(196,58,58,0.08); color: #DC7070; border-bottom-color: rgba(196,58,58,0.2); }
+.r-lineage .rail-head { background: rgba(58,170,114,0.08); color: #50C888; border-bottom-color: rgba(58,170,114,0.2); }
+.r-open .rail-head { background: rgba(196,164,58,0.08); color: #E0C450; border-bottom-color: rgba(196,164,58,0.2); }
+
+/* footer */
+.footer {
+  max-width: 1060px;
+  margin: 24px auto 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* open question callout */
+.open-q {
+  background: rgba(196,164,58,0.06);
+  border: 1px solid rgba(196,164,58,0.2);
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 9px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: #C4A43A;
+  margin-top: 4px;
+  display: inline-block;
+}
+</style>
+</head>
+<body>
+
+<h1>RBC Lumina — Enterprise Lakehouse Stack</h1>
+<div class="subtitle">ingestion &rarr; raw &rarr; bronze &rarr; silver &rarr; gold &rarr; semantic &rarr; consumers &nbsp;|&nbsp; <span>April 2026 &middot; all confirmed decisions</span></div>
+
+<div class="layout">
+
+  <!-- LEFT: LAYER STACK -->
+  <div class="stack">
+
+    <!-- SOURCES -->
+    <div class="layer l-sources">
+      <div class="layer-head">
+        <span class="layer-num">INGESTION</span>
+        <span class="layer-name">300+ Source Systems</span>
+        <span class="layer-tag">external</span>
+      </div>
+      <div class="layer-body">
+        <div class="chip">Mainframe COBOL/EBCDIC<span class="sub">CDC &middot; batch extract</span></div>
+        <div class="chip">Teradata FSDM<span class="sub">ADR-003 decoupling</span></div>
+        <div class="chip">Oracle EBS / SAP<span class="sub">batch</span></div>
+        <div class="chip">CRM / Salesforce<span class="sub">API</span></div>
+        <div class="chip">Kafka event streams<span class="sub">streaming</span></div>
+        <div class="chip">REST APIs / market data<span class="sub">pull</span></div>
+        <div class="chip">Digital channels<span class="sub">event</span></div>
+        <div class="chip">Risk / Treasury / ALM<span class="sub">batch</span></div>
+      </div>
+    </div>
+
+    <div class="arr">&#8595;<br/><span class="arr-label">Connect:Direct &middot; SFTP &middot; Kafka &middot; REST</span></div>
+
+    <!-- RAW -->
+    <div class="layer l-raw">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 0</span>
+        <span class="layer-name">Raw Zone &nbsp;<span style="font-weight:400;font-size:10px">— immutable landing</span></span>
+        <span class="layer-tag">S3 Parquet · WORM</span>
+      </div>
+      <div class="layer-body">
+        <div class="chip">RawZoneManager (Python)<span class="sub">etl/src/ingestion/raw_zone.py</span></div>
+        <div class="chip">MinIO AIStor<span class="sub">s3://lakehouse-raw/ · Object Lock 7yr</span></div>
+        <div class="chip">MD5 manifest<span class="sub">forensic anchor · OSFI B-13</span></div>
+        <div class="chip">No Polaris / No Iceberg<span class="sub">plain S3 PUT</span></div>
+        <div class="chip">EBCDIC decode only<span class="sub">no transformation</span></div>
+      </div>
+    </div>
+
+    <div class="arr">&#8595;<br/><span class="arr-label">Python pipeline · BasePipeline.execute()</span></div>
+
+    <!-- BRONZE -->
+    <div class="layer l-bronze">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 1</span>
+        <span class="layer-name">Bronze &nbsp;<span style="font-weight:400;font-size:10px">— Iceberg V2 · source-aligned</span></span>
+        <span class="layer-tag">Iceberg V2</span>
+      </div>
+      <div class="layer-body">
+        <div class="chip">Python pipeline (not Spark)<span class="sub">ADR-005 · BasePipeline · etl/src/pipelines/bronze/</span></div>
+        <div class="chip">Polaris REST — credential vend<span class="sub">JWT → scoped MinIO STS token · bronze/ prefix only</span></div>
+        <div class="chip">Schema validation (hard fail)<span class="sub">StructType enforcement · cannot be bypassed</span></div>
+        <div class="chip">Soda quality gates<span class="sub">completeness · PK uniqueness · freshness</span></div>
+        <div class="chip">PII auto-classification<span class="sub">Trust3 AI or Immuta post-write scan · default-deny</span></div>
+        <div class="chip">Iceberg atomic commit<span class="sub">Polaris CAS snapshot · no partial state</span></div>
+        <div class="chip">OpenLineage emission<span class="sub">raw file → Bronze column lineage → Marquez</span></div>
+      </div>
+    </div>
+
+    <div class="arr">&#8595;<br/><span class="arr-label">Python pipeline · FSDM mapping · SCD Type 2</span></div>
+
+    <!-- SILVER -->
+    <div class="layer l-silver">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 2</span>
+        <span class="layer-name">Silver &nbsp;<span style="font-weight:400;font-size:10px">— FSDM conformed · entity resolved</span></span>
+        <span class="layer-tag">Iceberg V2</span>
+      </div>
+      <div class="layer-body">
+        <div class="chip">FSDM canonical entities<span class="sub">Account · Customer · Product · Transaction · Party</span></div>
+        <div class="chip">Security enforced at READ<span class="sub">Trust3 AI Ranger plugin in Spark Driver OR Immuta Spark bootstrap</span></div>
+        <div class="chip">AD group sync<span class="sub">RBC-DATA-* groups → Trust3 AI LDAP or Immuta Azure AD OAuth2</span></div>
+        <div class="chip">Teradata GRANTs translated<span class="sub">masking views → column policies · GRANT → Ranger policy</span></div>
+        <div class="chip">Customer 360 joins<span class="sub">cross-source identity resolution · unified customer key</span></div>
+        <div class="chip">Column-level lineage<span class="sub">OpenLineage · BCBS 239 Principles 2/3/4/6</span></div>
+        <div class="chip">SCD Type 2 history<span class="sub">effective_date · is_current · row_hash</span></div>
+      </div>
+    </div>
+
+    <div class="arr">&#8595;<br/><span class="arr-label">Python or Trino SQL · domain aggregations</span></div>
+
+    <!-- GOLD -->
+    <div class="layer l-gold">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 3</span>
+        <span class="layer-name">Gold &nbsp;<span style="font-weight:400;font-size:10px">— two representations · domain aggregates</span></span>
+        <span class="layer-tag">Iceberg V2 + Delta copy</span>
+      </div>
+      <div class="layer-body">
+        <div class="chip">Trino SQL aggregation<span class="sub">ADR-002 · Gold pipeline service account · scoped STS token</span></div>
+        <div class="chip">Domain marts<span class="sub">Risk · Finance · Retail · Capital Markets · Wealth</span></div>
+        <div class="chip">Iceberg V2 on MinIO<span class="sub">compute plane · Trino · Databricks cloud burst</span></div>
+        <div class="chip">Delta copy in Fabric<span class="sub">BI/AI surface · ADR-010 · Import mode ONLY</span></div>
+        <div class="chip">Month-end snapshot tags<span class="sub">regulatory_snapshot=2026-03-31 · OSFI reproducible</span></div>
+        <div class="chip">Trust3 AI / Immuta FGAC<span class="sub">column mask + row filter on all Gold reads via Trino</span></div>
+      </div>
+    </div>
+
+    <div class="arr">&#8595;<br/><span class="arr-label">Fabric pipeline refresh · Polaris credential vend</span></div>
+
+    <!-- SEMANTIC -->
+    <div class="layer l-sem">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 4</span>
+        <span class="layer-name">Semantic Layer &nbsp;<span style="font-weight:400;font-size:10px">— metric definitions · trust boundary</span></span>
+        <span class="layer-tag">Fabric Import · Cube retiring</span>
+      </div>
+      <div class="layer-body">
+        <div class="chip">Fabric semantic model (PRIMARY)<span class="sub">Power BI Import mode · DAX measures · KPIs · RLS · ADR-010</span></div>
+        <div class="chip">T-SQL DDM<span class="sub">column masking at SQL Analytics Endpoint · PII/PCI tables</span></div>
+        <div class="chip">Cube.dev (RETIRING)<span class="sub">risk_exposure.yml · trading_metrics.yml · being replaced</span></div>
+        <div class="chip">Trino JDBC (direct)<span class="sub">Tableau · ML pipelines · certified query pattern</span></div>
+        <div class="open-q">Q-10: Tableau scope post-OBIEE? → determines secondary semantic layer need</div>
+        <div class="open-q">Evaluating: AtScale (B) · Starburst (C) · None (A)</div>
+      </div>
+    </div>
+
+    <div class="arr">&#8595;<br/><span class="arr-label">Fabric Data Agent · XMLA · Trino JDBC · REST</span></div>
+
+    <!-- CONSUMERS -->
+    <div class="layer l-bi">
+      <div class="layer-head">
+        <span class="layer-num">LAYER 5</span>
+        <span class="layer-name">Consumers &nbsp;<span style="font-weight:400;font-size:10px">— BI · AI · analytics</span></span>
+        <span class="layer-tag">multi-surface</span>
+      </div>
+      <div class="layer-body">
+        <div class="chip">Power BI<span class="sub">Import → Fabric SQL endpoint → T-SQL DDM · 1,000+ OBIEE migrations</span></div>
+        <div class="chip">RBC Assist (AI chatbot)<span class="sub">Azure AI Foundry → Fabric Data Agent → NL-to-DAX</span></div>
+        <div class="chip">Tableau<span class="sub">Trino JDBC → Privacera FGAC → Polaris → MinIO</span></div>
+        <div class="chip">Databricks cloud burst<span class="sub">PrivateLink → Polaris REST → Iceberg · data stays on-prem</span></div>
+        <div class="chip">Snowflake cloud burst<span class="sub">Open Catalog = managed Polaris · PrivateLink</span></div>
+        <div class="chip">ML pipelines / agents<span class="sub">Trino JDBC · certified query pattern · FastAPI-style boundary</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: CROSS-CUTTING RAIL -->
+  <div class="rail">
+
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:0 2px 6px;border-bottom:1px solid var(--border);margin-bottom:2px">Cross-cutting</div>
+
+    <div class="rail-section r-storage">
+      <div class="rail-head">Storage</div>
+      <div class="rail-body">
+        <div class="rail-item"><strong>MinIO AIStor</strong><br/>S3-compatible · on-prem<br/>AES-256 SSE-KMS<br/>Object Lock (WORM)<br/>Canadian DC</div>
+        <div class="rail-item"><strong>HashiCorp Vault</strong><br/>KMS key mgmt<br/>STS token rotation<br/>Pipeline secrets</div>
+      </div>
+    </div>
+
+    <div class="rail-section r-catalog">
+      <div class="rail-head">Catalog</div>
+      <div class="rail-body">
+        <div class="rail-item"><strong>Apache Polaris</strong><br/>ASF TLP Feb 2026<br/>Iceberg REST spec<br/>Credential vending<br/>Polaris RBAC<br/>PostgreSQL backend<br/>OCP deployment</div>
+        <div class="rail-item" style="opacity:0.55;font-size:9px">Nessie: optional future<br/>WAP/branching (Q-4)</div>
+      </div>
+    </div>
+
+    <div class="rail-section r-security">
+      <div class="rail-head">Security (TBD)</div>
+      <div class="rail-body">
+        <div class="rail-item"><strong>Trust3 AI or Immuta</strong><br/>Column masking<br/>Row-level filtering<br/>ABAC/RBAC<br/>AD group sync<br/>PII auto-classify<br/>Audit → Splunk</div>
+        <div class="rail-item" style="font-size:9px;opacity:0.6">OPA (fallback)<br/>Fabric: T-SQL DDM<br/>Polaris: catalog RBAC</div>
+        <div class="rail-item" style="font-size:9px;color:#DC7070">&#9888; OSFI B-10 review<br/>&#9888; Polaris REST POC<br/>needed for both vendors</div>
+      </div>
+    </div>
+
+    <div class="rail-section r-lineage">
+      <div class="rail-head">Lineage</div>
+      <div class="rail-body">
+        <div class="rail-item"><strong>OpenLineage</strong><br/>Spark + Trino emitters<br/>Column-level provenance</div>
+        <div class="rail-item"><strong>Marquez</strong><br/>Lineage backend<br/>BCBS 239 Principles<br/>2 · 3 · 4 · 6</div>
+      </div>
+    </div>
+
+    <div class="rail-section r-open">
+      <div class="rail-head">Quality</div>
+      <div class="rail-body">
+        <div class="rail-item"><strong>Soda Core</strong><br/>Bronze quality gates<br/>Blocks Silver promotion<br/>on critical failure</div>
+        <div class="rail-item"><strong>Airflow</strong><br/>Pipeline orchestration<br/>DAG scheduling<br/>Retry management</div>
+      </div>
+    </div>
+
+    <div class="rail-section" style="border-color:var(--border)">
+      <div class="rail-head" style="font-size:9px;letter-spacing:1px;color:var(--muted)">ADR Status</div>
+      <div class="rail-body">
+        <div class="rail-item" style="font-size:9px">
+          <span style="color:#3AAA72">&#10003;</span> ADR-002 Trino gateway<br/>
+          <span style="color:#3AAA72">&#10003;</span> ADR-003 Teradata decouple<br/>
+          <span style="color:#3AAA72">&#10003;</span> ADR-005 Python/no Spark<br/>
+          <span style="color:#3AAA72">&#10003;</span> ADR-006 RAG schema link<br/>
+          <span style="color:#3AAA72">&#10003;</span> ADR-007 Gov automation<br/>
+          <span style="color:#3AAA72">&#10003;</span> ADR-009 AI Data Hub<br/>
+          <span style="color:#3AAA72">&#10003;</span> ADR-010 Fabric Import<br/>
+          <span style="color:#C4A43A">&#9888;</span> ADR-001 OTF feasibility<br/>
+          <span style="color:#4A6080">&#8212;</span> ADR-008 superseded
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Lumina &middot; RBC Enterprise Data &middot; VP George Chilakos &middot; April 2026</span>
+  <span>&#9888; Trust3 AI vs Immuta TBD &nbsp;|&nbsp; &#9888; Semantic layer (Q-10) TBD &nbsp;|&nbsp; Cube.dev retiring</span>
+</div>
+
+</body>
+</html>
