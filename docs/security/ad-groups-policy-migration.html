@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AD Groups &amp; Policy Migration — Teradata to Lakehouse</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A1628;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);padding-bottom:60px;}
+.hero{background:var(--navy);padding:40px 32px 32px;}
+.back{font-size:10px;font-family:'DM Mono',monospace;color:#475569;margin-bottom:14px;}
+.back a{color:#94A3B8;text-decoration:none;}
+.hero h1{font-family:'Lora',serif;font-size:26px;font-weight:600;color:#fff;margin-bottom:8px;}
+.hero p{font-size:12px;color:#94A3B8;max-width:680px;line-height:1.7;}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+.pill{font-size:9px;font-family:'DM Mono',monospace;padding:3px 10px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.08);color:#94A3B8;}
+.pill.ok{background:rgba(5,150,105,0.15);color:#6EE7B7;border-color:rgba(110,231,183,0.3);}
+.canvas{max-width:1000px;margin:0 auto;padding:28px 24px 0;}
+.slabel{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin:20px 0 12px;}
+.slabel:first-child{margin-top:0;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--line);}
+.card{background:#fff;border-radius:10px;border:1.5px solid var(--line);padding:16px 18px;margin-bottom:12px;}
+.note{border-radius:8px;padding:10px 14px;font-size:11px;line-height:1.7;margin-bottom:12px;}
+.note.tip{background:#F0FDF4;border:1.5px solid #BBF7D0;color:#065F46;}
+.note.warn{background:#FFF7ED;border:1.5px solid #FED7AA;color:#78350F;}
+.note.key{background:#0A1628;border:1.5px solid #1E4D8C;color:#E2E8F0;}
+.note.info{background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1E3A5F;}
+pre{font-family:'DM Mono',monospace;font-size:10px;background:#0F172A;color:#E2E8F0;padding:10px 14px;border-radius:7px;margin:8px 0;line-height:1.8;overflow-x:auto;}
+.kw{color:#93C5FD;}.cm{color:#64748B;}.st{color:#FDE68A;}
+.ctable{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px;}
+.ctable th{padding:8px 12px;text-align:left;font-weight:700;background:var(--navy);color:#fff;}
+.ctable td{padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6;}
+.ctable tr:nth-child(even) td{background:#F8FAFC;}
+.ctable tr:last-child td{border-bottom:none;}
+.checklist{display:flex;flex-direction:column;gap:8px;}
+.ci{display:flex;gap:10px;align-items:flex-start;padding:8px 12px;background:#fff;border-radius:7px;border:1.5px solid var(--line);}
+.ci-box{width:16px;height:16px;border-radius:3px;border:1.5px solid #CBD5E1;flex-shrink:0;margin-top:1px;}
+.ci-body{flex:1;font-size:11px;line-height:1.6;}
+.ci-title{font-weight:600;margin-bottom:2px;}
+.ci-detail{color:var(--muted);font-size:10px;}
+.ci.risk{border-color:#FED7AA;background:#FFFBEB;}
+.ci.risk .ci-box{border-color:#FCD34D;background:#FEF9C3;}
+.footer{max-width:1000px;margin:28px auto 0;padding:14px 24px 0;border-top:1px solid var(--line);font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div style="max-width:1000px;margin:0 auto"><div class="back"><a href="../">&#8592; Lakehouse Hub</a></div></div>
+  <h1>AD Groups &amp; Policy Migration</h1>
+  <p>How existing RBC Active Directory groups carry over from Teradata to the Iceberg lakehouse. What changes is not who can access what &mdash; that stays in AD. What changes is how the access decision is enforced at query time.</p>
+  <div class="pills">
+    <span class="pill ok">&#10003; AD groups unchanged &mdash; lives in Active Directory</span>
+    <span class="pill">Trust3 AI or Immuta sync from AD/LDAP</span>
+    <span class="pill">Teradata GRANTs &rarr; Ranger policies or Immuta subscriptions</span>
+    <span class="pill">Masking views &mdash; key migration risk</span>
+  </div>
+</div>
+
+<div class="canvas">
+
+  <div class="note key"><strong>Core principle:</strong> The AD groups are the continuity thread. RBC&rsquo;s IAM team maintains them today for Teradata access. They carry over to the lakehouse unchanged &mdash; same groups, same membership, same governance process. What changes is the tool that consumes those groups to make enforcement decisions at query time.</div>
+
+  <div class="slabel">What exists in Teradata today</div>
+  <div class="card">
+    <div style="font-size:11px;line-height:1.8;">The Teradata access model is built on three layers working together:<br/><br/>
+    <strong>AD groups</strong> (e.g. <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">RBC-DATA-RISK-READ</code>, <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">RBC-DATA-FINANCE-PII-CLEARED</code>, <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">RBC-DATA-WHOLESALE-READ</code>) &mdash; live in Active Directory, maintained by IAM. These are not Teradata constructs.<br/><br/>
+    <strong>Teradata roles</strong> &mdash; mapped to AD groups via LDAP sync into Teradata&rsquo;s security layer. When someone&rsquo;s AD group changes, Teradata role membership updates automatically.<br/><br/>
+    <strong>GRANT statements</strong> &mdash; <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">GRANT SELECT ON fsdm_party TO ROLE rbc_risk_read</code> &mdash; table-level access attached to roles.<br/><br/>
+    <strong>Teradata masking views</strong> &mdash; many environments implement column-level security through database views that hide sensitive columns. <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">v_fsdm_party_masked</code> returns <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">'XXX-XXX-XXX'</code> for SIN columns. These are security controls but invisible in the GRANT table.
+    </div>
+  </div>
+
+  <div class="slabel">How AD groups map to the new enforcement model</div>
+  <pre><span class="cm">TODAY (Teradata):</span>
+User <span class="kw">in</span> AD group RBC-DATA-RISK-READ
+  &rarr; Teradata LDAP sync &rarr; Teradata role rbc_risk_read
+  &rarr; GRANT SELECT ON fsdm_financial_transaction TO rbc_risk_read
+  &rarr; Query runs, Teradata enforces
+
+<span class="cm">FUTURE (Iceberg + Trust3 AI):</span>
+User <span class="kw">in</span> AD group RBC-DATA-RISK-READ  <span class="cm">&larr; unchanged, still in AD</span>
+  &rarr; AD sync to Trust3 AI Ranger (every 30 min)
+  &rarr; Ranger policy: GROUP:RBC-DATA-RISK-READ READ on lakehouse.silver.fsdm_financial_transaction
+  &rarr; Trino Ranger plugin enforces at query time
+
+<span class="cm">FUTURE (Iceberg + Immuta):</span>
+User <span class="kw">in</span> AD group RBC-DATA-RISK-READ  <span class="cm">&larr; unchanged, still in AD</span>
+  &rarr; AD sync to Immuta (Azure AD OAuth2 direct or LDAP)
+  &rarr; Group membership becomes user attribute in Immuta ABAC
+  &rarr; Policy: <span class="kw">if</span> user.groups <span class="kw">contains</span> <span class="st">'RBC-DATA-RISK-READ'</span> &rarr; ALLOW
+             <span class="kw">if</span> user.groups <span class="kw">contains</span> <span class="st">'RBC-DATA-PII-CLEARED'</span> &rarr; unmask SIN columns
+  &rarr; ImmutaSystemAccessControl on Trino coordinator enforces</pre>
+
+  <div class="slabel">How each tool syncs AD groups</div>
+  <table class="ctable">
+    <thead><tr><th>Aspect</th><th>Trust3 AI (Privacera)</th><th>Immuta</th></tr></thead>
+    <tbody>
+      <tr><td><strong>AD sync mechanism</strong></td><td>LDAP connector with RBC AD bind credentials. Syncs users and group membership on a configurable schedule (typically 15&ndash;30 min).</td><td>Azure AD OAuth2 direct integration (Entra ID) added v1.0. Also supports LDAP sync. Group membership syncs as user identity attributes.</td></tr>
+      <tr><td><strong>Identity federation point</strong></td><td>Keycloak OIDC bridge. AD groups flow through Keycloak as JWT claims. Ranger reads group membership from the JWT token on each query.</td><td>Direct Azure AD OAuth2 &mdash; no Keycloak bridge needed. Groups arrive as token claims. Simpler integration path for RBC&rsquo;s Azure/M365 environment.</td></tr>
+      <tr><td><strong>Group membership in policies</strong></td><td>First-class subjects in Ranger policies. Syntax: <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">GROUP:RBC-DATA-RISK-READ has privilege READ on resource silver.fsdm_party</code></td><td>Group membership becomes an ABAC attribute. Syntax: <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">if user.groups contains 'RBC-DATA-PII-CLEARED' then unmask column account_number</code></td></tr>
+      <tr><td><strong>When AD group changes</strong></td><td>Next LDAP sync cycle (15&ndash;30 min). No manual intervention in Ranger policies needed.</td><td>Next AD sync cycle. Attribute change propagates automatically to all policies using that attribute.</td></tr>
+      <tr><td><strong>Advantage for complex rules</strong></td><td>RBAC-style: group X has privilege Y on resource Z. Simple and auditable.</td><td>ABAC-style: <code style="font-size:9px;background:#F1F5F9;padding:1px 3px;border-radius:2px">COUNTRY_OF_JURISDICTION = 'CA' AND groups contains 'BCBS239-APPROVED'</code>. More expressive for jurisdictional rules.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="slabel">The Teradata GRANT &rarr; Policy translation</div>
+  <div class="note info">This is a translation, not a redesign. The Teradata DBA team can export the current role-to-table grant matrix. That export becomes the source of truth for building the initial policy set. It is mechanical &mdash; the access model does not change, only the enforcement mechanism.</div>
+  <table class="ctable">
+    <thead><tr><th>Teradata construct</th><th>Trust3 AI equivalent</th><th>Immuta equivalent</th></tr></thead>
+    <tbody>
+      <tr><td><code style="font-size:9px">GRANT SELECT ON table TO role</code></td><td>Ranger policy: GROUP:role READ on table</td><td>Subscription policy: group members can subscribe to data source</td></tr>
+      <tr><td>Masking view (hides SIN column)</td><td>Column mask policy on <code style="font-size:9px">sin_number</code> column &mdash; tag-driven, auto-propagated</td><td>Sensitive data policy: mask column for users without PII-CLEARED attribute</td></tr>
+      <tr><td><code style="font-size:9px">GRANT SELECT ON masked_view TO role</code></td><td>Unmask privilege granted to PII-CLEARED group in Ranger</td><td>Subscription with purpose-based unmasking for PII-CLEARED group</td></tr>
+      <tr><td>Row-level filter (e.g. <code style="font-size:9px">WHERE jurisdiction='CA'</code>)</td><td>Row filter policy: inject WHERE clause based on user&rsquo;s group attribute</td><td>Row-level policy: filter expression tied to user.jurisdiction attribute</td></tr>
+      <tr><td>Column-level GRANT (rare in Teradata)</td><td>Column-level privilege in Ranger resource policy</td><td>Column-level masking/reveal in Immuta sensitive data policy</td></tr>
+    </tbody>
+  </table>
+
+  <div class="slabel">&#9888; The critical migration risk &mdash; security-bearing Teradata views</div>
+  <div class="note warn"><strong>The biggest migration gotcha:</strong> Many Teradata environments implement security through database views rather than explicit GRANTs. A view called <code style="font-size:9px;background:rgba(0,0,0,0.08);padding:1px 3px;border-radius:2px">v_fsdm_party_masked</code> that hides SIN columns is a security control &mdash; but it is invisible in the GRANT table. If you replicate the GRANTs and miss the masking views, you will expose data that was previously hidden when you point Tableau or Trino at the new Iceberg tables.</div>
+
+  <div class="slabel">Migration checklist</div>
+  <div class="checklist">
+    <div class="ci">
+      <div class="ci-box"></div>
+      <div class="ci-body">
+        <div class="ci-title">1. Export Teradata grant matrix</div>
+        <div class="ci-detail">DBA team exports: all roles, all GRANT SELECT statements, all role-to-AD-group mappings. This is the source of truth for policy translation.</div>
+      </div>
+    </div>
+    <div class="ci risk">
+      <div class="ci-box"></div>
+      <div class="ci-body">
+        <div class="ci-title">2. &#9888; Audit all Teradata views for security-bearing masking</div>
+        <div class="ci-detail">JoAnn&rsquo;s DA team must identify which Teradata views are security controls (hide columns, filter rows) vs convenience joins. Each security-bearing view must be mapped to an explicit column/row policy in Trust3 AI or Immuta BEFORE that Teradata table is decommissioned. This is the step most likely to be missed.</div>
+      </div>
+    </div>
+    <div class="ci">
+      <div class="ci-box"></div>
+      <div class="ci-body">
+        <div class="ci-title">3. Configure AD/LDAP sync in Trust3 AI or Immuta</div>
+        <div class="ci-detail">IAM team provides AD bind credentials. Configure sync schedule (15&ndash;30 min). Validate group membership is flowing correctly before any policy is activated.</div>
+      </div>
+    </div>
+    <div class="ci">
+      <div class="ci-box"></div>
+      <div class="ci-body">
+        <div class="ci-title">4. Translate grants to policies (scriptable)</div>
+        <div class="ci-detail">The grant export can be scripted into Ranger policy import format (Trust3 AI) or Immuta API calls. This is mechanical &mdash; the DA/platform team does not need to redesign the access model, just translate it.</div>
+      </div>
+    </div>
+    <div class="ci">
+      <div class="ci-box"></div>
+      <div class="ci-body">
+        <div class="ci-title">5. Validate parity before Teradata decommission</div>
+        <div class="ci-detail">For each AD group, run the same query against the Teradata table (via legacy path) and the new Iceberg table (via Trino + security tool). Column visibility and row counts must match. This is the gate that internal audit signs off on before Teradata tables are removed.</div>
+      </div>
+    </div>
+    <div class="ci">
+      <div class="ci-box"></div>
+      <div class="ci-body">
+        <div class="ci-title">6. Run parallel for 30 days before cutover</div>
+        <div class="ci-detail">Teradata and Iceberg access control run simultaneously. Any access discrepancy discovered during this period is caught before production cutover. Do not decommission Teradata tables until this parallel run is clean for 30 days.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note tip" style="margin-top:4px"><strong>Owner for this workstream:</strong> JoAnn (DA Team Lead) for the view audit and policy translation. Sanjeev (Platform Engineering) for the AD sync configuration and Trino plugin setup. IAM team for AD bind credential provisioning. Internal Audit for the parity sign-off gate.</div>
+
+</div>
+
+<div class="footer">
+  <span>Lumina &middot; RBC Enterprise Data &middot; AD Groups &amp; Policy Migration &middot; April 2026</span>
+  <span>George Chilakos, VP Enterprise Data</span>
+</div>
+</body>
+</html>
