@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Define Once, Serve AI &amp; BI — Semantic Architecture</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A1628;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);padding-bottom:60px;}
+.hero{background:var(--navy);padding:38px 32px 28px;}
+.back{font-size:10px;font-family:'DM Mono',monospace;color:#475569;margin-bottom:12px;}
+.back a{color:#94A3B8;text-decoration:none;}
+.hero h1{font-family:'Lora',serif;font-size:24px;font-weight:600;color:#fff;margin-bottom:6px;}
+.hero p{font-size:11px;color:#94A3B8;line-height:1.7;max-width:720px;}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+.pill{font-size:9px;font-family:'DM Mono',monospace;padding:2px 9px;border-radius:20px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.07);color:#94A3B8;}
+.pill.ok{background:rgba(5,150,105,0.15);color:#6EE7B7;border-color:rgba(110,231,183,0.25);}
+.canvas{max-width:1020px;margin:0 auto;padding:24px 24px 0;}
+.tabs{display:flex;gap:6px;max-width:1020px;margin:0 auto;padding:18px 24px 0;flex-wrap:wrap;}
+.tab{padding:6px 16px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:#E0E7EF;color:#64748B;}
+.tab.active{background:var(--navy);color:#fff;}
+.panel{display:none;max-width:1020px;margin:0 auto;padding:18px 24px 0;}
+.panel.active{display:block;}
+
+/* diagram */
+.diag{background:#fff;border-radius:12px;border:1.5px solid var(--line);padding:24px;margin-bottom:14px;}
+.d-row{display:flex;gap:10px;justify-content:center;align-items:stretch;margin-bottom:4px;flex-wrap:wrap;}
+.d-box{border-radius:8px;border:1.5px solid;padding:10px 14px;font-size:10px;flex:1;min-width:120px;max-width:200px;}
+.d-box-title{font-weight:700;font-size:11px;margin-bottom:4px;}
+.d-box-sub{font-size:9px;line-height:1.6;opacity:0.8;}
+.d-arrow{text-align:center;font-size:13px;color:var(--muted);padding:4px 0;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;}
+.d-arrow-label{font-size:9px;font-family:'DM Mono',monospace;color:var(--muted);}
+.d-center{background:#F0FDF4;border-color:#BBF7D0;}
+.d-center .d-box-title{color:#065F46;}
+.d-bi{background:#EFF6FF;border-color:#BFDBFE;}
+.d-bi .d-box-title{color:#1E4D8C;}
+.d-ai{background:#FAF5FF;border-color:#DDD6FE;}
+.d-ai .d-box-title{color:#5B21B6;}
+.d-tab{background:#FFF7ED;border-color:#FED7AA;}
+.d-tab .d-box-title{color:#92400E;}
+.d-agent{background:#F0FDF4;border-color:#86EFAC;}
+.d-agent .d-box-title{color:#065F46;}
+.d-gold{background:#FEFCE8;border-color:#FEF08A;}
+.d-gold .d-box-title{color:#713F12;}
+.d-grey{background:#F8FAFC;border-color:#E2E8F0;color:var(--muted);}
+.divider{width:2px;background:var(--line);border-radius:2px;align-self:stretch;min-height:60px;margin:0 4px;}
+.divider-label{font-size:9px;font-family:'DM Mono',monospace;color:var(--muted);writing-mode:vertical-rl;text-align:center;padding:4px 0;}
+.badge{display:inline-block;font-size:8px;font-family:'DM Mono',monospace;padding:1px 6px;border-radius:3px;margin-top:3px;}
+.badge-g{background:#D1FAE5;color:#065F46;}
+.badge-a{background:#FEF3C7;color:#92400E;}
+.badge-r{background:#FEE2E2;color:#991B1B;}
+
+/* cards */
+.note{border-radius:8px;padding:10px 14px;font-size:11px;line-height:1.7;margin-bottom:12px;}
+.note.key{background:var(--navy);border:1.5px solid #1E4D8C;color:#E2E8F0;}
+.note.tip{background:#F0FDF4;border:1.5px solid #BBF7D0;color:#065F46;}
+.note.warn{background:#FFF7ED;border:1.5px solid #FED7AA;color:#78350F;}
+.note.info{background:#EFF6FF;border:1.5px solid #BFDBFE;color:#1E3A5F;}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+@media(max-width:640px){.cols{grid-template-columns:1fr;}}
+.card{background:#fff;border-radius:10px;border:1.5px solid var(--line);padding:14px 16px;margin-bottom:10px;}
+.card-title{font-size:12px;font-weight:700;margin-bottom:6px;}
+.card-body{font-size:11px;color:var(--muted);line-height:1.7;}
+pre{font-family:'DM Mono',monospace;font-size:9px;background:#0F172A;color:#E2E8F0;padding:10px 14px;border-radius:6px;margin:6px 0;line-height:1.8;overflow-x:auto;}
+.kw{color:#93C5FD;}.cm{color:#475569;}.st{color:#FDE68A;}.fn{color:#6EE7B7;}
+
+/* options grid */
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+@media(max-width:640px){.opt-grid{grid-template-columns:1fr;}}
+.opt{border-radius:10px;border:1.5px solid var(--line);padding:14px 16px;}
+.opt-head{font-size:12px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:8px;}
+.opt-body{font-size:10px;color:var(--muted);line-height:1.7;}
+.opt-pros{margin-top:8px;font-size:10px;}
+.opt-pros li{padding:2px 0;padding-left:12px;position:relative;line-height:1.5;}
+.opt-pros li::before{content:'✓';position:absolute;left:0;color:#059669;font-size:9px;}
+.opt-cons li::before{content:'✗';color:#DC2626;}
+
+.slabel{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin:18px 0 10px;}
+.slabel:first-child{margin-top:0;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--line);}
+
+.footer{max-width:1020px;margin:24px auto 0;padding:12px 24px 0;border-top:1px solid var(--line);font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div style="max-width:1020px;margin:0 auto"><div class="back"><a href="../">&#8592; Lakehouse Hub</a></div></div>
+  <h1>Define Once, Serve AI &amp; BI</h1>
+  <p>The goal: one authoritative definition of every business metric &mdash; NII, VaR, LCR, customer count &mdash; consumed identically by Power BI dashboards, RBC Assist AI queries, Tableau analysts, and ML pipelines. Three architecture patterns evaluated against RBC&rsquo;s confirmed stack.</p>
+  <div class="pills">
+    <span class="pill ok">&#10003; ADR-010 Fabric confirmed</span>
+    <span class="pill">Fabric already does this for Power BI + RBC Assist</span>
+    <span class="pill">Tableau + agents = the unsolved edge</span>
+    <span class="pill">AtScale Pattern 3 extends coverage</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="go('today',this)">Today (Fabric alone)</button>
+  <button class="tab" onclick="go('gap',this)">The gap</button>
+  <button class="tab" onclick="go('atscale',this)">AtScale Pattern 3</button>
+  <button class="tab" onclick="go('verdict',this)">Recommendation</button>
+</div>
+
+<!-- TODAY -->
+<div class="panel active" id="panel-today">
+  <div class="note key"><strong>The good news:</strong> Fabric already solves "define once, serve AI and BI" for the Power BI + RBC Assist pair. The Fabric Data Agent reads the <em>identical</em> certified DAX measures as Power BI. Define NII once &mdash; both a report visual and an AI natural language query use the same number, calculated the same way, with the same RLS applied.</div>
+
+  <div class="slabel">How Fabric already unifies AI and BI</div>
+  <div class="diag">
+    <div class="d-row">
+      <div class="d-box d-gold" style="max-width:100%;text-align:center">
+        <div class="d-box-title">Gold Iceberg (on-prem MinIO)</div>
+        <div class="d-box-sub">gold.trading_metrics &nbsp;|&nbsp; gold.risk_exposure &nbsp;|&nbsp; gold.customer_360</div>
+      </div>
+    </div>
+    <div class="d-arrow">&#8595; <span class="d-arrow-label">Delta copy pipeline &mdash; Fabric pipeline refresh</span></div>
+    <div class="d-row">
+      <div class="d-box d-center" style="max-width:100%;text-align:center;padding:14px 20px">
+        <div class="d-box-title" style="font-size:13px">&#9733; Fabric Semantic Model &mdash; SINGLE DEFINITION LAYER</div>
+        <div class="d-box-sub" style="font-size:10px;margin-top:4px">
+          DAX measures: <strong>[Net Interest Income]</strong>, <strong>[VaR 95]</strong>, <strong>[LCR Ratio]</strong>, <strong>[Active Customers MTD]</strong>&hellip;<br/>
+          RLS: enforced by AD group &mdash; same rule for BI and AI queries<br/>
+          DDM: T-SQL column masking at SQL Analytics Endpoint for PII<br/>
+          Verified Answers: pre-approved AI responses for sensitive KPIs<br/>
+          <span class="badge badge-g">define once</span> <span class="badge badge-g">ADR-010 confirmed</span> <span class="badge badge-g">Import mode &mdash; in-memory, sub-second</span>
+        </div>
+      </div>
+    </div>
+    <div class="d-arrow" style="gap:40px">
+      <div style="text-align:center">&#8601;<br/><span class="d-arrow-label">DAX query</span></div>
+      <div style="text-align:center">&#8600;<br/><span class="d-arrow-label">NL &rarr; DAX via Fabric Data Agent</span></div>
+    </div>
+    <div class="d-row">
+      <div class="d-box d-bi">
+        <div class="d-box-title">Power BI Reports</div>
+        <div class="d-box-sub">1,000+ OBIEE migrations<br/>same certified measures<br/>same RLS as AI queries</div>
+        <span class="badge badge-g">BI</span>
+      </div>
+      <div class="d-box d-ai">
+        <div class="d-box-title">RBC Assist (AI chatbot)</div>
+        <div class="d-box-sub">Azure AI Foundry<br/>&rarr; Fabric Data Agent<br/>&rarr; NL-to-DAX</div>
+        <span class="badge badge-g">AI</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="note tip">Both Power BI and RBC Assist read the <strong>same DAX measure</strong>. If someone changes the definition of [Net Interest Income] in the Fabric model, it updates everywhere simultaneously &mdash; report visuals and AI answers in the same refresh cycle. This is "define once" working today.</div>
+</div>
+
+<!-- THE GAP -->
+<div class="panel" id="panel-gap">
+  <div class="note warn"><strong>Where "define once" breaks down:</strong> Fabric&rsquo;s DAX measures are not queryable by Tableau, ML pipelines, or AI agents that need raw data or complex SQL. Those consumers fall back to Trino directly &mdash; which means they bypass the Fabric semantic model and the metric definition is lost. They either rewrite the metric in SQL themselves, or get a different number.</div>
+
+  <div class="slabel">Current state: three disconnected surfaces</div>
+  <div class="diag">
+    <div class="d-row">
+      <div class="d-box d-gold" style="max-width:100%;text-align:center">
+        <div class="d-box-title">Gold Iceberg</div>
+        <div class="d-box-sub">Single authoritative source</div>
+      </div>
+    </div>
+    <div class="d-row" style="margin-top:8px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div class="d-arrow" style="flex-direction:column;gap:2px">&#8595;<span class="d-arrow-label">Delta copy</span></div>
+        <div class="d-box d-center" style="width:100%;text-align:center">
+          <div class="d-box-title">Fabric semantic model</div>
+          <div class="d-box-sub">DAX measures<br/>Power BI + RBC Assist</div>
+          <span class="badge badge-g">unified ✓</span>
+        </div>
+      </div>
+      <div style="width:1px;background:var(--line);margin:0 8px;align-self:stretch"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div class="d-arrow" style="flex-direction:column;gap:2px">&#8595;<span class="d-arrow-label">Trino JDBC</span></div>
+        <div class="d-box d-tab" style="width:100%;text-align:center">
+          <div class="d-box-title">Tableau</div>
+          <div class="d-box-sub">SQL written by analyst<br/>no governed measures</div>
+          <span class="badge badge-r">metric drift risk ✗</span>
+        </div>
+      </div>
+      <div style="width:1px;background:var(--line);margin:0 8px;align-self:stretch"></div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
+        <div class="d-arrow" style="flex-direction:column;gap:2px">&#8595;<span class="d-arrow-label">Trino JDBC / parameterised</span></div>
+        <div class="d-box d-agent" style="width:100%;text-align:center">
+          <div class="d-box-title">ML pipelines / agents</div>
+          <div class="d-box-sub">raw Iceberg data<br/>no business context</div>
+          <span class="badge badge-a">no semantic context</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slabel">Why Fabric&rsquo;s DAX can&rsquo;t serve everything</div>
+  <div class="cols">
+    <div class="card" style="border-left:4px solid #FCA5A5">
+      <div class="card-title" style="color:#DC2626">DAX limitations for agent/ML use cases</div>
+      <div class="card-body">
+        <ul style="padding-left:14px;line-height:1.8;font-size:10px">
+          <li>No REST/GraphQL API &mdash; XMLA only. Python agents can&rsquo;t call DAX cleanly</li>
+          <li>No real-time Iceberg &mdash; always reads the Delta copy (minutes-to-hours lag)</li>
+          <li>DAX cannot express: window functions, rolling aggregations, multi-join feature extraction, 50k-row ML datasets</li>
+          <li>No row-level data export for model training &mdash; Fabric returns summaries, not raw rows</li>
+          <li>Fabric Data Agent handles simple NL &rarr; KPI queries. Multi-hop reasoning ("customers with 3+ products AND declining engagement") requires complex SQL</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid #FCA5A5">
+      <div class="card-title" style="color:#DC2626">Tableau limitations through Fabric</div>
+      <div class="card-body">
+        <ul style="padding-left:14px;line-height:1.8;font-size:10px">
+          <li>Tableau cannot connect to the Fabric Import semantic model directly &mdash; no XMLA reader in Tableau that exposes DAX measures as governed objects</li>
+          <li>Tableau <em>can</em> connect to the Fabric SQL Analytics Endpoint via ODBC &mdash; but this exposes raw Delta tables, not the DAX measures</li>
+          <li>Result: Tableau analysts rewrite metric logic in SQL themselves &rarr; drift from the Fabric definition</li>
+          <li>BCBS 239 audit risk: "NII" in Tableau &ne; "NII" in Power BI if both sides define it independently</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ATSCALE PATTERN 3 -->
+<div class="panel" id="panel-atscale">
+  <div class="note info"><strong>AtScale Pattern 3</strong> places AtScale between Gold Iceberg and all consumers. Fabric imports from AtScale (pre-aggregated, governed) instead of raw Gold. Tableau and agents also connect to AtScale. One metric definition, served to every surface. This is "define once" extended to the full consumer estate.</div>
+
+  <div class="slabel">Full "define once" architecture with AtScale</div>
+  <div class="diag">
+    <div class="d-row">
+      <div class="d-box d-gold" style="max-width:100%;text-align:center">
+        <div class="d-box-title">Gold Iceberg (authoritative write target &mdash; unchanged)</div>
+        <div class="d-box-sub">gold.trading_metrics &nbsp;|&nbsp; gold.risk_exposure &nbsp;|&nbsp; gold.customer_360</div>
+      </div>
+    </div>
+    <div class="d-arrow">&#8595; <span class="d-arrow-label">Trino query &mdash; AtScale reads Gold directly</span></div>
+    <div class="d-row">
+      <div class="d-box" style="max-width:100%;text-align:center;padding:16px 20px;background:#EFF6FF;border:2px solid #1E4D8C">
+        <div class="d-box-title" style="color:#1E4D8C;font-size:13px">&#9733; AtScale &mdash; SINGLE METRIC REGISTRY</div>
+        <div class="d-box-sub" style="font-size:10px;margin-top:4px">
+          Business metrics defined once: <strong>Net Interest Income</strong>, <strong>VaR 95/99</strong>, <strong>LCR Ratio</strong>, <strong>Active Customers MTD</strong>&hellip;<br/>
+          Adaptive aggregates pre-materialised on Iceberg &rarr; fast queries for BI tools<br/>
+          MDX/OLAP cube surface for Excel &nbsp;|&nbsp; REST + GraphQL API for agents &nbsp;|&nbsp; MCP server for AI<br/>
+          AD group sync &rarr; same access control as Fabric RLS<br/>
+          <span class="badge badge-g">true single definition</span> <span class="badge badge-a">on-prem: validate POC</span> <span class="badge badge-a">Snowflake-led financing</span>
+        </div>
+      </div>
+    </div>
+    <div class="d-row" style="margin-top:4px;gap:6px">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span class="d-arrow-label">pre-aggregated feed</span>
+        <div style="font-size:11px;color:var(--muted)">&#8595;</div>
+        <div class="d-box d-center" style="width:100%;text-align:center">
+          <div class="d-box-title">Fabric semantic model</div>
+          <div class="d-box-sub">Imports from AtScale<br/>not raw Gold tables<br/>faster, smaller refresh</div>
+          <span class="badge badge-g">BI</span>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span class="d-arrow-label">NL → DAX</span>
+        <div style="font-size:11px;color:var(--muted)">&#8595;</div>
+        <div class="d-box d-ai" style="width:100%;text-align:center">
+          <div class="d-box-title">RBC Assist</div>
+          <div class="d-box-sub">Fabric Data Agent<br/>reads Fabric model<br/>(same as today)</div>
+          <span class="badge badge-g">AI</span>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span class="d-arrow-label">governed metrics</span>
+        <div style="font-size:11px;color:var(--muted)">&#8595;</div>
+        <div class="d-box d-tab" style="width:100%;text-align:center">
+          <div class="d-box-title">Tableau</div>
+          <div class="d-box-sub">Connects to AtScale<br/>same metric defs<br/>no SQL rewrite</div>
+          <span class="badge badge-g">BI</span>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span class="d-arrow-label">REST / MCP</span>
+        <div style="font-size:11px;color:var(--muted)">&#8595;</div>
+        <div class="d-box d-agent" style="width:100%;text-align:center">
+          <div class="d-box-title">Agents / ML pipelines</div>
+          <div class="d-box-sub">AtScale REST API<br/>or MCP server<br/>governed metrics</div>
+          <span class="badge badge-g">AI</span>
+        </div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px">
+        <span class="d-arrow-label">MDX cube</span>
+        <div style="font-size:11px;color:var(--muted)">&#8595;</div>
+        <div class="d-box d-grey" style="width:100%;text-align:center">
+          <div class="d-box-title">Excel pivot tables</div>
+          <div class="d-box-sub">Risk / Treasury<br/>MDX-native</div>
+          <span class="badge" style="background:#F1F5F9;color:#475569">BI</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="slabel">What changes vs today</div>
+  <div class="cols">
+    <div class="card" style="border-left:4px solid #BBF7D0">
+      <div class="card-title" style="color:#065F46">Gains</div>
+      <div class="card-body">
+        <ul style="padding-left:14px;line-height:1.8;font-size:10px">
+          <li><strong>True single metric registry</strong> &mdash; change NII definition once in AtScale, it propagates to Fabric, Tableau, agents simultaneously</li>
+          <li><strong>BCBS 239 compliance</strong> &mdash; every number in every tool traces back to the same definition. Audit question "how is NII calculated?" has one answer</li>
+          <li><strong>Fabric Import is faster</strong> &mdash; Fabric imports pre-aggregated AtScale output instead of joining raw FSDM tables. Smaller dataset, faster refresh, lower F-SKU memory pressure</li>
+          <li><strong>AI agents get business context</strong> &mdash; AtScale REST + MCP server gives agents governed metric definitions, not raw schema</li>
+          <li><strong>Excel coverage</strong> &mdash; MDX cube exposure for risk/treasury teams who work in Excel pivot tables</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="border-left:4px solid #FCA5A5">
+      <div class="card-title" style="color:#DC2626">Costs &amp; risks</div>
+      <div class="card-body">
+        <ul style="padding-left:14px;line-height:1.8;font-size:10px">
+          <li><strong>AtScale in Fabric refresh chain</strong> &mdash; if AtScale has an outage, Fabric can&rsquo;t refresh. New single point of failure for 1,000 Power BI reports. Requires enterprise SLA before production.</li>
+          <li><strong>Two authoring environments remain</strong> &mdash; metrics defined in AtScale, <em>then</em> DAX measures in Fabric reference them. Still need both. The drift problem is reduced but not eliminated.</li>
+          <li><strong>New vendor, new B-10 review</strong> &mdash; AtScale must pass OSFI third-party risk assessment before it sits upstream of Fabric.</li>
+          <li><strong>Implementation complexity</strong> &mdash; AtScale&rsquo;s Hadoop origins. POC against Trino/Polaris/MinIO required before commitment.</li>
+          <li><strong>Procurement cycle</strong> &mdash; enterprise licensing, unpublished pricing. 3&ndash;4 months from decision to production.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="note warn"><strong>Critical dependency:</strong> Fabric&rsquo;s NL-to-DAX / RBC Assist path remains independent of AtScale. The Fabric Data Agent still reads Fabric&rsquo;s own DAX measures &mdash; not AtScale directly. So even in Pattern 3, there are technically two metric layers: AtScale (upstream definition) and Fabric DAX (downstream projection for Power BI + AI). The goal is to keep them in sync through governance process, not through perfect technical unification.</div>
+</div>
+
+<!-- VERDICT -->
+<div class="panel" id="panel-verdict">
+  <div class="slabel">The architectural goal — and where each option lands</div>
+
+  <div class="card" style="border:2px solid #1E4D8C;background:#EFF6FF;margin-bottom:14px">
+    <div class="card-title" style="color:#1E4D8C;font-size:13px">What "define once, serve AI and BI" actually requires</div>
+    <div class="card-body" style="color:#1E3A5F">
+      <ol style="padding-left:16px;line-height:2;font-size:11px">
+        <li><strong>One authoritative metric definition</strong> — "NII" is calculated one way, everywhere</li>
+        <li><strong>Consumed by Power BI</strong> — fast, in-memory, certified, with RLS</li>
+        <li><strong>Consumed by RBC Assist (AI)</strong> — NL query returns the same NII as the Power BI report</li>
+        <li><strong>Consumed by Tableau</strong> — analyst connects and gets the governed metric, not raw SQL</li>
+        <li><strong>Consumed by agents / ML</strong> — programmatic access to the same business context, not raw schema</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="opt-grid">
+    <div class="opt" style="border-color:#BBF7D0;background:#F0FDF4">
+      <div class="opt-head"><span style="background:#059669;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">1</span><span style="color:#065F46">Fabric alone (today)</span></div>
+      <div class="opt-body">Solves requirements 1–3. Fails 4 and 5. Tableau gets raw Trino. Agents get raw schema.</div>
+      <ul class="opt-pros" style="color:#065F46;margin-top:6px"><li>Already built and confirmed</li><li>No new vendor</li><li>RBC Assist + Power BI: genuinely unified</li></ul>
+      <ul class="opt-pros opt-cons" style="color:#DC2626;margin-top:4px"><li>Tableau metric drift — BCBS 239 risk</li><li>Agents have no business context</li></ul>
+    </div>
+    <div class="opt" style="border-color:#BFDBFE;background:#EFF6FF;border-width:2px">
+      <div class="opt-head"><span style="background:#1E4D8C;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">2</span><span style="color:#1E4D8C">AtScale Pattern 3 (full vision)</span></div>
+      <div class="opt-body">Solves all 5 requirements. AtScale is the single definition layer. Fabric, Tableau, agents all consume from it.</div>
+      <ul class="opt-pros" style="color:#065F46;margin-top:6px"><li>True single metric registry</li><li>BCBS 239 — one definition everywhere</li><li>Agents get business context via MCP</li><li>Fabric refresh faster (pre-aggregated)</li></ul>
+      <ul class="opt-pros opt-cons" style="color:#DC2626;margin-top:4px"><li>AtScale in Fabric refresh chain = new SPOF</li><li>OSFI B-10 review required</li><li>POC on Trino/Polaris stack first</li><li>Requires Q-10 Tableau scope confirmed</li></ul>
+    </div>
+    <div class="opt" style="border-color:#E2E8F0">
+      <div class="opt-head"><span style="background:#475569;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">3</span><span style="color:#475569">Starburst (partial)</span></div>
+      <div class="opt-body">Solves 1–2 partially through data products. Fabric still imports raw Gold (no upstream semantic). Tableau gets governed SQL views. Agents get data products API.</div>
+      <ul class="opt-pros" style="color:#065F46;margin-top:6px"><li>Trino upgrade path — less new technology</li><li>Data products serve agents well</li></ul>
+      <ul class="opt-pros opt-cons" style="color:#DC2626;margin-top:4px"><li>Lighter semantic layer than AtScale</li><li>Fabric still importing raw Gold</li><li>No MDX for Excel</li></ul>
+    </div>
+    <div class="opt" style="border-color:#E2E8F0">
+      <div class="opt-head"><span style="background:#475569;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0">4</span><span style="color:#475569">dbt MetricFlow</span></div>
+      <div class="opt-body">Solves metric consistency in theory but conflicts with ADR-005 (no dbt). YAML definitions in source control, but requires dbt Cloud SaaS. Not recommended.</div>
+      <ul class="opt-pros opt-cons" style="color:#DC2626;margin-top:6px"><li>Direct ADR-005 conflict</li><li>dbt Cloud SaaS — OSFI B-10 exposure</li><li>Dual stack with Python transforms</li></ul>
+    </div>
+  </div>
+
+  <div class="note tip"><strong>Sequencing recommendation:</strong><br/>
+    <strong>Now:</strong> Operate with Fabric alone. Power BI + RBC Assist are unified today. Accept that Tableau has no governed metrics for the moment.<br/>
+    <strong>Q-10 answered (JoAnn + Saurabh):</strong> If Tableau = certified reporting &rarr; run AtScale POC against Trino/Polaris/MinIO. If POC passes and OSFI B-10 review clears &rarr; implement Pattern 3. This is the path to the full "define once" vision.<br/>
+    <strong>Don&rsquo;t skip the POC.</strong> AtScale&rsquo;s Hadoop origins have caused friction on modern Trino/Iceberg stacks. Validate before committing it as a dependency in the Fabric refresh chain.
+  </div>
+</div>
+
+<div class="footer">
+  <span>Lumina &middot; RBC Enterprise Data &middot; Semantic Single Source Architecture &middot; April 2026</span>
+  <span>George Chilakos, VP Enterprise Data</span>
+</div>
+<script>
+function go(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
