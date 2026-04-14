@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Lumina — Platform Responsibility Matrix (R)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --navy:    #0A1628;
+  --text:    #1E293B;
+  --muted:   #64748B;
+  --line:    #E2E8F0;
+  --soft:    #F8FAFC;
+
+  --plat:    #3068FF;
+  --plat-bg: #EFF6FF;
+  --plat-b:  #BFDBFE;
+
+  --dmo:     #0891B2;
+  --dmo-bg:  #ECFEFF;
+  --dmo-b:   #A5F3FC;
+
+  --biz:     #059669;
+  --biz-bg:  #ECFDF5;
+  --biz-b:   #A7F3D0;
+
+  --shared:  #7C3AED;
+  --shared-bg:#FAF5FF;
+  --shared-b: #DDD6FE;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(--text); padding-bottom: 60px; }
+
+/* HERO */
+.hero { background: var(--navy); padding: 36px 32px 28px; }
+.hero-inner { max-width: 1100px; margin: 0 auto; }
+.back { font-size: 10px; font-family: 'DM Mono', monospace; color: #475569; margin-bottom: 12px; }
+.back a { color: #94A3B8; text-decoration: none; }
+.hero h1 { font-family: 'Lora', serif; font-size: 24px; font-weight: 600; color: #fff; margin-bottom: 6px; }
+.hero p { font-size: 11px; color: #94A3B8; line-height: 1.7; max-width: 700px; margin-bottom: 16px; }
+
+/* LEGEND */
+.legend { display: flex; gap: 10px; flex-wrap: wrap; }
+.leg { display: flex; align-items: center; gap: 7px; }
+.leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.leg-label { font-size: 11px; color: #94A3B8; }
+
+/* FILTER BAR */
+.filter-bar { max-width: 1100px; margin: 18px auto 0; padding: 0 24px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filter-label { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted); margin-right: 4px; }
+.filter-btn { padding: 5px 14px; border-radius: 20px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 11px; color: var(--muted); transition: all 0.12s; }
+.filter-btn:hover { border-color: var(--plat); color: var(--plat); }
+.filter-btn.active-plat { background: var(--plat-bg); border-color: var(--plat-b); color: var(--plat); font-weight: 500; }
+.filter-btn.active-dmo  { background: var(--dmo-bg);  border-color: var(--dmo-b);  color: var(--dmo);  font-weight: 500; }
+.filter-btn.active-biz  { background: var(--biz-bg);  border-color: var(--biz-b);  color: var(--biz);  font-weight: 500; }
+.filter-btn.active-all  { background: var(--navy); border-color: var(--navy); color: #fff; font-weight: 500; }
+
+/* MAIN TABLE */
+.canvas { max-width: 1100px; margin: 16px auto 0; padding: 0 24px; }
+
+.section-label {
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--muted); display: flex; align-items: center; gap: 10px; margin: 18px 0 8px;
+}
+.section-label:first-child { margin-top: 0; }
+.section-label::after { content: ''; flex: 1; height: 1px; background: var(--line); }
+
+table.rt { width: 100%; border-collapse: collapse; }
+table.rt thead tr th {
+  padding: 9px 12px; font-size: 9px; font-weight: 700; letter-spacing: 0.5px;
+  text-transform: uppercase; text-align: left; border-bottom: 2px solid var(--line);
+  background: var(--soft); position: sticky; top: 0; z-index: 2;
+}
+table.rt thead tr th:first-child { min-width: 260px; }
+table.rt thead tr th:not(:first-child) { width: 200px; }
+
+table.rt tbody tr { transition: background 0.1s; }
+table.rt tbody tr:hover td { background: #F1F5F9; }
+table.rt tbody tr.hidden { display: none; }
+
+table.rt td {
+  padding: 9px 12px; border-bottom: 1px solid var(--line);
+  vertical-align: top; font-size: 11px; line-height: 1.6;
+}
+table.rt td:first-child { font-weight: 500; color: var(--text); }
+table.rt td.notes { font-size: 10px; color: var(--muted); }
+
+/* R CHIPS */
+.r-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 9px; border-radius: 4px; font-size: 10px;
+  font-family: 'DM Mono', monospace; font-weight: 600;
+  border: 1px solid; white-space: nowrap; margin: 2px 2px 2px 0;
+}
+.r-plat { background: var(--plat-bg); color: var(--plat); border-color: var(--plat-b); }
+.r-dmo  { background: var(--dmo-bg);  color: var(--dmo);  border-color: var(--dmo-b); }
+.r-biz  { background: var(--biz-bg);  color: var(--biz);  border-color: var(--biz-b); }
+.r-shared { background: var(--shared-bg); color: var(--shared); border-color: var(--shared-b); }
+
+.dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.dot-plat { background: var(--plat); }
+.dot-dmo  { background: var(--dmo); }
+.dot-biz  { background: var(--biz); }
+
+.footer {
+  max-width: 1100px; margin: 24px auto 0; padding: 14px 24px 0;
+  border-top: 1px solid var(--line);
+  font-size: 10px; font-family: 'DM Mono', monospace; color: var(--muted);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="back"><a href="../">← Lakehouse Hub</a></div>
+    <h1>Platform Responsibility Matrix — R Only</h1>
+    <p>Who is Responsible for each activity across the Lumina lakehouse programme. Full RACI (Accountable, Consulted, Informed) to follow. Filter by group to see only their responsibilities.</p>
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--plat)"></div><div class="leg-label">Platform Team — builds and operates the lakehouse infrastructure</div></div>
+      <div class="leg"><div class="leg-dot" style="background:var(--dmo)"></div><div class="leg-label">DMO — data management, governance, migration management, supports Business</div></div>
+      <div class="leg"><div class="leg-dot" style="background:var(--biz)"></div><div class="leg-label">Business — data owners, domain SMEs, metric definers, UAT signatories</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <span class="filter-label">Filter by:</span>
+  <button class="filter-btn active-all" onclick="filter('all',this)">All</button>
+  <button class="filter-btn" onclick="filter('plat',this)">Platform Team</button>
+  <button class="filter-btn" onclick="filter('dmo',this)">DMO</button>
+  <button class="filter-btn" onclick="filter('biz',this)">Business</button>
+</div>
+
+<div class="canvas">
+
+<table class="rt" id="matrix">
+<thead>
+  <tr>
+    <th>Activity</th>
+    <th>Platform Team</th>
+    <th>DMO</th>
+    <th>Business</th>
+  </tr>
+</thead>
+<tbody>
+
+<!-- ═══ INFRASTRUCTURE & PLATFORM ═══ -->
+<tr><td colspan="4" style="padding:10px 12px 4px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:var(--soft);border-bottom:1px solid var(--line)">Infrastructure &amp; Platform</td></tr>
+
+<tr data-groups="plat">
+  <td>Deploy and operate MinIO AIStor (object storage)</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>Deploy and operate Apache Polaris (Iceberg REST catalog)</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>Deploy and operate Trino cluster (query engine)</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>Deploy and operate Airflow (pipeline orchestration)</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>Deploy and operate Marquez (lineage backend)</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>CI/CD pipeline — GitHub Actions test, build, deploy</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>Iceberg table compaction and maintenance (vacuum, expire snapshots)</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>Platform capacity planning and cost management</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>Platform monitoring, alerting, and on-call response</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+
+<!-- ═══ DATA PIPELINE ═══ -->
+<tr><td colspan="4" style="padding:10px 12px 4px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:var(--soft);border-bottom:1px solid var(--line)">Data Pipeline (Raw → Bronze → Silver → Gold)</td></tr>
+
+<tr data-groups="plat">
+  <td>Python pipeline framework (BasePipeline, schema validation, quality gates)</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat dmo">
+  <td>New source system ingestion (raw zone onboarding)</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>Bronze pipeline build — format conversion, metadata columns</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat dmo">
+  <td>Silver pipeline build — FSDM conformance, SCD Type 2, entity resolution</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat dmo biz">
+  <td>Gold pipeline build — domain aggregates, business metrics</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="plat">
+  <td>Delta copy pipeline — Gold Iceberg to Fabric OneLake</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat dmo">
+  <td>OpenLineage instrumentation — column-level lineage emission</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo biz">
+  <td>FSDM business rules — define canonical mapping from source to FSDM schema</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+
+<!-- ═══ DATA QUALITY ═══ -->
+<tr><td colspan="4" style="padding:10px 12px 4px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:var(--soft);border-bottom:1px solid var(--line)">Data Quality</td></tr>
+
+<tr data-groups="plat">
+  <td>Soda Core — deploy and operate quality check framework</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo biz">
+  <td>Define quality check rules (completeness, PK uniqueness, value ranges)</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="dmo biz">
+  <td>Define critical vs. warning check thresholds — what blocks Silver promotion</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="biz">
+  <td>Data quality issue triage and root cause analysis (source system failures)</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="dmo">
+  <td>Data quality reporting — SLA dashboards, freshness tracking</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+
+<!-- ═══ SECURITY & ACCESS CONTROL ═══ -->
+<tr><td colspan="4" style="padding:10px 12px 4px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:var(--soft);border-bottom:1px solid var(--line)">Security &amp; Access Control</td></tr>
+
+<tr data-groups="plat">
+  <td>Deploy and operate Trust3 AI or Immuta (FGAC enforcement engine)</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>AD/LDAP sync configuration — connect Trust3 AI or Immuta to Active Directory</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>Polaris RBAC — Catalog Roles and Principal Roles setup</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo">
+  <td>Translate Teradata GRANT matrix to Ranger policies or Immuta subscriptions</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo">
+  <td>Audit Teradata masking views — identify security-bearing views before decommission</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo">
+  <td>Column mask and row filter policy authoring (PII/PCI classifications)</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="biz">
+  <td>Data access requests — which AD groups need access to which domain data</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="dmo biz">
+  <td>Validate access parity — confirm Iceberg access matches Teradata access before cutover</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="plat">
+  <td>Vault configuration — KMS key management, STS credential rotation</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+
+<!-- ═══ DATA GOVERNANCE & CATALOG ═══ -->
+<tr><td colspan="4" style="padding:10px 12px 4px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:var(--soft);border-bottom:1px solid var(--line)">Data Governance &amp; Catalog</td></tr>
+
+<tr data-groups="plat">
+  <td>OpenMetadata — deploy and operate data catalog platform</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo">
+  <td>Business glossary — author and maintain canonical term definitions</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="biz">
+  <td>Domain data stewardship — approve glossary terms for their domain</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="dmo">
+  <td>Table and column metadata — descriptions, owners, sensitivity tags in OpenMetadata</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo">
+  <td>Lineage documentation — BCBS 239 lineage path descriptions and sign-off</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="biz">
+  <td>Data domain ownership — declare which business unit owns which Gold domain mart</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+
+<!-- ═══ SEMANTIC LAYER & BI/AI ═══ -->
+<tr><td colspan="4" style="padding:10px 12px 4px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:var(--soft);border-bottom:1px solid var(--line)">Semantic Layer, BI &amp; AI Surface</td></tr>
+
+<tr data-groups="plat">
+  <td>Fabric capacity configuration — F64 SKU, workspace setup, Git integration</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo biz">
+  <td>Fabric semantic model authoring — DAX measures, KPIs, hierarchies, relationships</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="biz">
+  <td>Metric definitions — approve what each certified KPI means (NII, VaR, LCR etc.)</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="dmo">
+  <td>Fabric RLS rules — define which AD group sees which domain data in Power BI</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo">
+  <td>Verified Answers — author pre-approved AI responses for regulated KPIs</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>RBC Assist integration — Fabric Data Agent, Azure AI Foundry connection</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="biz">
+  <td>Power BI report content — visuals, layout, report-level design</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="biz">
+  <td>UAT sign-off — validate that Power BI numbers match the Teradata baseline</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+
+<!-- ═══ MIGRATION PROGRAMMES ═══ -->
+<tr><td colspan="4" style="padding:10px 12px 4px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:var(--soft);border-bottom:1px solid var(--line)">Migration Programmes</td></tr>
+
+<tr data-groups="plat dmo">
+  <td>DataStage → Python: build replacement pipelines in the new framework</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="biz">
+  <td>DataStage → Python: validate output parity — sign off that new pipelines produce the same data</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="dmo biz">
+  <td>OBIEE → Power BI: migrate 1,000+ reports — report design and content migration</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="biz">
+  <td>OBIEE → Power BI: prioritise which reports migrate first</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="plat dmo">
+  <td>Teradata decoupling: migrate tables to Iceberg using dual-write shadow pattern</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="biz">
+  <td>Teradata decommission: confirm which tables are safe to retire (no hidden dependencies)</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="dmo">
+  <td>Tech Mahindra exit: knowledge transfer of DataStage job documentation</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+
+<!-- ═══ COMPLIANCE ═══ -->
+<tr><td colspan="4" style="padding:10px 12px 4px;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);background:var(--soft);border-bottom:1px solid var(--line)">Compliance (BCBS 239 / OSFI B-13)</td></tr>
+
+<tr data-groups="plat">
+  <td>BCBS 239 lineage infrastructure — OpenLineage emitters, Marquez storage, column-level capture</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo">
+  <td>BCBS 239 Principle mapping — document which platform capability satisfies which principle</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="biz">
+  <td>BCBS 239 sign-off — validate that risk data aggregation meets regulatory requirements</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+<tr data-groups="plat">
+  <td>OSFI B-13 audit trail — immutable audit logs for all certified query executions</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="plat">
+  <td>OSFI regulatory snapshot tags — month-end Iceberg snapshot tagging for reproducibility</td>
+  <td><span class="r-chip r-plat"><span class="dot dot-plat"></span>Platform</span></td>
+  <td>—</td>
+  <td>—</td>
+</tr>
+<tr data-groups="dmo">
+  <td>OSFI B-10 third-party risk documentation — security vendor assessments (Trust3 AI / Immuta)</td>
+  <td>—</td>
+  <td><span class="r-chip r-dmo"><span class="dot dot-dmo"></span>DMO</span></td>
+  <td>—</td>
+</tr>
+<tr data-groups="biz">
+  <td>Regulatory reporting validation — confirm that regulatory outputs from Iceberg match submissions</td>
+  <td>—</td>
+  <td>—</td>
+  <td><span class="r-chip r-biz"><span class="dot dot-biz"></span>Business</span></td>
+</tr>
+
+</tbody>
+</table>
+</div>
+
+<div class="footer">
+  <span>Lumina · RBC Enterprise Data · Responsibility Matrix · April 2026 · R only — RACI to follow</span>
+  <span>George Chilakos, VP Enterprise Data</span>
+</div>
+
+<script>
+let active = 'all';
+function filter(group, btn) {
+  active = group;
+  document.querySelectorAll('.filter-btn').forEach(b => {
+    b.className = 'filter-btn';
+  });
+  btn.classList.add('active-' + group);
+
+  document.querySelectorAll('tbody tr[data-groups]').forEach(row => {
+    if (group === 'all') {
+      row.classList.remove('hidden');
+    } else {
+      const groups = row.getAttribute('data-groups').split(' ');
+      row.classList.toggle('hidden', !groups.includes(group));
+    }
+  });
+}
+</script>
+</body>
+</html>
