@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Table SWOT — Catalogs &amp; Semantic Layers</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--navy:#0A1628;--text:#1E293B;--muted:#64748B;--line:#E2E8F0;--soft:#F8FAFC;--white:#fff;
+--g:#059669;--g-bg:#D1FAE5;--g-b:#6EE7B7;
+--a:#D97706;--a-bg:#FEF3C7;--a-b:#FDE68A;
+--r:#DC2626;--r-bg:#FEE2E2;--r-b:#FCA5A5;
+--b:#1E4D8C;--b-bg:#EFF6FF;--b-b:#BFDBFE;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);padding-bottom:60px;}
+.hero{background:var(--navy);padding:36px 32px 28px;}
+.back{font-size:10px;font-family:'DM Mono',monospace;color:#475569;margin-bottom:12px;}
+.back a{color:#94A3B8;text-decoration:none;}
+.hero h1{font-family:'Lora',serif;font-size:24px;font-weight:600;color:#fff;margin-bottom:6px;}
+.hero p{font-size:11px;color:#94A3B8;line-height:1.7;max-width:680px;}
+.tabs{display:flex;gap:6px;max-width:1060px;margin:0 auto;padding:18px 24px 0;flex-wrap:wrap;}
+.tab{padding:6px 16px;border-radius:20px;border:none;cursor:pointer;font-size:11px;font-weight:600;background:#E0E7EF;color:#64748B;}
+.tab.active{background:var(--navy);color:#fff;}
+.panel{display:none;max-width:1060px;margin:0 auto;padding:18px 24px 0;}
+.panel.active{display:block;}
+.slabel{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin:18px 0 10px;}
+.slabel:first-child{margin-top:0;}
+.slabel::after{content:'';flex:1;height:1px;background:var(--line);}
+
+/* SWOT TABLE */
+table.sw{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:14px;}
+table.sw th{padding:8px 12px;text-align:left;font-weight:700;font-size:9px;letter-spacing:0.5px;text-transform:uppercase;border-bottom:2px solid var(--line);}
+table.sw td{padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.6;}
+table.sw tr:last-child td{border-bottom:none;}
+table.sw tr:hover td{background:#F8FAFC;}
+.cat-row th{background:#F1F5F9;font-size:9px;letter-spacing:0.8px;color:var(--muted);padding:5px 12px;border-bottom:1px solid var(--line);}
+/* rating cells */
+.g{background:var(--g-bg);color:#065F46;font-weight:500;padding:3px 8px;border-radius:4px;font-size:9px;font-family:'DM Mono',monospace;white-space:nowrap;display:inline-block;}
+.a{background:var(--a-bg);color:#92400E;font-weight:500;padding:3px 8px;border-radius:4px;font-size:9px;font-family:'DM Mono',monospace;white-space:nowrap;display:inline-block;}
+.r{background:var(--r-bg);color:#991B1B;font-weight:500;padding:3px 8px;border-radius:4px;font-size:9px;font-family:'DM Mono',monospace;white-space:nowrap;display:inline-block;}
+.n{background:#F1F5F9;color:#475569;font-weight:500;padding:3px 8px;border-radius:4px;font-size:9px;font-family:'DM Mono',monospace;white-space:nowrap;display:inline-block;}
+.note{border-radius:8px;padding:10px 14px;font-size:11px;line-height:1.7;margin-bottom:12px;}
+.note.tip{background:var(--g-bg);border:1.5px solid var(--g-b);color:#065F46;}
+.note.warn{background:var(--a-bg);border:1.5px solid var(--a-b);color:#78350F;}
+.note.key{background:var(--navy);border:1.5px solid #1E4D8C;color:#E2E8F0;}
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);}
+/* col headers */
+.ch-pol{background:#1E4D8C;color:#fff;}
+.ch-grav{background:#065F46;color:#fff;}
+.ch-dim{background:var(--navy);color:#fff;}
+.ch-none{background:#475569;color:#fff;}
+.ch-ats{background:#1E4D8C;color:#fff;}
+.ch-star{background:#065F46;color:#fff;}
+.ch-dbt{background:#4C1D95;color:#fff;}
+.ch-fab{background:#065F46;color:#fff;}
+.footer{max-width:1060px;margin:24px auto 0;padding:12px 24px 0;border-top:1px solid var(--line);font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+</style>
+</head>
+<body>
+<div class="hero">
+  <div style="max-width:1060px;margin:0 auto"><div class="back"><a href="../">&#8592; Lakehouse Hub</a></div></div>
+  <h1>Table SWOT — Catalogs &amp; Semantic Layers</h1>
+  <p>Scannable table-format comparison. Green = strong / confirmed. Amber = partial / caveats. Red = gap / risk. Grey = not applicable.</p>
+</div>
+<div class="tabs">
+  <button class="tab active" onclick="go('cat',this)">Catalogs</button>
+  <button class="tab" onclick="go('sem',this)">Semantic Layers</button>
+</div>
+
+<!-- ═══ CATALOGS ═══ -->
+<div class="panel active" id="panel-cat">
+  <div class="note key"><strong>Context:</strong> Polaris is the confirmed primary catalog (ASF TLP Feb 2026). Gravitino is the optional migration bridge if HMS federation is needed during Teradata decoupling. Nessie is available as an optional WAP/branching layer (Q-4 open question).</div>
+  <div class="legend">
+    <div class="legend-item"><span class="g">strong</span> confirmed / best-in-class</div>
+    <div class="legend-item"><span class="a">partial</span> supported with caveats</div>
+    <div class="legend-item"><span class="r">gap</span> not supported / risk</div>
+    <div class="legend-item"><span class="n">n/a</span> not applicable</div>
+  </div>
+  <div style="overflow-x:auto">
+  <table class="sw">
+    <thead>
+      <tr>
+        <th style="min-width:200px" class="ch-dim">Dimension</th>
+        <th style="min-width:180px" class="ch-pol">Apache Polaris</th>
+        <th style="min-width:180px" class="ch-grav">Apache Gravitino</th>
+        <th style="min-width:140px" class="ch-dim">Nessie</th>
+        <th style="min-width:80px" class="ch-dim">RBC role</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><th colspan="5" class="cat-row">GOVERNANCE &amp; OPEN SOURCE</th></tr>
+      <tr><td><strong>ASF status</strong></td><td><span class="g">TLP Feb 2026</span></td><td><span class="g">TLP Jun 2025</span></td><td><span class="a">ASF project — no TLP</span></td><td></td></tr>
+      <tr><td><strong>Primary commercial backer</strong></td><td>Snowflake + Dremio</td><td>Datastrato</td><td>Dremio</td><td></td></tr>
+      <tr><td><strong>PMC diversity</strong></td><td><span class="g">Google, Microsoft, Confluent, Bloomberg, Starburst</span></td><td><span class="a">Datastrato-heavy, diversifying</span></td><td><span class="a">Dremio-heavy</span></td><td></td></tr>
+      <tr><td><strong>License</strong></td><td><span class="g">Apache 2.0</span></td><td><span class="g">Apache 2.0</span></td><td><span class="g">Apache 2.0</span></td><td></td></tr>
+
+      <tr><th colspan="5" class="cat-row">ICEBERG &amp; REST CATALOG</th></tr>
+      <tr><td><strong>Iceberg REST spec compliance</strong></td><td><span class="g">Reference implementation</span></td><td><span class="a">Library wrapper — may lag spec</span></td><td><span class="a">Partial — branching focused</span></td><td></td></tr>
+      <tr><td><strong>Credential vending (STS)</strong></td><td><span class="g">Best-in-class: S3, ADLS, GCS, MinIO</span></td><td><span class="a">Added v1.0 — less tested at scale</span></td><td><span class="r">Not supported</span></td><td></td></tr>
+      <tr><td><strong>Atomic commits (CAS)</strong></td><td><span class="g">Yes</span></td><td><span class="g">Yes</span></td><td><span class="g">Yes + branching</span></td><td></td></tr>
+      <tr><td><strong>WAP / Git-style branching</strong></td><td><span class="r">Not native — roadmap</span></td><td><span class="r">Not native</span></td><td><span class="g">Core feature</span></td><td>Q-4 open</td></tr>
+      <tr><td><strong>OPA integration</strong></td><td><span class="g">Native (v1.3)</span></td><td><span class="a">Via plugin</span></td><td><span class="r">No</span></td><td></td></tr>
+
+      <tr><th colspan="5" class="cat-row">TABLE FORMAT SUPPORT</th></tr>
+      <tr><td><strong>Apache Iceberg</strong></td><td><span class="g">Primary — only format</span></td><td><span class="g">Primary</span></td><td><span class="g">Primary</span></td><td></td></tr>
+      <tr><td><strong>Delta Lake</strong></td><td><span class="r">Not supported</span></td><td><span class="a">External tables (v1.2)</span></td><td><span class="r">Not supported</span></td><td></td></tr>
+      <tr><td><strong>Apache Hudi / Paimon</strong></td><td><span class="r">Not supported</span></td><td><span class="g">Supported</span></td><td><span class="r">Not supported</span></td><td></td></tr>
+      <tr><td><strong>HMS / Hive 3 bridge</strong></td><td><span class="r">No federation</span></td><td><span class="g">Native bridge (v1.1)</span></td><td><span class="r">No</span></td><td></td></tr>
+
+      <tr><th colspan="5" class="cat-row">ENGINE INTEGRATIONS (RBC STACK)</th></tr>
+      <tr><td><strong>Trino (on-prem)</strong></td><td><span class="g">REST client v475+</span></td><td><span class="a">Dedicated connector (no CTAS)</span></td><td><span class="g">REST client</span></td><td></td></tr>
+      <tr><td><strong>Databricks cloud burst</strong></td><td><span class="g">DBR 16.4+ REST client</span></td><td><span class="a">Less tested</span></td><td><span class="a">Limited</span></td><td></td></tr>
+      <tr><td><strong>Snowflake cloud burst</strong></td><td><span class="g">Open Catalog = managed Polaris</span></td><td><span class="r">No path</span></td><td><span class="r">No</span></td><td></td></tr>
+      <tr><td><strong>Python / pyiceberg</strong></td><td><span class="g">REST client</span></td><td><span class="g">Python client (v1.x)</span></td><td><span class="g">REST client</span></td><td></td></tr>
+
+      <tr><th colspan="5" class="cat-row">SECURITY &amp; MULTI-TENANCY</th></tr>
+      <tr><td><strong>Table-level RBAC</strong></td><td><span class="g">Two-tier: Catalog Roles + Principal Roles</span></td><td><span class="g">Metalake hierarchy</span></td><td><span class="a">Basic namespace access</span></td><td></td></tr>
+      <tr><td><strong>Column/row security (FGAC)</strong></td><td><span class="r">Not yet — FGAC spec pending</span></td><td><span class="r">View-level only (v1.2)</span></td><td><span class="r">No</span></td><td>Privacera/Immuta fills</td></tr>
+      <tr><td><strong>Realm multi-tenancy</strong></td><td><span class="g">Hard Realm isolation per BU</span></td><td><span class="a">Metalake separation</span></td><td><span class="r">No</span></td><td></td></tr>
+      <tr><td><strong>AD/LDAP / Kerberos</strong></td><td><span class="a">Requires Keycloak OIDC bridge</span></td><td><span class="g">Kerberos native + Azure AD OAuth2</span></td><td><span class="a">Bearer token only</span></td><td></td></tr>
+
+      <tr><th colspan="5" class="cat-row">OPERATIONS</th></tr>
+      <tr><td><strong>Metadata backend</strong></td><td><span class="a">PostgreSQL only</span></td><td><span class="g">MySQL, PostgreSQL, H2</span></td><td><span class="g">RocksDB / PostgreSQL</span></td><td></td></tr>
+      <tr><td><strong>Table maintenance (compaction)</strong></td><td><span class="r">Dremio commercial only</span></td><td><span class="g">TMS built-in (v1.2)</span></td><td><span class="r">Not built-in</span></td><td></td></tr>
+      <tr><td><strong>Web UI</strong></td><td><span class="r">None — API only</span></td><td><span class="g">Redesigned UI (v1.2)</span></td><td><span class="a">Basic UI</span></td><td></td></tr>
+      <tr><td><strong>Lineage integration</strong></td><td><span class="r">Not built-in</span></td><td><span class="g">Marquez (v1.0)</span></td><td><span class="a">Via OpenLineage adapter</span></td><td></td></tr>
+      <tr><td><strong>OCP / Kubernetes deployment</strong></td><td><span class="g">Helm chart</span></td><td><span class="g">Helm chart</span></td><td><span class="g">Helm chart</span></td><td></td></tr>
+      <tr><td><strong>Operational complexity</strong></td><td><span class="g">Low — single service, one DB</span></td><td><span class="a">Medium-high — many subsystems</span></td><td><span class="g">Low</span></td><td></td></tr>
+
+      <tr><th colspan="5" class="cat-row">COMMERCIAL &amp; MANAGED SERVICE</th></tr>
+      <tr><td><strong>Managed SaaS option</strong></td><td><span class="g">Snowflake Open Catalog + Dremio Open Catalog</span></td><td><span class="a">Datastrato (limited reach)</span></td><td><span class="a">Dremio Arctic (commercial)</span></td><td></td></tr>
+      <tr><td><strong>Enterprise support SLA</strong></td><td><span class="g">Snowflake or Dremio enterprise</span></td><td><span class="a">Datastrato limited</span></td><td><span class="a">Dremio only</span></td><td></td></tr>
+      <tr><td><strong>GitHub stars</strong></td><td>1.8k</td><td>2,600+</td><td>~900</td><td></td></tr>
+
+      <tr><th colspan="5" class="cat-row">RBC ARCHITECTURE ROLE</th></tr>
+      <tr><td><strong>Role in RBC stack</strong></td><td><span class="g">PRIMARY — confirmed</span></td><td><span class="a">Optional migration bridge (HMS)</span></td><td><span class="a">Optional (WAP/branching — Q-4)</span></td><td></td></tr>
+      <tr><td><strong>Decision status</strong></td><td><span class="g">Committed</span></td><td><span class="a">Conditional on HMS scope</span></td><td><span class="a">Open question Q-4</span></td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note tip"><strong>Reading the table:</strong> Polaris wins on Iceberg purity, credential vending, Snowflake/Databricks cloud burst, and enterprise support. Gravitino wins on multi-format breadth, legacy HMS bridge, table maintenance, lineage, and UI. For RBC&rsquo;s pure-Iceberg estate, Polaris is the right primary catalog. Gravitino adds value only if Teradata&rsquo;s HMS tables need to be federated during the multi-year decoupling programme.</div>
+</div>
+
+<!-- ═══ SEMANTIC LAYERS ═══ -->
+<div class="panel" id="panel-sem">
+  <div class="note key"><strong>Context:</strong> Fabric is confirmed as the primary BI/AI semantic layer (ADR-010). The question is whether a secondary layer is needed for Tableau and programmatic/agent access. Cube.dev is being retired. Q-10 (Tableau scope) is the gating decision.</div>
+  <div class="legend">
+    <div class="legend-item"><span class="g">strong</span></div>
+    <div class="legend-item"><span class="a">partial</span></div>
+    <div class="legend-item"><span class="r">gap / risk</span></div>
+    <div class="legend-item"><span class="n">n/a</span></div>
+  </div>
+  <div style="overflow-x:auto">
+  <table class="sw">
+    <thead>
+      <tr>
+        <th style="min-width:200px" class="ch-dim">Dimension</th>
+        <th style="min-width:160px" class="ch-fab">Fabric (PRIMARY)</th>
+        <th style="min-width:150px" class="ch-none">A — None (Trino only)</th>
+        <th style="min-width:150px" class="ch-ats">B — AtScale</th>
+        <th style="min-width:150px" class="ch-star">C — Starburst</th>
+        <th style="min-width:150px" class="ch-dbt">D — dbt MetricFlow</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><th colspan="6" class="cat-row">FIT WITH RBC ARCHITECTURE</th></tr>
+      <tr><td><strong>ADR-005 conflict (Python-only)</strong></td><td><span class="g">No conflict</span></td><td><span class="g">No conflict</span></td><td><span class="g">No conflict</span></td><td><span class="g">No conflict</span></td><td><span class="r">Direct conflict — dbt Cloud required</span></td></tr>
+      <tr><td><strong>On-prem / OSFI B-10</strong></td><td><span class="g">OCP on-prem (Delta copy)</span></td><td><span class="g">100% on-prem</span></td><td><span class="a">On-prem supported — validate POC</span></td><td><span class="g">On-prem</span></td><td><span class="r">SaaS-only for Semantic Layer API</span></td></tr>
+      <tr><td><strong>New component required</strong></td><td><span class="g">Already decided</span></td><td><span class="g">None — retire Cube</span></td><td><span class="r">New service to operate</span></td><td><span class="a">Trino upgrade path</span></td><td><span class="r">dbt Cloud SaaS + dual-stack</span></td></tr>
+      <tr><td><strong>Trino / Iceberg native</strong></td><td><span class="n">n/a — Fabric owns BI surface</span></td><td><span class="g">Is Trino</span></td><td><span class="a">Supported — POC needed</span></td><td><span class="g">Is Trino (enterprise build)</span></td><td><span class="a">Trino adapter exists</span></td></tr>
+
+      <tr><th colspan="6" class="cat-row">CONSUMER COVERAGE</th></tr>
+      <tr><td><strong>Power BI</strong></td><td><span class="g">Native — certified datasets</span></td><td><span class="n">Fabric handles this</span></td><td><span class="g">Connector</span></td><td><span class="a">JDBC</span></td><td><span class="a">API connector</span></td></tr>
+      <tr><td><strong>RBC Assist (NL-to-DAX)</strong></td><td><span class="g">Fabric Data Agent — Azure AI Foundry</span></td><td><span class="r">No NL-to-DAX path</span></td><td><span class="a">MCP server (NL-to-SQL)</span></td><td><span class="r">No</span></td><td><span class="a">NL-to-SQL via API</span></td></tr>
+      <tr><td><strong>Tableau</strong></td><td><span class="r">No direct Tableau path</span></td><td><span class="a">Raw Trino JDBC — no governed metrics</span></td><td><span class="g">Governed metrics via connector</span></td><td><span class="g">JDBC + data products</span></td><td><span class="a">API connector</span></td></tr>
+      <tr><td><strong>Excel (MDX pivot tables)</strong></td><td><span class="a">Via SQL Analytics Endpoint</span></td><td><span class="r">No MDX</span></td><td><span class="g">MDX cube — native Excel support</span></td><td><span class="r">No MDX</span></td><td><span class="r">No MDX</span></td></tr>
+      <tr><td><strong>ML pipelines / AI agents</strong></td><td><span class="a">XMLA — awkward for Python</span></td><td><span class="g">Parameterised Trino SQL</span></td><td><span class="g">REST + MCP server</span></td><td><span class="g">Data products API</span></td><td><span class="g">REST/GraphQL API</span></td></tr>
+      <tr><td><strong>Databricks cloud burst</strong></td><td><span class="n">n/a — Delta copy for Fabric</span></td><td><span class="a">Direct Trino/Iceberg</span></td><td><span class="g">Supported</span></td><td><span class="a">Separate Starburst cluster</span></td><td><span class="a">Adapter</span></td></tr>
+
+      <tr><th colspan="6" class="cat-row">METRIC GOVERNANCE</th></tr>
+      <tr><td><strong>Central metric definitions</strong></td><td><span class="g">DAX measures — single source for Power BI</span></td><td><span class="r">Fabric only — no Tableau governance</span></td><td><span class="g">One definition for all tools</span></td><td><span class="a">Starburst views — lighter than AtScale</span></td><td><span class="g">YAML in Git — version controlled</span></td></tr>
+      <tr><td><strong>BCBS 239 metric consistency</strong></td><td><span class="a">Power BI only — Tableau drifts</span></td><td><span class="r">High drift risk Tableau vs Power BI</span></td><td><span class="g">One definition everywhere</span></td><td><span class="a">Partial</span></td><td><span class="g">Version controlled in Git</span></td></tr>
+      <tr><td><strong>Pre-aggregation / caching</strong></td><td><span class="g">Import mode in-memory</span></td><td><span class="r">No — every query hits Trino</span></td><td><span class="g">Adaptive aggregates on Iceberg</span></td><td><span class="r">No</span></td><td><span class="r">On-demand SQL only</span></td></tr>
+      <tr><td><strong>Metric freshness</strong></td><td><span class="a">Scheduled refresh — minutes-to-hours lag</span></td><td><span class="g">Real-time Iceberg</span></td><td><span class="g">Real-time Trino</span></td><td><span class="g">Real-time Trino</span></td><td><span class="g">Real-time</span></td></tr>
+
+      <tr><th colspan="6" class="cat-row">AI &amp; NL CAPABILITIES</th></tr>
+      <tr><td><strong>NL-to-DAX (Fabric Data Agent)</strong></td><td><span class="g">Native — Verified Answers, Prep for AI</span></td><td><span class="r">No</span></td><td><span class="r">No</span></td><td><span class="r">No</span></td><td><span class="r">No</span></td></tr>
+      <tr><td><strong>NL-to-SQL for agents</strong></td><td><span class="a">Complex queries awkward in DAX</span></td><td><span class="a">Custom — no governed semantic context</span></td><td><span class="g">REST + MCP server (2025)</span></td><td><span class="a">Via Trino SQL</span></td><td><span class="g">REST/GraphQL API</span></td></tr>
+      <tr><td><strong>AI agent schema context</strong></td><td><span class="g">Business measures / KPIs as context</span></td><td><span class="r">Raw schema only — no business meaning</span></td><td><span class="g">Governed metric context for agents</span></td><td><span class="a">Data product descriptions</span></td><td><span class="g">YAML metric definitions as context</span></td></tr>
+
+      <tr><th colspan="6" class="cat-row">SECURITY &amp; COMPLIANCE</th></tr>
+      <tr><td><strong>RLS / column masking</strong></td><td><span class="g">T-SQL DDM + Fabric RLS</span></td><td><span class="a">Privacera/Immuta on Trino</span></td><td><span class="a">Delegates to Trino FGAC</span></td><td><span class="a">SEP or Privacera/Immuta</span></td><td><span class="a">Delegates to engine</span></td></tr>
+      <tr><td><strong>AD group enforcement</strong></td><td><span class="g">Azure AD / Entra ID native</span></td><td><span class="a">Via Privacera/Immuta + Keycloak</span></td><td><span class="a">AD sync via AtScale IdP</span></td><td><span class="g">AD via Starburst SEP</span></td><td><span class="a">dbt Cloud IdP</span></td></tr>
+      <tr><td><strong>OSFI B-10 posture</strong></td><td><span class="g">Self-hosted via OCP — Canadian DC</span></td><td><span class="g">No vendor SaaS involved</span></td><td><span class="a">On-prem supported — validate</span></td><td><span class="g">On-prem</span></td><td><span class="r">SaaS API endpoint US-hosted</span></td></tr>
+
+      <tr><th colspan="6" class="cat-row">OPERATIONAL &amp; COMMERCIAL</th></tr>
+      <tr><td><strong>Operational complexity</strong></td><td><span class="g">Managed by Microsoft</span></td><td><span class="g">Lowest — nothing new</span></td><td><span class="r">High — new service + model authoring</span></td><td><span class="a">Medium — Trino upgrade</span></td><td><span class="r">High — dual stack</span></td></tr>
+      <tr><td><strong>Licensing cost</strong></td><td><span class="a">F64 SKU — budget approved</span></td><td><span class="g">None</span></td><td><span class="r">Enterprise — unpublished pricing</span></td><td><span class="r">Enterprise — significant</span></td><td><span class="r">dbt Cloud Team/Enterprise</span></td></tr>
+      <tr><td><strong>Financial services track record</strong></td><td><span class="g">Major bank deployments</span></td><td><span class="n">n/a</span></td><td><span class="g">Specific FS use cases</span></td><td><span class="a">General enterprise</span></td><td><span class="a">Growing</span></td></tr>
+
+      <tr><th colspan="6" class="cat-row">RBC RECOMMENDATION</th></tr>
+      <tr><td><strong>Status</strong></td><td><span class="g">CONFIRMED — ADR-010</span></td><td><span class="g">Default start position</span></td><td><span class="a">Evaluate IF Tableau = certified reporting</span></td><td><span class="a">Evaluate IF Trino enterprise SLA needed</span></td><td><span class="r">Deprioritised — ADR-005 conflict</span></td></tr>
+      <tr><td><strong>Gating question</strong></td><td><span class="n">n/a</span></td><td>Q-10: Tableau ad-hoc only?</td><td>Q-10: Tableau certified reporting?</td><td>Trino SLA gap?</td><td>Reopen ADR-005?</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="note warn"><strong>Key decision gate — Q-10:</strong> The entire secondary semantic layer decision hinges on whether Tableau is confirmed as certified management reporting (triggers AtScale evaluation) or ad-hoc exploration (Option A / no secondary layer). Do not procure or POC anything until JoAnn and Saurabh confirm the Tableau scope post-OBIEE migration.</div>
+</div>
+
+<div class="footer">
+  <span>Lumina &middot; RBC Enterprise Data &middot; Table SWOT: Catalogs &amp; Semantic Layers &middot; April 2026</span>
+  <span>George Chilakos, VP Enterprise Data</span>
+</div>
+<script>
+function go(id,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+id).classList.add('active');
+  btn.classList.add('active');
+}
+</script>
+</body>
+</html>
