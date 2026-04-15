@@ -1,0 +1,335 @@
+<h2 class="sr-only">Step-by-step walkthrough of how RBC Assist queries data through FastAPI and Snowflake Cortex</h2>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans, system-ui, sans-serif); }
+.step { display: none; padding: 0.5rem 0; }
+.step.active { display: block; }
+.step-label { font-size: 11px; color: var(--color-text-tertiary, #999); letter-spacing: 0.5px; margin-bottom: 0.25rem; }
+.step-title { font-size: 18px; font-weight: 500; color: var(--color-text-primary, #1a1a1a); margin-bottom: 0.75rem; }
+.card { background: var(--color-background-secondary, #f7f7f5); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; }
+.card-dark { background: #1e2530; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; }
+.code { font-family: var(--font-mono, 'Courier New', monospace); font-size: 12px; line-height: 1.6; color: #c8d4e0; white-space: pre-wrap; word-break: break-all; }
+.tag { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; margin-right: 4px; }
+.tag-post { background: #dbeafe; color: #1e40af; }
+.tag-get { background: #d1fae5; color: #065f46; }
+.tag-green { background: #d1fae5; color: #065f46; }
+.tag-amber { background: #fef3c7; color: #92400e; }
+.tag-purple { background: #ede9fe; color: #5b21b6; }
+.tag-coral { background: #fee2e2; color: #991b1b; }
+.desc { font-size: 14px; line-height: 1.65; color: var(--color-text-secondary, #555); }
+.desc strong { color: var(--color-text-primary, #1a1a1a); font-weight: 500; }
+.arrow-label { font-size: 12px; color: var(--color-text-tertiary, #999); text-align: center; padding: 0.35rem 0; }
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-top: 1px solid var(--color-border-tertiary, rgba(0,0,0,0.1)); margin-top: 0.5rem; }
+.nav-btn { font-size: 14px; font-weight: 500; padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; transition: opacity 0.15s; }
+.nav-btn:active { opacity: 0.7; }
+.btn-back { background: var(--color-background-secondary, #eee); color: var(--color-text-secondary, #555); }
+.btn-next { background: #3068FF; color: white; }
+.btn-next:disabled, .btn-back:disabled { opacity: 0.3; cursor: default; }
+.dots { display: flex; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-border-tertiary, rgba(0,0,0,0.15)); transition: background 0.2s; }
+.dot.on { background: #3068FF; }
+.flow-box { border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 0.4rem; font-size: 13px; font-weight: 500; }
+.flow-active { background: #dbeafe; color: #1e40af; border-left: 3px solid #3068FF; }
+.flow-dim { background: var(--color-background-secondary, #f5f5f3); color: var(--color-text-tertiary, #999); border-left: 3px solid transparent; }
+.callout { background: #fef3c7; border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 12px; color: #92400e; margin-top: 0.5rem; }
+</style>
+
+<div id="app" style="padding: 0.5rem 0;">
+
+<div class="step" data-step="0">
+<div class="step-label">OVERVIEW</div>
+<div class="step-title">The request lifecycle</div>
+<div class="desc" style="margin-bottom:1rem;">A user asks RBC Assist a question. Here's every hop that question takes, what API gets called at each stage, and what comes back. Tap through to follow a real query end to end.</div>
+
+<div class="flow-box flow-active">1. RBC Assist → FastAPI trust boundary</div>
+<div class="flow-box flow-dim">2. FastAPI authenticates + classifies</div>
+<div class="flow-box flow-dim">3. FastAPI → Snowflake Cortex Agent API</div>
+<div class="flow-box flow-dim">4. Cortex Agent → Cortex Analyst (NL-to-SQL)</div>
+<div class="flow-box flow-dim">5. Cortex Analyst → Semantic view → Iceberg</div>
+<div class="flow-box flow-dim">6. Results flow back through the chain</div>
+
+<div class="callout">Example query we'll trace: <strong>"What was total net revenue by product line for Q4 2025?"</strong></div>
+</div>
+
+<div class="step" data-step="1">
+<div class="step-label">STEP 1 — RBC ASSIST → FASTAPI</div>
+<div class="step-title">The user asks a question</div>
+<div class="desc">RBC Assist sends the NL question to your FastAPI trust boundary. This is the <strong>only</strong> API the consumer app ever calls. It never talks to Snowflake or Fabric directly.</div>
+
+<div class="card-dark" style="margin-top:0.75rem;">
+<div style="margin-bottom:0.4rem;"><span class="tag tag-post">POST</span><span class="code" style="font-size:13px;color:#7dd3fc;">/v1/query</span></div>
+<div class="code">{
+  "question": "What was total net revenue
+               by product line for Q4 2025?",
+  "conversation_id": null,
+  "options": {
+    "max_rows": 100,
+    "include_sql": true,
+    "include_explanation": true
+  }
+}
+
+Headers:
+  Authorization: Bearer &lt;user-entra-id-token&gt;
+  X-Trace-Id: "trace-7f3a2b1c"
+  X-Backend-Hint: "auto"</div>
+</div>
+
+<div class="desc" style="margin-top:0.5rem;"><strong>Key detail:</strong> The Bearer token is the user's Entra ID access token — not a service account. This is what enables per-user security enforcement downstream.</div>
+</div>
+
+<div class="step" data-step="2">
+<div class="step-label">STEP 2 — INSIDE FASTAPI</div>
+<div class="step-title">Authenticate, classify, route</div>
+<div class="desc">FastAPI does three things before calling any backend:</div>
+
+<div class="card" style="margin-top:0.75rem;">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.4rem;">2a. Validate + exchange token</div>
+<div class="desc">Validates the Entra ID token. Exchanges it for an OBO (on-behalf-of) token scoped to Snowflake. The OBO token carries the user's identity so Snowflake RBAC applies to <em>this specific user</em>.</div>
+</div>
+
+<div class="card">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.4rem;">2b. Guardrails</div>
+<div class="desc">Scans the question for prompt injection patterns, PII, and restricted data references. If anything triggers, FastAPI returns a <span class="tag tag-coral">422</span> with a guardrail violation — the query never reaches Snowflake.</div>
+</div>
+
+<div class="card">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.4rem;">2c. Classify + route</div>
+<div class="desc">The orchestrator LLM classifies the query intent. <strong>"Total net revenue by product line"</strong> is a structured analytics question → routes to <strong>Snowflake Cortex</strong>. If it were a BI report request, it would route to Fabric (Phase 2). If it were about a policy document, it would route to Cortex Search.</div>
+</div>
+
+<div class="callout">The <span class="tag tag-amber">X-Backend-Hint</span> header is optional. If the caller sends <code>snowflake</code>, FastAPI skips classification and routes directly. <code>auto</code> means "you decide."</div>
+</div>
+
+<div class="step" data-step="3">
+<div class="step-label">STEP 3 — FASTAPI → CORTEX AGENT</div>
+<div class="step-title">Calling the Snowflake Cortex Agent API</div>
+<div class="desc">FastAPI calls the Snowflake Cortex Agent REST API. The agent orchestrates across structured (Analyst) and unstructured (Search) tools. You can skip the Agent and call Cortex Analyst directly for pure NL-to-SQL — but the Agent gives you both in one call.</div>
+
+<div class="card-dark" style="margin-top:0.75rem;">
+<div style="margin-bottom:0.4rem;"><span class="tag tag-post">POST</span><span class="code" style="font-size:13px;color:#7dd3fc;">/api/v2/cortex/agent/run</span></div>
+<div class="code">{
+  "agent": "RBC_LAKEHOUSE.GOLD.RBC_ASSIST_AGENT",
+  "thread": { "messages": [{
+    "role": "user",
+    "content": "What was total net revenue
+                by product line for Q4 2025?"
+  }]},
+  "stream": true
+}
+
+Headers:
+  Authorization: Snowflake Token="&lt;obo-session-token&gt;"
+  Content-Type: application/json</div>
+</div>
+
+<div class="desc" style="margin-top:0.5rem;">The agent was pre-created in Snowflake with this config:</div>
+
+<div class="card-dark">
+<div class="code">{
+  "name": "RBC_ASSIST_AGENT",
+  "models": {
+    "orchestration": "claude-4-sonnet"
+  },
+  "tools": [{
+    "tool_spec": {
+      "type": "cortex_analyst_text_to_sql",
+      "name": "enterprise_analyst"
+    }
+  }, {
+    "tool_spec": {
+      "type": "cortex_analyst_sql_exec",
+      "name": "sql_executor"
+    }
+  }],
+  "instructions": {
+    "orchestration": "For any revenue, balance,
+      or transaction question, use enterprise_analyst.
+      For policy questions, use search."
+  }
+}</div>
+</div>
+
+<div class="callout">The orchestration model is <strong>Claude 4 Sonnet</strong> running inside Snowflake Cortex. No data leaves Snowflake's boundary.</div>
+</div>
+
+<div class="step" data-step="4">
+<div class="step-label">STEP 4 — CORTEX AGENT → CORTEX ANALYST</div>
+<div class="step-title">NL-to-SQL via the semantic view</div>
+<div class="desc">The Cortex Agent decides this is a structured data question and invokes <strong>Cortex Analyst</strong>. Analyst reads your semantic view to understand the business meaning of "net revenue" and "product line," then generates SQL.</div>
+
+<div class="card" style="margin-top:0.75rem;">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.4rem;">What Cortex Analyst sees</div>
+<div class="desc">Your semantic view (<code>ENTERPRISE_SEMANTIC_VIEW</code>) tells it:</div>
+<div class="card-dark" style="margin-top:0.4rem;">
+<div class="code">metric: total_net_revenue
+  expr: SUM(LEDGER_BAL_AMT * (1 - DISCOUNT_RT))
+
+dimension: product_line
+  expr: PRODUCT_LINE_CD
+  table: dim_product
+
+time_dimension: balance_date
+  expr: BALANCE_DT
+
+relationship: fact → dim_product
+  on: ACCOUNT_TYPE_CD = PRODUCT_ID</div>
+</div>
+</div>
+
+<div class="card">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.4rem;">What Cortex Analyst generates</div>
+<div class="card-dark" style="margin-top:0.4rem;">
+<div class="code">SELECT
+    p.PRODUCT_LINE_CD   AS product_line,
+    SUM(b.LEDGER_BAL_AMT * (1 - b.DISCOUNT_RT))
+                        AS total_net_revenue
+FROM GOLD.FACT_ACCOUNT_BALANCE_DAILY b
+LEFT JOIN GOLD.DIM_PRODUCT p
+    ON b.ACCOUNT_TYPE_CD = p.PRODUCT_ID
+WHERE b.BALANCE_DT
+    BETWEEN '2025-10-01' AND '2025-12-31'
+GROUP BY p.PRODUCT_LINE_CD
+ORDER BY total_net_revenue DESC;</div>
+</div>
+<div class="desc" style="margin-top:0.4rem;">This SQL runs on a Snowflake virtual warehouse under the <strong>user's role</strong>. Row access policies and RBAC apply — the user only sees data they're authorized for.</div>
+</div>
+
+<div class="callout"><strong>This is the key:</strong> the semantic view maps business language ("net revenue") to physical columns (<code>LEDGER_BAL_AMT * (1 - DISCOUNT_RT)</code>). Without it, the LLM would have to guess column names from raw schema — and get it wrong.</div>
+</div>
+
+<div class="step" data-step="5">
+<div class="step-label">STEP 5 — EXECUTION</div>
+<div class="step-title">SQL hits Iceberg via external tables</div>
+<div class="desc">The generated SQL executes against Snowflake external tables that point to your Gold Iceberg V2 files. Here's the data path:</div>
+
+<div class="flow-box flow-active" style="margin-top:0.75rem;">SQL executes on Snowflake warehouse</div>
+<div class="arrow-label">↓ reads</div>
+<div class="flow-box flow-active">External tables (Iceberg table format)</div>
+<div class="arrow-label">↓ points to</div>
+<div class="flow-box flow-active">External volume (S3/MinIO on-prem)</div>
+<div class="arrow-label">↓ reads</div>
+<div class="flow-box flow-active">Gold Iceberg V2 Parquet files (Nessie catalog)</div>
+
+<div class="card" style="margin-top:0.75rem;">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.4rem;">Zero-copy</div>
+<div class="desc">No data is copied into Snowflake. The external volume is a pointer to your on-prem object storage. Snowflake's query engine reads the Parquet files directly, using Iceberg metadata from the Nessie catalog to find the right files and apply partition pruning.</div>
+</div>
+
+<div class="card">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.4rem;">Security enforcement</div>
+<div class="desc">Snowflake RBAC applies at query time. If the user's role doesn't have access to a particular product line's data, those rows are filtered out — the LLM never sees them, and neither does the user.</div>
+</div>
+</div>
+
+<div class="step" data-step="6">
+<div class="step-label">STEP 6 — RESPONSE</div>
+<div class="step-title">Results flow back</div>
+<div class="desc">The results reverse the path: Snowflake → Cortex Agent → FastAPI → RBC Assist. Here's what FastAPI returns to the consumer:</div>
+
+<div class="card-dark" style="margin-top:0.75rem;">
+<div style="margin-bottom:0.4rem;"><span class="tag tag-green">200 OK</span></div>
+<div class="code">{
+  "query_id": "q_7f3a2b1c",
+  "conversation_id": "conv_new_abc123",
+  "backend": "snowflake",
+  "answer": "Total net revenue by product line
+    for Q4 2025:
+    Lending: $142.3M
+    Deposits: $98.7M
+    Cards: $67.1M
+    Investments: $54.2M
+    Insurance: $31.8M",
+  "data": {
+    "columns": [
+      {"name": "product_line", "type": "string"},
+      {"name": "total_net_revenue", "type": "number"}
+    ],
+    "rows": [
+      ["Lending", 142300000],
+      ["Deposits", 98700000],
+      ["Cards", 67100000],
+      ["Investments", 54200000],
+      ["Insurance", 31800000]
+    ],
+    "row_count": 5,
+    "truncated": false
+  },
+  "sql": "SELECT p.PRODUCT_LINE_CD ...",
+  "metadata": {
+    "semantic_model": "ENTERPRISE_SEMANTIC_VIEW",
+    "execution_time_ms": 1240,
+    "backend_request_id": "sf-01J7..."
+  }
+}</div>
+</div>
+
+<div class="desc" style="margin-top:0.5rem;">RBC Assist gets back: the NL answer (for display), the raw data (for charts/tables), the generated SQL (for transparency), and metadata (for audit). The <code>conversation_id</code> enables follow-up questions like <strong>"Break that down by region"</strong> — FastAPI passes it back to Cortex Agent which maintains the thread context.</div>
+</div>
+
+<div class="step" data-step="7">
+<div class="step-label">STEP 7 — FEEDBACK LOOP</div>
+<div class="step-title">User feedback improves accuracy</div>
+<div class="desc">When a user thumbs-up or thumbs-down a result, RBC Assist calls the feedback endpoint:</div>
+
+<div class="card-dark" style="margin-top:0.75rem;">
+<div style="margin-bottom:0.4rem;"><span class="tag tag-post">POST</span><span class="code" style="font-size:13px;color:#7dd3fc;">/v1/query/feedback</span></div>
+<div class="code">{
+  "query_id": "q_7f3a2b1c",
+  "rating": "positive",
+  "correction": null
+}</div>
+</div>
+
+<div class="card" style="margin-top:0.75rem;">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.4rem;">What happens with feedback</div>
+<div class="desc">Positive ratings confirm the SQL was correct. FastAPI logs the question + SQL pair and can push it to Cortex Analyst as a <strong>verified query</strong> — a few-shot example that improves future accuracy for similar questions.</div>
+<div class="desc" style="margin-top:0.4rem;">Negative ratings with corrections ("it should have excluded intercompany transfers") feed into the semantic model refinement cycle — the team updates the YAML, PR reviews it, CI/CD redeploys the semantic view.</div>
+</div>
+
+<div class="callout"><strong>Full API surface summary:</strong><br><br>
+<span class="tag tag-post">POST</span> <code>/v1/query</code> — ask a question, get a routed answer<br>
+<span class="tag tag-post">POST</span> <code>/v1/query/stream</code> — same, with SSE streaming<br>
+<span class="tag tag-post">POST</span> <code>/v1/query/feedback</code> — thumbs up/down + corrections<br>
+<span class="tag tag-get">GET</span> <code>/v1/health</code> — backend connectivity check<br>
+<span class="tag tag-get">GET</span> <code>/v1/backends</code> — list available backends + semantic models</div>
+</div>
+
+</div>
+
+<div class="nav">
+<button class="nav-btn btn-back" id="backBtn" disabled onclick="go(-1)">Back</button>
+<div class="dots" id="dots"></div>
+<button class="nav-btn btn-next" id="nextBtn" onclick="go(1)">Next</button>
+</div>
+
+<script>
+let cur = 0;
+const steps = document.querySelectorAll('.step');
+const total = steps.length;
+const dots = document.getElementById('dots');
+const backBtn = document.getElementById('backBtn');
+const nextBtn = document.getElementById('nextBtn');
+
+for (let i = 0; i < total; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' on' : '');
+  d.onclick = () => { cur = i; render(); };
+  dots.appendChild(d);
+}
+
+function render() {
+  steps.forEach((s, i) => s.classList.toggle('active', i === cur));
+  dots.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
+  backBtn.disabled = cur === 0;
+  nextBtn.textContent = cur === total - 1 ? 'Done' : 'Next';
+}
+
+function go(dir) {
+  if (cur === total - 1 && dir === 1) return;
+  cur = Math.max(0, Math.min(total - 1, cur + dir));
+  render();
+}
+
+render();
+</script>

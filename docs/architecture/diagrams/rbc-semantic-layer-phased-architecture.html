@@ -1,0 +1,279 @@
+<svg width="100%" viewBox="0 0 680 1540" role="img" style="font-family: system-ui, -apple-system, sans-serif;">
+<title>Phased architecture: Snowflake now, Fabric extension later</title>
+<desc>Phase 1 shows Snowflake as the access and semantic layer over Gold Iceberg V2 with FastAPI as trust boundary. Phase 2 shows Fabric added as a parallel BI/AI surface with FastAPI routing between both backends.</desc>
+<defs>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+<path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+<style>
+text { font-family: system-ui, -apple-system, sans-serif; }
+.th { font-size: 14px; font-weight: 500; }
+.ts { font-size: 12px; font-weight: 400; }
+.lbl { font-size: 11px; letter-spacing: 0.5px; }
+
+.phase-lbl { font-size: 16px; font-weight: 500; fill: #444441; }
+.phase-sub { font-size: 12px; fill: #888780; }
+
+.consumer rect { fill: #F1EFE8; stroke: #B4B2A9; }
+.consumer .th { fill: #444441; }
+
+.trust rect { fill: #FAECE7; stroke: #993C1D; }
+.trust .th { fill: #712B13; }
+.trust .ts { fill: #993C1D; }
+
+.sf rect { fill: #9FE1CB; stroke: #0F6E56; }
+.sf .th { fill: #085041; }
+.sf .ts { fill: #0F6E56; }
+.sf-outer { fill: #E1F5EE; stroke: #0F6E56; }
+
+.cortex rect { fill: #EEEDFE; stroke: #534AB7; }
+.cortex .th { fill: #3C3489; }
+.cortex .ts { fill: #534AB7; }
+
+.gold rect { fill: #B5D4F4; stroke: #185FA5; }
+.gold .th { fill: #0C447C; }
+.gold .ts { fill: #185FA5; }
+
+.fab rect { fill: #EEEDFE; stroke: #534AB7; }
+.fab .th { fill: #3C3489; }
+.fab .ts { fill: #534AB7; }
+.fab-outer { fill: #EEEDFE; stroke: #534AB7; }
+
+.gh rect { fill: #F1EFE8; stroke: #5F5E5A; }
+.gh .th { fill: #2C2C2A; }
+.gh .ts { fill: #5F5E5A; }
+
+.gov rect { fill: #FAEEDA; stroke: #854F0B; }
+.gov .th { fill: #633806; }
+.gov .ts { fill: #854F0B; }
+
+.arr { stroke: #888780; stroke-width: 1.5; }
+.arr-dash { stroke: #B4B2A9; stroke-width: 1.5; stroke-dasharray: 5 3; }
+</style>
+</defs>
+
+<!-- ==================== PHASE 1 ==================== -->
+<text class="phase-lbl" x="42" y="30">Phase 1 — Snowflake as access + semantic layer</text>
+<text class="phase-sub" x="42" y="48">Ship now. Semantic model in GitHub, deployed to Snowflake semantic views.</text>
+
+<line x1="42" y1="58" x2="638" y2="58" stroke="#D3D1C7" stroke-width="0.5"/>
+
+<!-- Consumers -->
+<text class="lbl" x="42" y="80" fill="#888780">CONSUMERS</text>
+<g class="consumer">
+<rect x="60" y="90" width="130" height="40" rx="8" stroke-width="0.5"/>
+<text class="th" x="125" y="114" text-anchor="middle">RBC Assist</text>
+</g>
+<g class="consumer">
+<rect x="210" y="90" width="130" height="40" rx="8" stroke-width="0.5"/>
+<text class="th" x="275" y="114" text-anchor="middle">Borealis</text>
+</g>
+<g class="consumer">
+<rect x="430" y="90" width="140" height="40" rx="8" stroke-width="0.5"/>
+<text class="th" x="500" y="114" text-anchor="middle">Power BI / Tableau</text>
+</g>
+
+<line x1="125" y1="130" x2="220" y2="158" class="arr" marker-end="url(#arrow)" opacity="0.4"/>
+<line x1="275" y1="130" x2="245" y2="158" class="arr" marker-end="url(#arrow)" opacity="0.4"/>
+
+<!-- Trust boundary -->
+<text class="lbl" x="42" y="152" fill="#888780">TRUST BOUNDARY</text>
+<g class="trust">
+<rect x="80" y="162" width="300" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="230" y="183" text-anchor="middle">FastAPI trust boundary</text>
+<text class="ts" x="230" y="199" text-anchor="middle">Orchestrator LLM + guardrails</text>
+</g>
+
+<line x1="230" y1="212" x2="230" y2="252" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="244" y="236" fill="#888780">Cortex Analyst REST API</text>
+
+<!-- Snowflake box -->
+<rect class="sf-outer" x="42" y="260" width="596" height="250" rx="14" stroke-width="0.5" stroke-dasharray="6 4"/>
+<text class="th" x="62" y="282" fill="#085041">Snowflake</text>
+
+<!-- Cortex Analyst -->
+<g class="cortex">
+<rect x="80" y="296" width="240" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="200" y="317" text-anchor="middle">Cortex Analyst</text>
+<text class="ts" x="200" y="333" text-anchor="middle">NL-to-SQL via REST API</text>
+</g>
+
+<!-- Direct BI connection -->
+<line x1="500" y1="130" x2="500" y2="296" class="arr" marker-end="url(#arrow)" opacity="0.35"/>
+<text class="ts" x="514" y="220" fill="#888780" style="font-style:italic">Direct SQL / ODBC</text>
+
+<line x1="200" y1="346" x2="200" y2="376" class="arr" marker-end="url(#arrow)"/>
+
+<!-- Semantic views -->
+<g class="sf">
+<rect x="80" y="380" width="510" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="335" y="401" text-anchor="middle">Semantic views (CREATE SEMANTIC VIEW)</text>
+<text class="ts" x="335" y="417" text-anchor="middle">Metrics, dimensions, time grains over Iceberg external tables</text>
+</g>
+
+<line x1="335" y1="430" x2="335" y2="456" class="arr" marker-end="url(#arrow)"/>
+
+<!-- Iceberg external tables -->
+<g class="sf">
+<rect x="80" y="460" width="510" height="36" rx="8" stroke-width="0.5"/>
+<text class="th" x="335" y="482" text-anchor="middle">Iceberg external tables (via external volumes)</text>
+</g>
+
+<!-- GitHub - semantic model source -->
+<text class="lbl" x="42" y="538" fill="#888780">SEMANTIC MODEL SOURCE OF TRUTH</text>
+<g class="gh">
+<rect x="80" y="548" width="300" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="230" y="569" text-anchor="middle">GitHub repo (semantic-model.yaml)</text>
+<text class="ts" x="230" y="585" text-anchor="middle">Canonical definitions, version controlled</text>
+</g>
+
+<path d="M380 573 L440 573 L440 415 L590 415" fill="none" class="arr" marker-end="url(#arrow)" opacity="0.4"/>
+<text class="ts" x="460" y="565" fill="#888780">CI/CD deploys to</text>
+<text class="ts" x="460" y="580" fill="#888780">Snowflake semantic views</text>
+
+<!-- Gold Iceberg -->
+<text class="lbl" x="42" y="628" fill="#888780">DATA LAYER (ON-PREM)</text>
+<g class="gold">
+<rect x="80" y="638" width="300" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="230" y="659" text-anchor="middle">Gold — Iceberg V2 (Nessie)</text>
+<text class="ts" x="230" y="675" text-anchor="middle">Aggregates, conformed from Silver/FSDM</text>
+</g>
+
+<line x1="335" y1="496" x2="335" y2="520" stroke="#B4B2A9" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="335" y1="520" x2="230" y2="520" stroke="#B4B2A9" stroke-width="1" stroke-dasharray="3 3"/>
+<line x1="230" y1="520" x2="230" y2="638" class="arr-dash" marker-end="url(#arrow)"/>
+<text class="ts" x="244" y="612" fill="#888780">Zero-copy read</text>
+
+<!-- Governance callout -->
+<g class="gov">
+<rect x="420" y="638" width="200" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="520" y="659" text-anchor="middle">Snowflake RBAC</text>
+<text class="ts" x="520" y="675" text-anchor="middle">Row access + Immuta?</text>
+</g>
+
+<!-- ==================== PHASE 2 ==================== -->
+<line x1="42" y1="720" x2="638" y2="720" stroke="#888780" stroke-width="1" stroke-dasharray="8 4"/>
+
+<text class="phase-lbl" x="42" y="756">Phase 2 — Add Fabric as parallel BI/AI surface</text>
+<text class="phase-sub" x="42" y="774">Ship when ready. Same Gold, same semantic definitions. FastAPI routes between both.</text>
+
+<line x1="42" y1="784" x2="638" y2="784" stroke="#D3D1C7" stroke-width="0.5"/>
+
+<!-- Consumers P2 -->
+<text class="lbl" x="42" y="806" fill="#888780">CONSUMERS</text>
+<g class="consumer">
+<rect x="60" y="816" width="130" height="40" rx="8" stroke-width="0.5"/>
+<text class="th" x="125" y="840" text-anchor="middle">RBC Assist</text>
+</g>
+<g class="consumer">
+<rect x="210" y="816" width="130" height="40" rx="8" stroke-width="0.5"/>
+<text class="th" x="275" y="840" text-anchor="middle">Borealis</text>
+</g>
+<g class="consumer">
+<rect x="430" y="816" width="140" height="40" rx="8" stroke-width="0.5"/>
+<text class="th" x="500" y="840" text-anchor="middle">Power BI</text>
+</g>
+
+<line x1="125" y1="856" x2="260" y2="884" class="arr" marker-end="url(#arrow)" opacity="0.4"/>
+<line x1="275" y1="856" x2="290" y2="884" class="arr" marker-end="url(#arrow)" opacity="0.4"/>
+
+<!-- Trust boundary P2 -->
+<g class="trust">
+<rect x="80" y="888" width="360" height="50" rx="8" stroke-width="0.5"/>
+<text class="th" x="260" y="909" text-anchor="middle">FastAPI trust boundary (router)</text>
+<text class="ts" x="260" y="925" text-anchor="middle">Routes: NL queries → Snowflake | BI/AI → Fabric</text>
+</g>
+
+<!-- Left arrow to Snowflake -->
+<line x1="180" y1="938" x2="180" y2="988" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="118" y="968" fill="#085041">Cortex Analyst</text>
+<text class="ts" x="118" y="982" fill="#085041">REST API</text>
+
+<!-- Right arrow to Fabric -->
+<line x1="360" y1="938" x2="360" y2="988" class="arr" marker-end="url(#arrow)"/>
+<text class="ts" x="374" y="968" fill="#534AB7">Data Agent</text>
+<text class="ts" x="374" y="982" fill="#534AB7">REST API</text>
+
+<!-- Power BI to Fabric -->
+<line x1="500" y1="856" x2="500" y2="988" class="arr" marker-end="url(#arrow)" opacity="0.35"/>
+<text class="ts" x="514" y="940" fill="#888780" style="font-style:italic">Import model</text>
+
+<!-- Snowflake box P2 -->
+<rect class="sf-outer" x="42" y="996" width="280" height="162" rx="12" stroke-width="0.5" stroke-dasharray="6 4"/>
+<text class="th" x="58" y="1016" fill="#085041">Snowflake</text>
+
+<g class="cortex">
+<rect x="60" y="1028" width="244" height="36" rx="6" stroke-width="0.5"/>
+<text class="th" x="182" y="1050" text-anchor="middle">Cortex Analyst</text>
+</g>
+<g class="sf">
+<rect x="60" y="1074" width="244" height="36" rx="6" stroke-width="0.5"/>
+<text class="th" x="182" y="1096" text-anchor="middle">Semantic views</text>
+</g>
+<g class="sf">
+<rect x="60" y="1120" width="244" height="30" rx="6" stroke-width="0.5"/>
+<text class="ts" x="182" y="1139" text-anchor="middle" fill="#085041">Iceberg external tables</text>
+</g>
+
+<!-- Fabric box P2 -->
+<rect class="fab-outer" x="358" y="996" width="280" height="162" rx="12" stroke-width="0.5" stroke-dasharray="6 4" fill="#EEEDFE" opacity="0.5"/>
+<text class="th" x="374" y="1016" fill="#3C3489">Microsoft Fabric</text>
+
+<g class="fab">
+<rect x="376" y="1028" width="244" height="36" rx="6" stroke-width="0.5"/>
+<text class="th" x="498" y="1050" text-anchor="middle">Data Agent + IQ</text>
+</g>
+<g class="fab">
+<rect x="376" y="1074" width="244" height="36" rx="6" stroke-width="0.5"/>
+<text class="th" x="498" y="1096" text-anchor="middle">Import semantic model</text>
+</g>
+<g class="fab">
+<rect x="376" y="1120" width="244" height="30" rx="6" stroke-width="0.5"/>
+<text class="ts" x="498" y="1139" text-anchor="middle" fill="#534AB7">OneLake (Delta copy of Gold)</text>
+</g>
+
+<!-- Both point to Gold -->
+<line x1="182" y1="1158" x2="182" y2="1194" stroke="#B4B2A9" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<line x1="498" y1="1158" x2="498" y2="1194" stroke="#B4B2A9" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+<text class="ts" x="120" y="1182" fill="#888780">Zero-copy</text>
+<text class="ts" x="510" y="1182" fill="#888780">Delta sync</text>
+
+<!-- Gold P2 -->
+<g class="gold">
+<rect x="120" y="1198" width="440" height="44" rx="8" stroke-width="0.5"/>
+<text class="th" x="340" y="1224" text-anchor="middle">Gold — Iceberg V2 (Nessie) — single source of truth</text>
+</g>
+
+<!-- GitHub P2 -->
+<text class="lbl" x="42" y="1278" fill="#888780">SEMANTIC MODEL SOURCE OF TRUTH</text>
+<g class="gh">
+<rect x="120" y="1288" width="440" height="44" rx="8" stroke-width="0.5"/>
+<text class="th" x="340" y="1314" text-anchor="middle">GitHub repo (semantic-model.yaml)</text>
+</g>
+
+<!-- Deploy arrows from GitHub -->
+<path d="M230 1288 L230 1268 L182 1268 L182 1158" fill="none" class="arr-dash" marker-end="url(#arrow)" opacity="0.5"/>
+<path d="M450 1288 L450 1268 L498 1268 L498 1158" fill="none" class="arr-dash" marker-end="url(#arrow)" opacity="0.5"/>
+<text class="ts" x="135" y="1262" fill="#888780">CI/CD</text>
+<text class="ts" x="505" y="1262" fill="#888780">CI/CD</text>
+
+<!-- Legend -->
+<line x1="42" y1="1370" x2="638" y2="1370" stroke="#D3D1C7" stroke-width="0.5"/>
+<text class="lbl" x="42" y="1392" fill="#888780">KEY DECISIONS</text>
+
+<circle cx="58" cy="1414" r="4" fill="#0F6E56"/>
+<text class="ts" x="70" y="1418" fill="#444441">Semantic model YAML in GitHub = single definition, deployed to each engine</text>
+
+<circle cx="58" cy="1440" r="4" fill="#993C1D"/>
+<text class="ts" x="70" y="1444" fill="#444441">FastAPI routes by query type: NL analytics → Snowflake, BI/AI surface → Fabric</text>
+
+<circle cx="58" cy="1466" r="4" fill="#185FA5"/>
+<text class="ts" x="70" y="1470" fill="#444441">Gold Iceberg V2 written once, read by both engines (zero-copy + Delta sync)</text>
+
+<circle cx="58" cy="1492" r="4" fill="#854F0B"/>
+<text class="ts" x="70" y="1496" fill="#444441">Governance: Snowflake RBAC now, OneLake security added with Fabric later</text>
+
+<circle cx="58" cy="1518" r="4" fill="#534AB7"/>
+<text class="ts" x="70" y="1522" fill="#444441">Phase 2 is additive — nothing in Phase 1 gets thrown away or rebuilt</text>
+
+</svg>

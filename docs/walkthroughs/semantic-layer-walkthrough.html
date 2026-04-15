@@ -1,0 +1,367 @@
+<h2 class="sr-only">Walkthrough of the semantic model YAML lifecycle from GitHub to Snowflake and Fabric</h2>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+.step { display: none; padding: 0.5rem 0; }
+.step.active { display: block; }
+.step-label { font-size: 11px; color: var(--color-text-tertiary, #999); letter-spacing: 0.5px; margin-bottom: 0.25rem; }
+.step-title { font-size: 18px; font-weight: 500; color: var(--color-text-primary, #1a1a1a); margin-bottom: 0.75rem; }
+.card { background: var(--color-background-secondary, #f7f7f5); border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; }
+.card-dark { background: #1e2530; border-radius: 12px; padding: 1rem; margin-bottom: 0.75rem; }
+.code { font-family: var(--font-mono, 'Courier New', monospace); font-size: 12px; line-height: 1.6; color: #c8d4e0; white-space: pre-wrap; word-break: break-all; }
+.code-light { font-family: var(--font-mono, 'Courier New', monospace); font-size: 12px; line-height: 1.6; color: var(--color-text-primary, #333); white-space: pre-wrap; background: var(--color-background-secondary, #f5f5f3); border-radius: 8px; padding: 0.75rem; }
+.tag { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; margin-right: 4px; }
+.tag-yaml { background: #dbeafe; color: #1e40af; }
+.tag-sql { background: #d1fae5; color: #065f46; }
+.tag-fabric { background: #ede9fe; color: #5b21b6; }
+.tag-cicd { background: #fef3c7; color: #92400e; }
+.desc { font-size: 14px; line-height: 1.65; color: var(--color-text-secondary, #555); }
+.desc strong { color: var(--color-text-primary, #1a1a1a); font-weight: 500; }
+.arrow-label { font-size: 12px; color: var(--color-text-tertiary, #999); text-align: center; padding: 0.35rem 0; }
+.flow-box { border-radius: 8px; padding: 0.6rem 0.75rem; margin-bottom: 0.4rem; font-size: 13px; font-weight: 500; }
+.flow-active { background: #dbeafe; color: #1e40af; border-left: 3px solid #3068FF; }
+.flow-dim { background: var(--color-background-secondary, #f5f5f3); color: var(--color-text-tertiary, #999); border-left: 3px solid transparent; }
+.flow-purple { background: #ede9fe; color: #5b21b6; border-left: 3px solid #7c3aed; }
+.callout { background: #fef3c7; border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 12px; color: #92400e; margin-top: 0.5rem; }
+.callout-blue { background: #dbeafe; border-radius: 8px; padding: 0.6rem 0.75rem; font-size: 12px; color: #1e40af; margin-top: 0.5rem; }
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.5rem; }
+.vs-col { border-radius: 8px; padding: 0.75rem; }
+.vs-left { background: #d1fae5; }
+.vs-right { background: #ede9fe; }
+.vs-title { font-size: 12px; font-weight: 500; margin-bottom: 0.4rem; }
+.nav { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-top: 1px solid var(--color-border-tertiary, rgba(0,0,0,0.1)); margin-top: 0.5rem; }
+.nav-btn { font-size: 14px; font-weight: 500; padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; transition: opacity 0.15s; }
+.nav-btn:active { opacity: 0.7; }
+.btn-back { background: var(--color-background-secondary, #eee); color: var(--color-text-secondary, #555); }
+.btn-next { background: #3068FF; color: white; }
+.btn-next:disabled, .btn-back:disabled { opacity: 0.3; cursor: default; }
+.dots { display: flex; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--color-border-tertiary, rgba(0,0,0,0.15)); transition: background 0.2s; }
+.dot.on { background: #3068FF; }
+</style>
+
+<div id="app" style="padding: 0.5rem 0;">
+
+<!-- STEP 0: What is the semantic layer -->
+<div class="step" data-step="0">
+<div class="step-label">THE PROBLEM</div>
+<div class="step-title">Why do we need a semantic layer?</div>
+<div class="desc">Your Gold Iceberg tables have column names like <code>LEDGER_BAL_AMT</code>, <code>DISCOUNT_RT</code>, and <code>PRODUCT_LINE_CD</code>. When a business user asks "what was net revenue by product line?" — the LLM has to figure out that:</div>
+
+<div class="card" style="margin-top:0.75rem;">
+<div class="desc"><strong>"net revenue"</strong> = <code>SUM(LEDGER_BAL_AMT * (1 - DISCOUNT_RT))</code></div>
+<div class="desc" style="margin-top:0.3rem;"><strong>"product line"</strong> = <code>PRODUCT_LINE_CD</code> from the <code>DIM_PRODUCT</code> table, joined via <code>ACCOUNT_TYPE_CD = PRODUCT_ID</code></div>
+</div>
+
+<div class="desc" style="margin-top:0.5rem;">Without a semantic layer, the LLM guesses from raw column names and gets it wrong. The semantic layer is a <strong>translation map</strong> between business language and physical schema. It tells the LLM exactly which columns to use, how to aggregate them, and how to join tables.</div>
+
+<div class="callout">Think of it as a data dictionary that the AI can read — but structured as code, not a PDF on SharePoint.</div>
+</div>
+
+<!-- STEP 1: The YAML file -->
+<div class="step" data-step="1">
+<div class="step-label">THE YAML FILE</div>
+<div class="step-title">What's inside the semantic model</div>
+<div class="desc">The YAML file in your GitHub repo defines four things:</div>
+
+<div class="card" style="margin-top:0.75rem;">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.3rem;">1. Metrics</div>
+<div class="desc">Business calculations. "Net revenue" = <code>SUM(LEDGER_BAL_AMT * (1 - DISCOUNT_RT))</code>. Defined once, used everywhere.</div>
+</div>
+<div class="card">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.3rem;">2. Dimensions</div>
+<div class="desc">Things you group by. "Product line", "branch", "customer segment". Maps business names to physical column names.</div>
+</div>
+<div class="card">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.3rem;">3. Relationships</div>
+<div class="desc">How tables join. <code>fact_account_balance.ACCOUNT_TYPE_CD → dim_product.PRODUCT_ID</code>. Tells the LLM which JOINs are valid.</div>
+</div>
+<div class="card">
+<div style="font-weight:500;color:var(--color-text-primary);margin-bottom:0.3rem;">4. Verified queries</div>
+<div class="desc">Example question-SQL pairs. "What is total balance by product line?" → exact correct SQL. These are few-shot examples that dramatically improve accuracy.</div>
+</div>
+
+<div class="desc" style="margin-top:0.5rem;">Here's what a metric looks like in the YAML:</div>
+<div class="card-dark" style="margin-top:0.4rem;">
+<div class="code"><span style="color:#7dd3fc;">metrics:</span>
+  - <span style="color:#7dd3fc;">name:</span> total_net_revenue
+    <span style="color:#7dd3fc;">description:</span> >
+      Net revenue after discounts,
+      summed across accounts
+    <span style="color:#7dd3fc;">expr:</span> SUM(LEDGER_BAL_AMT * (1 - DISCOUNT_RT))
+    <span style="color:#7dd3fc;">data_type:</span> NUMBER
+    <span style="color:#7dd3fc;">default_aggregation:</span> sum</div>
+</div>
+</div>
+
+<!-- STEP 2: Where it lives -->
+<div class="step" data-step="2">
+<div class="step-label">WHERE IT LIVES</div>
+<div class="step-title">GitHub is the source of truth</div>
+<div class="desc">The YAML file lives in your lakehouse repo alongside the ADRs and pipeline code. It's version controlled, PR-reviewed, and deployed via CI/CD — just like everything else.</div>
+
+<div class="card-dark" style="margin-top:0.75rem;">
+<div class="code">github.com/chilakos/lakehouse/
+├── docs/
+│   ├── adr/
+│   │   ├── 010-fabric-import-semantic-layer.md
+│   │   └── <span style="color:#7dd3fc;">011-snowflake-cortex-semantic-layer.md</span>
+│   └── architecture/
+│       ├── <span style="color:#7dd3fc;">semantic-model-template.yaml</span>  ← this file
+│       └── fastapi-trust-boundary-spec.yaml
+├── decks/
+└── src/
+    └── pipelines/</div>
+</div>
+
+<div class="desc" style="margin-top:0.5rem;">When someone wants to add a new metric or change a dimension, they:</div>
+
+<div class="flow-box flow-active" style="margin-top:0.5rem;">1. Edit the YAML in a feature branch</div>
+<div class="flow-box flow-active">2. Open a PR — team reviews the business logic</div>
+<div class="flow-box flow-active">3. Merge to main</div>
+<div class="flow-box flow-active">4. CI/CD deploys to Snowflake (and later Fabric)</div>
+
+<div class="callout">The semantic model gets the same rigor as your ETL code. No one edits metrics in a UI and forgets to tell the team.</div>
+</div>
+
+<!-- STEP 3: Deploy to Snowflake -->
+<div class="step" data-step="3">
+<div class="step-label">PHASE 1 DEPLOYMENT</div>
+<div class="step-title">YAML → Snowflake semantic view</div>
+<div class="desc">Your CI/CD pipeline reads the YAML and translates it into Snowflake <code>CREATE SEMANTIC VIEW</code> DDL. Here's what happens to the "net revenue" metric:</div>
+
+<div class="desc" style="margin-top:0.75rem;font-weight:500;">In the YAML (what you author):</div>
+<div class="card-dark">
+<div class="code"><span style="color:#7dd3fc;">- name:</span> total_net_revenue
+  <span style="color:#7dd3fc;">expr:</span> SUM(LEDGER_BAL_AMT * (1 - DISCOUNT_RT))</div>
+</div>
+
+<div class="arrow-label"><span class="tag tag-cicd">CI/CD</span> translates to</div>
+
+<div class="desc" style="font-weight:500;">In Snowflake (what gets deployed):</div>
+<div class="card-dark">
+<div class="code"><span style="color:#a5f3fc;">CREATE OR REPLACE SEMANTIC VIEW</span>
+  RBC_LAKEHOUSE.GOLD.ENTERPRISE_SEMANTIC_VIEW
+<span style="color:#a5f3fc;">  TABLES</span> (
+    fact_bal <span style="color:#a5f3fc;">AS</span> GOLD.FACT_ACCOUNT_BALANCE_DAILY,
+    dim_prod <span style="color:#a5f3fc;">AS</span> GOLD.DIM_PRODUCT
+  )
+<span style="color:#a5f3fc;">  COLUMNS</span> (
+    fact_bal.LEDGER_BAL_AMT
+      <span style="color:#a5f3fc;">AS</span> "Ledger balance"
+      <span style="color:#a5f3fc;">METRIC</span>,
+    fact_bal.DISCOUNT_RT
+      <span style="color:#a5f3fc;">AS</span> "Discount rate"
+      <span style="color:#a5f3fc;">FACT</span>,
+    dim_prod.PRODUCT_LINE_CD
+      <span style="color:#a5f3fc;">AS</span> "Product line"
+      <span style="color:#a5f3fc;">DIMENSION</span>
+  )
+<span style="color:#a5f3fc;">  METRICS</span> (
+    "Net revenue" <span style="color:#a5f3fc;">AS</span>
+      SUM(fact_bal.LEDGER_BAL_AMT
+        * (1 - fact_bal.DISCOUNT_RT))
+  )
+<span style="color:#a5f3fc;">  RELATIONSHIPS</span> (
+    fact_bal(ACCOUNT_TYPE_CD)
+      <span style="color:#a5f3fc;">REFERENCES</span> dim_prod(PRODUCT_ID)
+  );</div>
+</div>
+
+<div class="desc" style="margin-top:0.5rem;">The semantic view is a <strong>metadata object</strong> — it doesn't copy or transform any data. It just tells Cortex Analyst: "when someone says 'net revenue', here's the formula. When they say 'product line', here's the column and join."</div>
+</div>
+
+<!-- STEP 4: How Cortex uses it -->
+<div class="step" data-step="4">
+<div class="step-label">AT QUERY TIME</div>
+<div class="step-title">How Cortex Analyst reads the semantic view</div>
+<div class="desc">When a user asks <strong>"What was net revenue by product line for Q4?"</strong>, Cortex Analyst doesn't guess. It reads the semantic view and knows exactly what to do:</div>
+
+<div class="flow-box flow-active" style="margin-top:0.75rem;">User: "net revenue by product line for Q4"</div>
+<div class="arrow-label">↓ Cortex Analyst reads semantic view</div>
+<div class="flow-box flow-active">Resolves: "net revenue" → SUM(LEDGER_BAL_AMT * (1 - DISCOUNT_RT))</div>
+<div class="flow-box flow-active">Resolves: "product line" → dim_product.PRODUCT_LINE_CD</div>
+<div class="flow-box flow-active">Resolves: join path → fact.ACCOUNT_TYPE_CD = dim.PRODUCT_ID</div>
+<div class="flow-box flow-active">Resolves: "Q4" → BALANCE_DT BETWEEN '2025-10-01' AND '2025-12-31'</div>
+<div class="arrow-label">↓ generates SQL</div>
+<div class="flow-box flow-active">Executes SQL against Iceberg external tables</div>
+
+<div class="desc" style="margin-top:0.5rem;">Without the semantic view, Cortex Analyst would see raw column names like <code>LEDGER_BAL_AMT</code> and <code>DISCOUNT_RT</code> and have to guess whether "net revenue" means <code>SUM(LEDGER_BAL_AMT)</code> or <code>SUM(LEDGER_BAL_AMT - DISCOUNT_RT)</code> or something else entirely. The semantic view removes the guessing.</div>
+
+<div class="callout">The verified queries in the YAML (step 1) also help here — they're few-shot examples that Cortex Analyst uses to pattern-match similar questions it hasn't seen before.</div>
+</div>
+
+<!-- STEP 5: How Fabric uses the same YAML -->
+<div class="step" data-step="5">
+<div class="step-label">PHASE 2 DEPLOYMENT</div>
+<div class="step-title">Same YAML → Fabric semantic model</div>
+<div class="desc">When Fabric comes online, the same YAML deploys to a <strong>second target</strong>. The CI/CD pipeline translates the same metric definitions into a Power BI tabular model (TMDL format):</div>
+
+<div class="vs">
+<div class="vs-col vs-left">
+<div class="vs-title" style="color:#065f46;">Snowflake (Phase 1)</div>
+<div style="font-size:12px;color:#065f46;">YAML → <code>CREATE SEMANTIC VIEW</code></div>
+<div style="font-size:11px;color:#047857;margin-top:0.3rem;">Cortex Analyst reads it</div>
+<div style="font-size:11px;color:#047857;">SQL runs on Snowflake warehouse</div>
+<div style="font-size:11px;color:#047857;">Data: Iceberg external tables</div>
+</div>
+<div class="vs-col vs-right">
+<div class="vs-title" style="color:#5b21b6;">Fabric (Phase 2)</div>
+<div style="font-size:12px;color:#5b21b6;">YAML → TMDL / Power BI model</div>
+<div style="font-size:11px;color:#6d28d9;margin-top:0.3rem;">Fabric Data Agent reads it</div>
+<div style="font-size:11px;color:#6d28d9;">DAX runs on VertiPaq engine</div>
+<div style="font-size:11px;color:#6d28d9;">Data: Delta copy in OneLake</div>
+</div>
+</div>
+
+<div class="desc" style="margin-top:0.75rem;">Here's what happens to the same "net revenue" metric in Fabric:</div>
+
+<div class="desc" style="margin-top:0.5rem;font-weight:500;">In the YAML (same file, unchanged):</div>
+<div class="card-dark">
+<div class="code"><span style="color:#7dd3fc;">- name:</span> total_net_revenue
+  <span style="color:#7dd3fc;">expr:</span> SUM(LEDGER_BAL_AMT * (1 - DISCOUNT_RT))</div>
+</div>
+
+<div class="arrow-label"><span class="tag tag-cicd">CI/CD</span> translates to</div>
+
+<div class="desc" style="font-weight:500;">In Fabric (TMDL / DAX measure):</div>
+<div class="card-dark">
+<div class="code"><span style="color:#c4b5fd;">measure</span> 'Total Net Revenue' =
+  <span style="color:#c4b5fd;">SUMX</span>(
+    fact_account_balance,
+    fact_account_balance[LEDGER_BAL_AMT]
+      * (1 - fact_account_balance[DISCOUNT_RT])
+  )
+
+<span style="color:#c4b5fd;">relationship</span>
+  fact_account_balance[ACCOUNT_TYPE_CD]
+    → dim_product[PRODUCT_ID]
+    many-to-one</div>
+</div>
+
+<div class="callout-blue"><strong>Same metric, same business definition, two engines.</strong> When a Power BI user sees "Total Net Revenue" in a report, it's the exact same formula as when RBC Assist answers "what was net revenue?" via Cortex Analyst.</div>
+</div>
+
+<!-- STEP 6: The CI/CD pipeline -->
+<div class="step" data-step="6">
+<div class="step-label">THE CI/CD PIPELINE</div>
+<div class="step-title">How deployment actually works</div>
+<div class="desc">When someone merges a YAML change to <code>main</code>, GitHub Actions runs:</div>
+
+<div class="card-dark" style="margin-top:0.75rem;">
+<div class="code"><span style="color:#a5f3fc;"># .github/workflows/deploy-semantic-model.yml</span>
+
+<span style="color:#7dd3fc;">on:</span>
+  push:
+    branches: [main]
+    paths:
+      - 'docs/architecture/semantic-model-template.yaml'
+
+<span style="color:#7dd3fc;">jobs:</span>
+  <span style="color:#fbbf24;">deploy-snowflake:</span>
+    steps:
+      - name: Validate YAML schema
+        run: python scripts/validate_semantic_model.py
+
+      - name: Generate Snowflake DDL
+        run: python scripts/yaml_to_snowflake_ddl.py
+          --input semantic-model-template.yaml
+          --output semantic_view.sql
+
+      - name: Deploy to Snowflake
+        run: snowsql -f semantic_view.sql
+          --account $SF_ACCOUNT
+          --authenticator oauth
+          --token $SF_DEPLOY_TOKEN
+
+  <span style="color:#c4b5fd;">deploy-fabric:</span>  <span style="color:#666;"># Phase 2 — uncomment when ready</span>
+    <span style="color:#666;"># steps:
+    #   - name: Generate TMDL
+    #     run: python scripts/yaml_to_tmdl.py
+    #   - name: Deploy to Fabric
+    #     run: tabular-editor deploy ...</span></div>
+</div>
+
+<div class="desc" style="margin-top:0.5rem;">The <code>yaml_to_snowflake_ddl.py</code> script is a straightforward Python translator — it reads your YAML metrics/dimensions/relationships and generates <code>CREATE SEMANTIC VIEW</code> SQL. You'd build this once. The Fabric equivalent (<code>yaml_to_tmdl.py</code>) generates Power BI tabular model definitions — you build it when Phase 2 starts.</div>
+
+<div class="callout"><strong>What you build for Phase 1:</strong><br>
+1. The YAML file (already in the repo as the template)<br>
+2. A YAML → Snowflake DDL translator (Python script, ~200 lines)<br>
+3. A GitHub Actions workflow to deploy on merge<br><br>
+<strong>What you add for Phase 2:</strong><br>
+4. A YAML → TMDL translator (Python script)<br>
+5. A second deployment step in the same workflow</div>
+</div>
+
+<!-- STEP 7: The full picture -->
+<div class="step" data-step="7">
+<div class="step-label">THE FULL PICTURE</div>
+<div class="step-title">Everything connected</div>
+
+<div class="flow-box flow-active" style="margin-top:0.5rem;">Business user asks "What was net revenue by product line?"</div>
+<div class="arrow-label">↓</div>
+<div class="flow-box flow-active">RBC Assist → POST /v1/query → Lumina Gateway (FastAPI container)</div>
+<div class="arrow-label">↓ validates token, classifies query, applies guardrails</div>
+<div class="flow-box flow-active">Gateway → Snowflake Cortex Agent REST API (OAuth token)</div>
+<div class="arrow-label">↓ agent orchestrates, invokes Cortex Analyst</div>
+<div class="flow-box flow-active">Cortex Analyst reads semantic view → generates SQL</div>
+<div class="arrow-label">↓ semantic view was deployed from GitHub YAML via CI/CD</div>
+<div class="flow-box flow-active">SQL executes on Snowflake warehouse → reads Iceberg external tables</div>
+<div class="arrow-label">↓ zero-copy read from Gold Iceberg V2 on-prem</div>
+<div class="flow-box flow-active">Results return: NL answer + data + SQL + metadata</div>
+
+<div class="vs" style="margin-top:1rem;">
+<div class="vs-col vs-left">
+<div class="vs-title" style="color:#065f46;">What's running now (Phase 1)</div>
+<div style="font-size:11px;color:#047857;">Lumina Gateway container (OpenShift/AKS)</div>
+<div style="font-size:11px;color:#047857;">Snowflake External OAuth integration</div>
+<div style="font-size:11px;color:#047857;">Cortex Agent + Analyst + semantic views</div>
+<div style="font-size:11px;color:#047857;">Iceberg external tables → Gold on-prem</div>
+<div style="font-size:11px;color:#047857;">GitHub YAML → CI/CD → Snowflake DDL</div>
+</div>
+<div class="vs-col vs-right">
+<div class="vs-title" style="color:#5b21b6;">What's added later (Phase 2)</div>
+<div style="font-size:11px;color:#6d28d9;">Second route in Lumina Gateway</div>
+<div style="font-size:11px;color:#6d28d9;">Fabric Data Agent REST API</div>
+<div style="font-size:11px;color:#6d28d9;">Import semantic model in Fabric</div>
+<div style="font-size:11px;color:#6d28d9;">Delta copy of Gold in OneLake</div>
+<div style="font-size:11px;color:#6d28d9;">Same YAML → CI/CD → TMDL deploy</div>
+</div>
+</div>
+
+<div class="callout-blue" style="margin-top:0.75rem;"><strong>The semantic model YAML is the linchpin.</strong> It's the single artifact that ensures "net revenue" means the same thing whether you're asking RBC Assist (Cortex Analyst), building a Power BI report (Fabric Import model), or querying Trino directly (the YAML documents the formula for humans too).</div>
+</div>
+
+</div>
+
+<div class="nav">
+<button class="nav-btn btn-back" id="backBtn" disabled onclick="go(-1)">Back</button>
+<div class="dots" id="dots"></div>
+<button class="nav-btn btn-next" id="nextBtn" onclick="go(1)">Next</button>
+</div>
+
+<script>
+let cur = 0;
+const steps = document.querySelectorAll('.step');
+const total = steps.length;
+const dots = document.getElementById('dots');
+const backBtn = document.getElementById('backBtn');
+const nextBtn = document.getElementById('nextBtn');
+for (let i = 0; i < total; i++) {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i === 0 ? ' on' : '');
+  d.onclick = () => { cur = i; render(); };
+  dots.appendChild(d);
+}
+function render() {
+  steps.forEach((s, i) => s.classList.toggle('active', i === cur));
+  dots.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('on', i === cur));
+  backBtn.disabled = cur === 0;
+  nextBtn.textContent = cur === total - 1 ? 'Done' : 'Next';
+}
+function go(dir) {
+  if (cur === total - 1 && dir === 1) return;
+  cur = Math.max(0, Math.min(total - 1, cur + dir));
+  render();
+}
+render();
+</script>
