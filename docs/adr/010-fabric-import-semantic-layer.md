@@ -1,7 +1,8 @@
 # ADR-010: Microsoft Fabric Import Semantic Model as BI and AI Surface Layer
 
-**Status:** Accepted
+**Status:** Superseded by ADR-011
 **Date:** 2026-04-01
+**Superseded:** 2026-04-15 — ADR-011 adopts a phased approach (Snowflake Cortex Phase 1, Fabric Phase 2)
 **Authors:** George Chilakos, VP Enterprise Data (Lumina / RBC)
 **Raised by:** BI/AI surface layer evaluation (April 2026)
 **Supersedes:** ADR-008 contingency pattern
