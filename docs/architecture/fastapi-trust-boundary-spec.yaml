@@ -1,0 +1,428 @@
+openapi: 3.0.3
+info:
+  title: RBC Assist - FastAPI Trust Boundary
+  description: |
+    API contract for the FastAPI trust boundary layer that sits between
+    AI consumer applications (RBC Assist, Borealis) and governed data engines
+    (Snowflake Cortex Analyst, Microsoft Fabric Data Agent).
+
+    ## Architecture role
+    This service is the single entry point for all AI-to-data queries.
+    No agent or consumer app may query Snowflake or Fabric directly.
+    The trust boundary enforces:
+    - Authentication via Entra ID OBO (on-behalf-of) token flow
+    - Backend routing (Snowflake for NL analytics, Fabric for BI/AI surface)
+    - Prompt injection defense and PII masking
+    - Audit logging for OSFI B-13 / BCBS 239 compliance
+    - Response validation and guardrails
+
+    ## Backend routing
+    The orchestrator LLM classifies each query and routes to the appropriate backend:
+    - `snowflake` → Snowflake Cortex Analyst REST API (NL-to-SQL over semantic views)
+    - `fabric` → Microsoft Fabric Data Agent REST API (NL-to-DAX/SQL over Import semantic model)
+    - Callers may provide a hint via `X-Backend-Hint` header, but the orchestrator makes the final decision.
+
+    ## Auth flow
+    1. Consumer app authenticates user via Entra ID
+    2. Consumer app calls this API with the user's access token
+    3. Trust boundary acquires OBO token scoped to the target backend
+    4. Backend executes query under the user's identity (RLS/CLS enforced)
+  version: 1.0.0
+  contact:
+    name: Enterprise Data - Lumina Team
+  license:
+    name: Internal Use Only
+
+servers:
+  - url: https://rbc-assist-api.internal.rbc.com/v1
+    description: Production
+  - url: https://rbc-assist-api-dev.internal.rbc.com/v1
+    description: Development
+
+security:
+  - entraIdObo: []
+
+paths:
+  /query:
+    post:
+      operationId: submitQuery
+      summary: Submit a natural language query
+      description: |
+        Accepts a natural language question from the consumer app.
+        The orchestrator LLM classifies the query, selects the appropriate
+        backend (Snowflake Cortex Analyst or Fabric Data Agent), acquires
+        an OBO token, executes the query, and returns structured results.
+
+        Supports multi-turn conversation via `conversation_id`.
+      tags:
+        - Query
+      parameters:
+        - name: X-Backend-Hint
+          in: header
+          required: false
+          description: |
+            Optional hint for backend routing. The orchestrator may override
+            this based on query classification. Values: `snowflake`, `fabric`, `auto`.
+          schema:
+            type: string
+            enum: [snowflake, fabric, auto]
+            default: auto
+        - name: X-Trace-Id
+          in: header
+          required: false
+          description: Correlation ID for distributed tracing and audit logging.
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+            examples:
+              simple_question:
+                summary: Simple analytics question
+                value:
+                  question: "What was total net revenue by product line for Q4 2025?"
+                  conversation_id: null
+                  options:
+                    max_rows: 100
+                    include_sql: true
+              follow_up:
+                summary: Follow-up in conversation
+                value:
+                  question: "Break that down by region"
+                  conversation_id: "conv_abc123"
+                  options:
+                    max_rows: 50
+                    include_sql: true
+      responses:
+        '200':
+          description: Query executed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueryResponse'
+        '400':
+          description: Invalid request (malformed question, missing fields)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Authentication failed (invalid or expired token)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          description: |
+            Authorization failed. The user's OBO token does not have
+            sufficient permissions on the target data source. Backend
+            RBAC/RLS denied the query.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: |
+            Query rejected by guardrails (prompt injection detected,
+            PII in question, or query targets restricted data).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuardrailResponse'
+        '502':
+          description: Backend error (Snowflake or Fabric returned an error)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /query/stream:
+    post:
+      operationId: submitQueryStream
+      summary: Submit a query with streaming response
+      description: |
+        Same as /query but returns a server-sent event stream.
+        Events include status updates, partial results, and the final answer.
+        Useful for real-time UX in RBC Assist chat interface.
+      tags:
+        - Query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+      responses:
+        '200':
+          description: SSE stream of query progress and results
+          content:
+            text/event-stream:
+              schema:
+                type: string
+                description: |
+                  Server-sent events with types:
+                  - `status` — processing stage (classifying, generating_sql, executing, formatting)
+                  - `partial` — incremental result rows
+                  - `complete` — final structured response (QueryResponse JSON)
+                  - `error` — error details
+
+  /query/feedback:
+    post:
+      operationId: submitFeedback
+      summary: Submit feedback on a query result
+      description: |
+        Allows consumer apps to send thumbs-up/down and correction text
+        for a previous query. Feedback is logged for model improvement
+        and Cortex Analyst verified query generation.
+      tags:
+        - Feedback
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackRequest'
+      responses:
+        '200':
+          description: Feedback recorded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: recorded
+
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check with backend connectivity
+      description: |
+        Returns health status of the trust boundary and connectivity
+        to each configured backend (Snowflake, Fabric).
+      tags:
+        - Operations
+      security: []
+      responses:
+        '200':
+          description: Service healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /backends:
+    get:
+      operationId: listBackends
+      summary: List available backends and their status
+      description: |
+        Returns the list of configured data backends, their status,
+        and the semantic models available on each.
+      tags:
+        - Operations
+      responses:
+        '200':
+          description: Backend list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackendsResponse'
+
+components:
+  securitySchemes:
+    entraIdObo:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Entra ID access token for the signed-in user.
+        The trust boundary will exchange this for an OBO token
+        scoped to the target backend:
+        - Snowflake: `https://<account>.snowflakecomputing.com`
+        - Fabric: `https://api.fabric.microsoft.com/.default`
+
+  schemas:
+    QueryRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          description: Natural language question from the user.
+          example: "What was total net revenue by product line for Q4 2025?"
+        conversation_id:
+          type: string
+          nullable: true
+          description: |
+            ID of an existing conversation for multi-turn follow-ups.
+            Null for a new conversation.
+          example: "conv_abc123"
+        options:
+          type: object
+          properties:
+            max_rows:
+              type: integer
+              default: 100
+              description: Maximum number of result rows to return.
+            include_sql:
+              type: boolean
+              default: false
+              description: Whether to include the generated SQL in the response.
+            include_explanation:
+              type: boolean
+              default: true
+              description: Whether to include a natural language explanation of the results.
+
+    QueryResponse:
+      type: object
+      properties:
+        query_id:
+          type: string
+          description: Unique ID for this query execution.
+          example: "q_7f3a2b1c"
+        conversation_id:
+          type: string
+          description: Conversation ID (new or existing).
+          example: "conv_abc123"
+        backend:
+          type: string
+          enum: [snowflake, fabric]
+          description: Which backend served this query.
+        answer:
+          type: string
+          description: Natural language answer to the question.
+        data:
+          type: object
+          description: Structured result data.
+          properties:
+            columns:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  type:
+                    type: string
+                    enum: [string, number, date, boolean]
+            rows:
+              type: array
+              items:
+                type: array
+                items: {}
+            row_count:
+              type: integer
+            truncated:
+              type: boolean
+              description: True if results were truncated to max_rows.
+        sql:
+          type: string
+          nullable: true
+          description: Generated SQL (if include_sql was true).
+        metadata:
+          type: object
+          properties:
+            semantic_model:
+              type: string
+              description: Which semantic view/model was used.
+            execution_time_ms:
+              type: integer
+            backend_request_id:
+              type: string
+              description: Trace ID from the backend (Snowflake request ID or Fabric correlation ID).
+
+    FeedbackRequest:
+      type: object
+      required:
+        - query_id
+        - rating
+      properties:
+        query_id:
+          type: string
+          description: The query_id from the original QueryResponse.
+        rating:
+          type: string
+          enum: [positive, negative]
+        correction:
+          type: string
+          nullable: true
+          description: |
+            If negative, the user's correction or expected answer.
+            Fed back to Cortex Analyst as a verified query candidate.
+
+    GuardrailResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          example: guardrail_violation
+        reason:
+          type: string
+          enum: [prompt_injection, pii_detected, restricted_data, unsafe_query]
+        message:
+          type: string
+          example: "Query was rejected because it appears to contain a prompt injection attempt."
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+        trace_id:
+          type: string
+
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+        backends:
+          type: object
+          properties:
+            snowflake:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [connected, disconnected, error]
+                latency_ms:
+                  type: integer
+            fabric:
+              type: object
+              nullable: true
+              properties:
+                status:
+                  type: string
+                  enum: [connected, disconnected, not_configured]
+                latency_ms:
+                  type: integer
+                  nullable: true
+
+    BackendsResponse:
+      type: object
+      properties:
+        backends:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                enum: [snowflake, fabric]
+              status:
+                type: string
+                enum: [active, standby, not_configured]
+              semantic_models:
+                type: array
+                items:
+                  type: string
+                description: List of available semantic models/views on this backend.

@@ -1,0 +1,397 @@
+# =============================================================================
+# RBC Enterprise Data — Semantic Model Template
+# =============================================================================
+# Canonical semantic model definition for the AI semantic layer.
+#
+# This YAML is the single source of truth for metrics, dimensions, and
+# relationships over Gold Iceberg V2 tables.
+#
+# Deployment targets:
+#   Phase 1: Snowflake semantic views (CREATE SEMANTIC VIEW DDL)
+#   Phase 2: Fabric Import semantic model (Power BI tabular model)
+#
+# Location: github.com/chilakos/lakehouse/docs/semantic-model-template.yaml
+# Owner: Enterprise Data — Lumina Team
+# =============================================================================
+
+name: rbc_enterprise_gold
+description: >
+  Enterprise semantic model over Gold Iceberg V2 tables.
+  Defines business metrics, dimensions, and relationships conforming to
+  the RBC Financial Services Data Model (FSDM).
+  
+  Gold tables are accessed via Snowflake external volumes (zero-copy read
+  from on-prem Iceberg V2 / Nessie catalog).
+
+# ---------------------------------------------------------------------------
+# Logical tables
+# ---------------------------------------------------------------------------
+# Each logical table maps to a physical Gold Iceberg table in Snowflake.
+# Use the external table name as the base_table reference.
+# ---------------------------------------------------------------------------
+
+tables:
+
+  # =========================================================================
+  # FACT: Account balances (daily snapshot)
+  # =========================================================================
+  - name: fact_account_balance
+    description: >
+      Daily account balance snapshots from Gold layer.
+      Grain: one row per account per business date.
+    base_table:
+      database: RBC_LAKEHOUSE
+      schema: GOLD
+      table: FACT_ACCOUNT_BALANCE_DAILY
+    
+    # --- Dimensions ---
+    dimensions:
+      - name: account_id
+        description: Unique account identifier (FSDM Account entity key)
+        expr: ACCOUNT_ID
+        data_type: VARCHAR
+        unique: false
+        
+      - name: account_type
+        description: >
+          Account classification (e.g., Chequing, Savings, GIC, LOC, Mortgage).
+          Maps to FSDM Account Type reference entity.
+        expr: ACCOUNT_TYPE_CD
+        data_type: VARCHAR
+        
+      - name: currency_code
+        description: ISO 4217 currency code for the balance
+        expr: CURRENCY_CD
+        data_type: VARCHAR
+        
+      - name: branch_id
+        description: Originating branch identifier
+        expr: BRANCH_ID
+        data_type: VARCHAR
+        
+      - name: line_of_business
+        description: Line of business (Personal, Commercial, Capital Markets, Wealth)
+        expr: LOB_CD
+        data_type: VARCHAR
+
+    # --- Time dimensions ---
+    time_dimensions:
+      - name: balance_date
+        description: Business date of the balance snapshot
+        expr: BALANCE_DT
+        data_type: DATE
+        
+      - name: account_open_date
+        description: Date the account was originally opened
+        expr: ACCOUNT_OPEN_DT
+        data_type: DATE
+
+    # --- Facts (row-level measures) ---
+    facts:
+      - name: ledger_balance
+        description: End-of-day ledger balance in account currency
+        expr: LEDGER_BAL_AMT
+        data_type: NUMBER
+
+      - name: available_balance
+        description: Available balance after holds and pending transactions
+        expr: AVAIL_BAL_AMT
+        data_type: NUMBER
+
+    # --- Metrics (aggregated measures) ---
+    metrics:
+      - name: total_ledger_balance
+        description: Sum of ledger balances across accounts
+        expr: SUM(LEDGER_BAL_AMT)
+        data_type: NUMBER
+        default_aggregation: sum
+
+      - name: total_available_balance
+        description: Sum of available balances across accounts
+        expr: SUM(AVAIL_BAL_AMT)
+        data_type: NUMBER
+        default_aggregation: sum
+
+      - name: average_balance
+        description: Average ledger balance per account
+        expr: AVG(LEDGER_BAL_AMT)
+        data_type: NUMBER
+        default_aggregation: avg
+
+      - name: account_count
+        description: Count of distinct accounts
+        expr: COUNT(DISTINCT ACCOUNT_ID)
+        data_type: NUMBER
+        default_aggregation: count_distinct
+
+  # =========================================================================
+  # FACT: Transactions
+  # =========================================================================
+  - name: fact_transaction
+    description: >
+      Customer transactions from Gold layer.
+      Grain: one row per transaction.
+    base_table:
+      database: RBC_LAKEHOUSE
+      schema: GOLD
+      table: FACT_TRANSACTION
+    
+    dimensions:
+      - name: transaction_id
+        description: Unique transaction identifier
+        expr: TXN_ID
+        data_type: VARCHAR
+        unique: true
+        
+      - name: account_id
+        description: Account the transaction belongs to
+        expr: ACCOUNT_ID
+        data_type: VARCHAR
+        
+      - name: transaction_type
+        description: >
+          Transaction classification (Debit, Credit, Transfer, Fee, Interest).
+          Maps to FSDM Transaction Type reference entity.
+        expr: TXN_TYPE_CD
+        data_type: VARCHAR
+        
+      - name: channel
+        description: Channel through which the transaction was initiated (Online, Branch, ATM, Mobile)
+        expr: CHANNEL_CD
+        data_type: VARCHAR
+        
+      - name: merchant_category
+        description: Merchant category code (MCC) for card transactions
+        expr: MCC_CD
+        data_type: VARCHAR
+
+    time_dimensions:
+      - name: transaction_date
+        description: Date the transaction was posted
+        expr: TXN_DT
+        data_type: DATE
+        
+      - name: value_date
+        description: Value date for interest calculation
+        expr: VALUE_DT
+        data_type: DATE
+
+    facts:
+      - name: transaction_amount
+        description: Transaction amount in account currency (positive = credit, negative = debit)
+        expr: TXN_AMT
+        data_type: NUMBER
+
+    metrics:
+      - name: total_transaction_amount
+        description: Net sum of all transaction amounts
+        expr: SUM(TXN_AMT)
+        data_type: NUMBER
+        default_aggregation: sum
+
+      - name: total_credits
+        description: Sum of credit (positive) transactions
+        expr: SUM(CASE WHEN TXN_AMT > 0 THEN TXN_AMT ELSE 0 END)
+        data_type: NUMBER
+        default_aggregation: sum
+
+      - name: total_debits
+        description: Sum of debit (negative) transactions (returned as positive)
+        expr: SUM(CASE WHEN TXN_AMT < 0 THEN ABS(TXN_AMT) ELSE 0 END)
+        data_type: NUMBER
+        default_aggregation: sum
+
+      - name: transaction_count
+        description: Count of transactions
+        expr: COUNT(TXN_ID)
+        data_type: NUMBER
+        default_aggregation: count
+
+      - name: average_transaction_size
+        description: Average absolute transaction amount
+        expr: AVG(ABS(TXN_AMT))
+        data_type: NUMBER
+        default_aggregation: avg
+
+  # =========================================================================
+  # DIMENSION: Customer
+  # =========================================================================
+  - name: dim_customer
+    description: >
+      Customer dimension from Gold layer (FSDM Party entity).
+      Slowly changing dimension type 2.
+    base_table:
+      database: RBC_LAKEHOUSE
+      schema: GOLD
+      table: DIM_CUSTOMER
+    
+    dimensions:
+      - name: customer_id
+        description: Unique customer identifier (FSDM Party entity key)
+        expr: CUSTOMER_ID
+        data_type: VARCHAR
+        unique: true
+        
+      - name: customer_segment
+        description: Customer segment (Mass, Affluent, High Net Worth, Ultra HNW)
+        expr: SEGMENT_CD
+        data_type: VARCHAR
+        
+      - name: province
+        description: Province of primary residence
+        expr: PROVINCE_CD
+        data_type: VARCHAR
+        
+      - name: city
+        description: City of primary residence
+        expr: CITY_NM
+        data_type: VARCHAR
+        
+      - name: age_band
+        description: Age band (18-24, 25-34, 35-44, 45-54, 55-64, 65+)
+        expr: AGE_BAND_CD
+        data_type: VARCHAR
+        
+      - name: relationship_tenure_years
+        description: Years since first account opened
+        expr: RELATIONSHIP_TENURE_YRS
+        data_type: NUMBER
+
+    time_dimensions:
+      - name: customer_since_date
+        description: Date the customer relationship was established
+        expr: CUSTOMER_SINCE_DT
+        data_type: DATE
+
+  # =========================================================================
+  # DIMENSION: Product
+  # =========================================================================
+  - name: dim_product
+    description: >
+      Product dimension from Gold layer (FSDM Product entity).
+    base_table:
+      database: RBC_LAKEHOUSE
+      schema: GOLD
+      table: DIM_PRODUCT
+    
+    dimensions:
+      - name: product_id
+        description: Unique product identifier
+        expr: PRODUCT_ID
+        data_type: VARCHAR
+        unique: true
+        
+      - name: product_name
+        description: Product display name
+        expr: PRODUCT_NM
+        data_type: VARCHAR
+        
+      - name: product_line
+        description: Product line (Deposits, Lending, Cards, Investments, Insurance)
+        expr: PRODUCT_LINE_CD
+        data_type: VARCHAR
+        
+      - name: product_category
+        description: Product category within the product line
+        expr: PRODUCT_CATEGORY_CD
+        data_type: VARCHAR
+
+
+# ---------------------------------------------------------------------------
+# Relationships (joins)
+# ---------------------------------------------------------------------------
+# Define how tables join for star schema queries.
+# Cortex Analyst uses these to generate correct JOINs.
+# ---------------------------------------------------------------------------
+
+relationships:
+
+  - name: balance_to_customer
+    left_table: fact_account_balance
+    right_table: dim_customer
+    join_type: left
+    relationship_type: many_to_one
+    on:
+      - left_column: ACCOUNT_ID
+        right_column: CUSTOMER_ID
+        # Note: in practice this may go through an account-to-customer bridge.
+        # Adjust the join path to match your actual FSDM FK structure.
+    description: Join account balances to customer dimension
+
+  - name: transaction_to_customer
+    left_table: fact_transaction
+    right_table: dim_customer
+    join_type: left
+    relationship_type: many_to_one
+    on:
+      - left_column: ACCOUNT_ID
+        right_column: CUSTOMER_ID
+    description: Join transactions to customer dimension
+
+  - name: balance_to_product
+    left_table: fact_account_balance
+    right_table: dim_product
+    join_type: left
+    relationship_type: many_to_one
+    on:
+      - left_column: ACCOUNT_TYPE_CD
+        right_column: PRODUCT_ID
+    description: Join account balances to product dimension
+
+
+# ---------------------------------------------------------------------------
+# Verified queries (few-shot examples for Cortex Analyst)
+# ---------------------------------------------------------------------------
+# These improve accuracy by giving the LLM concrete examples of correct SQL.
+# Add more as you validate queries with business users.
+# ---------------------------------------------------------------------------
+
+verified_queries:
+
+  - question: "What is the total balance by product line?"
+    sql: >
+      SELECT p.PRODUCT_LINE_CD, SUM(b.LEDGER_BAL_AMT) AS total_balance
+      FROM GOLD.FACT_ACCOUNT_BALANCE_DAILY b
+      LEFT JOIN GOLD.DIM_PRODUCT p ON b.ACCOUNT_TYPE_CD = p.PRODUCT_ID
+      WHERE b.BALANCE_DT = CURRENT_DATE() - 1
+      GROUP BY p.PRODUCT_LINE_CD
+      ORDER BY total_balance DESC
+
+  - question: "How many transactions happened last month by channel?"
+    sql: >
+      SELECT CHANNEL_CD, COUNT(*) AS txn_count
+      FROM GOLD.FACT_TRANSACTION
+      WHERE TXN_DT >= DATE_TRUNC('MONTH', CURRENT_DATE()) - INTERVAL '1 MONTH'
+        AND TXN_DT < DATE_TRUNC('MONTH', CURRENT_DATE())
+      GROUP BY CHANNEL_CD
+      ORDER BY txn_count DESC
+
+  - question: "What is the average balance for high net worth customers?"
+    sql: >
+      SELECT AVG(b.LEDGER_BAL_AMT) AS avg_balance
+      FROM GOLD.FACT_ACCOUNT_BALANCE_DAILY b
+      LEFT JOIN GOLD.DIM_CUSTOMER c ON b.ACCOUNT_ID = c.CUSTOMER_ID
+      WHERE c.SEGMENT_CD = 'High Net Worth'
+        AND b.BALANCE_DT = CURRENT_DATE() - 1
+
+
+# ---------------------------------------------------------------------------
+# Deployment notes
+# ---------------------------------------------------------------------------
+# Phase 1 (Snowflake):
+#   - CI/CD translates this YAML → CREATE SEMANTIC VIEW DDL
+#   - Deployed to RBC_LAKEHOUSE.GOLD schema
+#   - Cortex Analyst reads semantic views at query time
+#   - Snowflake RBAC enforced on underlying Iceberg external tables
+#
+# Phase 2 (Fabric):
+#   - CI/CD translates this YAML → Power BI Import semantic model (TMDL)
+#   - Deployed to Fabric workspace via XMLA endpoint
+#   - Fabric Data Agent reads Import model at query time
+#   - OneLake security (RLS/CLS) + Purview DLP enforced
+#
+# Maintenance:
+#   - All changes to metrics/dimensions start as PRs against this YAML
+#   - CI pipeline validates YAML schema before merge
+#   - Post-merge, CI deploys to all target engines
+# ---------------------------------------------------------------------------
