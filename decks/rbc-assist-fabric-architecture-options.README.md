@@ -1,22 +1,33 @@
 # RBC Assist × Fabric Data Agent — Architecture Options
 
-**File:** `RBC_Assist_Fabric_Architecture.pptx`
+**File:** `rbc-assist-fabric-architecture-options.pptx`
 **Author:** George Chilakos, VP Enterprise Data
 **Date:** April 2026
-**Status:** Working draft — for discussion with Vinh Tran and Rex Davis
+**Status:** Working draft — for Phase 2 planning alongside ADR-011
+
+---
+
+## Reconciliation with ADR-011 (important)
+
+This deck was drafted before ADR-011 (Snowflake Cortex as Access and Semantic Layer) landed. ADR-011 establishes a phased approach — Snowflake Cortex in Phase 1 (ship now), Fabric as a parallel BI/AI surface in Phase 2 (when OBIEE → Power BI migration completes). The deck's framing assumes Fabric Data Agent as the primary path, which is now the Phase 2 question rather than the immediate one.
+
+**How to read this deck today:**
+- The three consumption patterns (custom Python + FastAPI, Foundry-mediated, Copilot Studio) remain valid design options for the **Phase 2 Fabric Data Agent integration**
+- The FastAPI trust boundary pattern described here aligns with and reinforces the trust boundary established in ADR-011
+- The "unified semantic layer" argument is subsumed by ADR-011's "one definition, two deployments" principle — the YAML semantic model template deploys to Snowflake semantic views (P1) and Fabric Import semantic models (P2)
+- The Foundry-as-orchestration question remains open and applies to Phase 2
+
+The newly drafted ADR-012 formalizes the Phase 2 Fabric Data Agent consumption pattern and should be read as the authoritative follow-on to this deck.
 
 ---
 
 ## Purpose
 
-This deck frames two related architectural decisions that need to be made as we evaluate exposing Fabric Data Agent and Fabric IQ to RBC Assist:
+This deck frames design options for connecting RBC Assist to Fabric Data Agent as part of the Phase 2 extension described in ADR-011. Three patterns are evaluated:
 
-1. **Agent consumption surface** — how does RBC Assist actually reach Fabric Data Agent? Three patterns are viable:
-   - **Pattern 1** — Custom Python app with FastAPI trust boundary (symmetric with Borealis/Teradata pattern)
-   - **Pattern 3** — Foundry agent between RBC Assist and Fabric Data Agent (adds Azure Policy model governance and Entra Agent ID inventory)
-   - **Pattern 2** — Copilot Studio in Teams/M365 (future surface, can reuse a Foundry backend)
-
-2. **Data access pattern** — should every structured data source accessible to AI agents be exposed via a Fabric semantic model, regardless of whether the underlying source is Iceberg or Teradata? This extends ADR-010 (Fabric Import semantic model as BI/AI surface) from the lakehouse domain to cover Teradata-sourced FSDM data as well.
+1. **Pattern 1** — Custom Python app with FastAPI trust boundary (direct SDK integration, symmetric with existing ADR-011 pattern)
+2. **Pattern 3** — Foundry agent between RBC Assist and Fabric Data Agent (adds Azure Policy model governance and Entra Agent ID inventory)
+3. **Pattern 2** — Copilot Studio in Teams/M365 (future surface, can reuse a Foundry backend)
 
 ---
 
@@ -25,8 +36,7 @@ This deck frames two related architectural decisions that need to be made as we 
 - **Foundry is not strictly required** to expose Fabric Data Agent to RBC Assist. The Fabric Data Agent Python SDK supports On-Behalf-Of (OBO) identity passthrough natively. Foundry's value is governance and orchestration — Azure Policy model allowlist, Entra Agent ID inventory, Content Safety, and multi-source orchestration — not connectivity.
 - **The Fabric Data Agent internal NL2DAX model is Microsoft-managed and opaque.** RBC does not get to choose this model. This applies equally in all three patterns — Foundry does not change it.
 - **Service Principal Name (SPN) authentication is not supported** by Fabric Data Agent. Every call requires a human user's Entra token in the chain. This rules out agentic background jobs against Fabric Data Agent; those workflows need an alternate path (direct XMLA or direct Delta read with service identity).
-- **The thin FastAPI trust boundary does not go away** even if Foundry is adopted. It still owns RBC-specific PII rules (SIN, account numbers, BCBS-flagged fields), RBC audit format / SIEM forwarding, cost attribution per user and use-case, and pre-flight request validation. It becomes thinner, not absent.
-- **The unified semantic layer decision is architecturally bigger than the agent surface decision.** If we commit to "every source behind a semantic model," the agent consumption pattern simplifies because Fabric Data Agent becomes the single agent-facing interface regardless of source.
+- **The FastAPI trust boundary (per ADR-011) is the single agent entry point.** It does not go away — it gains a second backend route for Fabric Data Agent alongside the existing Snowflake Cortex route.
 
 ---
 
@@ -44,45 +54,27 @@ This deck frames two related architectural decisions that need to be made as we 
 
 ---
 
-## Open questions to close before ADRs are written
+## Open questions to close
 
 1. **Is Foundry RBC's enterprise AI agent runtime?**
    - Owner: Rex Davis / Vinh Tran / Borealis
-   - Determines whether Pattern 3 replaces Pattern 1 or is additive.
+   - Applies to Phase 2. Determines whether Pattern 3 replaces Pattern 1 or is additive. ADR-012 documents the options but does not resolve this strategic question.
 
 2. **What is RBC Assist built on today?**
    - Owner: RBC Assist product team
    - Python custom / Foundry / Copilot Studio — dictates the integration pattern.
 
-3. **Do we commit to FSDM-in-Fabric as the semantic contract?**
-   - Owner: Enterprise Data (George Chilakos)
-   - If yes, JoAnn's DA team and Sam (Teradata) lead the semantic model design; POC a bounded domain first.
+3. **Phase 1 vs Phase 2 user routing**
+   - Owner: Enterprise Data (George Chilakos) + Borealis
+   - Which workloads stay on Snowflake Cortex (P1) vs. move to Fabric Data Agent (P2) once Fabric is live? FastAPI routing rules need to be defined before Phase 2.
 
 ---
 
 ## Related ADRs and follow-on work
 
-- **ADR-010** — Fabric Import semantic model as BI/AI surface layer (established)
-- **ADR-011** — Snowflake Cortex as access + semantic layer (supersedes ADR-010) — **note:** this deck was drafted before ADR-011 landed; the Fabric Data Agent direction here may need reconciliation against the Snowflake Cortex decision
-- **Next ADR** (to be drafted) — RBC Assist × Fabric Data Agent consumption pattern (or reconciled against Snowflake Cortex)
-- **Next ADR** (to be drafted) — Teradata agent access via semantic model (deprecates FastAPI-direct-Teradata as an agent surface)
-- **Architectural principle** (to be drafted) — All agent-accessible structured data shall be exposed via a governed semantic layer (Fabric or Snowflake Cortex per ADR-011)
-
----
-
-## Proposed execution tracks
-
-**Track A — Agent consumption surface**
-1. Confirm RBC Assist tech stack with product team
-2. Raise Foundry-as-runtime question with Rex / Vinh
-3. POC Fabric Data Agent via Python SDK with OBO against a low-sensitivity semantic model
-4. Draft ADR-011
-
-**Track B — Unified semantic layer**
-1. Write the architectural principle statement
-2. Pick a bounded FSDM domain for POC (e.g. Customer)
-3. Early Teradata licensing conversation with Sam
-4. Draft ADR-012
+- **ADR-010** — Fabric Import semantic model as BI/AI surface layer (superseded by ADR-011)
+- **ADR-011** — Snowflake Cortex as access + semantic layer (current authoritative direction)
+- **ADR-012** — RBC Assist × Fabric Data Agent consumption pattern (Phase 2 extension to ADR-011)
 
 ---
 

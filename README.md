@@ -12,45 +12,49 @@ A data architecture transformation converting a legacy Teradata/DataStage data w
 
 ## Target Architecture
 
+Per ADR-011, the access and semantic layer is delivered in two phases. Phase 1 ships Snowflake Cortex now; Phase 2 adds Fabric as a parallel BI/AI surface when the Power BI migration completes.
+
 ```
      ┌──────────────────────────────────────────────────────────────┐
      │                    Consumption Layer                         │
-     │  Power BI · Tableau · RBC Assist (AI chatbot)               │
+     │  RBC Assist · Borealis · Power BI · Tableau                  │
      └───────────────────────────┬──────────────────────────────────┘
                                   │
      ┌───────────────────────────┴──────────────────────────────────┐
-     │         Fabric Semantic Model  (Import mode · VertiPaq)      │
-     │  DAX measures · RLS · Prep for AI · Fabric Data Agent        │
-     │  NL2DAX → Azure AI Foundry → RBC Assist REST endpoint        │
-     └───────────────────────────┬──────────────────────────────────┘
-                                  │  Python ETL copy (Gold-only · V-Order)
-     ┌───────────────────────────┴──────────────────────────────────┐
-     │               Cube Semantic Layer (NL-to-SQL)                │
-     │          YAML metric definitions · SQL API (port 15432)      │
-     └───────────────────────────┬──────────────────────────────────┘
-                                     │
-        ┌────────────────────────────┼───────────────────────┐
-        │                            │                       │
-  ┌─────┴──────┐            ┌───────┴────────┐      ┌──────┴───────┐
-  │  Teradata   │            │     Trino      │      │  Snowflake   │
-  │  (OTF)     │            │  Query Engine  │      │  (External   │
-  │            │            │                │      │   Tables)    │
-  └─────┬──────┘            └───────┬────────┘      └──────┬───────┘
-        │                            │                       │
-        └────────────────────────────┼───────────────────────┘
-                                     │
-                    ┌────────────────┴─────────────────────────┐
-                    │      Apache Iceberg (Open Table Format)  │
-                    │         Nessie Catalog (REST)            │
-                    └────────────────┬─────────────────────────┘
-                                     │
-                    ┌────────────────┴─────────────────────────┐
-                    │          Object Storage                   │
-                    │     AWS S3 (cloud)  ·  MinIO (on-prem)   │
-                    └──────────────────────────────────────────┘
+     │              FastAPI Trust Boundary (router)                 │
+     │  OBO auth · guardrails · PII masking · audit logging         │
+     │  Routes NL queries to Snowflake Cortex (P1) or Fabric (P2)   │
+     └───────┬──────────────────────────────────────┬───────────────┘
+             │                                      │
+     ┌───────┴────────────┐                ┌───────┴─────────────┐
+     │ Snowflake Cortex   │                │ Fabric Data Agent   │
+     │ Analyst + Agents   │                │ (Phase 2)           │
+     │ Semantic Views     │                │ Import Semantic     │
+     │ (CREATE SEMANTIC   │                │ Model · NL2DAX      │
+     │  VIEW DDL)         │                │                     │
+     └───────┬────────────┘                └───────┬─────────────┘
+             │  Iceberg external volumes           │  Python ETL copy
+             │  (zero-copy)                        │  Gold → Delta in OneLake
+             │                                      │
+             └──────────────┬───────────────────────┘
+                            │
+         ┌──────────────────┴──────────────────────┐
+         │     Gold — Apache Iceberg V2            │
+         │     Nessie Catalog (REST)               │
+         │     FSDM-conformed, Ranger-governed     │
+         └──────────────────┬──────────────────────┘
+                            │  Bronze → Silver → Gold (Python ETL)
+         ┌──────────────────┴──────────────────────┐
+         │          Source Systems                 │
+         │   Teradata · Mainframe · APIs           │
+         └─────────────────────────────────────────┘
 ```
 
-**Core principle:** A single, governed copy of data in Iceberg format that every compute-plane consumer — Teradata, Trino, BI tools, and AI — can access without creating additional copies. Gold data exists in a second deliberate representation as Delta in Fabric for BI/AI surface consumption (see ADR-010). No OneLake shortcuts or XTable metadata virtualization are used.
+**Core principle:** Gold Iceberg V2 is the single source of truth. Written once by the on-prem medallion pipeline; read by multiple engines via external volumes (Snowflake, zero-copy) or Delta copy (Fabric, Phase 2). The FastAPI trust boundary is the single entry point for all AI agent queries — no agent or consumer app queries backends directly.
+
+The semantic model itself is defined once in GitHub as YAML and translated by CI/CD to Snowflake semantic views (Phase 1) and Fabric Import semantic models (Phase 2). One definition, two deployments.
+
+See [ADR-011](docs/adr/011-snowflake-cortex-semantic-layer.md) for the full phased approach and [ADR-010](docs/adr/010-fabric-import-semantic-layer.md) for the prior Fabric-only decision it supersedes.
 
 ## Tech Stack
 
@@ -67,8 +71,11 @@ A data architecture transformation converting a legacy Teradata/DataStage data w
 | Governance | Apache Ranger | 2.8.0 |
 | Data Catalog | OpenMetadata | 1.6.0 |
 | Semantic Layer (NL-to-SQL) | Cube | 0.36.0 |
-| BI/AI Semantic Layer | Microsoft Fabric (Import mode) | — |
-| AI Chatbot Integration | Fabric Data Agent → Azure AI Foundry | — |
+| Access & Semantic Layer — Phase 1 | Snowflake Cortex Analyst + Semantic Views | GA |
+| BI/AI Semantic Layer — Phase 2 | Microsoft Fabric (Import mode) | — |
+| AI Chatbot Integration — Phase 1 | Snowflake Cortex Analyst REST API | GA |
+| AI Chatbot Integration — Phase 2 | Fabric Data Agent (on-behalf-of auth) | — |
+| Trust Boundary | FastAPI (OBO, guardrails, audit) | — |
 | AI/NL-to-SQL | Claude on AWS Bedrock | Sonnet |
 | Monitoring | Grafana + Prometheus | — |
 | IaC | Terraform | — |
@@ -228,10 +235,14 @@ See [`docs/mainframe-ingestion.md`](docs/mainframe-ingestion.md) for the full gu
 
 ## Semantic & AI Layer
 
-- **Cube** -- YAML-defined metrics served via SQL API (Postgres wire protocol); NL-to-SQL schema linking (ADR-006)
-- **Microsoft Fabric (Import mode)** -- BI and AI surface layer for Gold data; DAX semantic model serving Power BI, Tableau (XMLA), and RBC Assist via Fabric Data Agent (ADR-010)
-- **NL-to-SQL** -- Natural language query engine using Claude on AWS Bedrock with Cube YAML context
-- **Evaluation Framework** -- Golden datasets (trading + risk exposure) with execution accuracy scoring
+Per [ADR-011](docs/adr/011-snowflake-cortex-semantic-layer.md) (supersedes ADR-010):
+
+- **Phase 1 — Snowflake Cortex** -- Cortex Analyst serves NL-to-SQL over Snowflake semantic views, reading Gold Iceberg V2 via external volumes (zero-copy). Cortex Agents orchestrate across Analyst (structured) and Search (unstructured). Configurable orchestration model including Claude Sonnet.
+- **Phase 2 — Microsoft Fabric (Import mode)** -- Adds Fabric as a parallel BI/AI surface for Power BI and Fabric Data Agent consumption when OBIEE → Power BI migration completes. Gold is copied to Delta in OneLake via Python ETL.
+- **FastAPI Trust Boundary** -- Single entry point for all AI agent queries. Handles OBO auth, PII masking, prompt injection guardrails, audit logging, and routes to Snowflake Cortex or Fabric Data Agent.
+- **Semantic model as code** -- Defined once in GitHub YAML (`docs/architecture/semantic-model-template.yaml`), translated by CI/CD to Snowflake `CREATE SEMANTIC VIEW` DDL (Phase 1) and Fabric Import semantic model TMDL (Phase 2).
+- **Cube** -- YAML-defined metrics served via SQL API (Postgres wire protocol); legacy NL-to-SQL path retained for specific use cases (ADR-006). Retiring as Cortex and Fabric Data Agent take over primary NL workloads.
+- **Evaluation Framework** -- Golden datasets (trading + risk exposure) with execution accuracy scoring against both Snowflake Cortex and Fabric Data Agent output.
 
 ## Key Documentation
 

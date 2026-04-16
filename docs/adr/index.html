@@ -259,17 +259,48 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
       </div>
     </a>
 
-    <a class="adr-card accepted" href="010-fabric-import-semantic-layer.md">
+    <a class="adr-card superseded" href="010-fabric-import-semantic-layer.md">
       <div class="adr-num">010</div>
       <div class="adr-body">
         <div class="adr-title">Microsoft Fabric Import Semantic Model as BI and AI Surface Layer</div>
-        <div class="adr-summary">Fabric Import mode (not DirectLake, not Shortcuts) is the correct BI/AI surface. Gold exists in two representations: Iceberg V2 on-prem (compute plane) and Delta copy in Fabric (BI/AI surface). Import mode is mandatory for PII/PCI tables — DirectLake bypasses T-SQL DDM enforcement.</div>
+        <div class="adr-summary">Fabric Import mode (not DirectLake, not Shortcuts) as BI/AI surface. Superseded on 2026-04-15 by ADR-011 which adopts a phased approach: Snowflake Cortex in Phase 1, Fabric in Phase 2.</div>
         <div class="adr-footer">
-          <span class="status-pill status-accepted">Accepted</span>
+          <span class="status-pill status-superseded">Superseded</span>
           <span class="adr-tag">Fabric</span>
           <span class="adr-tag">Import mode</span>
-          <span class="adr-tag">ADR-010</span>
-          <span class="adr-tag">DDM enforced</span>
+          <span class="adr-tag">→ see ADR-011</span>
+          <span class="adr-date">Apr 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card accepted" href="011-snowflake-cortex-semantic-layer.md">
+      <div class="adr-num">011</div>
+      <div class="adr-body">
+        <div class="adr-title">Snowflake Cortex as Access and Semantic Layer — Phased Fabric Extension</div>
+        <div class="adr-summary">Phase 1: Snowflake Cortex Analyst over Gold Iceberg V2 via external volumes (zero-copy) as the AI semantic layer. Phase 2: Fabric as parallel BI/AI surface when OBIEE → Power BI migration completes. FastAPI trust boundary routes between backends. Supersedes ADR-010.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-accepted">Accepted</span>
+          <span class="adr-tag">Snowflake Cortex</span>
+          <span class="adr-tag">Phased</span>
+          <span class="adr-tag">FastAPI boundary</span>
+          <span class="adr-date">Apr 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card draft" href="012-rbc-assist-fabric-data-agent-pattern.md">
+      <div class="adr-num">012</div>
+      <div class="adr-body">
+        <div class="adr-title">RBC Assist × Fabric Data Agent Consumption Pattern — Phase 2 Extension to ADR-011</div>
+        <div class="adr-summary">Phase 2a: Pattern 1 (default) — RBC Assist calls Fabric Data Agent via Python SDK through the existing FastAPI trust boundary (adds fabric_data_agent route alongside snowflake_cortex). Phase 2b: Pattern 3 — introduce Foundry agent between FastAPI and Fabric Data Agent if Foundry is adopted as RBC's enterprise AI runtime. Pattern 2 (Copilot Studio) deferred.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-draft">Draft</span>
+          <span class="adr-tag">Fabric Data Agent</span>
+          <span class="adr-tag">OBO</span>
+          <span class="adr-tag">Extends ADR-011</span>
           <span class="adr-date">Apr 2026</span>
           <span class="adr-md-link">view .md →</span>
         </div>
@@ -280,7 +311,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
 </div>
 
 <div class="footer">
-  <span>Lumina · RBC Enterprise Data · 10 ADRs · ADR-001 → ADR-010</span>
+  <span>Lumina · RBC Enterprise Data · 12 ADRs · ADR-001 → ADR-012</span>
   <span>George Chilakos, VP Enterprise Data · April 2026</span>
 </div>
 

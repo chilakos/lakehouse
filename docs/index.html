@@ -46,7 +46,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);m
   <div class="hero-chips">
     <span class="chip decided">&#10003; Catalog: Apache Polaris</span>
     <span class="chip decided">&#10003; Security: Privacera</span>
-    <span class="chip decided">&#10003; BI Surface: Fabric ADR-010</span>
+    <span class="chip decided">&#10003; Access/Semantic Layer: Snowflake Cortex P1 → Fabric P2 (ADR-011)</span>
     <span class="chip decided">&#10003; Storage: MinIO</span>
     <span class="chip">? WAP/Nessie: pending</span>
     <span class="chip">? Privacera B-10: in review</span>
@@ -59,7 +59,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);m
     <a class="doc-card arch" href="architecture/lakehouse-data-flow.html">
       <div class="card-icon">&#128202;</div>
       <div class="card-title">End-to-End Data Flow</div>
-      <div class="card-desc">300+ sources through Raw &rarr; Bronze &rarr; Silver &rarr; Gold &rarr; Semantic &rarr; Consumer. Medallion architecture with Polaris, Privacera, OpenLineage, Fabric ADR-010, and full consumption layer.</div>
+      <div class="card-desc">300+ sources through Raw &rarr; Bronze &rarr; Silver &rarr; Gold &rarr; Semantic &rarr; Consumer. Medallion architecture with Polaris, Privacera, OpenLineage, Snowflake Cortex (P1) / Fabric (P2) per ADR-011, and full consumption layer.</div>
       <div class="card-meta"><span class="card-tag new">new</span><span class="card-tag">medallion</span><span class="card-tag">end-to-end</span><span class="card-date">Apr 2026</span></div>
     </a>
     <a class="doc-card arch" href="architecture/write-path-security.html">
@@ -92,9 +92,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);m
   <div class="grid">
     <a class="doc-card adr" href="adr/index.html">
       <div class="card-icon">&#128221;</div>
-      <div class="card-title">ADR Index &mdash; All 10 Records</div>
-      <div class="card-desc">ADR-001 through ADR-010. Trino as query gateway, Teradata decoupling, workload isolation, no-Spark decision, AI semantic layer, governance automation, OneLake evaluation, and Fabric Import mode.</div>
-      <div class="card-meta"><span class="card-tag">ADR-001 &rarr; ADR-010</span><span class="card-tag">8 accepted &middot; 1 draft &middot; 1 superseded</span></div>
+      <div class="card-title">ADR Index &mdash; All Records</div>
+      <div class="card-desc">ADR-001 through ADR-012. Trino as query gateway, Teradata decoupling, workload isolation, no-Spark decision, AI semantic layer, governance automation, OneLake evaluation, Fabric Import (superseded), Snowflake Cortex phased access/semantic layer, and RBC Assist × Fabric Data Agent consumption pattern.</div>
+      <div class="card-meta"><span class="card-tag">ADR-001 &rarr; ADR-012</span><span class="card-tag">10 accepted &middot; 1 draft &middot; 1 superseded</span></div>
     </a>
   </div>
 
