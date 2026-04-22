@@ -1,0 +1,205 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 1000" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+  <!-- Background -->
+  <rect width="1400" height="1000" fill="#fafafa"/>
+
+  <!-- Title -->
+  <text x="700" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#1a1a1a">RBC Lakehouse — Medallion, Hubs, Semantic Layers &amp; Contracts</text>
+  <text x="700" y="65" text-anchor="middle" font-size="13" fill="#666">Ingest once · Conform once · Consume many — governed end-to-end</text>
+
+  <!-- ============ CONSUMERS (TOP) ============ -->
+  <g>
+    <rect x="40" y="90" width="1320" height="80" rx="8" fill="#ffffff" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="55" y="115" font-size="12" font-weight="600" fill="#888" letter-spacing="1">CONSUMERS</text>
+
+    <!-- Human BI -->
+    <rect x="80" y="125" width="280" height="35" rx="6" fill="#1e40af"/>
+    <text x="220" y="148" text-anchor="middle" font-size="13" font-weight="600" fill="white">Human BI (Power BI, Tableau, Excel)</text>
+
+    <!-- AI Agents -->
+    <rect x="380" y="125" width="280" height="35" rx="6" fill="#7c3aed"/>
+    <text x="520" y="148" text-anchor="middle" font-size="13" font-weight="600" fill="white">AI Agents (RBC Assist, Borealis)</text>
+
+    <!-- Regulatory -->
+    <rect x="680" y="125" width="280" height="35" rx="6" fill="#b91c1c"/>
+    <text x="820" y="148" text-anchor="middle" font-size="13" font-weight="600" fill="white">Regulatory Reporting (BCBS 239)</text>
+
+    <!-- Domain apps -->
+    <rect x="980" y="125" width="340" height="35" rx="6" fill="#047857"/>
+    <text x="1150" y="148" text-anchor="middle" font-size="13" font-weight="600" fill="white">Domain Apps &amp; Downstream Systems</text>
+  </g>
+
+  <!-- Arrows from semantic layers up to consumers -->
+  <path d="M 220 200 L 220 170" stroke="#888" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 520 200 L 520 170" stroke="#888" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 820 200 L 820 170" stroke="#888" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 1150 200 L 1150 170" stroke="#888" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#888"/>
+    </marker>
+    <marker id="arrow-policy" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#b45309"/>
+    </marker>
+  </defs>
+
+  <!-- ============ SEMANTIC LAYER ============ -->
+  <g>
+    <rect x="40" y="200" width="1320" height="130" rx="8" fill="#eef2ff" stroke="#6366f1" stroke-width="1.5"/>
+    <text x="55" y="225" font-size="12" font-weight="700" fill="#4338ca" letter-spacing="1">SEMANTIC LAYER — meaning projected onto Gold</text>
+    <text x="55" y="243" font-size="11" fill="#6366f1" font-style="italic">Logical, not physical · defines measures, dimensions, certified queries · consumes from Gold</text>
+
+    <!-- Fabric semantic model -->
+    <rect x="80" y="258" width="280" height="60" rx="6" fill="white" stroke="#1e40af" stroke-width="1.5"/>
+    <text x="220" y="278" text-anchor="middle" font-size="13" font-weight="700" fill="#1e40af">Fabric Semantic Model</text>
+    <text x="220" y="295" text-anchor="middle" font-size="10" fill="#333">Human BI surface (ADR-010)</text>
+    <text x="220" y="309" text-anchor="middle" font-size="10" fill="#333">measures · RLS · NL-to-SQL (Copilot)</text>
+
+    <!-- Teradata AI -->
+    <rect x="380" y="258" width="280" height="60" rx="6" fill="white" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="520" y="278" text-anchor="middle" font-size="13" font-weight="700" fill="#7c3aed">Teradata AI Semantic Layer</text>
+    <text x="520" y="295" text-anchor="middle" font-size="10" fill="#333">Agent surface · vector store</text>
+    <text x="520" y="309" text-anchor="middle" font-size="10" fill="#333">certified SQL · FastAPI trust boundary</text>
+
+    <!-- Canonical metric registry -->
+    <rect x="690" y="258" width="270" height="60" rx="6" fill="#fef3c7" stroke="#d97706" stroke-width="2" stroke-dasharray="4,3"/>
+    <text x="825" y="278" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Canonical Metric Registry</text>
+    <text x="825" y="295" text-anchor="middle" font-size="10" fill="#333">enterprise measure definitions</text>
+    <text x="825" y="309" text-anchor="middle" font-size="10" fill="#333">both semantic layers source here</text>
+
+    <!-- Domain semantic models -->
+    <rect x="980" y="258" width="340" height="60" rx="6" fill="white" stroke="#047857" stroke-width="1.5"/>
+    <text x="1150" y="278" text-anchor="middle" font-size="13" font-weight="700" fill="#047857">Domain Semantic Models</text>
+    <text x="1150" y="295" text-anchor="middle" font-size="10" fill="#333">Cards · Mortgages · Risk · Wealth</text>
+    <text x="1150" y="309" text-anchor="middle" font-size="10" fill="#333">compose under enterprise measures</text>
+  </g>
+
+  <!-- Connector: registry feeds both semantic layers -->
+  <path d="M 690 288 L 660 288" stroke="#d97706" stroke-width="1.5" fill="none" marker-end="url(#arrow-policy)"/>
+  <path d="M 960 288 L 980 288" stroke="#d97706" stroke-width="1.5" fill="none" marker-end="url(#arrow-policy)"/>
+
+  <!-- Arrows semantic -> gold -->
+  <path d="M 220 360 L 220 330" stroke="#888" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 520 360 L 520 330" stroke="#888" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <path d="M 1150 360 L 1150 330" stroke="#888" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- ============ GOLD ZONE (HUBS) ============ -->
+  <g>
+    <rect x="40" y="360" width="1320" height="160" rx="8" fill="#fffbeb" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="55" y="385" font-size="12" font-weight="700" fill="#92400e" letter-spacing="1">GOLD ZONE — consume many</text>
+    <text x="55" y="403" font-size="11" fill="#b45309" font-style="italic">Physical business-ready data · hubs are Gold datasets with product status (contract + owner + SLA)</text>
+
+    <!-- Hubs -->
+    <g>
+      <rect x="80" y="420" width="200" height="85" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="180" y="441" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Cards Hub</text>
+      <text x="180" y="458" text-anchor="middle" font-size="9.5" fill="#666">Domain product · Gold</text>
+      <rect x="90" y="466" width="180" height="30" rx="4" fill="#fef3c7"/>
+      <text x="180" y="479" text-anchor="middle" font-size="9" font-weight="600" fill="#92400e">📄 Data Contract</text>
+      <text x="180" y="490" text-anchor="middle" font-size="8" fill="#666">schema · SLA · PII · owner</text>
+    </g>
+    <g>
+      <rect x="300" y="420" width="200" height="85" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="400" y="441" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Mortgages Hub</text>
+      <text x="400" y="458" text-anchor="middle" font-size="9.5" fill="#666">Domain product · Gold</text>
+      <rect x="310" y="466" width="180" height="30" rx="4" fill="#fef3c7"/>
+      <text x="400" y="479" text-anchor="middle" font-size="9" font-weight="600" fill="#92400e">📄 Data Contract</text>
+      <text x="400" y="490" text-anchor="middle" font-size="8" fill="#666">schema · SLA · PII · owner</text>
+    </g>
+    <g>
+      <rect x="520" y="420" width="200" height="85" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="620" y="441" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Risk Hub</text>
+      <text x="620" y="458" text-anchor="middle" font-size="9.5" fill="#666">Domain product · Gold</text>
+      <rect x="530" y="466" width="180" height="30" rx="4" fill="#fef3c7"/>
+      <text x="620" y="479" text-anchor="middle" font-size="9" font-weight="600" fill="#92400e">📄 Data Contract</text>
+      <text x="620" y="490" text-anchor="middle" font-size="8" fill="#666">schema · SLA · PII · owner</text>
+    </g>
+    <g>
+      <rect x="740" y="420" width="200" height="85" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="840" y="441" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Wealth Hub</text>
+      <text x="840" y="458" text-anchor="middle" font-size="9.5" fill="#666">Domain product · Gold</text>
+      <rect x="750" y="466" width="180" height="30" rx="4" fill="#fef3c7"/>
+      <text x="840" y="479" text-anchor="middle" font-size="9" font-weight="600" fill="#92400e">📄 Data Contract</text>
+      <text x="840" y="490" text-anchor="middle" font-size="8" fill="#666">schema · SLA · PII · owner</text>
+    </g>
+    <g>
+      <rect x="960" y="420" width="200" height="85" rx="6" fill="white" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <text x="1060" y="441" text-anchor="middle" font-size="13" font-weight="700" fill="#92400e">Other Gold</text>
+      <text x="1060" y="458" text-anchor="middle" font-size="9.5" fill="#666">feature stores · aggregates</text>
+      <text x="1060" y="475" text-anchor="middle" font-size="9" fill="#666">performance layers</text>
+      <text x="1060" y="492" text-anchor="middle" font-size="8.5" fill="#888" font-style="italic">(Gold ≠ hub)</text>
+    </g>
+    <g>
+      <rect x="1180" y="420" width="140" height="85" rx="6" fill="white" stroke="#f59e0b" stroke-width="1" stroke-dasharray="2,2"/>
+      <text x="1250" y="441" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Reg Report</text>
+      <text x="1250" y="455" text-anchor="middle" font-size="12" font-weight="700" fill="#92400e">Hub</text>
+      <text x="1250" y="473" text-anchor="middle" font-size="9" fill="#666">BCBS 239</text>
+      <text x="1250" y="487" text-anchor="middle" font-size="9" fill="#666">OSFI filings</text>
+    </g>
+  </g>
+
+  <!-- Arrow Gold -> Silver -->
+  <path d="M 700 550 L 700 520" stroke="#888" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="710" y="538" font-size="10" fill="#888" font-style="italic">compose from</text>
+
+  <!-- ============ SILVER — FSDM ============ -->
+  <g>
+    <rect x="40" y="550" width="1320" height="130" rx="8" fill="#f0fdf4" stroke="#16a34a" stroke-width="1.5"/>
+    <text x="55" y="575" font-size="12" font-weight="700" fill="#166534" letter-spacing="1">SILVER — conform once</text>
+    <text x="55" y="593" font-size="11" fill="#15803d" font-style="italic">Enterprise conformance layer · FSDM-on-Iceberg as authoritative enterprise product · EDW team owned</text>
+
+    <rect x="80" y="608" width="1240" height="60" rx="6" fill="white" stroke="#16a34a" stroke-width="2"/>
+    <text x="700" y="632" text-anchor="middle" font-size="15" font-weight="700" fill="#166534">FSDM-on-Iceberg — Customer · Account · Transaction · Exposure · Balance · Product</text>
+    <text x="700" y="653" text-anchor="middle" font-size="11" fill="#333">entity resolution · enterprise keys · business rules · history (Iceberg V2) · 📄 enterprise data contract</text>
+  </g>
+
+  <!-- Arrow Silver -> Bronze -->
+  <path d="M 700 710 L 700 680" stroke="#888" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+  <text x="710" y="698" font-size="10" fill="#888" font-style="italic">conform from</text>
+
+  <!-- ============ BRONZE ============ -->
+  <g>
+    <rect x="40" y="710" width="1320" height="110" rx="8" fill="#fef2f2" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="55" y="735" font-size="12" font-weight="700" fill="#991b1b" letter-spacing="1">BRONZE — ingest once</text>
+    <text x="55" y="753" font-size="11" fill="#b91c1c" font-style="italic">Platform-owned raw landing · immutable · append-only · lineage-tagged · one ingestion per source</text>
+
+    <rect x="80" y="768" width="1240" height="42" rx="6" fill="white" stroke="#dc2626" stroke-width="1.5"/>
+    <text x="700" y="795" text-anchor="middle" font-size="12" font-weight="600" fill="#991b1b">Teradata EDW extracts · Mainframe · Core Banking · Salesforce · Vendor APIs · Streaming · File landing</text>
+  </g>
+
+  <!-- Arrow Bronze -> Sources -->
+  <path d="M 700 870 L 700 820" stroke="#888" stroke-width="1.5" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- ============ SOURCES ============ -->
+  <g>
+    <rect x="40" y="870" width="1320" height="40" rx="8" fill="#f3f4f6" stroke="#9ca3af" stroke-width="1"/>
+    <text x="700" y="896" text-anchor="middle" font-size="12" font-weight="600" fill="#374151">SOURCE SYSTEMS — OLTP, mainframes, SaaS, vendor feeds (ingested only via platform framework)</text>
+  </g>
+
+  <!-- ============ GOVERNANCE SIDEBAR (right) ============ -->
+  <g>
+    <rect x="1050" y="920" width="310" height="70" rx="8" fill="#fdf4ff" stroke="#a21caf" stroke-width="1.5"/>
+    <text x="1205" y="940" text-anchor="middle" font-size="11" font-weight="700" fill="#86198f" letter-spacing="1">GOVERNANCE PLANE — cross-cutting</text>
+    <text x="1205" y="958" text-anchor="middle" font-size="10" fill="#333">Gravitino (policy authoring) · Ranger (enforcement)</text>
+    <text x="1205" y="973" text-anchor="middle" font-size="10" fill="#333">Nessie (catalog) · Soda (quality) · OpenLineage</text>
+    <text x="1205" y="985" text-anchor="middle" font-size="9" fill="#666" font-style="italic">one policy · enforced everywhere</text>
+  </g>
+
+  <!-- ============ LEGEND ============ -->
+  <g>
+    <rect x="40" y="920" width="990" height="70" rx="8" fill="#ffffff" stroke="#e0e0e0" stroke-width="1"/>
+    <text x="55" y="940" font-size="11" font-weight="700" fill="#333" letter-spacing="1">KEY CONCEPTS</text>
+
+    <rect x="55" y="950" width="14" height="14" rx="3" fill="#fffbeb" stroke="#f59e0b"/>
+    <text x="75" y="961" font-size="10" fill="#333"><tspan font-weight="600">Hub</tspan> = Gold dataset with product status (contract + owner + SLA)</text>
+
+    <rect x="430" y="950" width="14" height="14" rx="3" fill="#eef2ff" stroke="#6366f1"/>
+    <text x="450" y="961" font-size="10" fill="#333"><tspan font-weight="600">Semantic layer</tspan> = meaning projected on Gold (not a medallion tier)</text>
+
+    <rect x="55" y="972" width="14" height="14" rx="3" fill="#fef3c7" stroke="#d97706" stroke-dasharray="2,2"/>
+    <text x="75" y="983" font-size="10" fill="#333"><tspan font-weight="600">Data contract</tspan> = schema, SLA, PII, owner, quality — published &amp; versioned</text>
+
+    <rect x="430" y="972" width="14" height="14" rx="3" fill="#fdf4ff" stroke="#a21caf"/>
+    <text x="450" y="983" font-size="10" fill="#333"><tspan font-weight="600">Governance</tspan> = Gravitino + Ranger, uniform across all layers</text>
+  </g>
+</svg>
