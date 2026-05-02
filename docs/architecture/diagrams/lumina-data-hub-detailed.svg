@@ -1,0 +1,611 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1800 1600" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+  <defs>
+    <marker id="arr" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#475569"/>
+    </marker>
+    <marker id="arr-blue" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#005DAA"/>
+    </marker>
+    <pattern id="hatch" patternUnits="userSpaceOnUse" width="6" height="6">
+      <path d="M-1,1 l2,-2 M0,6 l6,-6 M5,7 l2,-2" stroke="#cbd5e1" stroke-width="0.6"/>
+    </pattern>
+  </defs>
+
+  <text x="40" y="36" font-size="22" font-weight="700" fill="#0f172a">Lumina Data Hub Architecture — Detailed View</text>
+  <text x="40" y="58" font-size="13" fill="#64748b">Engineering reference · internal flows · component decomposition · for chilakos/lakehouse</text>
+  <text x="1760" y="36" font-size="11" fill="#94a3b8" text-anchor="end">Draft 2026-05-02 · George Chilakos</text>
+
+  <!-- Legend -->
+  <g transform="translate(1230, 50)">
+    <rect x="0" y="0" width="530" height="32" fill="#ffffff" stroke="#cbd5e1" rx="4"/>
+    <rect x="10" y="10" width="14" height="14" fill="#ffffff" stroke="#1e293b" stroke-width="1.5"/>
+    <text x="30" y="22" font-size="11" fill="#1e293b">Platform-owned</text>
+    <rect x="135" y="10" width="14" height="14" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="3,2"/>
+    <text x="155" y="22" font-size="11" fill="#1e293b">LOB-owned</text>
+    <rect x="240" y="10" width="14" height="14" fill="#FFD200" stroke="#005DAA" stroke-width="1.5"/>
+    <text x="260" y="22" font-size="11" fill="#1e293b">RBC Data Gateway</text>
+    <rect x="400" y="10" width="14" height="14" fill="url(#hatch)" stroke="#94a3b8"/>
+    <text x="420" y="22" font-size="11" fill="#1e293b">Transitional / future</text>
+  </g>
+
+  <!-- Consumers -->
+  <g transform="translate(40, 90)">
+    <rect x="0" y="0" width="540" height="240" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5" rx="8"/>
+    <text x="14" y="22" font-size="13" font-weight="700" fill="#475569" letter-spacing="1.0">CONSUMERS</text>
+
+    <g transform="translate(20, 40)">
+      <rect x="0" y="0" width="240" height="86" fill="#1e293b" rx="6"/>
+      <text x="120" y="22" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">RBC Assist</text>
+      <text x="120" y="38" font-size="10" fill="#cbd5e1" text-anchor="middle">on OCP cluster · agent orchestration</text>
+      <text x="120" y="56" font-size="10" fill="#cbd5e1" text-anchor="middle">user-facing API · prompt management</text>
+      <text x="120" y="76" font-size="10" font-style="italic" fill="#94a3b8" text-anchor="middle">Owns: agent personas, conversation state</text>
+    </g>
+
+    <g transform="translate(280, 40)">
+      <rect x="0" y="0" width="240" height="86" fill="#1e293b" rx="6"/>
+      <text x="120" y="22" font-size="13" font-weight="700" fill="#ffffff" text-anchor="middle">M365 Copilot (agentic)</text>
+      <text x="120" y="38" font-size="10" fill="#cbd5e1" text-anchor="middle">Microsoft cloud</text>
+      <text x="120" y="56" font-size="10" fill="#cbd5e1" text-anchor="middle">Calls gateway via published endpoint</text>
+      <text x="120" y="76" font-size="10" font-style="italic" fill="#94a3b8" text-anchor="middle">Future · phased</text>
+    </g>
+
+    <g transform="translate(20, 140)">
+      <rect x="0" y="0" width="240" height="76" fill="#ffffff" stroke="#005DAA" stroke-width="1.5" rx="6"/>
+      <text x="120" y="22" font-size="13" font-weight="700" fill="#005DAA" text-anchor="middle">Power BI users</text>
+      <text x="120" y="40" font-size="10" fill="#475569" text-anchor="middle">Direct to Fabric semantic models</text>
+      <text x="120" y="56" font-size="10" font-weight="600" fill="#005DAA" text-anchor="middle">BYPASSES gateway</text>
+    </g>
+
+    <g transform="translate(280, 140)">
+      <rect x="0" y="0" width="240" height="76" fill="#ffffff" stroke="#005DAA" stroke-width="1.5" rx="6"/>
+      <text x="120" y="22" font-size="13" font-weight="700" fill="#005DAA" text-anchor="middle">SQL clients · Notebooks</text>
+      <text x="120" y="40" font-size="10" fill="#475569" text-anchor="middle">Through Trino (ADR-002)</text>
+      <text x="120" y="56" font-size="10" font-weight="600" fill="#005DAA" text-anchor="middle">BYPASSES gateway</text>
+    </g>
+  </g>
+
+  <!-- Gateway -->
+  <g transform="translate(620, 90)">
+    <rect x="0" y="0" width="700" height="240" fill="#FFD200" stroke="#005DAA" stroke-width="2.5" rx="8"/>
+    <text x="14" y="22" font-size="13" font-weight="700" fill="#1e293b" letter-spacing="1.0">RBC DATA GATEWAY  ·  FastAPI on OCP  ·  ADR-015</text>
+    <text x="14" y="40" font-size="11" fill="#1e293b" font-style="italic">Multi-replica deployment · OCP standard HA · same cluster as RBC Assist for low latency</text>
+
+    <g transform="translate(14, 56)">
+      <rect x="0" y="0" width="125" height="170" fill="#ffffff" stroke="#005DAA" stroke-width="1" rx="4"/>
+      <text x="62" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Auth Layer</text>
+      <line x1="10" y1="28" x2="115" y2="28" stroke="#005DAA" stroke-width="0.5"/>
+      <text x="62" y="46" font-size="9" fill="#475569" text-anchor="middle">Entra ID validation</text>
+      <text x="62" y="60" font-size="9" fill="#475569" text-anchor="middle">Identity translation</text>
+      <text x="62" y="74" font-size="9" fill="#475569" text-anchor="middle">Token propagation</text>
+      <text x="62" y="98" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">delegated user</text>
+      <text x="62" y="112" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">identity (default)</text>
+    </g>
+
+    <g transform="translate(150, 56)">
+      <rect x="0" y="0" width="125" height="170" fill="#ffffff" stroke="#005DAA" stroke-width="1" rx="4"/>
+      <text x="62" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Policy Layer</text>
+      <line x1="10" y1="28" x2="115" y2="28" stroke="#005DAA" stroke-width="0.5"/>
+      <text x="62" y="46" font-size="9" fill="#475569" text-anchor="middle">Rate limit per caller</text>
+      <text x="62" y="60" font-size="9" fill="#475569" text-anchor="middle">Cost ceilings</text>
+      <text x="62" y="74" font-size="9" fill="#475569" text-anchor="middle">Time-of-day rules</text>
+      <text x="62" y="88" font-size="9" fill="#475569" text-anchor="middle">Source app policies</text>
+      <text x="62" y="112" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Inbound + outbound</text>
+      <text x="62" y="126" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">PII / sensitivity scrub</text>
+    </g>
+
+    <g transform="translate(286, 56)">
+      <rect x="0" y="0" width="125" height="170" fill="#ffffff" stroke="#005DAA" stroke-width="2" rx="4"/>
+      <text x="62" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Orchestrator</text>
+      <line x1="10" y1="28" x2="115" y2="28" stroke="#005DAA" stroke-width="0.5"/>
+      <text x="62" y="44" font-size="9" font-weight="600" fill="#005DAA" text-anchor="middle">Option A · on-prem</text>
+      <text x="62" y="60" font-size="9" fill="#475569" text-anchor="middle">Decompose query</text>
+      <text x="62" y="74" font-size="9" fill="#475569" text-anchor="middle">Route to agents</text>
+      <text x="62" y="88" font-size="9" fill="#475569" text-anchor="middle">Manage parallelism</text>
+      <text x="62" y="102" font-size="9" fill="#475569" text-anchor="middle">Compose response</text>
+      <text x="62" y="116" font-size="9" fill="#475569" text-anchor="middle">Partial failure</text>
+      <text x="62" y="140" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Routing map from</text>
+      <text x="62" y="154" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">data product registry</text>
+    </g>
+
+    <g transform="translate(422, 56)">
+      <rect x="0" y="0" width="125" height="170" fill="#ffffff" stroke="#005DAA" stroke-width="1" rx="4"/>
+      <text x="62" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Adapters</text>
+      <line x1="10" y1="28" x2="115" y2="28" stroke="#005DAA" stroke-width="0.5"/>
+      <text x="62" y="46" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">Fabric Data Agent</text>
+      <text x="62" y="60" font-size="9" fill="#475569" text-anchor="middle">(primary backend)</text>
+      <text x="62" y="84" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">Cortex Analyst</text>
+      <text x="62" y="98" font-size="9" fill="#475569" text-anchor="middle">(tactical)</text>
+      <text x="62" y="122" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Pluggable</text>
+      <text x="62" y="136" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">future backends</text>
+    </g>
+
+    <g transform="translate(558, 56)">
+      <rect x="0" y="0" width="125" height="170" fill="#ffffff" stroke="#005DAA" stroke-width="1" rx="4"/>
+      <text x="62" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Audit + Metrics</text>
+      <line x1="10" y1="28" x2="115" y2="28" stroke="#005DAA" stroke-width="0.5"/>
+      <text x="62" y="46" font-size="9" fill="#475569" text-anchor="middle">Structured logging</text>
+      <text x="62" y="60" font-size="9" fill="#475569" text-anchor="middle">SIEM forwarding</text>
+      <text x="62" y="74" font-size="9" fill="#475569" text-anchor="middle">Latency / cost metrics</text>
+      <text x="62" y="98" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Every request</text>
+      <text x="62" y="112" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">+ response logged</text>
+    </g>
+
+    <line x1="139" y1="140" x2="150" y2="140" stroke="#005DAA" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+    <line x1="275" y1="140" x2="286" y2="140" stroke="#005DAA" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+    <line x1="411" y1="140" x2="422" y2="140" stroke="#005DAA" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+    <line x1="547" y1="140" x2="558" y2="140" stroke="#005DAA" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+  </g>
+
+  <!-- Gateway dependencies -->
+  <g transform="translate(1360, 90)">
+    <rect x="0" y="0" width="400" height="240" fill="#f8fafc" stroke="#cbd5e1" rx="8"/>
+    <text x="14" y="22" font-size="12" font-weight="700" fill="#475569" letter-spacing="1.0">GATEWAY DEPENDENCIES</text>
+
+    <g transform="translate(20, 40)">
+      <rect x="0" y="0" width="180" height="42" fill="#ffffff" stroke="#1e293b" rx="3"/>
+      <text x="90" y="18" font-size="11" font-weight="600" fill="#1e293b" text-anchor="middle">Entra ID</text>
+      <text x="90" y="34" font-size="9" fill="#64748b" text-anchor="middle">token validation, claims</text>
+    </g>
+
+    <g transform="translate(210, 40)">
+      <rect x="0" y="0" width="170" height="42" fill="#ffffff" stroke="#1e293b" rx="3"/>
+      <text x="85" y="18" font-size="11" font-weight="600" fill="#1e293b" text-anchor="middle">RBC SIEM</text>
+      <text x="85" y="34" font-size="9" fill="#64748b" text-anchor="middle">audit forwarding</text>
+    </g>
+
+    <g transform="translate(20, 92)">
+      <rect x="0" y="0" width="360" height="42" fill="#ffffff" stroke="#005DAA" stroke-width="1.5" rx="3"/>
+      <text x="180" y="18" font-size="11" font-weight="600" fill="#005DAA" text-anchor="middle">Data Product Registry</text>
+      <text x="180" y="34" font-size="9" fill="#475569" text-anchor="middle">routing map · agent discovery · contract metadata</text>
+    </g>
+
+    <g transform="translate(20, 144)">
+      <rect x="0" y="0" width="360" height="42" fill="#ffffff" stroke="#1e293b" rx="3"/>
+      <text x="180" y="18" font-size="11" font-weight="600" fill="#1e293b" text-anchor="middle">Observability Platform</text>
+      <text x="180" y="34" font-size="9" fill="#64748b" text-anchor="middle">metrics, traces, dashboards</text>
+    </g>
+
+    <g transform="translate(20, 196)">
+      <rect x="0" y="0" width="360" height="32" fill="url(#hatch)" stroke="#94a3b8" stroke-dasharray="3,2" rx="3"/>
+      <text x="180" y="20" font-size="10" font-style="italic" fill="#475569" text-anchor="middle">Future: Copilot Studio agent-to-agent (Phase 3, ADR-015)</text>
+    </g>
+  </g>
+
+  <line x1="260" y1="170" x2="620" y2="170" stroke="#005DAA" stroke-width="2" marker-end="url(#arr-blue)"/>
+  <line x1="500" y1="170" x2="620" y2="180" stroke="#005DAA" stroke-width="2" marker-end="url(#arr-blue)"/>
+
+  <line x1="1320" y1="120" x2="1380" y2="120" stroke="#475569" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+  <line x1="1320" y1="260" x2="1380" y2="220" stroke="#475569" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+
+  <line x1="140" y1="216" x2="140" y2="380" stroke="#005DAA" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr-blue)"/>
+  <line x1="400" y1="216" x2="400" y2="380" stroke="#005DAA" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#arr-blue)"/>
+
+  <!-- Semantic plane -->
+  <g transform="translate(40, 380)">
+    <rect x="0" y="0" width="1720" height="120" fill="#f8fafc" stroke="#005DAA" stroke-width="1.5" rx="6"/>
+    <text x="14" y="22" font-size="13" font-weight="700" fill="#005DAA" letter-spacing="1.0">SEMANTIC PLANE  ·  Fabric semantic models  ·  ADR-014</text>
+
+    <g transform="translate(20, 36)">
+      <rect x="0" y="0" width="220" height="74" fill="#ffffff" stroke="#1e293b" stroke-width="2" rx="4"/>
+      <text x="110" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Enterprise SemMod</text>
+      <text x="110" y="38" font-size="10" fill="#475569" text-anchor="middle">Customer 360</text>
+      <text x="110" y="52" font-size="10" fill="#475569" text-anchor="middle">Total Exposure</text>
+      <text x="110" y="66" font-size="10" fill="#475569" text-anchor="middle">Household · Segment P&amp;L</text>
+    </g>
+
+    <g transform="translate(260, 36)">
+      <rect x="0" y="0" width="180" height="74" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4,2" rx="4"/>
+      <text x="90" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">P&amp;CB SemMod</text>
+      <text x="90" y="40" font-size="9" fill="#475569" text-anchor="middle">DirectQuery → Trino</text>
+      <text x="90" y="56" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">+ Fabric Data Agent</text>
+    </g>
+    <g transform="translate(460, 36)">
+      <rect x="0" y="0" width="180" height="74" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4,2" rx="4"/>
+      <text x="90" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Cap Mkts SemMod</text>
+      <text x="90" y="40" font-size="9" fill="#475569" text-anchor="middle">Mirror → Snowflake</text>
+      <text x="90" y="56" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">+ Fabric Data Agent</text>
+    </g>
+    <g transform="translate(660, 36)">
+      <rect x="0" y="0" width="180" height="74" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4,2" rx="4"/>
+      <text x="90" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Wealth SemMod</text>
+      <text x="90" y="40" font-size="9" fill="#475569" text-anchor="middle">Mirror → Snowflake</text>
+      <text x="90" y="56" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">+ Fabric Data Agent</text>
+    </g>
+    <g transform="translate(860, 36)">
+      <rect x="0" y="0" width="180" height="74" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4,2" rx="4"/>
+      <text x="90" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Insurance SemMod</text>
+      <text x="90" y="40" font-size="9" fill="#475569" text-anchor="middle">DirectQuery → Trino</text>
+      <text x="90" y="56" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">+ Fabric Data Agent</text>
+    </g>
+    <g transform="translate(1060, 36)">
+      <rect x="0" y="0" width="180" height="74" fill="url(#hatch)" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="3,2" rx="4"/>
+      <text x="90" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Risk SemMod</text>
+      <text x="90" y="40" font-size="9" fill="#475569" text-anchor="middle">Federated</text>
+      <text x="90" y="56" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Open question</text>
+    </g>
+
+    <g transform="translate(1280, 36)">
+      <rect x="0" y="0" width="420" height="74" fill="#ffffff" stroke="#1e293b" stroke-dasharray="2,2" rx="4"/>
+      <text x="210" y="20" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Fabric Capacity Plane</text>
+      <line x1="20" y1="28" x2="400" y2="28" stroke="#1e293b" stroke-width="0.5"/>
+      <text x="210" y="44" font-size="10" fill="#475569" text-anchor="middle">F128 Enterprise (Tier 2 + Data Agent serving)</text>
+      <text x="210" y="58" font-size="10" fill="#475569" text-anchor="middle">F128 Shared LOB · F64 Capital Markets ★</text>
+    </g>
+  </g>
+
+  <line x1="350" y1="500" x2="350" y2="540" stroke="#475569" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+  <line x1="550" y1="500" x2="550" y2="540" stroke="#475569" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+  <line x1="750" y1="500" x2="750" y2="540" stroke="#475569" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+  <line x1="950" y1="500" x2="950" y2="540" stroke="#475569" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+
+  <line x1="130" y1="500" x2="130" y2="940" stroke="#475569" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+
+  <!-- LOB Hubs -->
+  <g transform="translate(40, 540)">
+    <text x="0" y="14" font-size="13" font-weight="700" fill="#1e293b" letter-spacing="1.0">LOB DATA HUBS  ·  internal medallion per hub</text>
+
+    <g transform="translate(0, 30)">
+      <rect x="0" y="0" width="700" height="320" fill="#f8fafc" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4,2" rx="6"/>
+      <text x="14" y="22" font-size="12" font-weight="700" fill="#1e293b">Capital Markets Hub  ·  detailed (representative)  ·  PRIMARY: CLOUD</text>
+
+      <g transform="translate(20, 36)">
+        <rect x="0" y="0" width="200" height="80" fill="#f1f5f9" stroke="#94a3b8" rx="3"/>
+        <text x="100" y="18" font-size="11" font-weight="600" fill="#475569" text-anchor="middle">Hub Bronze</text>
+        <text x="100" y="34" font-size="9" fill="#64748b" text-anchor="middle">Raw landed in hub</text>
+        <text x="100" y="50" font-size="9" fill="#64748b" text-anchor="middle">Schema-on-read</text>
+        <text x="100" y="68" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Iceberg, Snowflake-native</text>
+      </g>
+
+      <g transform="translate(240, 36)">
+        <rect x="0" y="0" width="200" height="80" fill="#cbd5e1" stroke="#94a3b8" rx="3"/>
+        <text x="100" y="18" font-size="11" font-weight="600" fill="#475569" text-anchor="middle">Hub Silver</text>
+        <text x="100" y="34" font-size="9" fill="#475569" text-anchor="middle">Cleaned, conformed</text>
+        <text x="100" y="50" font-size="9" fill="#475569" text-anchor="middle">Joined to ent dimensions</text>
+        <text x="100" y="68" font-size="9" font-style="italic" fill="#475569" text-anchor="middle">DQ checks (Soda)</text>
+      </g>
+
+      <g transform="translate(460, 36)">
+        <rect x="0" y="0" width="220" height="80" fill="#94a3b8" stroke="#475569" stroke-width="2" rx="3"/>
+        <text x="110" y="18" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">Hub Gold</text>
+        <text x="110" y="34" font-size="9" fill="#ffffff" text-anchor="middle">Aggregates · derived products</text>
+        <text x="110" y="50" font-size="9" fill="#ffffff" text-anchor="middle">Counterparty risk score</text>
+        <text x="110" y="68" font-size="9" font-style="italic" fill="#f1f5f9" text-anchor="middle">SemMod backed by this layer</text>
+      </g>
+
+      <line x1="220" y1="76" x2="240" y2="76" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="440" y1="76" x2="460" y2="76" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <g transform="translate(20, 132)">
+        <text x="0" y="14" font-size="11" font-weight="600" fill="#475569">Inputs (4 channels)</text>
+        <g transform="translate(0, 22)">
+          <rect x="0" y="0" width="155" height="42" fill="#ffffff" stroke="#1e293b" rx="3"/>
+          <text x="77" y="18" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">EDLH Gold</text>
+          <text x="77" y="32" font-size="9" fill="#64748b" text-anchor="middle">conformed, version-pinned</text>
+        </g>
+        <g transform="translate(165, 22)">
+          <rect x="0" y="0" width="155" height="42" fill="#ffffff" stroke="#1e293b" rx="3"/>
+          <text x="77" y="18" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Raw Zone (CM ns)</text>
+          <text x="77" y="32" font-size="9" fill="#64748b" text-anchor="middle">trading platforms</text>
+        </g>
+        <g transform="translate(330, 22)">
+          <rect x="0" y="0" width="155" height="42" fill="#ffffff" stroke="#1e293b" stroke-dasharray="3,2" rx="3"/>
+          <text x="77" y="18" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">External</text>
+          <text x="77" y="32" font-size="9" fill="#64748b" text-anchor="middle">Bloomberg · Reuters</text>
+        </g>
+        <g transform="translate(495, 22)">
+          <rect x="0" y="0" width="155" height="42" fill="#ffffff" stroke="#1e293b" stroke-dasharray="3,2" rx="3"/>
+          <text x="77" y="18" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Self-serve uploads</text>
+          <text x="77" y="32" font-size="9" fill="#64748b" text-anchor="middle">analyst datasets</text>
+        </g>
+      </g>
+
+      <g transform="translate(20, 220)">
+        <text x="0" y="14" font-size="11" font-weight="600" fill="#475569">Outputs</text>
+        <g transform="translate(0, 22)">
+          <rect x="0" y="0" width="320" height="60" fill="#005DAA" rx="3"/>
+          <text x="160" y="18" font-size="10" font-weight="700" fill="#ffffff" text-anchor="middle">Certified Products → Registry</text>
+          <text x="160" y="34" font-size="9" fill="#ffffff" text-anchor="middle">Counterparty Risk Score · Trade Reconciliation</text>
+          <text x="160" y="50" font-size="9" fill="#ffffff" text-anchor="middle">Position Snapshot · etc.</text>
+        </g>
+        <g transform="translate(330, 22)">
+          <rect x="0" y="0" width="320" height="60" fill="url(#hatch)" stroke="#1e293b" stroke-dasharray="3,2" rx="3"/>
+          <text x="160" y="18" font-size="10" font-weight="700" fill="#1e293b" text-anchor="middle">Promotion candidates</text>
+          <text x="160" y="34" font-size="9" fill="#475569" text-anchor="middle">Products with enterprise relevance</text>
+          <text x="160" y="50" font-size="9" fill="#475569" text-anchor="middle">Sponsored absorption into EDLH Gold</text>
+        </g>
+      </g>
+    </g>
+
+    <g transform="translate(720, 30)">
+      <rect x="0" y="0" width="980" height="320" fill="#f8fafc" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4,2" rx="6"/>
+      <text x="14" y="22" font-size="12" font-weight="700" fill="#1e293b">Other LOB Hubs · same internal pattern</text>
+
+      <g transform="translate(20, 40)">
+        <rect x="0" y="0" width="220" height="130" fill="#ffffff" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,2" rx="4"/>
+        <text x="110" y="18" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">P&amp;CB Hub</text>
+        <text x="110" y="34" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">PRIMARY: ON-PREM</text>
+        <text x="110" y="56" font-size="9" fill="#475569" text-anchor="middle">Bronze · Silver · Gold</text>
+        <text x="110" y="74" font-size="9" fill="#475569" text-anchor="middle">SemMod + Data Agent</text>
+        <text x="110" y="100" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Reads: EDLH · Raw P&amp;CB ns</text>
+        <text x="110" y="116" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Inputs: branch · cards · mortgage</text>
+      </g>
+
+      <g transform="translate(255, 40)">
+        <rect x="0" y="0" width="220" height="130" fill="#ffffff" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,2" rx="4"/>
+        <text x="110" y="18" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Wealth Hub</text>
+        <text x="110" y="34" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">PRIMARY: CLOUD</text>
+        <text x="110" y="56" font-size="9" fill="#475569" text-anchor="middle">Bronze · Silver · Gold</text>
+        <text x="110" y="74" font-size="9" fill="#475569" text-anchor="middle">SemMod + Data Agent</text>
+        <text x="110" y="100" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Reads: EDLH · Raw Wealth ns</text>
+        <text x="110" y="116" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Inputs: custody · brokerage</text>
+      </g>
+
+      <g transform="translate(490, 40)">
+        <rect x="0" y="0" width="220" height="130" fill="#ffffff" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,2" rx="4"/>
+        <text x="110" y="18" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Insurance Hub</text>
+        <text x="110" y="34" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">PRIMARY: ON-PREM</text>
+        <text x="110" y="56" font-size="9" fill="#475569" text-anchor="middle">Bronze · Silver · Gold</text>
+        <text x="110" y="74" font-size="9" fill="#475569" text-anchor="middle">SemMod + Data Agent</text>
+        <text x="110" y="100" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Reads: EDLH · Raw Ins ns</text>
+        <text x="110" y="116" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Inputs: policy · claims</text>
+      </g>
+
+      <g transform="translate(725, 40)">
+        <rect x="0" y="0" width="240" height="130" fill="url(#hatch)" stroke="#1e293b" stroke-width="1" stroke-dasharray="3,2" rx="4"/>
+        <text x="120" y="18" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Risk Hub</text>
+        <text x="120" y="34" font-size="9" font-weight="600" fill="#475569" text-anchor="middle">PRIMARY: CLOUD · open question</text>
+        <text x="120" y="56" font-size="9" fill="#475569" text-anchor="middle">Bronze · Silver · Gold</text>
+        <text x="120" y="74" font-size="9" fill="#475569" text-anchor="middle">SemMod + Data Agent</text>
+        <text x="120" y="100" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">Reads: certified products from</text>
+        <text x="120" y="116" font-size="9" font-style="italic" fill="#64748b" text-anchor="middle">other hubs · EDLH Tier 2</text>
+      </g>
+
+      <g transform="translate(20, 190)">
+        <rect x="0" y="0" width="945" height="110" fill="#ffffff" stroke="#cbd5e1" rx="4"/>
+        <text x="14" y="22" font-size="11" font-weight="700" fill="#475569">Hub workspace structure (each LOB)</text>
+        <text x="14" y="42" font-size="10" fill="#475569">• Fabric workspace bound to capacity (Shared F128 by default; Cap Markets gets dedicated F64)</text>
+        <text x="14" y="58" font-size="10" fill="#475569">• Workspace contains: Hub lakehouse(s), semantic model, Fabric Data Agent, Power BI reports</text>
+        <text x="14" y="74" font-size="10" fill="#475569">• Data Agent serving compute runs on Enterprise capacity (separation of concerns)</text>
+        <text x="14" y="90" font-size="10" fill="#475569">• OneLake mirrors of Snowflake-resident data for cloud-primary hubs (where Mirroring is GA)</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Registry -->
+  <g transform="translate(40, 900)">
+    <rect x="0" y="0" width="1720" height="80" fill="#ffffff" stroke="#005DAA" stroke-width="2" rx="6"/>
+    <text x="14" y="22" font-size="13" font-weight="700" fill="#005DAA" letter-spacing="1.0">DATA PRODUCT REGISTRY  ·  the federation mechanism</text>
+
+    <g transform="translate(20, 36)">
+      <rect x="0" y="0" width="220" height="34" fill="#f8fafc" stroke="#005DAA" rx="3"/>
+      <text x="110" y="20" font-size="11" font-weight="700" fill="#005DAA" text-anchor="middle">Contracts in Git (per LOB)</text>
+    </g>
+    <g transform="translate(260, 36)">
+      <rect x="0" y="0" width="200" height="34" fill="#f8fafc" stroke="#005DAA" rx="3"/>
+      <text x="100" y="20" font-size="11" font-weight="700" fill="#005DAA" text-anchor="middle">Indexed by Registry</text>
+    </g>
+    <g transform="translate(480, 36)">
+      <rect x="0" y="0" width="200" height="34" fill="#f8fafc" stroke="#005DAA" rx="3"/>
+      <text x="100" y="20" font-size="11" font-weight="700" fill="#005DAA" text-anchor="middle">Built on top of MCS</text>
+    </g>
+    <g transform="translate(700, 36)">
+      <rect x="0" y="0" width="800" height="34" fill="#f8fafc" stroke="#005DAA" rx="3"/>
+      <text x="400" y="20" font-size="11" font-weight="700" fill="#005DAA" text-anchor="middle">Lifecycle: propose → build → certify → publish → promote (optional)</text>
+    </g>
+
+    <g transform="translate(1520, 36)">
+      <rect x="0" y="0" width="180" height="34" fill="#005DAA" rx="3"/>
+      <text x="90" y="20" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">Subscription &amp; access</text>
+    </g>
+  </g>
+
+  <!-- EDLH detailed -->
+  <g transform="translate(40, 1000)">
+    <rect x="0" y="0" width="1720" height="180" fill="#ffffff" stroke="#1e293b" stroke-width="2" rx="6"/>
+    <text x="14" y="22" font-size="13" font-weight="700" fill="#1e293b" letter-spacing="1.0">ENTERPRISE DATA LAKEHOUSE (EDLH)  ·  internal flow shown</text>
+
+    <g transform="translate(20, 36)">
+      <rect x="0" y="0" width="180" height="36" fill="#f1f5f9" stroke="#94a3b8" rx="3"/>
+      <text x="90" y="22" font-size="11" font-weight="600" fill="#475569" text-anchor="middle">Enterprise Bronze</text>
+    </g>
+    <g transform="translate(220, 36)">
+      <rect x="0" y="0" width="180" height="36" fill="#cbd5e1" stroke="#94a3b8" rx="3"/>
+      <text x="90" y="22" font-size="11" font-weight="600" fill="#475569" text-anchor="middle">Enterprise Silver</text>
+    </g>
+    <line x1="200" y1="54" x2="220" y2="54" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <g transform="translate(420, 36)">
+      <rect x="0" y="0" width="200" height="36" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5" rx="3"/>
+      <text x="100" y="22" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Conformed Dimensions</text>
+    </g>
+    <line x1="400" y1="54" x2="420" y2="54" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <g transform="translate(640, 36)">
+      <rect x="0" y="0" width="200" height="36" fill="#cbd5e1" stroke="#1e293b" stroke-width="1.5" rx="3"/>
+      <text x="100" y="22" font-size="11" font-weight="700" fill="#1e293b" text-anchor="middle">Entity Resolution Graph</text>
+    </g>
+    <line x1="620" y1="54" x2="640" y2="54" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <g transform="translate(860, 36)">
+      <rect x="0" y="0" width="220" height="36" fill="#94a3b8" stroke="#1e293b" stroke-width="2" rx="3"/>
+      <text x="110" y="22" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">Tier 2 Conformance</text>
+    </g>
+    <line x1="840" y1="54" x2="860" y2="54" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <g transform="translate(1100, 36)">
+      <rect x="0" y="0" width="220" height="36" fill="#94a3b8" stroke="#475569" rx="3"/>
+      <text x="110" y="22" font-size="11" font-weight="700" fill="#ffffff" text-anchor="middle">Enterprise Gold</text>
+    </g>
+    <line x1="1080" y1="54" x2="1100" y2="54" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <g transform="translate(1340, 36)">
+      <rect x="0" y="0" width="220" height="36" fill="url(#hatch)" stroke="#1e293b" stroke-dasharray="3,2" rx="3"/>
+      <text x="110" y="22" font-size="11" font-weight="600" fill="#1e293b" text-anchor="middle">Promoted from LOB Hubs</text>
+    </g>
+    <line x1="1320" y1="54" x2="1340" y2="54" stroke="#475569" stroke-width="1.5" stroke-dasharray="2,2" marker-end="url(#arr)"/>
+
+    <text x="14" y="100" font-size="11" font-weight="600" fill="#475569">Internal flow (left to right):</text>
+    <text x="14" y="118" font-size="10" fill="#475569">Bronze (raw landed) → Silver (conformed, including Conformed Dimensions) → Entity Resolution Graph reads from Silver →</text>
+    <text x="14" y="134" font-size="10" fill="#475569">Tier 2 reads Silver + Graph → Gold (Tier 2 outputs become enterprise truth) → Promoted products absorbed in</text>
+    <text x="14" y="150" font-size="10" fill="#475569">Promoted zone (sponsored process, not automatic).</text>
+    <text x="14" y="170" font-size="10" font-style="italic" fill="#64748b">Source: reads from Raw Zone (mostly Enterprise namespace; LOB namespaces only on promotion).</text>
+  </g>
+
+  <!-- Raw Zone -->
+  <g transform="translate(40, 1200)">
+    <rect x="0" y="0" width="1720" height="170" fill="#ffffff" stroke="#1e293b" stroke-width="1.5" rx="6"/>
+    <text x="14" y="22" font-size="13" font-weight="700" fill="#1e293b" letter-spacing="1.0">RAW / LANDING ZONE  ·  Iceberg  ·  hybrid model</text>
+
+    <g transform="translate(20, 36)">
+      <rect x="0" y="0" width="540" height="120" fill="#f8fafc" stroke="#1e293b" stroke-width="1.5" rx="4"/>
+      <text x="270" y="20" font-size="12" font-weight="700" fill="#1e293b" text-anchor="middle">Enterprise Namespace · platform-mediated</text>
+      <line x1="20" y1="28" x2="520" y2="28" stroke="#1e293b" stroke-width="0.5"/>
+
+      <g transform="translate(20, 38)">
+        <rect x="0" y="0" width="240" height="22" fill="#ffffff" stroke="#1e293b" rx="2"/>
+        <text x="120" y="16" font-size="10" fill="#1e293b" text-anchor="middle">Mainframe core banking (CDC)</text>
+      </g>
+      <g transform="translate(280, 38)">
+        <rect x="0" y="0" width="240" height="22" fill="#ffffff" stroke="#1e293b" rx="2"/>
+        <text x="120" y="16" font-size="10" fill="#1e293b" text-anchor="middle">General Ledger (CDC)</text>
+      </g>
+      <g transform="translate(20, 64)">
+        <rect x="0" y="0" width="240" height="22" fill="#ffffff" stroke="#1e293b" rx="2"/>
+        <text x="120" y="16" font-size="10" fill="#1e293b" text-anchor="middle">Customer master · Counterparty</text>
+      </g>
+      <g transform="translate(280, 64)">
+        <rect x="0" y="0" width="240" height="22" fill="#ffffff" stroke="#1e293b" rx="2"/>
+        <text x="120" y="16" font-size="10" fill="#1e293b" text-anchor="middle">Regulatory ref · Market data</text>
+      </g>
+      <g transform="translate(20, 90)">
+        <rect x="0" y="0" width="500" height="22" fill="url(#hatch)" stroke="#94a3b8" stroke-dasharray="2,2" rx="2"/>
+        <text x="250" y="16" font-size="10" font-style="italic" fill="#475569" text-anchor="middle">Teradata FSDM CDC (transitional · feeds Raw Zone, no longer the gateway)</text>
+      </g>
+    </g>
+
+    <g transform="translate(580, 36)">
+      <rect x="0" y="0" width="1120" height="120" fill="#f8fafc" stroke="#1e293b" stroke-width="1.5" stroke-dasharray="4,2" rx="4"/>
+      <text x="560" y="20" font-size="12" font-weight="700" fill="#1e293b" text-anchor="middle">LOB-Owned Namespaces · self-serve (platform provides patterns; LOBs operate)</text>
+      <line x1="20" y1="28" x2="1100" y2="28" stroke="#1e293b" stroke-width="0.5"/>
+
+      <g transform="translate(20, 38)">
+        <rect x="0" y="0" width="200" height="74" fill="#ffffff" stroke="#1e293b" stroke-dasharray="3,2" rx="2"/>
+        <text x="100" y="18" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">P&amp;CB ns</text>
+        <text x="100" y="34" font-size="9" fill="#64748b" text-anchor="middle">branch systems</text>
+        <text x="100" y="48" font-size="9" fill="#64748b" text-anchor="middle">cards platforms</text>
+        <text x="100" y="62" font-size="9" fill="#64748b" text-anchor="middle">mortgage · auto loan</text>
+      </g>
+
+      <g transform="translate(240, 38)">
+        <rect x="0" y="0" width="200" height="74" fill="#ffffff" stroke="#1e293b" stroke-dasharray="3,2" rx="2"/>
+        <text x="100" y="18" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Capital Markets ns</text>
+        <text x="100" y="34" font-size="9" fill="#64748b" text-anchor="middle">trading platforms</text>
+        <text x="100" y="48" font-size="9" fill="#64748b" text-anchor="middle">market data subs</text>
+        <text x="100" y="62" font-size="9" fill="#64748b" text-anchor="middle">risk engines</text>
+      </g>
+
+      <g transform="translate(460, 38)">
+        <rect x="0" y="0" width="200" height="74" fill="#ffffff" stroke="#1e293b" stroke-dasharray="3,2" rx="2"/>
+        <text x="100" y="18" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Wealth ns</text>
+        <text x="100" y="34" font-size="9" fill="#64748b" text-anchor="middle">custody systems</text>
+        <text x="100" y="48" font-size="9" fill="#64748b" text-anchor="middle">brokerage</text>
+        <text x="100" y="62" font-size="9" fill="#64748b" text-anchor="middle">3rd-party perf data</text>
+      </g>
+
+      <g transform="translate(680, 38)">
+        <rect x="0" y="0" width="200" height="74" fill="#ffffff" stroke="#1e293b" stroke-dasharray="3,2" rx="2"/>
+        <text x="100" y="18" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Insurance ns</text>
+        <text x="100" y="34" font-size="9" fill="#64748b" text-anchor="middle">policy admin</text>
+        <text x="100" y="48" font-size="9" fill="#64748b" text-anchor="middle">claims</text>
+        <text x="100" y="62" font-size="9" fill="#64748b" text-anchor="middle">reinsurance</text>
+      </g>
+
+      <g transform="translate(900, 38)">
+        <rect x="0" y="0" width="200" height="74" fill="url(#hatch)" stroke="#cbd5e1" stroke-dasharray="3,2" rx="2"/>
+        <text x="100" y="20" font-size="10" font-style="italic" fill="#94a3b8" text-anchor="middle">future namespaces</text>
+        <text x="100" y="36" font-size="9" fill="#94a3b8" text-anchor="middle">e.g., Direct Investing</text>
+        <text x="100" y="50" font-size="9" fill="#94a3b8" text-anchor="middle">Caribbean Banking</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Storage -->
+  <g transform="translate(40, 1390)">
+    <rect x="0" y="0" width="1720" height="80" fill="#1e293b" rx="6"/>
+    <text x="14" y="22" font-size="13" font-weight="700" fill="#ffffff" letter-spacing="1.0">STORAGE PLANE  ·  Apache Iceberg V2</text>
+
+    <g transform="translate(20, 36)">
+      <rect x="0" y="0" width="500" height="32" fill="#0f172a" stroke="#475569" rx="3"/>
+      <text x="250" y="22" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">On-prem object storage · Iceberg tables</text>
+    </g>
+    <text x="540" y="58" font-size="13" font-weight="700" fill="#cbd5e1" text-anchor="middle">↔ replication ↔</text>
+    <g transform="translate(580, 36)">
+      <rect x="0" y="0" width="500" height="32" fill="#0f172a" stroke="#475569" rx="3"/>
+      <text x="250" y="22" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">Cloud object storage · Iceberg tables</text>
+    </g>
+    <g transform="translate(1100, 36)">
+      <rect x="0" y="0" width="280" height="32" fill="#005DAA" stroke="#005DAA" rx="3"/>
+      <text x="140" y="22" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">OneLake (Fabric mirror)</text>
+    </g>
+    <g transform="translate(1400, 36)">
+      <rect x="0" y="0" width="300" height="32" fill="#0f172a" stroke="#475569" rx="3"/>
+      <text x="150" y="22" font-size="11" font-weight="600" fill="#ffffff" text-anchor="middle">Nessie catalog (versioning)</text>
+    </g>
+  </g>
+
+  <!-- Platform services -->
+  <g transform="translate(40, 1490)">
+    <rect x="0" y="0" width="1720" height="80" fill="#f8fafc" stroke="#cbd5e1" rx="6"/>
+    <text x="14" y="22" font-size="12" font-weight="700" fill="#475569" letter-spacing="1.0">PLATFORM SERVICES  ·  cross-cutting</text>
+
+    <g transform="translate(14, 36)">
+      <rect x="0" y="0" width="160" height="34" fill="#ffffff" stroke="#1e293b" rx="2"/>
+      <text x="80" y="22" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">MCS</text>
+    </g>
+    <g transform="translate(184, 36)">
+      <rect x="0" y="0" width="160" height="34" fill="#ffffff" stroke="#1e293b" rx="2"/>
+      <text x="80" y="22" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Purview</text>
+    </g>
+    <g transform="translate(354, 36)">
+      <rect x="0" y="0" width="160" height="34" fill="#ffffff" stroke="#1e293b" rx="2"/>
+      <text x="80" y="22" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Gravitino + Ranger</text>
+    </g>
+    <g transform="translate(524, 36)">
+      <rect x="0" y="0" width="160" height="34" fill="#ffffff" stroke="#1e293b" rx="2"/>
+      <text x="80" y="22" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Entra ID</text>
+    </g>
+    <g transform="translate(694, 36)">
+      <rect x="0" y="0" width="160" height="34" fill="#ffffff" stroke="#1e293b" rx="2"/>
+      <text x="80" y="22" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Airflow</text>
+    </g>
+    <g transform="translate(864, 36)">
+      <rect x="0" y="0" width="160" height="34" fill="#ffffff" stroke="#1e293b" rx="2"/>
+      <text x="80" y="22" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">CI/CD (GH Actions)</text>
+    </g>
+    <g transform="translate(1034, 36)">
+      <rect x="0" y="0" width="160" height="34" fill="#ffffff" stroke="#1e293b" rx="2"/>
+      <text x="80" y="22" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">OpenLineage</text>
+    </g>
+    <g transform="translate(1204, 36)">
+      <rect x="0" y="0" width="160" height="34" fill="#ffffff" stroke="#1e293b" rx="2"/>
+      <text x="80" y="22" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Soda · DQ</text>
+    </g>
+    <g transform="translate(1374, 36)">
+      <rect x="0" y="0" width="160" height="34" fill="#FFD200" stroke="#005DAA" stroke-width="1.5" rx="2"/>
+      <text x="80" y="22" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">RBC Gateway (OCP)</text>
+    </g>
+    <g transform="translate(1544, 36)">
+      <rect x="0" y="0" width="160" height="34" fill="#ffffff" stroke="#1e293b" rx="2"/>
+      <text x="80" y="22" font-size="10" font-weight="600" fill="#1e293b" text-anchor="middle">Fabric (capacities)</text>
+    </g>
+  </g>
+
+  <line x1="350" y1="860" x2="350" y2="900" stroke="#005DAA" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+  <line x1="1000" y1="860" x2="1000" y2="900" stroke="#005DAA" stroke-width="1.5" marker-end="url(#arr-blue)"/>
+
+  <path d="M 280 1000 Q 280 920, 350 870" stroke="#475569" stroke-width="1" fill="none" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+
+  <line x1="290" y1="1200" x2="290" y2="1180" stroke="#475569" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="900" y1="1200" x2="900" y2="860" stroke="#475569" stroke-width="1" stroke-dasharray="3,3" opacity="0.4"/>
+
+</svg>
