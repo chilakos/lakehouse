@@ -1,0 +1,32 @@
+# GitHub Pages / Jekyll config for chilakos/lakehouse
+# This file lives inside docs/ which is the Pages source folder.
+
+title: RBC Lakehouse — Architecture
+description: >-
+  Architecture decision records, position papers, and reference architecture
+  for the RBC Enterprise Lakehouse and Lumina data hub program.
+
+# Clean URLs: docs/adr/001-foo.md -> /adr/001-foo/
+permalink: /:path/:basename/
+
+# Markdown engine
+markdown: kramdown
+kramdown:
+  input: GFM
+  hard_wrap: false
+  syntax_highlighter: rouge
+
+# Apply default layout to all pages without front matter
+defaults:
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: default
+
+# Exclude Python tooling from the build
+exclude:
+  - "*.py"
+  - "__init__.py"
+  - render_html.py
+  - "**/__pycache__"
