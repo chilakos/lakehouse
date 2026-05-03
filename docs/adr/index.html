@@ -10,6 +10,7 @@
   --navy: #0A1628; --blue: #1E4D8C; --line: #E2E8F0;
   --muted: #64748B; --text: #1E293B; --soft: #F8FAFC; --white: #FFFFFF;
   --accepted: #059669; --draft: #D97706; --superseded: #64748B; --proposed: #2563EB;
+  --amendment: #7C3AED;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(--text); padding: 0 0 60px; }
@@ -26,6 +27,24 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
 .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 32px; }
 .legend-item { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--muted); }
 .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.section-heading {
+  font-family: 'Lora', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--navy);
+  margin: 36px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid var(--line);
+}
+.section-heading:first-of-type { margin-top: 0; }
+.section-sub {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 20px;
+  line-height: 1.65;
+  max-width: 640px;
+}
 
 .adr-list { display: flex; flex-direction: column; gap: 10px; }
 
@@ -54,6 +73,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
 .adr-card.draft::before     { background: var(--draft); }
 .adr-card.superseded::before{ background: var(--superseded); }
 .adr-card.proposed::before  { background: var(--proposed); }
+.adr-card.amendment::before { background: var(--amendment); }
 
 .adr-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.07); transform: translateY(-1px); border-color: #BFDBFE; }
 
@@ -63,12 +83,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
   font-weight: 500;
   color: #CBD5E1;
   flex-shrink: 0;
-  width: 48px;
+  width: 56px;
   text-align: right;
   line-height: 1;
   margin-top: 2px;
 }
-.adr-body { flex: 1; }
+.adr-num small { font-size: 11px; display: block; margin-top: 4px; color: #94A3B8; }
+.adr-body { flex: 1; min-width: 0; }
 .adr-title { font-size: 14px; font-weight: 600; color: var(--navy); margin-bottom: 5px; line-height: 1.4; }
 .adr-summary { font-size: 11px; color: var(--muted); line-height: 1.65; margin-bottom: 10px; }
 .adr-footer { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -80,6 +101,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
 .status-draft     { background: #FEF3C7; color: #92400E; }
 .status-superseded{ background: #F1F5F9; color: #475569; }
 .status-proposed  { background: #DBEAFE; color: #1E40AF; }
+.status-amendment { background: #EDE9FE; color: #5B21B6; }
 .adr-date { font-size: 9px; font-family: 'DM Mono', monospace; color: #CBD5E1; }
 .adr-tag  { font-size: 9px; font-family: 'DM Mono', monospace; background: #F1F5F9; color: #64748B; padding: 2px 7px; border-radius: 4px; }
 
@@ -97,6 +119,42 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
 }
 .adr-md-link:hover { background: #F1F5F9; color: var(--text); }
 
+.hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+@media (max-width: 640px) { .hub-grid { grid-template-columns: 1fr; } }
+
+.hub-card {
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 18px;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: all 0.15s ease;
+}
+.hub-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.07); transform: translateY(-1px); border-color: #BFDBFE; }
+.hub-card-eyebrow {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.hub-card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  margin-bottom: 5px;
+  line-height: 1.4;
+}
+.hub-card-summary {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.hub-card.diagram-card .hub-card-eyebrow { color: var(--blue); }
+
 .footer { max-width:860px; margin:32px auto 0; padding:16px 24px 0; border-top:1px solid var(--line); font-size:10px; font-family:'DM Mono',monospace; color:var(--muted); display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px; }
 </style>
 </head>
@@ -105,7 +163,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
 <div class="hero">
   <div class="back"><a href="../">← Lakehouse Hub</a></div>
   <h1>Architecture Decision Records</h1>
-  <p>Formal records of significant architectural decisions for the RBC Enterprise Lakehouse. Each ADR captures the context, decision, and consequences.</p>
+  <p>Formal records of significant architectural decisions for the RBC Enterprise Lakehouse. Each ADR captures the context, decision, and consequences. Amendments and reconciliation notes attach to their parent ADRs.</p>
 </div>
 
 <div class="main">
@@ -113,9 +171,13 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:var(--accepted)"></div> Accepted</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--draft)"></div> Draft</div>
-    <div class="legend-item"><div class="legend-dot" style="background:var(--superseded)"></div> Superseded</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--proposed)"></div> Proposed</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--superseded)"></div> Superseded</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--amendment)"></div> Amendment</div>
   </div>
+
+  <h2 class="section-heading">Architecture Decision Records</h2>
+  <p class="section-sub">17 records covering the lakehouse foundation (compute, governance, ingestion), the AI consumption layer (semantic plane, gateway, agent patterns), and the cross-cutting governance model. Listed in chronological order.</p>
 
   <div class="adr-list">
 
@@ -215,11 +277,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
     <a class="adr-card accepted" href="007-governance-automation-pipeline.md">
       <div class="adr-num">007</div>
       <div class="adr-body">
-        <div class="adr-title">Automated Governance Pipeline — Classification to Ranger TagREST</div>
-        <div class="adr-summary">Automated pipeline: Privacera classifiers scan new tables → PII/PCI tags applied → Privacera policy engine propagates masking rules. No manual policy authoring for standard classification tiers.</div>
+        <div class="adr-title">Automated Governance Pipeline — OpenMetadata Classification to Ranger TagREST</div>
+        <div class="adr-summary">Automated pipeline: OpenMetadata classifiers scan new tables → PII/PCI tags applied → Ranger TagREST policies propagate masking and access rules. No manual policy authoring for standard classification tiers.</div>
         <div class="adr-footer">
           <span class="status-pill status-accepted">Accepted</span>
-          <span class="adr-tag">Privacera</span>
+          <span class="adr-tag">OpenMetadata</span>
+          <span class="adr-tag">Ranger</span>
           <span class="adr-tag">governance automation</span>
           <span class="adr-date">Mar 2026</span>
           <span class="adr-md-link">view .md →</span>
@@ -231,12 +294,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
       <div class="adr-num">008</div>
       <div class="adr-body">
         <div class="adr-title">Microsoft Fabric OneLake — Shortcuts and XTable Not Adopted</div>
-        <div class="adr-summary">OneLake Shortcuts and XTable (Delta↔Iceberg conversion) evaluated and rejected. Shortcuts create a dependent path that bypasses Polaris credential vending. XTable conversion adds latency and format mismatch risk. Superseded by ADR-010.</div>
+        <div class="adr-summary">OneLake Shortcuts and XTable (Delta↔Iceberg conversion) evaluated and rejected. Shortcuts create a dependent path that bypasses credential vending. XTable conversion adds latency and format mismatch risk. Position carried forward through ADR-010 → ADR-011 → ADR-014.</div>
         <div class="adr-footer">
           <span class="status-pill status-superseded">Superseded</span>
           <span class="adr-tag">Fabric</span>
           <span class="adr-tag">OneLake</span>
-          <span class="adr-tag">→ see ADR-010</span>
+          <span class="adr-tag">→ ADR-010 → 011 → 014</span>
           <span class="adr-date">Mar 2026</span>
           <span class="adr-md-link">view .md →</span>
         </div>
@@ -247,7 +310,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
       <div class="adr-num">009</div>
       <div class="adr-body">
         <div class="adr-title">AI Data Hub — RAG-Ready Data Serving Layer for the Lakehouse</div>
-        <div class="adr-summary">Gold layer tables exposed to AI consumers via a Python FastAPI trust boundary enforcing certified query patterns. Direct Gold access prohibited for agent workloads — all AI queries must pass through the certified gateway.</div>
+        <div class="adr-summary">Gold layer tables exposed to AI consumers via a Python FastAPI trust boundary enforcing certified query patterns. Direct Gold access prohibited for agent workloads — all AI queries must pass through the certified gateway. Foundational for ADR-015 (RBC Data Gateway).</div>
         <div class="adr-footer">
           <span class="status-pill status-accepted">Accepted</span>
           <span class="adr-tag">AI hub</span>
@@ -263,12 +326,12 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
       <div class="adr-num">010</div>
       <div class="adr-body">
         <div class="adr-title">Microsoft Fabric Import Semantic Model as BI and AI Surface Layer</div>
-        <div class="adr-summary">Fabric Import mode (not DirectLake, not Shortcuts) as BI/AI surface. Superseded on 2026-04-15 by ADR-011 which adopts a phased approach: Snowflake Cortex in Phase 1, Fabric in Phase 2.</div>
+        <div class="adr-summary">Fabric Import mode (not DirectLake, not Shortcuts) as BI/AI surface. Superseded on 2026-04-15 by ADR-011 which adopts a phased approach with Snowflake Cortex in Phase 1.</div>
         <div class="adr-footer">
           <span class="status-pill status-superseded">Superseded</span>
           <span class="adr-tag">Fabric</span>
           <span class="adr-tag">Import mode</span>
-          <span class="adr-tag">→ see ADR-011</span>
+          <span class="adr-tag">→ ADR-011</span>
           <span class="adr-date">Apr 2026</span>
           <span class="adr-md-link">view .md →</span>
         </div>
@@ -279,7 +342,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
       <div class="adr-num">011</div>
       <div class="adr-body">
         <div class="adr-title">Snowflake Cortex as Access and Semantic Layer — Phased Fabric Extension</div>
-        <div class="adr-summary">Phase 1: Snowflake Cortex Analyst over Gold Iceberg V2 via external volumes (zero-copy) as the AI semantic layer. Phase 2: Fabric as parallel BI/AI surface when OBIEE → Power BI migration completes. FastAPI trust boundary routes between backends. Supersedes ADR-010.</div>
+        <div class="adr-summary">Phase 1: Snowflake Cortex Analyst over Gold Iceberg V2 via external volumes (zero-copy) as the AI semantic layer. Phase 2: Fabric as parallel BI/AI surface when OBIEE → Power BI migration completes. Supersedes ADR-010. Reframed by the amendment below; further amended by ADR-014.</div>
         <div class="adr-footer">
           <span class="status-pill status-accepted">Accepted</span>
           <span class="adr-tag">Snowflake Cortex</span>
@@ -291,28 +354,252 @@ body { font-family: 'DM Sans', sans-serif; background: var(--soft); color: var(-
       </div>
     </a>
 
-    <a class="adr-card draft" href="012-rbc-assist-fabric-data-agent-pattern.md">
-      <div class="adr-num">012</div>
+    <a class="adr-card amendment" href="011-amendment-cortex-tactical.md">
+      <div class="adr-num">011<small>amend</small></div>
       <div class="adr-body">
-        <div class="adr-title">RBC Assist × Fabric Data Agent Consumption Pattern — Phase 2 Extension to ADR-011</div>
-        <div class="adr-summary">Phase 2a: Pattern 1 (default) — RBC Assist calls Fabric Data Agent via Python SDK through the existing FastAPI trust boundary (adds fabric_data_agent route alongside snowflake_cortex). Phase 2b: Pattern 3 — introduce Foundry agent between FastAPI and Fabric Data Agent if Foundry is adopted as RBC's enterprise AI runtime. Pattern 2 (Copilot Studio) deferred.</div>
+        <div class="adr-title">Amendment to ADR-011 — Cortex Reframed as Tactical Snowflake-Internal Semantic Layer</div>
+        <div class="adr-summary">Amends ADR-011's Phase 1 framing. Cortex remains in scope but is reframed as a tactical, Snowflake-internal semantic layer rather than the enterprise semantic layer. The enterprise semantic layer decision moves to ADR-014.</div>
         <div class="adr-footer">
-          <span class="status-pill status-draft">Draft</span>
-          <span class="adr-tag">Fabric Data Agent</span>
-          <span class="adr-tag">OBO</span>
-          <span class="adr-tag">Extends ADR-011</span>
+          <span class="status-pill status-amendment">Amendment</span>
+          <span class="adr-tag">amends ADR-011</span>
+          <span class="adr-tag">Cortex tactical</span>
           <span class="adr-date">Apr 2026</span>
           <span class="adr-md-link">view .md →</span>
         </div>
       </div>
     </a>
 
+    <a class="adr-card draft" href="012-rbc-assist-fabric-data-agent-pattern.md">
+      <div class="adr-num">012</div>
+      <div class="adr-body">
+        <div class="adr-title">RBC Assist × Fabric Data Agent Consumption Pattern — Phase 2 Extension to ADR-011</div>
+        <div class="adr-summary">Phase 2a: Pattern 1 (default) — RBC Assist calls Fabric Data Agent via Python SDK through the existing FastAPI trust boundary. Phase 2b: Pattern 3 — introduce Foundry agent between FastAPI and Fabric Data Agent if Foundry is adopted as RBC's enterprise AI runtime. Pattern 2 (Copilot Studio) deferred.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-draft">Draft</span>
+          <span class="adr-tag">Fabric Data Agent</span>
+          <span class="adr-tag">OBO</span>
+          <span class="adr-tag">extends ADR-011</span>
+          <span class="adr-date">Apr 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card proposed" href="013-ingestion-as-platform-capability.md">
+      <div class="adr-num">013</div>
+      <div class="adr-body">
+        <div class="adr-title">Ingestion is a Platform Capability — Hubs Compose, They Do Not Ingest</div>
+        <div class="adr-summary">Establishes the federation principle for the Lumina hub model: ingestion is a centralized platform capability owned by the lakehouse team. LOB-aligned hubs compose, conform, and curate from the shared raw zone — they do not run their own ingestion stacks. Removes the duplication risk of every hub building its own pipelines.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-proposed">Proposed</span>
+          <span class="adr-tag">hubs</span>
+          <span class="adr-tag">federation</span>
+          <span class="adr-tag">ingestion</span>
+          <span class="adr-date">Apr 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card proposed" href="014-fabric-semantic-plane.md">
+      <div class="adr-num">014</div>
+      <div class="adr-body">
+        <div class="adr-title">Semantic Plane Architecture — Unified Semantic Layer Across Snowflake and Trino</div>
+        <div class="adr-summary">Adopts Microsoft Fabric semantic models as the single enterprise semantic layer across both Snowflake (DirectQuery + Mirroring) and Trino (DirectQuery). Resolves the Cortex-vs-Fabric split: business definitions live in one place and AI agents reason against one surface, regardless of where data physically resides. Amends ADR-011.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-proposed">Proposed</span>
+          <span class="adr-tag">Fabric semantic models</span>
+          <span class="adr-tag">unified semantic layer</span>
+          <span class="adr-tag">amends ADR-011</span>
+          <span class="adr-date">May 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card amendment" href="014-amendment-gateway-and-landing.md">
+      <div class="adr-num">014<small>amend</small></div>
+      <div class="adr-body">
+        <div class="adr-title">Amendment to ADR-014 — Gateway as Trust Boundary and Raw Zone Landing</div>
+        <div class="adr-summary">Clarifies two points in ADR-014: the RBC Data Gateway (ADR-015) is the trust boundary for all agentic traffic to the semantic plane, and operational data lands in a hybrid Raw Zone owned by the platform before any hub composes from it.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-amendment">Amendment</span>
+          <span class="adr-tag">amends ADR-014</span>
+          <span class="adr-tag">gateway</span>
+          <span class="adr-tag">Raw Zone</span>
+          <span class="adr-date">May 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card proposed" href="015-rbc-data-gateway.md">
+      <div class="adr-num">015</div>
+      <div class="adr-body">
+        <div class="adr-title">RBC Data Gateway — On-Prem Trust Boundary and Orchestrator for AI Data Access</div>
+        <div class="adr-summary">FastAPI on OpenShift as the on-prem trust boundary for all AI traffic into the lakehouse. Orchestrates routing between Snowflake Cortex (tactical), Fabric semantic models (strategic), and Trino. Enforces Entra ID OBO, Immuta ABAC, and audit logging at a single chokepoint. Productionizes the FastAPI pattern from ADR-009 and ADR-011.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-proposed">Proposed</span>
+          <span class="adr-tag">FastAPI</span>
+          <span class="adr-tag">trust boundary</span>
+          <span class="adr-tag">orchestrator</span>
+          <span class="adr-date">May 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card proposed" href="016-enterprise-conformance-tier.md">
+      <div class="adr-num">016</div>
+      <div class="adr-body">
+        <div class="adr-title">Enterprise Conformance Tier (Tier 2) — Stub</div>
+        <div class="adr-summary">Stub ADR for the cross-LOB conformed datasets layer (Customer 360, Total Exposure, Household Rollups, Counterparty 360, Segment P&L) and the entity-resolution graph that supports them. Full draft pending the Q3 2026 MVP scoping. Reconciliation with ADR-017 documented separately.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-proposed">Proposed (stub)</span>
+          <span class="adr-tag">Tier 2</span>
+          <span class="adr-tag">enterprise conformance</span>
+          <span class="adr-tag">entity resolution</span>
+          <span class="adr-date">May 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card proposed" href="017-operational-vs-collaborative-data-products.md">
+      <div class="adr-num">017</div>
+      <div class="adr-body">
+        <div class="adr-title">Operational vs Collaborative Data Products — Two-Type Model and Accountability Framework</div>
+        <div class="adr-summary">Adopts the two-type data product model from Steve Jones (Feb 2022). Operational Data Products are owned by business leaders of the originating area; Collaborative Data Products are managed by a Data Product Manager and accountable at the attribute level to contributing ODP owners. Introduces the attribute accountability map as a CDP release gate. Amends ADR-011, ADR-012, ADR-014 governance sections.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-proposed">Proposed</span>
+          <span class="adr-tag">governance</span>
+          <span class="adr-tag">ODP / CDP</span>
+          <span class="adr-tag">accountability</span>
+          <span class="adr-date">May 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
+    <a class="adr-card amendment" href="reconciliation-016-017.md">
+      <div class="adr-num">016<small>×017</small></div>
+      <div class="adr-body">
+        <div class="adr-title">Reconciliation Note — ADR-016 (Enterprise Conformance Tier) × ADR-017 (ODP/CDP)</div>
+        <div class="adr-summary">Five specific reconciliations to incorporate when ADR-016 is promoted from stub to full draft: terminology (Tier 2 datasets are CDPs), three-way ownership split (managed / accountable / sponsored), promotion path from LOB to Tier 2, entity resolution as a platform service rather than a CDP, and the relationship to Fabric semantic models.</div>
+        <div class="adr-footer">
+          <span class="status-pill status-amendment">Reconciliation</span>
+          <span class="adr-tag">reconciles 016 × 017</span>
+          <span class="adr-date">May 2026</span>
+          <span class="adr-md-link">view .md →</span>
+        </div>
+      </div>
+    </a>
+
   </div>
+
+  <h2 class="section-heading">Lumina Data Hubs</h2>
+  <p class="section-sub">A federated mesh of LOB-aligned hubs sharing the enterprise lakehouse, with the RBC Data Gateway as the trust boundary for all agentic traffic. The architecture, the pilot plan, and the Q3 2026 MVP plan are below; the supporting ADRs are 009, 013, 014, 015, 016, and 017 above.</p>
+
+  <a class="adr-card accepted" href="../lumina/data-hub-architecture.md" style="margin-bottom:10px">
+    <div class="adr-num">v2</div>
+    <div class="adr-body">
+      <div class="adr-title">Lumina Data Hub Architecture (v2)</div>
+      <div class="adr-summary">Reference architecture for the federated hub model. Two medallions, hybrid Snowflake + Trino, hybrid Raw Zone landing, governance and federation responsibilities defined. Eight architectural principles. Supersedes v1 dated 2026-05-02.</div>
+      <div class="adr-footer">
+        <span class="status-pill status-accepted">Reference</span>
+        <span class="adr-tag">federated mesh</span>
+        <span class="adr-tag">hubs compose</span>
+        <span class="adr-tag">hybrid Snowflake + Trino</span>
+        <span class="adr-date">May 2026</span>
+        <span class="adr-md-link">view .md →</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="adr-card draft" href="../lumina/phase-1-pilot-plan.md" style="margin-bottom:10px">
+    <div class="adr-num">P1</div>
+    <div class="adr-body">
+      <div class="adr-title">Phase 1 Pilot Plan — Fabric Semantic Models over Snowflake and Trino</div>
+      <div class="adr-summary">Two-pilot plan validating Fabric semantic models over both Snowflake (DirectQuery + Mirroring) and Trino (DirectQuery). 12 weeks, three decision gates. Companion to ADR-014.</div>
+      <div class="adr-footer">
+        <span class="status-pill status-draft">Plan</span>
+        <span class="adr-tag">Fabric pilot</span>
+        <span class="adr-tag">12 weeks</span>
+        <span class="adr-tag">3 gates</span>
+        <span class="adr-date">May 2026</span>
+        <span class="adr-md-link">view .md →</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="adr-card draft" href="../lumina/mvp-plan-q3-2026.md" style="margin-bottom:24px">
+    <div class="adr-num">MVP</div>
+    <div class="adr-body">
+      <div class="adr-title">Q3 2026 PI Plan — Capital Markets Hub and Counterparty Risk Score</div>
+      <div class="adr-summary">Single LOB hub (Capital Markets), single certified product (Counterparty Risk Score), end-to-end through the gateway. Six 2-week iterations + stabilization across a 13-week PI window.</div>
+      <div class="adr-footer">
+        <span class="status-pill status-draft">Plan</span>
+        <span class="adr-tag">Capital Markets</span>
+        <span class="adr-tag">PI Q3 2026</span>
+        <span class="adr-tag">13 weeks</span>
+        <span class="adr-date">May 2026</span>
+        <span class="adr-md-link">view .md →</span>
+      </div>
+    </div>
+  </a>
+
+  <div class="hub-grid">
+    <a class="hub-card diagram-card" href="../architecture/diagrams/lumina-data-hub-executive.svg">
+      <div class="hub-card-eyebrow">Diagram · Boardroom</div>
+      <div class="hub-card-title">Lumina Data Hub — Executive View</div>
+      <div class="hub-card-summary">One-page boardroom view of the federated hub model. Suitable for senior leadership and exec committee.</div>
+    </a>
+    <a class="hub-card diagram-card" href="../architecture/diagrams/lumina-data-hub-detailed.svg">
+      <div class="hub-card-eyebrow">Diagram · Engineering</div>
+      <div class="hub-card-title">Lumina Data Hub — Detailed Reference</div>
+      <div class="hub-card-summary">Engineering-grade reference diagram. All flows, components, and trust boundaries.</div>
+    </a>
+  </div>
+
+  <h2 class="section-heading">Supporting Documents</h2>
+  <p class="section-sub">Position papers and exec-level summaries that complement the ADRs. Not architectural decisions in themselves; they inform and support the formal records above.</p>
+
+  <a class="adr-card accepted" href="../position-papers/hub-ingestion-conformance-composition.md" style="margin-bottom:10px">
+    <div class="adr-num">PP</div>
+    <div class="adr-body">
+      <div class="adr-title">Position Paper — Hub Ingestion, Conformance, and Composition</div>
+      <div class="adr-summary">The case for treating ingestion as a platform capability and hubs as composers rather than ingestion endpoints. Foundational thinking behind ADR-013.</div>
+      <div class="adr-footer">
+        <span class="status-pill status-accepted">Position</span>
+        <span class="adr-tag">hubs</span>
+        <span class="adr-tag">composition</span>
+        <span class="adr-tag">supports ADR-013</span>
+        <span class="adr-date">Apr 2026</span>
+        <span class="adr-md-link">view .md →</span>
+      </div>
+    </div>
+  </a>
+
+  <a class="adr-card accepted" href="../position-papers/two-type-data-product-model-exec-summary.md" style="margin-bottom:10px">
+    <div class="adr-num">PP</div>
+    <div class="adr-body">
+      <div class="adr-title">Exec Summary — The Two-Type Data Product Model</div>
+      <div class="adr-summary">One-page exec summary of ADR-017 for senior leadership: the political case for the ODP/CDP split, the FSDM framing, and three explicit asks (endorsement, two pilot CDPs, air cover on the FSDM framing).</div>
+      <div class="adr-footer">
+        <span class="status-pill status-accepted">Exec summary</span>
+        <span class="adr-tag">ODP / CDP</span>
+        <span class="adr-tag">supports ADR-017</span>
+        <span class="adr-date">May 2026</span>
+        <span class="adr-md-link">view .md →</span>
+      </div>
+    </div>
+  </a>
+
 </div>
 
 <div class="footer">
-  <span>Lumina · RBC Enterprise Data · 12 ADRs · ADR-001 → ADR-012</span>
-  <span>George Chilakos, VP Enterprise Data · April 2026</span>
+  <span>Lumina · RBC Enterprise Data · 17 ADRs · ADR-001 → ADR-017 + 2 amendments + reconciliation</span>
+  <span>George Chilakos, VP Enterprise Data · May 2026</span>
 </div>
 
 </body>
