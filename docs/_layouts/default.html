@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>{{ page.title | default: site.title }}</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&family=Lora:wght@500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --navy: #0A1628;
+  --blue: #1E4D8C;
+  --line: #E2E8F0;
+  --muted: #64748B;
+  --text: #1E293B;
+  --soft: #F8FAFC;
+  --white: #FFFFFF;
+  --code-bg: #F1F5F9;
+  --code-text: #1E40AF;
+  --quote-line: #CBD5E1;
+  --link: #1E4D8C;
+  --link-hover: #0A1628;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--soft);
+  color: var(--text);
+  font-size: 16px;
+  line-height: 1.65;
+  padding: 0 0 60px;
+}
+
+/* === HEADER === */
+.site-hero {
+  background: var(--navy);
+  padding: 28px 20px 24px;
+}
+.site-hero-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.back-link {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  margin-bottom: 14px;
+  display: block;
+}
+.back-link a {
+  color: #94A3B8;
+  text-decoration: none;
+}
+.back-link a:hover {
+  color: #E2E8F0;
+}
+.site-title {
+  font-family: 'Lora', serif;
+  font-size: 13px;
+  color: #94A3B8;
+  font-weight: 400;
+}
+
+/* === MAIN CONTENT === */
+.content {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 28px 20px;
+  background: var(--white);
+  border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  min-height: calc(100vh - 200px);
+}
+
+/* === TYPOGRAPHY === */
+.content h1 {
+  font-family: 'Lora', serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--navy);
+  line-height: 1.3;
+  margin: 0 0 18px;
+  letter-spacing: -0.3px;
+}
+.content h2 {
+  font-family: 'Lora', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--navy);
+  margin: 32px 0 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+  line-height: 1.35;
+}
+.content h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--navy);
+  margin: 24px 0 10px;
+  line-height: 1.4;
+}
+.content h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--navy);
+  margin: 20px 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.content h5,
+.content h6 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--navy);
+  margin: 16px 0 6px;
+}
+
+.content p {
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0 0 14px;
+  color: var(--text);
+}
+
+.content a {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-color: rgba(30, 77, 140, 0.3);
+  text-underline-offset: 2px;
+}
+.content a:hover {
+  color: var(--link-hover);
+  text-decoration-color: var(--link-hover);
+}
+
+/* === LISTS === */
+.content ul,
+.content ol {
+  margin: 0 0 14px;
+  padding-left: 24px;
+}
+.content li {
+  font-size: 15px;
+  line-height: 1.7;
+  margin-bottom: 4px;
+}
+.content li > p { margin-bottom: 6px; }
+.content li > ul,
+.content li > ol { margin-top: 4px; margin-bottom: 4px; }
+
+/* === CODE === */
+.content code {
+  font-family: 'DM Mono', 'SF Mono', Menlo, monospace;
+  font-size: 13px;
+  background: var(--code-bg);
+  color: var(--code-text);
+  padding: 2px 6px;
+  border-radius: 4px;
+  word-break: break-word;
+}
+.content pre {
+  background: var(--navy);
+  color: #E2E8F0;
+  padding: 14px 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 14px 0;
+  font-size: 12px;
+  line-height: 1.55;
+  -webkit-overflow-scrolling: touch;
+}
+.content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  font-size: 12px;
+  border-radius: 0;
+}
+
+/* === BLOCKQUOTE === */
+.content blockquote {
+  border-left: 3px solid var(--quote-line);
+  padding: 4px 0 4px 14px;
+  margin: 14px 0;
+  color: var(--muted);
+  font-style: italic;
+}
+.content blockquote p { margin-bottom: 6px; }
+
+/* === TABLES — mobile-aware === */
+.content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 14px 0;
+  font-size: 13px;
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  white-space: nowrap;
+}
+@media (min-width: 600px) {
+  .content table {
+    display: table;
+    white-space: normal;
+  }
+}
+.content th,
+.content td {
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+.content th {
+  font-weight: 600;
+  color: var(--navy);
+  background: var(--soft);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.content tbody tr:hover { background: var(--soft); }
+
+/* === HORIZONTAL RULE === */
+.content hr {
+  border: 0;
+  height: 1px;
+  background: var(--line);
+  margin: 28px 0;
+}
+
+/* === IMAGES — mobile-aware === */
+.content img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 14px auto;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+}
+
+/* === STRONG / EMPHASIS === */
+.content strong { color: var(--navy); font-weight: 600; }
+.content em { color: var(--text); }
+
+/* === FOOTER === */
+.site-footer {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 16px 20px 0;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  text-align: center;
+  border-top: 1px solid var(--line);
+  background: var(--white);
+}
+.site-footer a { color: var(--blue); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+
+/* === MOBILE-FIRST RESPONSIVE === */
+@media (max-width: 600px) {
+  body { font-size: 15px; }
+  .content { padding: 22px 16px; border-left: 0; border-right: 0; }
+  .content h1 { font-size: 22px; }
+  .content h2 { font-size: 18px; margin-top: 26px; }
+  .content h3 { font-size: 15px; }
+  .content p,
+  .content li { font-size: 14px; }
+  .content pre { font-size: 11px; padding: 12px; }
+  .site-hero { padding: 22px 16px 18px; }
+}
+
+/* Selection */
+::selection { background: rgba(30, 77, 140, 0.2); }
+</style>
+</head>
+<body>
+
+<header class="site-hero">
+  <div class="site-hero-inner">
+    <div class="back-link">
+      <a href="{{ '/adr/' | relative_url }}">← Architecture Decision Records</a>
+    </div>
+    <div class="site-title">RBC Lakehouse · Lumina · Enterprise Data</div>
+  </div>
+</header>
+
+<main class="content">
+  {{ content }}
+</main>
+
+<footer class="site-footer">
+  <p><a href="{{ '/' | relative_url }}">Lakehouse Hub</a> · <a href="{{ '/adr/' | relative_url }}">ADRs</a> · George Chilakos, VP Enterprise Data</p>
+</footer>
+
+</body>
+</html>
