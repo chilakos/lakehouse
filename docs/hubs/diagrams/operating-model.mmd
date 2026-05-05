@@ -1,0 +1,86 @@
+flowchart TB
+
+%% ===== STYLES =====
+classDef source fill:#E8F1FA,stroke:#0051A5,stroke-width:1.5px,color:#002F6C
+classDef bronze fill:#FCE4B6,stroke:#B07A1F,stroke-width:1.5px,color:#5C3B00
+classDef silver fill:#E5E5E5,stroke:#6B6B6B,stroke-width:1.5px,color:#1F1F1F
+classDef gold   fill:#FFE38A,stroke:#A37800,stroke-width:1.5px,color:#4A3500
+classDef author fill:#E1F0DC,stroke:#3F7A2A,stroke-width:1.5px,color:#1F4012
+classDef plat   fill:#F2E1F4,stroke:#7A2C8E,stroke-width:1.5px,color:#3D154A
+
+%% ===== SOURCES =====
+subgraph SRC["📥 Sources the team pulls from"]
+  direction LR
+  TD["Teradata views<br/>(EDW)"]:::source
+  HIVE["EDL Hive tables<br/>(on-prem lake)"]:::source
+end
+
+%% ===== HUB =====
+subgraph HUB["🏢 Hub (Snowflake)"]
+  direction TB
+
+  subgraph BRZ["🟫 Bronze — Immutable, append-only"]
+    direction LR
+    B1["bronze.td_extract"]:::bronze
+    B2["bronze.hive_extract"]:::bronze
+  end
+
+  subgraph SLV["⬜ Silver — Cleansed & conformed"]
+    direction LR
+    S1["clients_clean"]:::silver
+    S2["positions_clean"]:::silver
+  end
+
+  subgraph GLD["🟨 Gold — Certified product"]
+    direction LR
+    G1["household_exposure"]:::gold
+  end
+end
+
+%% ===== AUTHORING =====
+subgraph AUTH["✍️ DMO authoring"]
+  direction TB
+  PYL["product.yml<br/>(declares sources,<br/>tests, schedule)"]:::author
+  SQL["silver/*.sql<br/>gold/*.sql"]:::author
+  CLI["hub-cli<br/>init · validate · run<br/>promote · rehydrate"]:::author
+end
+
+%% ===== PLATFORM =====
+subgraph PLAT["⚙️ Platform (invisible to DMO)"]
+  direction TB
+  GIT["GitHub repo"]:::plat
+  CI["GitHub Actions<br/>on OpenShift<br/>(Helios pattern)"]:::plat
+  DBT["dbt Core<br/>generated from<br/>product.yml"]:::plat
+  ORCH["Scheduler<br/>(cron + on-demand)"]:::plat
+end
+
+%% ===== FLOWS =====
+
+%% Step 1: extract into Bronze
+TD ==>|"<b>1.</b> scheduled extract<br/>via Trino → Snowpipe<br/>(append only)"| B1
+HIVE ==>|"<b>1.</b> scheduled extract<br/>via Trino → Snowpipe<br/>(append only)"| B2
+
+%% Bronze immutability
+BRZ -.->|"<i>INSERT only<br/>no UPDATE / DELETE</i>"| BRZ
+
+%% Step 2: authoring
+PYL --> CLI
+SQL --> CLI
+
+%% Step 3: commit + CI
+CLI ==>|"<b>2.</b> commit & PR"| GIT
+GIT ==>|"<b>3.</b> trigger"| CI
+CI ==>|"<b>4.</b> generate &<br/>execute"| DBT
+
+%% Step 4: build Silver and Gold
+DBT ==>|"<b>5a.</b> read"| BRZ
+DBT ==>|"<b>5b.</b> write"| SLV
+SLV ==>|"<b>6.</b> aggregate"| GLD
+
+%% Step 5: scheduled refresh
+ORCH ==>|"<b>nightly</b>"| DBT
+
+%% Step 6: rehydration loop (the killer feature)
+CLI -.->|"<b>R1.</b> rehydrate<br/>--as-of 2026-03-15"| ORCH
+ORCH -.->|"<b>R2.</b> Time Travel pin"| BRZ
+DBT -.->|"<b>R3.</b> rebuild<br/>Silver → Gold<br/>for window"| SLV

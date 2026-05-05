@@ -131,5 +131,10 @@ body {
   <p><a href="{{ '/' | relative_url }}">Lakehouse Hub</a> · <a href="{{ '/adr/' | relative_url }}">ADRs</a> · George Chilakos, VP Enterprise Data</p>
 </footer>
 
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+</script>
+
 </body>
 </html>

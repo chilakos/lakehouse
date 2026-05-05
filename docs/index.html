@@ -138,6 +138,46 @@ body{font-family:'DM Sans',sans-serif;background:var(--soft);color:var(--text);m
     </a>
   </div>
 
+  <div class="section-label">Hub Self-Service Design</div>
+  <div class="grid">
+    <a class="doc-card arch" href="hubs/00-overview/">
+      <div class="card-icon">&#127970;</div>
+      <div class="card-title">Hub Self-Service — Overview</div>
+      <div class="card-desc">DMO authoring experience for Snowflake-based hubs. dbt under the hood, product.yml on top, immutable Bronze, Helios CI/CD pattern.</div>
+      <div class="card-meta"><span class="card-tag new">new</span><span class="card-tag">design</span></div>
+    </a>
+    <a class="doc-card arch" href="hubs/01-experience-flow/">
+      <div class="card-icon">&#128221;</div>
+      <div class="card-title">Experience Flow</div>
+      <div class="card-desc">Day-by-day DMO walkthrough — scaffold, author, validate, promote to UAT, promote to Prod, rehydrate six months later.</div>
+      <div class="card-meta"><span class="card-tag new">new</span></div>
+    </a>
+    <a class="doc-card arch" href="hubs/03-product-yml-schema/">
+      <div class="card-icon">&#128196;</div>
+      <div class="card-title">product.yml Schema</div>
+      <div class="card-desc">The single authoring artifact a DMO touches. Annotated example plus field-by-field reference. Required, recommended, and optional fields.</div>
+      <div class="card-meta"><span class="card-tag new">new</span></div>
+    </a>
+    <a class="doc-card arch" href="hubs/04-source-selection/">
+      <div class="card-icon">&#128269;</div>
+      <div class="card-title">Source Selection — Teradata &amp; Hive</div>
+      <div class="card-desc">How a DMO discovers, declares, and consumes Teradata views and Hive tables. Federated extracts via Trino into immutable Bronze.</div>
+      <div class="card-meta"><span class="card-tag new">new</span><span class="card-tag">deep-dive</span></div>
+    </a>
+    <a class="doc-card arch" href="hubs/05-rehydration/">
+      <div class="card-icon">&#128260;</div>
+      <div class="card-title">Rehydration</div>
+      <div class="card-desc">Point-in-time rebuild of Gold from Bronze using Snowflake Time Travel. One-command operation. Versioned coexistence for BCBS-239.</div>
+      <div class="card-meta"><span class="card-tag new">new</span><span class="card-tag">deep-dive</span></div>
+    </a>
+    <a class="doc-card arch" href="hubs/">
+      <div class="card-icon">&#128193;</div>
+      <div class="card-title">All Hub Design Docs</div>
+      <div class="card-desc">Repo structure, CLI &amp; portal, CI/CD pattern, governance hooks, failure modes, build plan, open questions.</div>
+      <div class="card-meta"><span class="card-tag">13 docs</span><span class="card-tag">index</span></div>
+    </a>
+  </div>
+
   <div class="section-label">SWOT Analyses &amp; Research</div>
   <div class="grid">
     <a class="doc-card swot" href="swot/index.html">

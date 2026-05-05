@@ -1,0 +1,36 @@
+sequenceDiagram
+    autonumber
+    participant J as Jane (DMO)
+    participant P as Hub Portal
+    participant A as Approvers<br/>(Steward + Compliance)
+    participant F as Framework
+    participant S as Snowflake
+
+    Note over J,S: Methodology change — March 2026 needs to be recomputed
+
+    J->>J: edit silver/clients_clean.sql<br/>edit gold/household_exposure.sql
+    J->>P: open PR
+    P-->>J: CI green, peer approved
+    J->>P: merge to main → prod runs new<br/>methodology going forward
+    Note right of P: But March's Gold rows are still<br/>the original numbers
+
+    J->>P: hub rehydrate<br/>--as-of 2026-03-01<br/>--through 2026-03-31<br/>--reason "RFI-2026-1142"
+    P-->>J: cost estimate: $12.40 CAD<br/>requires Steward + Compliance
+    J->>P: confirm
+    P->>A: queue rehydrate request
+    A-->>P: approve (Steward)
+    A-->>P: approve (Compliance)
+    P->>F: launch rehydrate job
+    
+    loop for each day from 2026-03-01 to 2026-03-31
+        F->>S: SET QUERY_TAG = "rehydrate:..."
+        F->>S: SET Bronze pin via<br/>Time Travel AT(TIMESTAMP =>...)
+        F->>S: dbt run silver+ gold+<br/>--vars business_date
+        S-->>F: rows written with<br/>methodology_sha + regeneration_id
+        F->>F: append to audit trail
+    end
+
+    F-->>P: rehydrate complete
+    P-->>J: notification: 31 days regenerated,<br/>originals preserved as superseded
+    F->>F: notify declared consumers<br/>(Power BI, Data Agent, P&CB hub)
+    F->>F: file evidence artifact in catalog

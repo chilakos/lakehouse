@@ -1,0 +1,23 @@
+sequenceDiagram
+    autonumber
+    participant J as Jane (DMO)
+    participant P as Hub Portal
+    participant F as Framework / CI
+    participant T as Trino + Snowpipe
+    participant S as Snowflake (Bronze)
+
+    J->>P: search "household"
+    P-->>J: ranked list of Teradata views,<br/>Hive tables, EDLH datasets
+    J->>P: inspect wm_household_map_v
+    P-->>J: schema, sample, owner,<br/>quality, current consumers
+    J->>P: Add to Product →<br/>client_household_exposure
+    P->>P: append source block to<br/>product.yml on Jane's branch
+    J->>P: open PR
+    P->>F: trigger pr-validate
+    F->>F: validate hub entitlement<br/>via Ranger
+    F->>F: check classification<br/>compatibility
+    F->>F: register lineage<br/>dependency
+    F->>T: provision managed<br/>extract job
+    Note over T,S: From this point, the extract runs hourly<br/>without DMO involvement
+    T->>S: scheduled extract<br/>→ bronze.td_wm_household_map_v
+    S-->>F: load_ts, row_count<br/>logged to audit
