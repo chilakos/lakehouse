@@ -95,6 +95,6 @@ and the hub program adopts dbt-Core-on-our-runners, we will have two
 parallel patterns at RBC and DMOs will get conflicting guidance.
 
 **Recommendation:** Take a clear position in an ADR
-(see [`07-cicd-pattern.md`](./07-cicd-pattern.md) for the case
+(see [`07-cicd-pattern.md`](/lakehouse/hubs/07-cicd-pattern/) for the case
 against dbt-on-Snowflake). Walk the position through with the
 Snowflake team and Vinh. Get to one pattern.

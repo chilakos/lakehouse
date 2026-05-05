@@ -42,4 +42,4 @@ The catalog (whichever tool we land on) needs to support:
 - **Contract notifications** — when a product declares a breaking
   change, the catalog notifies declared consumers
 
-Catalog tool choice is open — see [`11-open-questions.md`](./11-open-questions.md).
+Catalog tool choice is open — see [`11-open-questions.md`](/lakehouse/hubs/11-open-questions/).

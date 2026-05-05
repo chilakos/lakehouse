@@ -78,7 +78,7 @@ WM DMO analyst, is building a Gold product called
     tag. The new methodology applied to historical data is
     audit-traceable to the Git commit that introduced it.
 
-See [`05-rehydration.md`](./05-rehydration.md) for the rehydration
+See [`05-rehydration.md`](/lakehouse/hubs/05-rehydration/) for the rehydration
 mechanic in detail.
 
 ## What is *not* in this flow

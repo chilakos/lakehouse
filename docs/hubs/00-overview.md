@@ -145,7 +145,7 @@ team supports one model instead of two.**
 
 ## Read next
 
-- [01 — Experience flow](01-experience-flow) — day-by-day from scaffold to rehydrate
-- [04 — Source selection](04-source-selection) — how a DMO picks a Teradata view or Hive table
-- [05 — Rehydration](05-rehydration) — how point-in-time rebuild works
-- [11 — Open questions](11-open-questions) — what still needs to close before Phase 1
+- [01 — Experience flow](/lakehouse/hubs/01-experience-flow/) — day-by-day from scaffold to rehydrate
+- [04 — Source selection](/lakehouse/hubs/04-source-selection/) — how a DMO picks a Teradata view or Hive table
+- [05 — Rehydration](/lakehouse/hubs/05-rehydration/) — how point-in-time rebuild works
+- [11 — Open questions](/lakehouse/hubs/11-open-questions/) — what still needs to close before Phase 1
