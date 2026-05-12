@@ -66,7 +66,7 @@ If an upstream system sent garbage, garbage lands in Bronze with a timestamp. Th
 
 ## 4. Silver and Gold authoring (dbt under the hood, Helios on top)
 
-- DMO writes **SQL only** — `silver/*.sql` and `gold/*.sql` — referencing Bronze via `{{ source() }}` and other Silver via `{{ ref() }}`.
+- DMO writes **SQL only** — `silver/*.sql` and `gold/*.sql` — referencing Bronze via {% raw %}`{{ source() }}`{% endraw %} and other Silver via {% raw %}`{{ ref() }}`{% endraw %}.
 - They never edit `dbt_project.yml`, `profiles.yml`, or `.github/workflows/`. CODEOWNERS protects the framework.
 - `hub-cli` provides the loop: `init`, `validate`, `run`, `promote`, `rehydrate`.
 - Helios orchestrates the dbt runs on a schedule declared in `product.yml` — same orchestration plane the team uses for Bronze extracts, so one mental model.
