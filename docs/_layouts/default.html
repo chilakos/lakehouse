@@ -133,6 +133,18 @@ body {
 
 <script type="module">
   import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+
+  // kramdown renders ```mermaid blocks as <pre><code class="language-mermaid">...</code></pre>
+  // Mermaid's auto-detection only finds elements with class="mermaid", so we
+  // need to convert kramdown's output into something mermaid can render.
+  document.querySelectorAll('pre > code.language-mermaid').forEach((codeEl) => {
+    const pre = codeEl.parentElement;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'mermaid';
+    wrapper.textContent = codeEl.textContent;
+    pre.replaceWith(wrapper);
+  });
+
   mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
 </script>
 
