@@ -13,7 +13,13 @@ Status: **Draft for review with Vinh Tran.** Not yet an ADR — this is the desi
 intent that will produce ADR-016 (Hub self-service authoring framework) once
 the open questions in [11 — Open questions](/lakehouse/hubs/11-open-questions/) are closed.
 
-## Start here
+## Design session pack (latest)
+
+| Doc | Purpose |
+| --- | --- |
+| [Session pack index](/lakehouse/hubs/session-pack-index/) | **Start here.** Four artifacts produced for the cloud hub design session — opening bullets, one-pager, `product.yml` spec, and the UX flow diagram |
+
+## Start here (reference series)
 
 | Doc | Purpose |
 | --- | --- |
