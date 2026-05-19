@@ -39,6 +39,8 @@ No direct S3, OTF bypass, or raw client library reads in production. See ADR-002
 | [teradata-to-iceberg.md](teradata-to-iceberg.md) | Dual-write pattern, type mapping, SCD handling, cutover process |
 | [materialized-view-decomposition.md](materialized-view-decomposition.md) | Decomposing Teradata MVs into Gold Iceberg tables and Cube metrics |
 | [cloudera-hive-to-iceberg.md](cloudera-hive-to-iceberg.md) | Hive table registration, HDFS data migration, shadow copy deprecation |
+| [acceldata-odp-migration-plan.md](acceldata-odp-migration-plan.md) | Cloudera CDP → Acceldata ODP migration plan. Path comparison (in-place / sidecar / forklift), workload mix risk, ODP vs Databricks framing, Cloudera contract-driven timeline. |
+| [acceldata-odp-poc-plan.md](acceldata-odp-poc-plan.md) | Zero-cost POC plan for ODP validation before vendor engagement. CDP 7.1.9 SP1 CHF 10 → ODP 3.3.6.x version mapping, Impala and Spark 2.4.8 pre-migration workstreams, GitHub patch-delta inspection. |
 
 ---
 
