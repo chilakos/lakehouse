@@ -18,7 +18,7 @@
 | Table | trades |
 | Row count | [N] |
 | Storage format | Apache Iceberg (Parquet) |
-| Storage backend | MinIO (on-prem) / S3 (cloud) |
+| Storage backend | Pure Storage (on-prem) / S3 (cloud) |
 | Catalog | Nessie REST |
 | Partitioning | [partition spec or "none"] |
 
@@ -30,7 +30,7 @@
 | PySpark | [version] | [local/cluster, memory] |
 | Teradata | [version] | [OTF config or federation] |
 | Nessie | [version] | [replicas, backing store] |
-| MinIO | [version] | [nodes, drives] |
+| Pure Storage | [version] | [nodes, drives] |
 
 ### Benchmark Parameters
 
@@ -122,7 +122,7 @@
 
 ### Storage Backend Impact
 
-1. [Comparison of S3 vs MinIO performance if applicable]
+1. [Comparison of S3 vs Pure Storage performance if applicable]
 2. [Impact of partitioning on query performance]
 3. [File format and compression observations]
 

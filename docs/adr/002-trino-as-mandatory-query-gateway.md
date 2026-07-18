@@ -10,7 +10,7 @@
 ## Context
 
 The RBC Lakehouse uses Apache Iceberg V2 as its single open table format, with data
-physically stored in S3/MinIO and catalogued via Apache Nessie. Multiple compute engines
+physically stored in S3/Pure Storage and catalogued via Apache Nessie. Multiple compute engines
 are capable of reading Iceberg tables directly — including Trino, Teradata OTF, Apache
 Spark, and raw client libraries (PyArrow, boto3, DuckDB).
 

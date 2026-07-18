@@ -57,7 +57,7 @@ Fabric's native format is Delta Lake. Iceberg is supported via metadata virtuali
 
 ### 3. OneLake is cloud-only
 
-OneLake cannot replace MinIO as on-prem storage. The on-prem story is "create shortcuts to
+OneLake cannot replace Pure Storage as on-prem storage. The on-prem story is "create shortcuts to
 on-prem data via an On-Premises Data Gateway (OPDG)" — a Windows agent that must be
 installed, patched, and monitored. This adds operational overhead without eliminating
 the data copy problem.
@@ -69,7 +69,7 @@ no Entra service principal. For RBC's OSFI B-13 posture this is a governance gap
 
 ### 5. OneLake would be additive cost, not replacement
 
-The existing infrastructure (Trino, Nessie, Ranger, MinIO) is still needed for non-Fabric
+The existing infrastructure (Trino, Nessie, Ranger, Pure Storage) is still needed for non-Fabric
 consumers. OneLake adds cost for the Power BI path only.
 
 ---

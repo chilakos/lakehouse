@@ -1,6 +1,6 @@
 # Lakehouse Architecture Transformation
 
-A data architecture transformation converting a legacy Teradata/DataStage data warehouse into a modern lakehouse built on **Apache Iceberg** and **Trino**. Designed for a financial services organization with 1.5 PB of data across 300+ sources, supporting both cloud (AWS S3) and on-premises (MinIO) consumers with BI and AI semantic layers.
+A data architecture transformation converting a legacy Teradata/DataStage data warehouse into a modern lakehouse built on **Apache Iceberg** and **Trino**. Designed for a financial services organization with 1.5 PB of data across 300+ sources, supporting both cloud (AWS S3) and on-premises (Pure Storage) consumers with BI and AI semantic layers.
 
 ## The Problem
 
@@ -63,7 +63,7 @@ See [ADR-011](docs/adr/011-snowflake-cortex-semantic-layer.md) for the full phas
 | Table Format | Apache Iceberg | V2 spec |
 | Catalog | Nessie | 0.107.4 |
 | Query Engine | Trino | 479 |
-| Object Storage | AWS S3 / MinIO | latest |
+| Object Storage | AWS S3 / Pure Storage | latest |
 | ETL | Python (PySpark + PyIceberg) | 3.11+ |
 | Orchestration | Apache Airflow | 3.1.x |
 | Lineage | OpenLineage + Marquez | — |
@@ -93,7 +93,7 @@ lakehouse/
 │   │   │   ├── silver/         # Cleaned & validated
 │   │   │   └── gold/           # Business-level aggregates (trading metrics, risk)
 │   │   ├── ingestion/          # Raw zone file management & ingestion manifest
-│   │   │   ├── raw_zone.py     # RawZoneManager -- SFTP drop → S3/MinIO raw zone
+│   │   │   ├── raw_zone.py     # RawZoneManager -- SFTP drop → S3/Pure Storage raw zone
 │   │   │   └── manifest.py     # IngestionManifest -- LANDED/PROCESSING/PROCESSED/FAILED
 │   │   ├── governance/         # Ranger policies, classification, audit, freshness
 │   │   ├── quality/            # Soda Core scanner, reconciliation, SodaCL checks
@@ -199,7 +199,7 @@ All pipelines extend `BasePipeline` (see [`etl/src/pipelines/base.py`](etl/src/p
 ### Raw Zone & Ingestion
 
 Before mainframe data reaches the Bronze Iceberg tables, original binary files are preserved in a
-**raw zone** on S3/MinIO for 7-year regulatory retention:
+**raw zone** on S3/Pure Storage for 7-year regulatory retention:
 
 ```
 SFTP / Connect:Direct drop zone  (local staging)
@@ -219,8 +219,8 @@ Key components in `etl/src/ingestion/`:
 
 | Module | Class | Purpose |
 |--------|-------|---------|
-| `raw_zone.py` | `RawZoneManager` | Upload files to S3/MinIO, compute MD5, list raw files |
-| `raw_zone.py` | `RawZoneConfig` | Bucket, prefix, region, MinIO endpoint override |
+| `raw_zone.py` | `RawZoneManager` | Upload files to S3/Pure Storage, compute MD5, list raw files |
+| `raw_zone.py` | `RawZoneConfig` | Bucket, prefix, region, custom S3 endpoint override (Pure Storage, MinIO) |
 | `manifest.py` | `IngestionManifest` | JSON Lines lifecycle tracking per source/date |
 | `manifest.py` | `ManifestEntry` | Single file record: LANDED → PROCESSING → PROCESSED/FAILED |
 
@@ -289,7 +289,7 @@ All four phases of the v1.0 milestone are complete:
 ### Open Items
 
 - Teradata OTF REST catalog support -- unconfirmed, ADR drafted with fallback strategy
-- MinIO replacement decision -- RustFS vs Ceph vs AIStor commercial
+- MinIO replacement -- decided: Pure Storage for on-prem object storage (MinIO retained for local dev only)
 - Live integration tests pending: Teradata instance, Snowflake account, LDAP/AD server
 
 ## License

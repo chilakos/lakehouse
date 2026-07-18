@@ -57,7 +57,7 @@ Following our evaluation of Iceberg catalog options for the lakehouse architectu
 **Nessie** remains our recommended choice. The deciding factors are:
 1. Git-like branching for zero-downtime schema evolution (no other catalog offers this)
 2. Validated in Phase 1 feasibility testing (Spark + Trino confirmed working)
-3. Cloud-agnostic design for our hybrid S3/MinIO architecture
+3. Cloud-agnostic design for our hybrid S3/Pure Storage architecture
 4. Proven Teradata OTF fallback via Trino federation
 5. Migration to Polaris or Gravitino remains < 1 week effort if needed
 

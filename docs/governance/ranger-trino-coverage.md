@@ -62,7 +62,7 @@ it does not fail open.
 
 | Access path | Governed? | Risk | Mitigation |
 |---|---|---|---|
-| Direct S3/MinIO reads (boto3, PyArrow) | ❌ No | Ungoverned data access; no audit trail | S3 bucket policies + IAM; block direct reads at infra layer (ADR-002) |
+| Direct S3/Pure Storage reads (boto3, PyArrow) | ❌ No | Ungoverned data access; no audit trail | S3 bucket policies + IAM; block direct reads at infra layer (ADR-002) |
 | Teradata internal queries (direct JDBC to TD) | ❌ No — Teradata native | Separate audit trail; not in OpenLineage | Teradata query logs must be ingested to BCBS 239 audit store separately |
 | Teradata OTF direct to Nessie (if bypasses Trino) | ❌ No | Full Ranger bypass | Do not permit OTF direct reads until confirmed to route through Trino (ADR-001, ADR-002) |
 | Cloudera Hive tables (during migration) | ❌ No | Shadow data accessible without Ranger | Deprecate shadow copies before decommissioning governance gap |

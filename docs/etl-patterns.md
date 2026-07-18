@@ -348,7 +348,7 @@ from src.ingestion.raw_zone import RawZoneConfig, RawZoneManager
 # AWS S3
 config = RawZoneConfig(bucket="lakehouse-raw", region="us-east-1")
 
-# MinIO (local / on-prem)
+# MinIO (local dev) -- Pure Storage on-prem uses the same S3-compatible endpoint pattern
 config = RawZoneConfig(
     bucket="lakehouse-raw",
     endpoint_url="http://minio:9000",
@@ -475,7 +475,7 @@ result = pipeline.execute()
 | Aspect | Approach |
 |--------|----------|
 | **COBOL copybooks** | Cobrix parses EBCDIC encoding, packed decimal, and record layouts |
-| **Raw zone retention** | Original EBCDIC files stored untouched in S3/MinIO for 7 years |
+| **Raw zone retention** | Original EBCDIC files stored untouched in S3/Pure Storage for 7 years |
 | **Manifest storage** | JSON Lines at `s3://{bucket}/raw/_manifest/{source}/{date}.jsonl` |
 | **DB2 z/OS JDBC** | `ibm_db` Python driver for direct mainframe database access |
 | **Schema validation** | Overridden -- Cobrix derives schema from copybook at runtime |

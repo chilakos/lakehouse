@@ -357,7 +357,7 @@ Covers:
 - ADR-010 is superseded. The Fabric Import semantic model remains the correct
   Phase 2 architecture but is no longer the sole or Phase 1 path.
 - Snowflake external volumes must be configured to read Gold Iceberg V2 from
-  on-prem S3/MinIO via the Nessie catalog.
+  on-prem S3/Pure Storage via the Nessie catalog.
 - The GitHub lakehouse repo gains three new artifacts:
   - `docs/architecture/fastapi-trust-boundary-spec.yaml` (OpenAPI spec)
   - `docs/architecture/semantic-model-template.yaml` (FSDM Gold mapping)
