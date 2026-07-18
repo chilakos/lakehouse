@@ -71,7 +71,7 @@ evolution, row-level deletes):
 
 ```python
 # Convert Hive Parquet table to native Iceberg V2 format
-# This rewrites the data files into Iceberg format on S3/MinIO
+# This rewrites the data files into Iceberg format on S3/Pure Storage
 
 spark.sql("""
     CREATE TABLE nessie.bronze.transactions

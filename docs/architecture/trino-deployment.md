@@ -10,7 +10,7 @@ control migration path.
 ## Architecture Overview
 
 Trino is a **distributed SQL query engine with no storage of its own.** It translates
-SQL into parallel reads from Iceberg Parquet files on S3/MinIO, executes joins and
+SQL into parallel reads from Iceberg Parquet files on S3/Pure Storage, executes joins and
 aggregations in-memory across worker nodes, and returns results. It never holds data
 between queries.
 
@@ -36,7 +36,7 @@ Consumers (Python ETL / Soda / Power BI / AI agents)
                  NESSIE              ← returns S3 path + snapshot + schema
                     │
                     ▼
-             S3 / MinIO             ← actual Parquet files
+             S3 / Pure Storage             ← actual Parquet files
 ```
 
 ---

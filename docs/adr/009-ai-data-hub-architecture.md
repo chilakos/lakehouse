@@ -47,21 +47,21 @@ An AI agent routes between these tiers based on the question type.
 Source Systems (Core Banking, Trading Platforms, CRM, Market Data)
     ↓ CDC / Batch Extract (300+ sources)
 
-Bronze Layer (Iceberg on MinIO)
+Bronze Layer (Iceberg on Pure Storage)
     Raw, source-system-specific tables
     e.g., bronze.raw_trades_history, bronze.raw_positions_daily
     Transforms: format conversion only + metadata columns (source_system, ingestion_ts, batch_id)
     Quality gate: schema validation, PK not-null, PK unique
     ↓
 
-Silver Layer (Iceberg on MinIO) — FSDM 3NF Conformed Model
+Silver Layer (Iceberg on Pure Storage) — FSDM 3NF Conformed Model
     Cleansed, deduplicated, entity-resolved, FSDM-schema-conformed
     e.g., silver.fsdm_party, silver.fsdm_account, silver.fsdm_financial_transaction
     Transforms: dedup by PK (window function), business rule filters, FSDM conformance
     Quality gate: uniqueness, valid value ranges, referential integrity
     ↓
 
-Gold Layer (Iceberg on MinIO) — Denormalized Business-Ready Tables
+Gold Layer (Iceberg on Pure Storage) — Denormalized Business-Ready Tables
     Pre-aggregated, domain-oriented wide tables for analytics and AI
     e.g., gold.trading_metrics, gold.risk_exposure, gold.customer_360
     Transforms: multi-table joins across FSDM subject areas, aggregation, enrichment

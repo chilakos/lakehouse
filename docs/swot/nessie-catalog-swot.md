@@ -33,7 +33,7 @@ Nessie serves as a single catalog for multiple query engines. Our Phase 1 feasib
 - PySpark reads and writes Iceberg tables through Nessie REST catalog
 - Trino reads Spark-created tables and writes back through the same catalog
 - Cross-engine metadata consistency is maintained (same schema, same row counts)
-- Both MinIO (on-prem) and S3 (cloud) storage backends work through one catalog
+- Both Pure Storage (on-prem) and S3 (cloud) storage backends work through one catalog
 
 ### S5: PostgreSQL Backing Store
 Nessie uses PostgreSQL for metadata storage, providing:
@@ -43,7 +43,7 @@ Nessie uses PostgreSQL for metadata storage, providing:
 - No dependency on cloud-specific storage (DynamoDB, etc.)
 
 ### S6: Single Catalog Serving Multiple Storage Backends
-One Nessie instance serves tables across both S3 (cloud) and MinIO (on-premises), enabling the hybrid architecture without catalog duplication or synchronization.
+One Nessie instance serves tables across both S3 (cloud) and Pure Storage (on-premises), enabling the hybrid architecture without catalog duplication or synchronization.
 
 ---
 
@@ -163,7 +163,7 @@ Nessie's performance characteristics at extreme scale (millions of tables, thous
 1. REST catalog compliance for multi-engine interoperability
 2. Git-like branching for safe schema evolution (unique differentiator)
 3. Successful Phase 1 feasibility validation (Spark + Trino confirmed working)
-4. Cloud-agnostic design supporting our hybrid S3/MinIO architecture
+4. Cloud-agnostic design supporting our hybrid S3/Pure Storage architecture
 5. No license cost and open-source governance
 6. Manageable risk profile with documented mitigations for each threat
 

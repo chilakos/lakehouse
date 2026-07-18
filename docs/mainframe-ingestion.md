@@ -24,7 +24,7 @@ zone, ingestion manifest, and into the Bronze Iceberg table.
                          │  • File stored binary-exact (no conversion)
                          ▼
 ┌────────────────────────────────────────────────────────────────┐
-│  Raw Zone  (S3 / MinIO)                                        │
+│  Raw Zone  (S3 / Pure Storage)                                        │
 │  s3://lakehouse-raw/raw/mainframe/{source}/{YYYY-MM-DD}/{file} │
 │                                                                │
 │  _manifest/{source}/{YYYY-MM-DD}.jsonl  ← IngestionManifest   │
@@ -85,7 +85,7 @@ s3_config = RawZoneConfig(
     region="us-east-1",
 )
 
-# MinIO (on-premises / local dev)
+# MinIO (local dev) -- Pure Storage on-prem uses the same S3-compatible endpoint pattern
 minio_config = RawZoneConfig(
     bucket="lakehouse-raw",
     endpoint_url="http://minio:9000",
@@ -477,7 +477,7 @@ aws configure
 # Default output format: json
 ```
 
-For **MinIO (on-premises)**, set a custom endpoint:
+For **Pure Storage (on-premises)**, set a custom endpoint:
 
 ```bash
 # Add to ~/.aws/config
@@ -515,7 +515,7 @@ aws s3 cp \
 echo "Landed: s3://${BUCKET}/${S3_KEY}"
 ```
 
-For **MinIO** (on-prem, no KMS):
+For **on-prem S3-compatible storage** (Pure Storage; MinIO endpoint shown for local dev, no KMS):
 
 ```bash
 aws --endpoint-url http://minio:9000 s3 cp \

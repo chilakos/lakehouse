@@ -40,7 +40,7 @@ documents the decision to adopt the Fabric Import semantic model pattern.
 **Adopt Microsoft Fabric's semantic layer in Import mode as the BI and AI surface for
 Gold-layer data. Gold exists in two deliberate representations:**
 
-1. **Iceberg V2 on on-prem S3 (MinIO)** — authoritative, Ranger-governed, compute plane
+1. **Iceberg V2 on on-prem S3-compatible storage (Pure Storage)** — authoritative, Ranger-governed, compute plane
    (Trino, Teradata Vantage). This is the write target for all ETL pipelines.
 
 2. **Delta in Fabric (OneLake)** — BI/AI surface plane only. A scheduled Python ETL job
@@ -57,7 +57,7 @@ Gold-layer data. Gold exists in two deliberate representations:**
 ```
 Trino / Teradata Vantage
   ↓  (authoritative writes)
-Gold Layer — Iceberg V2 on MinIO/S3
+Gold Layer — Iceberg V2 on Pure Storage/S3
   │  Ranger-governed · Nessie-catalogued · OPTIMIZE + VACUUM enforced
   │
   ↓  Python ETL copy (scheduled, Gold-only, not Bronze/Silver)

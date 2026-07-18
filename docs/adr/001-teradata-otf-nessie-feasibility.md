@@ -10,7 +10,7 @@ DRAFT -- To be updated after Week 1 validation testing.
 
 ## Context
 
-The lakehouse architecture requires Teradata to query Iceberg tables stored in S3/MinIO through the shared Nessie catalog. Teradata's Open Table Format (OTF) feature enables reading external table formats (Iceberg, Delta Lake, Hudi) stored on object storage.
+The lakehouse architecture requires Teradata to query Iceberg tables stored in S3/Pure Storage through the shared Nessie catalog. Teradata's Open Table Format (OTF) feature enables reading external table formats (Iceberg, Delta Lake, Hudi) stored on object storage.
 
 ### Current OTF Documentation Gap
 
@@ -65,7 +65,7 @@ NO PRIMARY INDEX;
 
 **Architecture:**
 ```
-Teradata -> JDBC -> Trino -> Nessie REST -> Iceberg (S3/MinIO)
+Teradata -> JDBC -> Trino -> Nessie REST -> Iceberg (S3/Pure Storage)
 ```
 
 **Configuration:**
@@ -101,7 +101,7 @@ SELECT * FROM trino_lakehouse.iceberg.default.trades;
 
 **Architecture:**
 ```
-Teradata -> OTF (HMS) -> HMS Shim -> Nessie REST -> Iceberg (S3/MinIO)
+Teradata -> OTF (HMS) -> HMS Shim -> Nessie REST -> Iceberg (S3/Pure Storage)
 ```
 
 **Pros:**
